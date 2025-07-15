@@ -44,8 +44,8 @@ namespace Kandooz.InteractionSystem.Core
             }
 
             var weightedSpeed = timeInverse * Mathf.Lerp(0, 1, velocityVector.sqrMagnitude*100 );
-            body.velocity = velocityVector*weightedSpeed ;
-            body.velocity = Vector3.ClampMagnitude(body.velocity, maxVelocity);
+            body.linearVelocity = velocityVector*weightedSpeed ;
+            body.linearVelocity = Vector3.ClampMagnitude(body.linearVelocity, maxVelocity);
         }
 
         private void SetAngularVelocity()
@@ -70,7 +70,7 @@ namespace Kandooz.InteractionSystem.Core
         {
             body.position = target.position;
             body.rotation = target.rotation;
-            body.velocity = body.angularVelocity = Vector3.zero;
+            body.linearVelocity = body.angularVelocity = Vector3.zero;
         }
     }
 }

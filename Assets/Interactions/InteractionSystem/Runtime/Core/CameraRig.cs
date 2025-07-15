@@ -75,8 +75,8 @@ namespace Kandooz.InteractionSystem.Core
             var rb = hand.GetComponent<Rigidbody>();
             if (rb == null) rb = hand.AddComponent<Rigidbody>();
             rb.mass = 40;
-            rb.drag = 5;
-            rb.angularDrag = 1;
+            rb.linearDamping = 5;
+            rb.angularDamping = 1;
             var follower = hand.AddComponent<PhysicsHandFollwer>();
             follower.Target = target;
         }

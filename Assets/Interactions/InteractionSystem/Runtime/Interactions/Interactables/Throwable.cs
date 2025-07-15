@@ -45,7 +45,7 @@ namespace Kandooz.InteractionSystem.Interactions
                 velocity += velocityList[i];
             }
             velocity *= dtInverse/iterations;
-            body.velocity = velocity;
+            body.linearVelocity = velocity;
             body.isKinematic = false;
         }
         private void FixedUpdate()
