@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f16953eba7fc4575a8da8b63809a9f2d, type: 3}
+  m_Name: config
+  m_EditorClassIdentifier: 
+  handData: {fileID: 11400000, guid: 28a7a2dc63f23496b9a931b83e6c5a04, type: 2}
+  leftHandLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  rightHandLayer:
+    serializedVersion: 2
+    m_Bits: 256
+  interactableLayer:
+    serializedVersion: 2
+    m_Bits: 512
+  playerLayer:
+    serializedVersion: 2
+    m_Bits: 1024
+  inputType: 1
+  leftHandActions:
+    thumbAction: {fileID: 8618201098598118570, guid: 7f0e64f652d4c479c9a37da09d6653ef, type: 3}
+    indexAction: {fileID: -5982496924579745919, guid: 7f0e64f652d4c479c9a37da09d6653ef, type: 3}
+    middleAction: {fileID: 6558622148059887818, guid: 7f0e64f652d4c479c9a37da09d6653ef, type: 3}
+    ringAction: {fileID: 6558622148059887818, guid: 7f0e64f652d4c479c9a37da09d6653ef, type: 3}
+    pinkyAction: {fileID: 6558622148059887818, guid: 7f0e64f652d4c479c9a37da09d6653ef, type: 3}
+  rightHandActions:
+    thumbAction: {fileID: -4429228972898843309, guid: 7f0e64f652d4c479c9a37da09d6653ef, type: 3}
+    indexAction: {fileID: 7904272356298805229, guid: 7f0e64f652d4c479c9a37da09d6653ef, type: 3}
+    middleAction: {fileID: -1758520528963094988, guid: 7f0e64f652d4c479c9a37da09d6653ef, type: 3}
+    ringAction: {fileID: -1758520528963094988, guid: 7f0e64f652d4c479c9a37da09d6653ef, type: 3}
+    pinkyAction: {fileID: -1758520528963094988, guid: 7f0e64f652d4c479c9a37da09d6653ef, type: 3}
+  feedbackSystemStyleSheet: {fileID: 7433441132597879392, guid: 3c91606246cd44966a770e730c1ecd9f, type: 3}
+  handMass: 30
+  linearDamping: 5
+  angularDamping: 1
+  gameManager: {fileID: 0}
+  inputManager: {fileID: 0}

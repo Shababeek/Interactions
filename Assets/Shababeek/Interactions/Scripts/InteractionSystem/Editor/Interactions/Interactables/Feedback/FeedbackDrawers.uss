@@ -1,0 +1,89 @@
+/* Feedback System Root */
+.feedback-system-root {
+    padding: 10px;
+}
+
+/* Feedback Drawers Styling */
+.feedback-header {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    padding: 4px 0;
+    
+}
+
+.description-text {
+    margin-bottom: 10px;
+    color: rgb(179, 179, 179);
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.feedback-section {
+    margin: 8px 0;
+    padding: 8px;
+    border-radius: 4px;
+}
+
+.section-header {
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 6px;
+    padding: 2px 0;
+}
+
+/* List Container */
+.list-container {
+    margin-top: 10px;
+}
+
+.list-container PropertyField {
+    margin-top: 5px;
+}
+
+/* Button Container */
+.button-container {
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+
+
+.status-text {
+    margin-top: 5px;
+    color: rgb(204, 204, 204);
+    font-size: 11px;
+}
+
+/* Property Fields */
+.feedback-section PropertyField {
+    margin: 4px 0;
+}
+
+.feedback-section PropertyField > Label {
+    min-width: 120px;
+    font-size: 11px;
+}
+
+/* Color Fields */
+.feedback-section PropertyField[label="Hover Color"],
+.feedback-section PropertyField[label="Select Color"],
+.feedback-section PropertyField[label="Activate Color"] {
+    flex: 1;
+    margin: 2px 4px;
+}
+
+/* Trigger Fields */
+.feedback-section PropertyField[label="Hover"],
+.feedback-section PropertyField[label="Select"],
+.feedback-section PropertyField[label="Activate"] {
+    flex: 1;
+    margin: 2px 4px;
+}
+
+/* Container Layouts */
+.feedback-section > VisualElement {
+    margin: 4px 0;
+}
+

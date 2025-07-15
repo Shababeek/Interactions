@@ -1,0 +1,19 @@
+using UnityEditor;
+using UnityEngine;
+
+namespace Shababeek.Core.Editors
+{
+    [CustomEditor(typeof(GameEvent),true)]
+    public class GameEventEditor : Editor
+    {
+        public override void OnInspectorGUI()
+        {
+            base.OnInspectorGUI();
+            if (Application.isPlaying && GUILayout.Button("Raise"))
+            {
+                var @event = (GameEvent)target;
+                @event.Raise();
+            }
+        }
+    }
+}
