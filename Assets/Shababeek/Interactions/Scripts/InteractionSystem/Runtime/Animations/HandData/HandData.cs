@@ -63,6 +63,8 @@ namespace Shababeek.Interactions.Animations
     [CreateAssetMenu(menuName = "Shababeek/Interaction System/Hand Data")]
     public class HandData : ScriptableObject, IAvatarMaskIndexer
     {
+        [Tooltip("Preview image for this hand, shown in setup wizard and UI.")]
+        public Sprite previewSprite;
         [Tooltip("The Hand must have HandAnimationController Script attached")] [HideInInspector] [SerializeField]
         private HandPoseController leftHandPrefab;
 
