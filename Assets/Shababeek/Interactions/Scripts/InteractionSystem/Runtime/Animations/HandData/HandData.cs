@@ -6,9 +6,19 @@ using UnityEngine.Serialization;
 
 namespace Shababeek.Interactions.Animations
 {
+    
     /// <summary>
-    /// Container for avatar masks for each finger, used for hand animation masking.
+    /// ScriptableObject that contains all hand pose data, avatar masks, and prefab references for a hand.
     /// </summary>
+    /// <remarks>
+    /// This scriptable object holds the default pose, custom poses, and references to the hand prefabs for both left and right hands.
+    /// It also provides an indexer to access avatar masks by index or finger name.
+    /// </remarks>
+    /// <seealso cref="PoseData"/>
+    /// <seealso cref="HandAvatarMaskContainer"/>
+    /// <seealso cref="IAvatarMaskIndexer"/>
+    /// <seealso cref="HandPoseController"/>
+    /// <seealso cref="FingerName"/>
     [System.Serializable]
     public class HandAvatarMaskContainer
     {
@@ -73,6 +83,9 @@ namespace Shababeek.Interactions.Animations
         public HandPoseController LeftHandPrefab => leftHandPrefab;
         public HandPoseController RightHandPrefab => rightHandPrefab;
 
+        /// <summary>
+        /// Returns an array of all poses, including the default pose at index 0.
+        /// </summary>
         public PoseData[] Poses
         {
             get

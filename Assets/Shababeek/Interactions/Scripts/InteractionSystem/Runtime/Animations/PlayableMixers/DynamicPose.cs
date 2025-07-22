@@ -6,7 +6,7 @@ using UnityEngine.Playables;
 namespace Shababeek.Interactions.Animations
 {
     /// <summary>
-    /// A pose that have every finger controller individually between two poses
+    /// Represents a dynamic pose that can be used in the interaction system.
     /// </summary>
     internal class DynamicPose : IPose
     {
@@ -14,6 +14,12 @@ namespace Shababeek.Interactions.Animations
         private readonly FingerAnimationMixer[] _fingers;
         private readonly IAvatarMaskIndexer _handFingerMask;
         private readonly string _name;
+        /// <summary>
+        /// This is used to set the value of a finger in the dynamic pose.
+        /// </summary>
+        /// <param name="indexer">The index of the finger to set the value for
+        /// 0 for thumb, 1 for index, 2 for middle, 3 for ring, and 4 for pinky.
+        /// </param>
 
         public float this[int indexer]
         {
@@ -23,13 +29,6 @@ namespace Shababeek.Interactions.Animations
         internal AnimationLayerMixerPlayable PoseMixer => _poseMixer;
         public string Name => _name;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="graph">The graph to be conect the pose to</param>
-        /// <param name="poseData">the pose Data object</param>
-        /// <param name="fingerMask">Avatar Mask of the finger</param>
-        /// <param name="tweener">The Variable tweener to be used by the editor</param>
         internal DynamicPose(PlayableGraph graph, PoseData poseData, IAvatarMaskIndexer fingerMask, VariableTweener tweener)
         {
             _handFingerMask = fingerMask;

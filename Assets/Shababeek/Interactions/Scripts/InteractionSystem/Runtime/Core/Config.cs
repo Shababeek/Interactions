@@ -14,11 +14,18 @@ namespace Shababeek.Interactions.Core
     [CreateAssetMenu(menuName = "Shababeek/Interactions/Config")]
     public class Config : ScriptableObject
     {
+        [Tooltip("you need to create a HandData ScriptableObject for all hands you want to use in the interaction system., instructions are in teh documentation.")]
         [SerializeField] private HandData handData;
+        [Header("Layers")]
+        [Tooltip("Layer for the left hand, used for physics interactions, needed to make sure the hand Does not interact with itself.")]
         [SerializeField] private LayerMask leftHandLayer;
+        [Tooltip("Layer for the right hand, used for physics interactions,needed to make sure the hand Does not interact with itself")]
         [SerializeField] private LayerMask rightHandLayer;
+        [Tooltip("Layer for interactable objects, used for physics interactions .")]
         [SerializeField] private LayerMask interactableLayer;
         [SerializeField] private LayerMask playerLayer;
+        [Header("Input Manager Settings")]
+        [Tooltip("Type of input manager to use for the interaction system. Options are Unity Axis")]
         [SerializeField] private InputManagerType inputType = InputManagerType.InputSystem;
         [SerializeField] private HandInputActions leftHandActions;
         [SerializeField] private HandInputActions rightHandActions;

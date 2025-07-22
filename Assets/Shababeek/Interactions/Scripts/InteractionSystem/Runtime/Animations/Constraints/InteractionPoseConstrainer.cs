@@ -6,7 +6,11 @@ using UnityEngine;
 
 namespace Shababeek.Interactions
 {
-    public class InteractionPoseConstrainer : MonoBehaviour,IPoseConstrainer
+    /// <summary>
+    /// Constrains the interaction pose of hands position and pose when interaction starts.
+    /// </summary>
+    [AddComponentMenu("Shababeek/Interactions/Interaction Pose Constrainer")]
+    public class InteractionPoseConstrainer : MonoBehaviour, IPoseConstrainer
     {
         [HideInInspector, SerializeField] private HandConstraints leftConstraints;
         [HideInInspector, SerializeField] private HandConstraints rightConstraints;
@@ -38,7 +42,7 @@ namespace Shababeek.Interactions
             pivotParent.localScale = Vector3.one;
             pivotParent.parent = transform;
             pivotParent.transform.localPosition = Vector3.zero;
-            pivotParent.transform.localRotation=Quaternion.identity;
+            pivotParent.transform.localRotation = Quaternion.identity;
             ;
         }
 
@@ -53,7 +57,7 @@ namespace Shababeek.Interactions
             interactable.OnSelected.Do(Constrain).Subscribe().AddTo(this);
             interactable.OnDeselected.Do(Unconstrain).Subscribe().AddTo(this);
         }
-        
+
         private void Unconstrain(InteractorBase interactor)
         {
             interactor.Hand.Unconstrain(this);

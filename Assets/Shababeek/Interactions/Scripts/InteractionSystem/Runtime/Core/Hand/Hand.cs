@@ -10,24 +10,13 @@ namespace Shababeek.Interactions.Core
     /// pose constraints and visual feedback. It provides a unified interface for accessing hand input data,
     /// managing hand pose constraints, and controlling hand model visibility.
     /// </summary>
-    /// <remarks>
-    /// The Hand class works in conjunction with the Config system to access input data and manages
-    /// pose constraints through the IPoseable interface. It supports both left and right hands through
-    /// the HandIdentifier enum and provides observable streams for button state changes.
-    /// </remarks>
     public class Hand : MonoBehaviour
     {
-        /// <summary>
-        /// Identifies whether this hand represents the left or right hand in the VR system.
-        /// This determines which input mappings and constraints are applied to this hand instance.
-        /// </summary>
-        [SerializeField] private HandIdentifier hand;
-        
-        /// <summary>
-        /// Reference to the global configuration that contains input manager and system settings.
-        /// This provides access to input data and system-wide configuration options.
-        /// </summary>
+        [Tooltip("Identifies whether this hand is the left or right hand in the VR system.")]
+        [SerializeField] private HandIdentifier hand;        
+        [Tooltip("Reference to the global configuration that contains input manager and system settings.")]
         [SerializeField] private Config config;
+        [Tooltip("The hand model GameObject that will be shown or hidden based on interaction state.")  ]
         [SerializeField] private GameObject handModel;
         private IPoseable poseDriver;
         

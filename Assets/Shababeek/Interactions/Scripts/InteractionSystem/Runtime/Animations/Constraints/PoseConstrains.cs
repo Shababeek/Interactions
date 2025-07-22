@@ -1,13 +1,26 @@
 ﻿
-using Shababeek.Interactions.Core;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Shababeek.Interactions.Core
 {
     [System.Serializable]
+    /// <summary>
+    /// Represents constraints for finger poses in the interaction system.
+    /// </summary>
+    /// <remarks>
+    /// This struct defines the constraints for each finger, including whether it is locked,
+    /// and the minimum and maximum values for its pose.
+    /// It is used to manage finger poses during interactions.
+    /// </remarks>
+    /// <seealso cref="PoseConstrains"/>
+    /// <seealso cref="IPoseConstrainer"/>
+    /// <seealso cref="HandConstraints"/>
     public struct FingerConstraints
     {
+        /// <summary>
+        /// Indicates whether the finger is locked in its current pose.
+        /// If true, the finger will not change its pose and will remain at the minimum value.
+        /// </summary>
         public bool locked;
         [Range(0, 1)]
         public float min;

@@ -11,8 +11,9 @@ namespace Shababeek.Core
     [AddComponentMenu(menuName: "Shababeek/Scriptable System/UI Variable Updated")]
     public class VariableToUIBinder : MonoBehaviour
     {
+        [Tooltip("The ScriptableVariable to bind to the UI.")]
         [SerializeField] private ScriptableVariable variable;
-        [SerializeField] private VariableReference<int> v;
+        [Tooltip("The TextMeshProUGUI component to update with the variable's value.")]
         [SerializeField] private TextMeshProUGUI text;
         private CompositeDisposable _disposable;
 
@@ -21,7 +22,7 @@ namespace Shababeek.Core
         {
             _disposable = new CompositeDisposable();
             text.text = variable.ToString();
-            variable.Do(_ => UpdateText()).Subscribe().AddTo(this);
+            variable.OnRaised.Do(_ => UpdateText()).Subscribe().AddTo(this);
         }
 
         private void UpdateText()

@@ -9,9 +9,13 @@ namespace Shababeek.Interactions.Animations
     [Serializable]
     public struct PoseData
     {
+        [Tooltip("The animation clip for when the hand is fully open( no buttons are pressed).")]
         [SerializeField] private AnimationClip open;
+        [Tooltip("The animation clip for when the hand is fully closed (all buttons are pressed).")]
         [SerializeField] private AnimationClip closed;
+        [Tooltip("The name of the pose. If empty, it will be derived from the animation clips.")]
         [SerializeField] private string name;
+        [Tooltip("The type of the pose: static (singe pose) or dynamic (fingers will follow a value between two poses).")]
         [SerializeField] private PoseType type;
         /// <summary>
         /// The name of the pose. If empty, it will be derived from the animation clips.

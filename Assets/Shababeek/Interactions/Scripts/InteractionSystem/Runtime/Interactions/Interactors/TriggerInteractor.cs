@@ -1,25 +1,24 @@
 using Shababeek.Core;
 using Shababeek.Interactions;
 using Shababeek.Interactions.Core;
-using Shababeek.Interactions.Core;
 using UnityEngine;
 
 namespace Shababeek.Interactions
 {
     /// <summary>
-    /// This class is used to handle the trigger input for the interactable.
+    /// TriggerInteractor is a type of Interactor that uses Unity's trigger collider system to detect interactions with interactable objects.
+    /// It allows for hover and selection interactions based on trigger events.
+    /// This interactor is designed to work with colliders and does not require direct input from the user.
     /// </summary>
-    
     public class TriggerInteractor : InteractorBase
     {
         //TODO: rewrite to make it support pairs of colliders/interactables
         [ReadOnly][SerializeField] private Collider currentCollider;
         
         // Cache for performance and to avoid hierarchy issues
-        private Vector3 lastInteractionPoint;
-        private float lastDistanceCheck;
-        private const float DISTANCE_CHECK_INTERVAL = 0.05f; // Check distance every 0.1 seconds
-        
+        private Vector3 _lastInteractionPoint;
+        private float _lastDistanceCheck;
+        private const float DistanceCheckInterval = 0.08f; 
         private void OnTriggerEnter(Collider other)
         {
             if (isInteracting) return;
@@ -51,10 +50,10 @@ namespace Shababeek.Interactions
             if (currentInteractable == null) return true;
             
             // Performance optimization: only check distance periodically
-            if (Time.time - lastDistanceCheck < DISTANCE_CHECK_INTERVAL)
+            if (Time.time - _lastDistanceCheck < DistanceCheckInterval)
                 return false;
                 
-            lastDistanceCheck = Time.time;
+            _lastDistanceCheck = Time.time;
             
             // Use interaction points instead of transform positions to avoid hierarchy issues
             Vector3 newInteractionPoint = GetInteractionPoint(interactable);

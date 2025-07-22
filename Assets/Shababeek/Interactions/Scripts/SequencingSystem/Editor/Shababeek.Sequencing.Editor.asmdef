@@ -3,7 +3,9 @@
     "rootNamespace": "Shababeek.Sequencing",
     "references": [
         "Shababeek.Sequencing",
-        "Shababeek.Core"
+        "Shababeek.Core",
+        "Shababeek.Interactions",
+        "UniRx"
     ],
     "includePlatforms": [
         "Editor"

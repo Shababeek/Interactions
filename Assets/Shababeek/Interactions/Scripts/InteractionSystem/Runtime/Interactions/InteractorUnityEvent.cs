@@ -1,5 +1,3 @@
-using Shababeek.Interactions;
-using UnityEngine;
 using UnityEngine.Events;
 
 namespace Shababeek.Interactions

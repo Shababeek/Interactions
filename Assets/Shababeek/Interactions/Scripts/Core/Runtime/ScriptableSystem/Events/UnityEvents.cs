@@ -5,11 +5,13 @@ using UnityEngine.Events;
 namespace Shababeek.Core
 {
     [Serializable]
-    public class FloatUnityEvent : UnityEvent<float>
-    {
-    }
+    public class FloatUnityEvent : UnityEvent<float>{}
     [Serializable]
-    public class Vector3UnityEvent : UnityEvent<Vector3>
-    {
-    }
+    public class Vector3UnityEvent : UnityEvent<Vector3>{}
+    [Serializable]
+
+    public class IntUnityEvent : UnityEvent<int>{}
+    [Serializable]
+    public class StringUnityEvent : UnityEvent<string> { }
+
 }

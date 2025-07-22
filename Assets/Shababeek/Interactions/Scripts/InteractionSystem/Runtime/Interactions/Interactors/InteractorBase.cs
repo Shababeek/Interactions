@@ -4,14 +4,19 @@ using Shababeek.Interactions;
 using Shababeek.Interactions.Core;
 using Shababeek.Interactions.Core;
 using UniRx;
+using UnityEditor.EditorTools;
 using UnityEngine;
 
 namespace Shababeek.Interactions
 {
+    /// <summary>
+    /// Base class for interactors in the interaction system.
+    /// This class provides common functionality for interactors, such as handling interaction states,
+    /// managing the current interactable, and providing an attachment point for held objects.
+    /// </summary>
     [RequireComponent(typeof(Hand))]
     public abstract class InteractorBase : MonoBehaviour
     {
-     
         [SerializeField] [ReadOnly] public InteractableBase currentInteractable;
         [SerializeField] [ReadOnly] protected bool isInteracting;
         private Hand _hand;

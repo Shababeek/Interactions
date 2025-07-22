@@ -56,20 +56,7 @@ namespace Shababeek.Interactions.Editors
 
         protected abstract void ShowPoseInspector();
 
-        private static Texture2D LoadIconByFileName(string fileName)
-        {
-#if UNITY_EDITOR
-            string nameNoExt = System.IO.Path.GetFileNameWithoutExtension(fileName);
-            string[] guids = AssetDatabase.FindAssets(nameNoExt + " t:Texture2D");
-            foreach (string guid in guids)
-            {
-                string path = AssetDatabase.GUIDToAssetPath(guid);
-                if (System.IO.Path.GetFileName(path) == fileName)
-                    return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
-            }
-#endif
-            return null;
-        }
+       
 
         private void HandleHandSelection()
         {
@@ -126,10 +113,20 @@ namespace Shababeek.Interactions.Editors
             interactable.Initialize();
             InitializeHandPivot();
             selectedHand = HandIdentifier.None;
-            var cameraRig = FindAnyObjectByType<CameraRig>();
-            if (!cameraRig) return;
-            leftHandPrefab = cameraRig.LeftHandPrefab;
-            rightHandPrefab = cameraRig.RightHandPrefab;
+            var config = FindAnyObjectByType<CameraRig>().Config;
+            if (!config)
+            {
+                var configAsset = AssetDatabase.FindAssets("t:Shababeek.Interactions.Core.Config");
+                if (configAsset.Length == 0)
+                {
+                    Debug.LogError("No config found. Please add one to your scene");
+                    return;
+                }
+                var path = AssetDatabase.GUIDToAssetPath(configAsset[0]);
+                config=AssetDatabase.LoadAssetAtPath<Config>(path);
+            }
+            leftHandPrefab = config.HandData.LeftHandPrefab;
+            rightHandPrefab = config.HandData.RightHandPrefab;
             EditorApplication.update += OnUpdate;
         }
 

@@ -1,6 +1,9 @@
 ﻿
 namespace Shababeek.Interactions.Core
 {
+    /// <summary>
+    /// Represents the names of fingers in the interaction system.
+    /// </summary>
     public enum FingerName
     {
         Thumb = 0,

@@ -5,25 +5,12 @@ using System.Collections.Generic;
 
 namespace Shababeek.Interactions.Core
 {
-    public enum InteractionSystemType
-    {
-        TransformBased,
-        PhysicsBased
-    }
-
-    public enum HandInteractorType
-    {
-        Trigger,
-        Ray
-    }
-
     public class CameraRig : MonoBehaviour
     {
         [SerializeField] private Config config;
         [SerializeField] [HideInInspector] private bool initializeHands = true;
 
-        [SerializeField] [HideInInspector]
-        private InteractionSystemType handTrackingMethod = InteractionSystemType.PhysicsBased;
+        [SerializeField] [HideInInspector] private InteractionSystemType trackingMethod = InteractionSystemType.PhysicsBased;
 
         [SerializeField] [HideInInspector] private Transform leftHandPivot;
         [SerializeField] [HideInInspector] private Transform rightHandPivot;
@@ -31,11 +18,10 @@ namespace Shababeek.Interactions.Core
         [SerializeField] private HandInteractorType leftHandInteractorType = HandInteractorType.Trigger;
         [SerializeField] private HandInteractorType rightHandInteractorType = HandInteractorType.Trigger;
 
-        [Header("XR Camera Offset")] [SerializeField]
-        private Transform offsetObject; // The object to move for camera height
+        [Header("XR Camera Offset")] [SerializeField] private Transform offsetObject;
 
-        [SerializeField] private Camera xrCamera; // XR camera reference
-        [SerializeField] private float cameraHeight = 1.7f; // Default standing height
+        [SerializeField] private Camera xrCamera; 
+        [SerializeField] private float cameraHeight = 1f; // Default standing height
         [SerializeField] private bool alignRigForwardOnTracking = true;
         private bool _trackingInitialized = false;
 
@@ -173,7 +159,7 @@ namespace Shababeek.Interactions.Core
         private void CreateAndItializeHands()
         {
             if (!initializeHands) return;
-            switch (handTrackingMethod)
+            switch (trackingMethod)
             {
                 case InteractionSystemType.TransformBased:
                     InitializeHands();
@@ -235,4 +221,17 @@ namespace Shababeek.Interactions.Core
             return hand;
         }
     }
+  
+    public enum InteractionSystemType
+    {
+        TransformBased,
+        PhysicsBased
+    }
+
+    public enum HandInteractorType
+    {
+        Trigger,
+        Ray
+    }
+
 }

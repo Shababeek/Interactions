@@ -1,0 +1,18 @@
+{
+  "name": "com.shababeek.interactions",
+  "displayName": "Shababeek Interaction System ",
+  "version": "1.0.0",
+  "unity": "6.0",
+  "description": "",
+  "author": {
+    "name": "Ahmadabobakr",
+    "email": "Ahmadabobakr@gmail.com",
+    "url": "Ahmadabobakr.github.io"
+  },
+  "company": "Shababeek",
+  "keywords": ["interactions", "events", "unity", "shababeek"],
+  "dependencies": {
+    "com.unity.inputsystem": "1.0.0",
+    
+  }
+} 

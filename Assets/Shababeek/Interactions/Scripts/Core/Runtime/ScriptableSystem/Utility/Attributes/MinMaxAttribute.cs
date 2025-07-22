@@ -2,6 +2,9 @@
 
 namespace Shababeek.Core
 {
+    /// <summary>
+    /// Attribute to define a minimum and maximum range for a float value in the inspector.
+    /// </summary>
     public class MinMaxAttribute : PropertyAttribute
     {
         public float MinLimit = 0;
