@@ -9,40 +9,13 @@ namespace Shababeek.Interactions.Core
     [Obsolete("This class is obsolete, use NewInputSystemBasedInputManager instead")]
     internal class AxisBasedInputManager : InputManagerBase
     {
-        private string LeftTriggerAxis = "XRI_Left_Trigger";
-        private string LeftGripAxis = "XRI_Left_Grip";
-        private string LeftPrimaryButton = "XRI_Left_PrimaryButton";
-        private string LeftSecondryButton = "XRI_Left_SecondaryButton";
-        private string LeftGripDebugKey = "XRI_Left_Grip_DebugKey";
-        private string LeftTriggerDebugKey = "XRI_Left_Index_DebugKey";
-        private string leftThumbDebugKey= "XRI_Left_Primary_DebugKey";
+        private Config config;
+        private OldInputManagerSettings inputSettings;
 
-        private string RightTriggerAxis = "XRI_Right_Trigger";
-        private string RightGripAxis = "XRI_Right_Grip";
-        private string RightPrimaryButton = "XRI_Right_PrimaryButton";
-        private string RightSecondryButton = "XRI_Right_SecondaryButton";
-        private string RightGripDebugKey = "XRI_Right_Grip_DebugKey";
-        private string RightTriggerDebugKey = "XRI_Right_Index_DebugKey";
-        private string rightThumbDebugKey= "XRI_Right_Primary_DebugKey";
-
-        void Initialize(string leftTriggerName, string leftGripName, string leftPrimaryButton,
-            string leftSecondryButton, string leftGripDebugKey, string leftTriggerDebugKey, string rightTriggerName,
-            string rightGripName, string rightPrimaryButton, string rightSecondryButton, string rightGripDebugKey,
-            string rightTriggerDebugKey)
+        public void Initialize(Config config)
         {
-            LeftTriggerAxis = leftTriggerName;
-            LeftGripAxis = leftGripName;
-            LeftPrimaryButton = leftPrimaryButton;
-            LeftSecondryButton = leftSecondryButton;
-            LeftGripDebugKey = leftGripDebugKey;
-            LeftTriggerDebugKey = leftTriggerDebugKey;
-            RightTriggerAxis = rightTriggerName;
-            RightGripAxis = rightGripName;
-            RightPrimaryButton = rightPrimaryButton;
-            RightSecondryButton = rightSecondryButton;
-            RightGripDebugKey = rightGripDebugKey;
-            RightTriggerDebugKey = rightTriggerDebugKey;
-            Debug.Log("AxisBasedInputManager initialized");
+            this.config = config;
+            this.inputSettings = config.OldInputSettings;
         }
 
         private void Update()
@@ -53,8 +26,8 @@ namespace Shababeek.Interactions.Core
             void HandleLeftHand()
             {
                 var (thumb, triggerAxe, gripAxe) = GetAxes(
-                    LeftPrimaryButton, LeftSecondryButton, LeftTriggerAxis, LeftGripAxis,
-                    LeftGripDebugKey, LeftTriggerDebugKey,leftThumbDebugKey);
+                    inputSettings.leftPrimaryButton, inputSettings.leftSecondaryButton, inputSettings.leftTriggerAxis, inputSettings.leftGripAxis,
+                    inputSettings.leftGripDebugKey, inputSettings.leftTriggerDebugKey, inputSettings.leftThumbDebugKey);
                 LeftHand[0] = thumb ? 1 : 0;
                 LeftHand[1] = triggerAxe;
                 LeftHand[2] = LeftHand[3] = LeftHand[4] = gripAxe;
@@ -65,8 +38,8 @@ namespace Shababeek.Interactions.Core
             void HandRightHand()    
             {
                 var (thumb, triggerAxe, gripAxe) = GetAxes(
-                    RightPrimaryButton, RightSecondryButton, RightTriggerAxis, RightGripAxis,
-                    RightGripDebugKey, RightTriggerDebugKey,rightThumbDebugKey);
+                    inputSettings.rightPrimaryButton, inputSettings.rightSecondaryButton, inputSettings.rightTriggerAxis, inputSettings.rightGripAxis,
+                    inputSettings.rightGripDebugKey, inputSettings.rightTriggerDebugKey, inputSettings.rightThumbDebugKey);
 
                 RightHand[0] = thumb ? 1 : 0;
                 RightHand[1] = triggerAxe;
