@@ -1,8 +1,4 @@
-using System;
-using Shababeek.Interactions.Core;
 using UnityEngine;
-using Shababeek.Interactions.Core;
-using UnityEngine.Serialization; // For HandInputActions struct
 
 namespace Shababeek.Interactions.Core
 {

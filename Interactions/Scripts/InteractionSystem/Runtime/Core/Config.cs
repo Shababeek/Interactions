@@ -9,6 +9,69 @@ using UnityEngine.UIElements;
 namespace Shababeek.Interactions.Core
 {
     /// <summary>
+    /// Settings for the old input manager, containing axis names and button IDs.
+    /// </summary>
+    [System.Serializable]
+    public struct OldInputManagerSettings
+    {
+        [Header("Left Hand Input")]
+        [Tooltip("Axis name for left hand trigger")]
+        public string leftTriggerAxis;
+        [Tooltip("Axis name for left hand grip")]
+        public string leftGripAxis;
+        [Tooltip("Button name for left hand primary button")]
+        public string leftPrimaryButton;
+        [Tooltip("Button name for left hand secondary button")]
+        public string leftSecondaryButton;
+        [Tooltip("Debug key for left hand grip")]
+        public string leftGripDebugKey;
+        [Tooltip("Debug key for left hand trigger")]
+        public string leftTriggerDebugKey;
+        [Tooltip("Debug key for left hand thumb")]
+        public string leftThumbDebugKey;
+        
+        [Header("Right Hand Input")]
+        [Tooltip("Axis name for right hand trigger")]
+        public string rightTriggerAxis;
+        [Tooltip("Axis name for right hand grip")]
+        public string rightGripAxis;
+        [Tooltip("Button name for right hand primary button")]
+        public string rightPrimaryButton;
+        [Tooltip("Button name for right hand secondary button")]
+        public string rightSecondaryButton;
+        [Tooltip("Debug key for right hand grip")]
+        public string rightGripDebugKey;
+        [Tooltip("Debug key for right hand trigger")]
+        public string rightTriggerDebugKey;
+        [Tooltip("Debug key for right hand thumb")]
+        public string rightThumbDebugKey;
+        
+        /// <summary>
+        /// Creates default settings with Shababeek input names.
+        /// </summary>
+        public static OldInputManagerSettings Default => new OldInputManagerSettings
+        {
+            // Left Hand
+            leftTriggerAxis = "Shababeek_Left_Trigger",
+            leftGripAxis = "Shababeek_Left_Grip",
+            leftPrimaryButton = "Shababeek_Left_PrimaryButton",
+            leftSecondaryButton = "Shababeek_Left_SecondaryButton",
+            leftGripDebugKey = "Shababeek_Left_Grip_DebugKey",
+            leftTriggerDebugKey = "Shababeek_Left_Index_DebugKey",
+            leftThumbDebugKey = "Shababeek_Left_Primary_DebugKey",
+            
+            // Right Hand
+            rightTriggerAxis = "Shababeek_Right_Trigger",
+            rightGripAxis = "Shababeek_Right_Grip",
+            rightPrimaryButton = "Shababeek_Right_PrimaryButton",
+            rightSecondaryButton = "Shababeek_Right_SecondaryButton",
+            rightGripDebugKey = "Shababeek_Right_Grip_DebugKey",
+            rightTriggerDebugKey = "Shababeek_Right_Index_DebugKey",
+            rightThumbDebugKey = "Shababeek_Right_Primary_DebugKey"
+        };
+    }
+
+    /// <summary>
     /// ScriptableObject that holds all configuration settings for the interaction system, including hand data, input, and layers.
     /// </summary>
     [CreateAssetMenu(menuName = "Shababeek/Interactions/Config")]
@@ -18,17 +81,21 @@ namespace Shababeek.Interactions.Core
         [SerializeField] private HandData handData;
         [Header("Layers")]
         [Tooltip("Layer for the left hand, used for physics interactions, needed to make sure the hand Does not interact with itself.")]
-        [SerializeField] private LayerMask leftHandLayer;
+        [SerializeField] private int leftHandLayer;
         [Tooltip("Layer for the right hand, used for physics interactions,needed to make sure the hand Does not interact with itself")]
-        [SerializeField] private LayerMask rightHandLayer;
+        [SerializeField] private int rightHandLayer;
         [Tooltip("Layer for interactable objects, used for physics interactions .")]
-        [SerializeField] private LayerMask interactableLayer;
-        [SerializeField] private LayerMask playerLayer;
+        [SerializeField] private int interactableLayer;
+        [SerializeField] private int playerLayer;
         [Header("Input Manager Settings")]
         [Tooltip("Type of input manager to use for the interaction system. Options are Unity Axis")]
         [SerializeField] private InputManagerType inputType = InputManagerType.InputSystem;
         [SerializeField] private HandInputActions leftHandActions;
         [SerializeField] private HandInputActions rightHandActions;
+        
+        [Header("Old Input Manager Settings")]
+        [Tooltip("Input axis and button names for the old input manager")]
+        [SerializeField] private OldInputManagerSettings oldInputSettings;
 
         [Header("Editor UI Settings")]
         [SerializeField] private StyleSheet feedbackSystemStyleSheet;
@@ -42,26 +109,25 @@ namespace Shababeek.Interactions.Core
         [ReadOnly] [SerializeField] private InputManagerBase inputManager;
         public int LeftHandLayer
         {
-            get => (int)(Mathf.Log(leftHandLayer, 2) + .5f);
+            get => leftHandLayer;
             internal set => leftHandLayer = value;
         }
 
         public int RightHandLayer
         {
-            get => (int)(Mathf.Log(rightHandLayer, 2) + .5f);
+            get => rightHandLayer;
             internal set => rightHandLayer = value;
         }
 
         public int InteractableLayer
         {
-            get => (int)(Mathf.Log(interactableLayer, 2) + .5f);
+            get => interactableLayer;
             internal set => interactableLayer = value;
         }
 
-
         public int PlayerLayer
         {
-            get => (int)(Mathf.Log(playerLayer, 2) + .5f);
+            get => playerLayer;
             internal set => playerLayer = value;
         }
 
@@ -83,28 +149,28 @@ namespace Shababeek.Interactions.Core
         public float HandLinearDamping => linearDamping;
         public float HandAngularDamping => angularDamping;
         public StyleSheet FeedbackSystemStyleSheet => feedbackSystemStyleSheet;
-
+        public OldInputManagerSettings OldInputSettings
+        {
+            get => oldInputSettings;
+            set => oldInputSettings = value;
+        }
         private InputManagerBase CreateInputManager()
         {
             switch (inputType)
             {
-                case InputManagerType.UnityAxisBased:
+                case InputManagerType.InputManager:
                     if (inputManager != null && inputManager is AxisBasedInputManager) return inputManager;
                     if (inputManager) Destroy(inputManager);
-                    inputManager = gameManager.AddComponent<AxisBasedInputManager>();
+                    var axisManager = gameManager.AddComponent<AxisBasedInputManager>();
+                    axisManager.Initialize(this);
+                    inputManager = axisManager;
                     break;
                 case InputManagerType.InputSystem:
                     if (inputManager != null && inputManager is NewInputSystemBasedInputManager) return inputManager;
                     if (inputManager) Destroy(inputManager);
-                        var manager = gameManager.AddComponent<NewInputSystemBasedInputManager>();
+                    var manager = gameManager.AddComponent<NewInputSystemBasedInputManager>();
                     manager.Initialize(leftHandActions, rightHandActions);
                     inputManager = manager;
-
-                    break;
-                case InputManagerType.KeyboardMock:
-                    if (inputManager != null && inputManager is KeyboardBasedInput) return inputManager;
-                    if (inputManager) Destroy(inputManager);
-                    inputManager = gameManager.AddComponent<KeyboardBasedInput>();
 
                     break;
             }
@@ -134,9 +200,8 @@ namespace Shababeek.Interactions.Core
 
         private enum InputManagerType
         {
-            UnityAxisBased = 0,
+            InputManager = 0,
             InputSystem = 1,
-            KeyboardMock = -1
         }
     }
 
