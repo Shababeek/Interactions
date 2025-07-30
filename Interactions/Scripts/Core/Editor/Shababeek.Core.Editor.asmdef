@@ -3,7 +3,9 @@
     "rootNamespace": "Shababeek.ScriptableSystem",
     "references": [
         "UniRx",
-        "Shababeek.Core"
+        "Shababeek.Core",
+        "Shababeek.Interactions",
+        "Shababeek.Sequencing"
     ],
     "includePlatforms": [
         "Editor"
