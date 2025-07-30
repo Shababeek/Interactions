@@ -1,37 +1,45 @@
 using Shababeek.Core;
 using Shababeek.Interactions;
 using Shababeek.Interactions.Core;
-using Shababeek.Interactions.Core;
 using UniRx;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Serialization;
 
 namespace Shababeek.Interactions
 {
     [RequireComponent(typeof(InteractableBase))]
+    [RequireComponent(typeof(VariableTweener))]
     public class Socketable : MonoBehaviour
     {
         [SerializeField] private bool shouldReturnToParent = true;
+        [SerializeField] private bool useSmoothReturn = true;
+        [SerializeField] private float returnDuration = 0.5f;
         [SerializeField] private LayerMask mask;
-        [SerializeField] private MeshRenderer _bondsRenderer;
-        [SerializeField] private KeyCode socketKey = KeyCode.S;
+        [SerializeField] private Renderer boundsRenderer;
+        [SerializeField] private KeyCode debugKey = KeyCode.S;
         [SerializeField] private bool findBoundsAutomatically = true;
-        [SerializeField] private Bounds _bounds;
+        [SerializeField] private Bounds bounds;
         [SerializeField] private Vector3 rotationWhenSocketed = Vector3.zero;
         [SerializeField] private Transform indicator;
         [SerializeField] private UnityEvent onSocketed;
         [ReadOnly] [SerializeField] private AbstractSocket socket;
         [ReadOnly] [SerializeField] private bool isSocketed = false;
 
-        private Transform _parent;
-        private Vector3 _initialPosition;
-        private Quaternion _initialRotation;
+        private Transform _initialParent;
+        private Vector3 _initialLocalPosition;
+        private Quaternion _initialLocalRotation;
 
         private InteractableBase _interactable;
 
         private readonly Collider[] _colliders = new Collider [4];
         private Collider _currentCollider;
         private Rigidbody _rb;
+        
+        // Tweening system for smooth return
+        private VariableTweener _tweener;
+        private TransformTweenable _returnTweenable;
+        private bool _isReturning = false;
 
         public bool IsSocketed
         {
@@ -52,35 +60,57 @@ namespace Shababeek.Interactions
         }
 
         public Vector3 RotationWhenSocketed => rotationWhenSocketed;
+        
+        /// <summary>
+        /// Gets the keyboard key used for debug socket/unsocket operations.
+        /// </summary>
+        public KeyCode DebugKey => debugKey;
+        
+        /// <summary>
+        /// Gets the currently detected socket.
+        /// </summary>
+        public AbstractSocket CurrentSocket => socket;
+        
+        /// <summary>
+        /// Gets whether the object is currently returning to its original position.
+        /// </summary>
+        public bool IsReturning => _isReturning;
 
-        public Bounds bounds
+        public Bounds Bounds
         {
-            get => _bounds;
-            set => _bounds = value;
+            get => bounds;
+            set => bounds = value;
         }
 
-        public MeshRenderer bondsRenderer
+        public Renderer BondsRenderer
         {
-            get => _bondsRenderer;
-            set => _bondsRenderer = value;
+            get => boundsRenderer;
+            set => boundsRenderer = value;
         }
 
         private void Awake()
         {
-            indicator.gameObject.SetActive(false);
-            if (shouldReturnToParent)
+            _rb = GetComponent<Rigidbody>();
+            _tweener = GetComponent<VariableTweener>();
+            _returnTweenable = new TransformTweenable();
+
+            if (indicator)
             {
-                _parent = transform.parent;
-                _initialPosition = transform.position;
-                _initialRotation = transform.rotation;
+                indicator?.gameObject.SetActive(false);                
             }
 
-            _rb = GetComponent<Rigidbody>();
+            if (shouldReturnToParent)
+            {
+                _initialParent = transform.parent;
+                _initialLocalPosition = transform.localPosition;
+                _initialLocalRotation = transform.localRotation;
+            }
+
+            
             if (findBoundsAutomatically)
             {
                 GetBounds();
             }
-
             _interactable = GetComponent<InteractableBase>();
             _interactable.OnDeselected
                 .Where(_ => !IsSocketed && socket != null && socket.CanSocket())
@@ -89,6 +119,10 @@ namespace Shababeek.Interactions
                 .Select(_ => socket.Insert(this))
                 .Do(LerpToPosition)
                 .Subscribe().AddTo(this);
+            _interactable.OnDeselected
+                .Where(_=>shouldReturnToParent && !IsSocketed && socket == null)
+                .Do(_=>Return()).Subscribe().AddTo(this);
+        
 
 
             _interactable.OnSelected
@@ -100,9 +134,9 @@ namespace Shababeek.Interactions
 
         private void GetBounds()
         {
-            if (!bondsRenderer) bondsRenderer = GetComponentInChildren<MeshRenderer>();
-            bounds = bondsRenderer.bounds;
-            _bounds.size *= 1.5f;
+            if (!BondsRenderer) BondsRenderer = GetComponentInChildren<MeshRenderer>();
+            Bounds = BondsRenderer.bounds;
+            bounds.size *= 1.5f;
         }
 
         private void LerpToPosition(Transform pivot)
@@ -117,18 +151,86 @@ namespace Shababeek.Interactions
 
         private void Return()
         {
+            if (_isReturning) return; // Prevent multiple return operations
+            
             isSocketed = false;
             this.transform.parent = null;
+            
             if (shouldReturnToParent)
             {
-                this.transform.position = _initialPosition;
-                this.transform.rotation = _initialRotation;
+                if (useSmoothReturn && _tweener != null)
+                {
+                    ReturnWithTween();
+                }
+                else
+                {
+                    ReturnImmediate();
+                }
             }
+        }
+        
+        private void ReturnImmediate()
+        {
+            this.transform.SetParent(_initialParent);
+            this.transform.localPosition = _initialLocalPosition;
+            this.transform.localRotation = _initialLocalRotation;
+            
+            // Re-enable physics if needed
+            if (_rb && !_rb.isKinematic)
+            {
+                _rb.isKinematic = false;
+            }
+        }
+        
+        private void ReturnWithTween()
+        {
+            _isReturning = true;
+            
+            // Create a temporary target transform for the tween
+            var targetTransform = new GameObject($"{gameObject.name}_ReturnTarget").transform;
+            if (_initialParent != null)
+            {
+                targetTransform.SetParent(_initialParent);
+                targetTransform.localPosition = _initialLocalPosition;
+                targetTransform.localRotation = _initialLocalRotation;
+            }
+            else
+            {
+                targetTransform.position = transform.position; // Fallback to world position
+                targetTransform.rotation = transform.rotation;
+            }
+            
+            // Initialize and start the tween
+            _returnTweenable.Initialize(transform, targetTransform);
+            _tweener.AddTweenable(_returnTweenable);
+            
+            // Set up completion callback
+            _returnTweenable.OnTweenComplete += () =>
+            {
+                // Clean up
+                this.transform.SetParent(_initialParent);
+                this.transform.localPosition = _initialLocalPosition;
+                this.transform.localRotation = _initialLocalRotation;
+                
+                // Re-enable physics if needed
+                if (_rb && !_rb.isKinematic)
+                {
+                    _rb.isKinematic = false;
+                }
+                
+                // Clean up temporary target
+                if (targetTransform != null)
+                {
+                    DestroyImmediate(targetTransform.gameObject);
+                }
+                
+                _isReturning = false;
+            };
         }
 
         private void Update()
         {
-            if (!Input.GetKeyDown(socketKey)) return;
+            if (!Input.GetKeyDown(debugKey)) return;
             if (isSocketed)
             {
                 socket.Remove(this);
@@ -146,8 +248,8 @@ namespace Shababeek.Interactions
         private void FixedUpdate()
         {
             bool found = false;
-            _bounds.center = transform.position;
-            var count = Physics.OverlapBoxNonAlloc(bounds.center, bounds.extents, _colliders, Quaternion.identity,
+            bounds.center = transform.position;
+            var count = Physics.OverlapBoxNonAlloc(Bounds.center, Bounds.extents, _colliders, Quaternion.identity,
                 mask);
             if (count > 0)
             {
@@ -191,11 +293,47 @@ namespace Shababeek.Interactions
         {
             indicator.gameObject.SetActive(false);
         }
+        
+        /// <summary>
+        /// Forces the object to return to its original position immediately.
+        /// </summary>
+        public void ForceReturn()
+        {
+            if (_isReturning)
+            {
+                // Stop any ongoing tween
+                if (_tweener != null)
+                {
+                    _tweener.RemoveTweenable(_returnTweenable);
+                }
+                _isReturning = false;
+            }
+            
+            ReturnImmediate();
+        }
+        
+        /// <summary>
+        /// Forces the object to return to its original position with smooth animation.
+        /// </summary>
+        public void ForceReturnWithTween()
+        {
+            if (_isReturning)
+            {
+                // Stop any ongoing tween
+                if (_tweener != null)
+                {
+                    _tweener.RemoveTweenable(_returnTweenable);
+                }
+                _isReturning = false;
+            }
+            
+            ReturnWithTween();
+        }
 
         private void OnDrawGizmosSelected()
         {
             Gizmos.color = Color.green;
-            Gizmos.DrawWireCube(bounds.center, bounds.extents);
+            Gizmos.DrawWireCube(Bounds.center+transform.position, Bounds.extents);
         }
     }
 }
