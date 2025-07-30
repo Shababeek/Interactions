@@ -5,24 +5,37 @@ using System.Collections.Generic;
 
 namespace Shababeek.Interactions.Core
 {
+    [System.Serializable]
+    public struct LayerAssignment
+    {
+        public Transform target;
+        public int layer;
+    }
+
     public class CameraRig : MonoBehaviour
     {
+        [Header("Camera Rig Settings")]
+        [Tooltip("Configuration for the camera rig, including hand prefabs and settings.")]
         [SerializeField] private Config config;
-        [SerializeField] [HideInInspector] private bool initializeHands = true;
+        [SerializeField][HideInInspector] private bool initializeHands = true;
 
-        [SerializeField] [HideInInspector] private InteractionSystemType trackingMethod = InteractionSystemType.PhysicsBased;
+        [SerializeField][HideInInspector] private InteractionSystemType trackingMethod = InteractionSystemType.PhysicsBased;
 
-        [SerializeField] [HideInInspector] private Transform leftHandPivot;
-        [SerializeField] [HideInInspector] private Transform rightHandPivot;
-        [SerializeField] [HideInInspector] private bool initializeLayers;
+        [SerializeField][HideInInspector] private Transform leftHandPivot;
+        [SerializeField][HideInInspector] private Transform rightHandPivot;
         [SerializeField] private HandInteractorType leftHandInteractorType = HandInteractorType.Trigger;
         [SerializeField] private HandInteractorType rightHandInteractorType = HandInteractorType.Trigger;
+        [SerializeField] private Transform offsetObject;
 
-        [Header("XR Camera Offset")] [SerializeField] private Transform offsetObject;
-
-        [SerializeField] private Camera xrCamera; 
+        [SerializeField] private Camera xrCamera;
         [SerializeField] private float cameraHeight = 1f; // Default standing height
         [SerializeField] private bool alignRigForwardOnTracking = true;
+        [Tooltip("If true, initializes layers for the camera rig and hands.")]
+        [SerializeField][HideInInspector] private bool initializeLayers = true;
+
+        [Tooltip("Assign specific layers to specific objects on initialization.")]
+        [SerializeField] private LayerAssignment[] customLayerAssignments;
+
         private bool _trackingInitialized = false;
 
         private HandPoseController _leftPoseController, _rightPoseController;
@@ -154,6 +167,16 @@ namespace Shababeek.Interactions.Core
             ChangeLayerRecursive(transform, config.PlayerLayer);
             ChangeLayerRecursive(leftHandPivot, config.LeftHandLayer);
             ChangeLayerRecursive(rightHandPivot, config.RightHandLayer);
+
+            // Apply custom layer assignments
+            if (customLayerAssignments != null)
+            {
+                foreach (var assignment in customLayerAssignments)
+                {
+                    if (assignment.target != null)
+                        ChangeLayerRecursive(assignment.target, assignment.layer);
+                }
+            }
         }
 
         private void CreateAndItializeHands()
@@ -175,6 +198,8 @@ namespace Shababeek.Interactions.Core
             transform.gameObject.layer = layer;
             for (var i = 0; i < transform.childCount; i++) ChangeLayerRecursive(transform.GetChild(i), layer);
         }
+        
+
 
         private void InitializePhysicsBasedHands()
         {
@@ -221,7 +246,7 @@ namespace Shababeek.Interactions.Core
             return hand;
         }
     }
-  
+
     public enum InteractionSystemType
     {
         TransformBased,
