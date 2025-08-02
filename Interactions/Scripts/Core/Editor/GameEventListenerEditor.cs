@@ -51,7 +51,6 @@ namespace Shababeek.Core.Editors
             list.serializedProperty.InsertArrayElementAtIndex(index);
             var newElement = list.serializedProperty.GetArrayElementAtIndex(index);
             newElement.FindPropertyRelative("gameEvent").objectReferenceValue = null;
-            newElement.FindPropertyRelative("onGameEventRaised").objectReferenceValue = null;
         }
 
         private void OnRemoveCallback(ReorderableList list)
