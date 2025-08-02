@@ -13,17 +13,40 @@ namespace Shababeek.Interactions
         Down=-1,
         None=0
     }
+    
+    /// <summary>
+    /// Physical switch component that responds to trigger interactions.
+    /// Rotates the switch body based on interaction direction and raises events.
+    /// </summary>
+    /// <remarks>
+    /// This component creates a physical switch that can be activated by trigger interactions.
+    /// It automatically rotates the switch body and raises events based on the interaction direction.
+    /// </remarks>
     public class Switch : MonoBehaviour
     {
+        [Tooltip("Event raised when the switch is moved to the up position.")]
         [SerializeField] private UnityEvent onUp;
+        
+        [Tooltip("Event raised when the switch is moved to the down position.")]
         [SerializeField] private UnityEvent onDown;
+        
+        [Tooltip("Event raised when the switch is held in a position.")]
         [SerializeField] private UnityEvent onHold;
         
+        [Tooltip("The transform of the switch body that rotates during interaction.")]
         [SerializeField] private Transform switchBody;
-        [SerializeField] private float upRotation =20;
-        [SerializeField] private float downRotation =-20;
+        
+        [Tooltip("Rotation angle in degrees for the up position.")]
+        [SerializeField] private float upRotation = 20;
+        
+        [Tooltip("Rotation angle in degrees for the down position.")]
+        [SerializeField] private float downRotation = -20;
+        
+        [Tooltip("Speed of the rotation animation.")]
         [SerializeField] private float rotateSpeed = 10;
-        [ReadOnly][SerializeField]private Direction direction;
+        
+        [Tooltip("Current direction of the switch.")]
+        [ReadOnly][SerializeField] private Direction direction;
 
         private float t = 0;
         private float targetRotation=0;
