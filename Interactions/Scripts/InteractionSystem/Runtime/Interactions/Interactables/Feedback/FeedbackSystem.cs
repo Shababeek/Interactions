@@ -17,6 +17,7 @@ namespace Shababeek.Interactions.Feedback
     public class FeedbackSystem : MonoBehaviour
     {
         [Header("Feedback Configuration")]
+        [Tooltip("List of feedback components that respond to interaction events. Add feedbacks via code/editor only.")]
         // IMPORTANT: Only add feedbacks via code/editor, not via the inspector + button, to ensure correct managed reference type.
         [SerializeReference]
         private List<FeedbackData> feedbacks = new List<FeedbackData>();
@@ -129,8 +130,14 @@ namespace Shababeek.Interactions.Feedback
         }
 
         /// <summary>
-        /// Add a new feedback to the system
+        /// Adds a new feedback component to the feedback system.
+        /// The feedback will be initialized and start responding to interaction events.
         /// </summary>
+        /// <param name="feedback">The feedback component to add to the system.</param>
+        /// <remarks>
+        /// The feedback will be automatically initialized if it's valid.
+        /// Duplicate feedbacks will be ignored.
+        /// </remarks>
         public void AddFeedback(FeedbackData feedback)
         {
             if (feedback != null && !feedbacks.Contains(feedback))
@@ -144,8 +151,13 @@ namespace Shababeek.Interactions.Feedback
         }
 
         /// <summary>
-        /// Add a new material feedback to the system
+        /// Adds a new material feedback component to the feedback system.
+        /// Creates a default MaterialFeedback instance and adds it to the system.
         /// </summary>
+        /// <remarks>
+        /// This method creates a new MaterialFeedback with default settings.
+        /// The feedback will be automatically initialized if it's valid.
+        /// </remarks>
         public void AddFeedback()
         {
             var newFeedback = new MaterialFeedback();
@@ -157,8 +169,12 @@ namespace Shababeek.Interactions.Feedback
         }
 
         /// <summary>
-        /// Remove a feedback from the system
+        /// Removes a feedback component from the feedback system.
         /// </summary>
+        /// <param name="feedback">The feedback component to remove from the system.</param>
+        /// <remarks>
+        /// If the feedback is not found in the system, no action is taken.
+        /// </remarks>
         public void RemoveFeedback(FeedbackData feedback)
         {
             if (feedbacks.Contains(feedback))
@@ -168,16 +184,24 @@ namespace Shababeek.Interactions.Feedback
         }
 
         /// <summary>
-        /// Clear all feedbacks from the system
+        /// Removes all feedback components from the feedback system.
         /// </summary>
+        /// <remarks>
+        /// This will clear the entire feedback list, removing all active feedbacks.
+        /// </remarks>
         public void ClearFeedbacks()
         {
             feedbacks.Clear();
         }
 
         /// <summary>
-        /// Get all feedbacks in the system
+        /// Gets all feedback components currently in the feedback system.
         /// </summary>
+        /// <returns>A list containing all active feedback components.</returns>
+        /// <remarks>
+        /// This returns a reference to the internal feedback list.
+        /// Modifying the returned list will affect the feedback system.
+        /// </remarks>
         public List<FeedbackData> GetFeedbacks()
         {
             return feedbacks;

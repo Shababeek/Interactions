@@ -19,16 +19,31 @@ namespace Shababeek.Interactions.Core
         [SerializeField] private Config config;
         [SerializeField][HideInInspector] private bool initializeHands = true;
 
+        [Tooltip("The tracking method used for hand interactions (Transform-based or Physics-based).")]
         [SerializeField][HideInInspector] private InteractionSystemType trackingMethod = InteractionSystemType.PhysicsBased;
 
+        [Tooltip("Transform for the left hand pivot point in the camera rig, to apply shift in position and rotation.")]
         [SerializeField][HideInInspector] private Transform leftHandPivot;
+        
+        [Tooltip("Transform for the right hand pivot point in the camera rig, to apply shift in position and rotation .")]
         [SerializeField][HideInInspector] private Transform rightHandPivot;
+        
+        [Tooltip("Type of interactor to use for the left hand (Trigger or Ray).")]
         [SerializeField] private HandInteractorType leftHandInteractorType = HandInteractorType.Trigger;
+        
+        [Tooltip("Type of interactor to use for the right hand (Trigger or Ray).")]
         [SerializeField] private HandInteractorType rightHandInteractorType = HandInteractorType.Trigger;
+        
+        [Tooltip("Transform used to offset the camera position and height.")]
         [SerializeField] private Transform offsetObject;
 
+        [Tooltip("The XR camera component for the camera rig.")]
         [SerializeField] private Camera xrCamera;
+        
+        [Tooltip("Height offset for the camera rig (default standing height).")]
         [SerializeField] private float cameraHeight = 1f; // Default standing height
+        
+        [Tooltip("Whether to align the rig's forward direction with the tracking origin.")]
         [SerializeField] private bool alignRigForwardOnTracking = true;
         [Tooltip("If true, initializes layers for the camera rig and hands.")]
         [SerializeField][HideInInspector] private bool initializeLayers = true;
@@ -41,14 +56,19 @@ namespace Shababeek.Interactions.Core
         private HandPoseController _leftPoseController, _rightPoseController;
         /// <summary>
         /// Gets the left hand prefab from the configuration's HandData.
+        /// This prefab is used to instantiate the left hand in the scene when editing the pose constraints.
         /// </summary>
         public HandPoseController LeftHandPrefab => config.HandData.LeftHandPrefab;
+        
         /// <summary>
         /// Gets the right hand prefab from the configuration's HandData.
+        /// This prefab is used to instantiate the right hand in the scene when editing the pose constraints.
         /// </summary>
         public HandPoseController RightHandPrefab => config.HandData.RightHandPrefab;
+        
         /// <summary>
         /// Gets the configuration asset for the camera rig.
+        /// Contains all the settings for hands, layers, and input management.
         /// </summary>
         public Config Config => config;
 
