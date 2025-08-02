@@ -141,4 +141,12 @@ namespace Shababeek.Core
             return Value.GetHashCode();
         }
     }
+    
+    /// <summary>
+    /// A reference that can point to either an IntVariable or use a constant integer value.
+    /// </summary>
+    [System.Serializable]
+    public class IntReference : VariableReference<int>
+    {
+    }
 }

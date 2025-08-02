@@ -93,4 +93,11 @@ namespace Shababeek.Core
             return Value.GetHashCode();
         }
     }
+    
+    /// <summary>
+    /// A reference that can point to either a BoolVariable or use a constant boolean value.
+    /// </summary>
+    [System.Serializable]
+    public class BoolReference : VariableReference<bool>
+    { }
 } 

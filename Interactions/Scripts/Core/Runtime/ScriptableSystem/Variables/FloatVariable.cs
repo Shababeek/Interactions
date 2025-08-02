@@ -136,4 +136,12 @@ namespace Shababeek.Core
             return variable;
         }
     }
+    
+    /// <summary>
+    /// A reference that can point to either a FloatVariable or use a constant float value.
+    /// Provides type-safe float variable handling with UniRx integration.
+    /// </summary>
+    [System.Serializable]
+    public class FloatReference : VariableReference<float>
+    { }
 }
