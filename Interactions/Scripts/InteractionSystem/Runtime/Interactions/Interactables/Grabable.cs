@@ -5,16 +5,40 @@ using Shababeek.Interactions.Core;
 
 namespace Shababeek.Interactions
 {
+    /// <summary>
+    /// Component that enables objects to be grabbed and held by VR hands.
+    /// Manages the grabbing process, hand positioning, and smooth transitions
+    /// between grab states using pose constraints and tweening.
+    /// </summary>
+    /// <remarks>
+    /// This component requires an InteractionPoseConstrainer for proper hand positioning.
+    /// It automatically handles the grab/ungrab process and manages the attachment
+    /// of objects to hand attachment points with smooth animations.
+    /// </remarks>
     [CreateAssetMenu(menuName = "Shababeek/Interactions/Interactables/Grabable")]
     [RequireComponent(typeof(InteractionPoseConstrainer))]
     public class Grabable : InteractableBase
     {
+        [Tooltip("Whether to hide the hand model when this object is grabbed.")]
         [SerializeField] protected bool hideHand;
+        
+        [Tooltip("The tweener component used for smooth grab animations.")]
         [SerializeField] private VariableTweener tweener;
+        
         private readonly TransformTweenable _transformTweenable= new();
         private GrabStrategy _grabStrategy;
         private InteractionPoseConstrainer _poseConstrainer;
+        
+        /// <summary>
+        /// Gets the transform for the right hand's relative position during grabbing.
+        /// </summary>
+        /// <value>The transform representing the right hand's grab position.</value>
         public Transform RightHandRelativePosition => _poseConstrainer.RightHandTransform;
+        
+        /// <summary>
+        /// Gets the transform for the left hand's relative position during grabbing.
+        /// </summary>
+        /// <value>The transform representing the left hand's grab position.</value>
         public Transform LeftHandRelativePosition => _poseConstrainer.LeftHandTransform;
 
         protected override void Activate(){}

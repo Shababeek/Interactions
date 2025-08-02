@@ -9,23 +9,46 @@ namespace Shababeek.Interactions
 {
 
 
+    /// <summary>
+    /// Component that enables realistic throwing behavior for grabbed objects.
+    /// Tracks velocity during grabbing and applies it when the object is released,
+    /// creating natural throwing physics with configurable multipliers.
+    /// </summary>
+    /// <remarks>
+    /// This component requires both a Grabable and Rigidbody component.
+    /// It automatically subscribes to grab events and tracks velocity samples
+    /// during the grab period to calculate realistic throw trajectories.
+    /// </remarks>
     [RequireComponent(typeof(Grabable))]
     [RequireComponent(typeof(Rigidbody))]
     [AddComponentMenu("Shababeek/Interactions/Interactables/Throwable")]
     public class Throwable : MonoBehaviour
     {
         [Header("Throw Settings")]
+        [Tooltip("Number of velocity samples to average for throw calculation. Higher values provide smoother throws but use more memory.")]
         [SerializeField] private int velocitySampleCount = 10;
+        
+        [Tooltip("Multiplier applied to the calculated throw velocity. Values > 1 increase throw force, < 1 decrease it.")]
         [SerializeField] private float throwMultiplier = 1f;
+        
+        [Tooltip("Whether to apply angular velocity (rotation) to the thrown object.")]
         [SerializeField] private bool enableAngularVelocity = true;
+        
+        [Tooltip("Multiplier applied to the calculated angular velocity. Controls how much the object spins when thrown.")]
         [SerializeField] private float angularVelocityMultiplier = 1f;
         
         [Header("Events")]
+        [Tooltip("Event raised when the object is thrown, providing the final throw velocity.")]
         [SerializeField] private Vector3UnityEvent onThrowEnd;
 
         [Header("Debug")]
+        [Tooltip("Indicates whether the object is currently being held and tracked for throwing.")]
         [ReadOnly] [SerializeField] private bool isBeingThrown = false;
+        
+        [Tooltip("The current velocity of the object during tracking.")]
         [ReadOnly] [SerializeField] private Vector3 currentVelocity = Vector3.zero;
+        
+        [Tooltip("The final velocity applied when the object was last thrown.")]
         [ReadOnly] [SerializeField] private Vector3 lastThrowVelocity = Vector3.zero;
 
         private Grabable _grabable;
@@ -38,6 +61,11 @@ namespace Shababeek.Interactions
         private int _sampleCount = 0;
         private float _fixedDeltaTimeInverse;
 
+        /// <summary>
+        /// Observable that fires when the object is thrown.
+        /// Provides the final throw velocity vector for external systems to react to.
+        /// </summary>
+        /// <value>An observable that emits the throw velocity when the object is released.</value>
         public IObservable<Vector3> OnThrowEnd => onThrowEnd.AsObservable();
 
         private void Awake()

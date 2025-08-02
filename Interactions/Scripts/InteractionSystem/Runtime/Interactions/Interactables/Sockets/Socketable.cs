@@ -8,22 +8,56 @@ using UnityEngine.Serialization;
 
 namespace Shababeek.Interactions
 {
+    /// <summary>
+    /// Component that allows objects to be socketed into specific locations.
+    /// Handles socket detection, positioning, and return-to-original-position functionality.
+    /// </summary>
+    /// <remarks>
+    /// This component requires both an InteractableBase and VariableTweener component.
+    /// It automatically detects nearby sockets and handles the socketing process
+    /// with optional smooth return animations.
+    /// </remarks>
     [RequireComponent(typeof(InteractableBase))]
     [RequireComponent(typeof(VariableTweener))]
     public class Socketable : MonoBehaviour
     {
+        [Tooltip("Whether the object should return to its original parent when unsocketed.")]
         [SerializeField] private bool shouldReturnToParent = true;
+        
+        [Tooltip("Whether to use smooth animation when returning to original position.")]
         [SerializeField] private bool useSmoothReturn = true;
+        
+        [Tooltip("Duration of the smooth return animation in seconds.")]
         [SerializeField] private float returnDuration = 0.5f;
+        
+        [Tooltip("Layer mask for socket detection.")]
         [SerializeField] private LayerMask mask;
+        
+        [Tooltip("Renderer used to calculate bounds for socket detection.")]
         [SerializeField] private Renderer boundsRenderer;
+        
+        [Tooltip("Keyboard key for debug socket/unsocket operations.")]
         [SerializeField] private KeyCode debugKey = KeyCode.S;
+        
+        [Tooltip("Whether to automatically find bounds from child renderers.")]
         [SerializeField] private bool findBoundsAutomatically = true;
+        
+        [Tooltip("Custom bounds for socket detection if not using automatic bounds.")]
         [SerializeField] private Bounds bounds;
+        
+        [Tooltip("Rotation to apply when the object is socketed.")]
         [SerializeField] private Vector3 rotationWhenSocketed = Vector3.zero;
+        
+        [Tooltip("Transform used as a visual indicator for socket position.")]
         [SerializeField] private Transform indicator;
+        
+        [Tooltip("Event raised when the object is successfully socketed.")]
         [SerializeField] private UnityEvent onSocketed;
+        
+        [Tooltip("The currently detected socket.")]
         [ReadOnly] [SerializeField] private AbstractSocket socket;
+        
+        [Tooltip("Indicates whether the object is currently socketed.")]
         [ReadOnly] [SerializeField] private bool isSocketed = false;
 
         private Transform _initialParent;
