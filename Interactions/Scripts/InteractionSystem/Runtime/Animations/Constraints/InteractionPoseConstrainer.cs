@@ -12,15 +12,20 @@ namespace Shababeek.Interactions
     [AddComponentMenu("Shababeek/Interactions/Interaction Pose Constrainer")]
     public class InteractionPoseConstrainer : MonoBehaviour, IPoseConstrainer
     {
+        [Tooltip("Constraints for the left hand's position and pose during interactions.")]
         [HideInInspector, SerializeField] private HandConstraints leftConstraints;
+        [Tooltip("Constraints for the right hand's position and pose during interactions.")]
         [HideInInspector, SerializeField] private HandConstraints rightConstraints;
+        [Tooltip("Parent transform for interaction pivot points that define hand positions.")]
         [HideInInspector, SerializeField] private Transform pivotParent;
         private InteractableBase interactable;
+
         public Transform LeftHandTransform
         {
             set => leftConstraints.relativeTransform = value;
             get => leftConstraints.relativeTransform;
         }
+        
         public Transform RightHandTransform
         {
             set => rightConstraints.relativeTransform = value;
