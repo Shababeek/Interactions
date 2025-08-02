@@ -16,7 +16,7 @@ namespace Shababeek.Interactions.Core
         [SerializeField] private HandIdentifier hand;        
         [Tooltip("Reference to the global configuration that contains input manager and system settings.")]
         [SerializeField] private Config config;
-        [Tooltip("The hand model GameObject that will be shown or hidden based on interaction state.")  ]
+        [Tooltip("The hand model GameObject that will be shown or hidden based on interaction state. If not assigned, will be auto-assigned to the first child with any renderer (MeshRenderer, SkinnedMeshRenderer, etc.).")]
         [SerializeField] private GameObject handModel;
         private IPoseable poseDriver;
         
@@ -76,13 +76,38 @@ namespace Shababeek.Interactions.Core
         /// This can be used to hide the hand when it's not needed or when interacting with objects.
         /// </summary>
         /// <param name="enable">True to show the hand model, false to hide it.</param>
-        public void ToggleRenderer(bool enable) => handModel.gameObject.SetActive(enable);
+        public void ToggleRenderer(bool enable) => handModel?.gameObject.SetActive(enable);
 
 
         private void Awake()
         {
             poseDriver = GetComponent<IPoseable>();
-            if (handModel == null) handModel = GetComponentInChildren<MeshRenderer>().gameObject;
+            AutoAssignHandModel();
+        }
+        
+
+        private void AutoAssignHandModel()
+        {
+            if (handModel != null) return;
+            
+            // Try to find any Renderer in children (MeshRenderer, SkinnedMeshRenderer, etc.)
+            Renderer renderer = GetComponentInChildren<Renderer>();
+            if (renderer != null)
+            {
+                handModel = renderer.gameObject;
+            }
+            else
+            {
+                // Fallback: use the first child GameObject
+                if (transform.childCount > 0)
+                {
+                    handModel = transform.GetChild(0).gameObject;
+                }
+                else
+                {
+                    Debug.LogWarning($"Hand component on {gameObject.name} could not find a suitable handModel. Please assign one manually.");
+                }
+            }
         }
 
         /// <summary>
