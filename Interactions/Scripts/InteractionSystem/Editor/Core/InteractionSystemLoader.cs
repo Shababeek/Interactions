@@ -4,7 +4,7 @@ using UnityEditor;
 using UnityEditor.AssetImporters;
 using UnityEngine;
 
-namespace Shababeek.InteractionSystem.Core.Editors
+namespace Shababeek.Interactions.Editors
 {
     /// <summary>
     /// It is used to initialize the input manager, layers, physics, and config file.

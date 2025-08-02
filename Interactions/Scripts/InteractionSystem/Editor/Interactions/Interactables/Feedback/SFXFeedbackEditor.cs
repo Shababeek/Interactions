@@ -2,7 +2,7 @@ using Shababeek.Interactions.Feedback;
 using UnityEngine;
 using UnityEditor;
 
-namespace Shababeek.InteractionSystem.Interactions.Feedback.Editors
+namespace Shababeek.Interactions.Editors
 {
     [CustomEditor(typeof(SFXFeedback))]
     public class SFXFeedbackEditor : UnityEditor.Editor

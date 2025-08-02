@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 
-namespace Shababeek.InteractionSystem.Core.Editors
+namespace Shababeek.Interactions.Editors
 {
     /// <summary>
     /// Utility class providing shared functionality for editor scripts.

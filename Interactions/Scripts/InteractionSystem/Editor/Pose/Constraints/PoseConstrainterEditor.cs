@@ -1,8 +1,8 @@
 using Shababeek.Interactions.Animations;
 using Shababeek.Interactions.Core;
-using Shababeek.InteractionSystem.Animations;
-using Shababeek.InteractionSystem.Core;
-using Shababeek.InteractionSystem.Interactions;
+using Shababeek.Interactions.Animations;
+using Shababeek.Interactions.Core;
+using Shababeek.Interactions;
 using UnityEditor;
 
 namespace Shababeek.Interactions.Editors

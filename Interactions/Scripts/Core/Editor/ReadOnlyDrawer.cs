@@ -2,7 +2,7 @@
 using Shababeek.Core;
 using UnityEditor;
 
-namespace Shababeek.InteractionSystem.Core.Editors
+namespace Shababeek.Interactions.Editors
 {
     [CustomPropertyDrawer(typeof(ReadOnly))]
     public class ReadOnlyDrawer : PropertyDrawer

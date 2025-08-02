@@ -1,7 +1,7 @@
 using Shababeek.Interactions;
 using UnityEditor;
 
-namespace Shababeek.InteractionSystem.Interactions.Editors
+namespace Shababeek.Interactions.Editors
 {
     [CustomEditor(typeof(Grabable))]
     [CanEditMultipleObjects]

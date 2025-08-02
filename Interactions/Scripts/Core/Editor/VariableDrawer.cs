@@ -1,10 +1,11 @@
 using System;
+using Shababeek.Core;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Shababeek.Core.Editors
+namespace Shababeek.Interactions.Editors
 {    public static class Extensions
     {
         public static Type GetDeclaredType<T>(this T obj )

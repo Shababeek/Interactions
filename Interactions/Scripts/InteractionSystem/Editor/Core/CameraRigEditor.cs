@@ -3,7 +3,7 @@ using Shababeek.Interactions.Core;
 using UnityEditor;
 using UnityEngine;
 
-namespace Shababeek.InteractionSystem.Core.Editors
+namespace Shababeek.Interactions.Editors
 {
     [CustomEditor(typeof(CameraRig))]
     public class CameraRigEditor : Editor

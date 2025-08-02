@@ -1,7 +1,7 @@
 ﻿using Shababeek.Interactions.Animations;
 using UnityEditor;
 
-namespace Shababeek.InteractionSystem.Animations.Editors
+namespace Shababeek.Interactions.Editors
 {
     [CustomEditor(typeof(HandData))]
     [CanEditMultipleObjects]

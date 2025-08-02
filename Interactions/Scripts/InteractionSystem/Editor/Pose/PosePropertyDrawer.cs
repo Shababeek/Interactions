@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEditor;
 
-namespace  Shababeek.InteractionSystem.Animations.Editors
+namespace Shababeek.Interactions.Editors
 {
     [CustomPropertyDrawer(typeof(PoseData))]
     public class PosePropertyDrawer : PropertyDrawer

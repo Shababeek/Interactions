@@ -1,7 +1,7 @@
 using Shababeek.Interactions.Animations;
 using Shababeek.Interactions.Animations.Constraints;
 using Shababeek.Interactions.Core;
-using Shababeek.InteractionSystem.Animations;
+using Shababeek.Interactions.Animations;
 using UnityEditor;
 using UnityEngine;
 namespace Shababeek.Interactions.Editors

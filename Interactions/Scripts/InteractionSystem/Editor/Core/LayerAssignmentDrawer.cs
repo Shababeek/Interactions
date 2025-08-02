@@ -2,7 +2,7 @@ using UnityEditor;
 using UnityEngine;
 using Shababeek.Interactions.Core;
 
-namespace Shababeek.InteractionSystem.Core.Editors
+namespace Shababeek.Interactions.Editors
 {
     [CustomPropertyDrawer(typeof(LayerAssignment))]
     public class LayerAssignmentDrawer : PropertyDrawer

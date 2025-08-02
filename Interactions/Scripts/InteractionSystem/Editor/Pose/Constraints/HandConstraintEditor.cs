@@ -2,9 +2,9 @@
 using Shababeek.Interactions.Core;
 using UnityEngine;
 using UnityEditor;
-using Shababeek.InteractionSystem.Animations;
+using Shababeek.Interactions.Animations;
 
-namespace Shababeek.InteractionSystem.Core.Editors
+namespace Shababeek.Interactions.Editors
 {
     [CustomPropertyDrawer(typeof(PoseConstrains))]
     public class PoseConstraintPropertyDrawer : PropertyDrawer

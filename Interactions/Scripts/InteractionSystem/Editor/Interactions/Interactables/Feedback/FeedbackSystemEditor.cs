@@ -2,12 +2,12 @@ using UnityEngine;
 using UnityEditor;
 using UnityEngine.UIElements;
 using UnityEditor.UIElements;
-using Shababeek.InteractionSystem.Interactions.Feedback;
+using Shababeek.Interactions.Feedback;
 using Shababeek.Interactions.Core;
 using System;
 using Shababeek.Interactions.Feedback;
 
-namespace Shababeek.InteractionSystem.Interactions.Feedback.Editors
+namespace Shababeek.Interactions.Editors
 {
     [CustomEditor(typeof(FeedbackSystem))]
     public class FeedbackSystemEditor : Editor

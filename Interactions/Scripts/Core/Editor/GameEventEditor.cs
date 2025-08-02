@@ -1,7 +1,8 @@
+using Shababeek.Core;
 using UnityEditor;
 using UnityEngine;
 
-namespace Shababeek.Core.Editors
+namespace Shababeek.Interactions.Editors
 {
     [CustomEditor(typeof(GameEvent),true)]
     public class GameEventEditor : Editor

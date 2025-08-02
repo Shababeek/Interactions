@@ -4,7 +4,7 @@ using Shababeek.Interactions.Core;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Shababeek.InteractionSystem.Core.Editors
+namespace Shababeek.Interactions.Editors
 {
     [CustomEditor(typeof(Config))]
     public class ConfigEditor : Editor

@@ -2,7 +2,7 @@ using Shababeek.Interactions.Feedback;
 using UnityEditor;
 using UnityEngine.UIElements;
 
-namespace Shababeek.InteractionSystem.Interactions.Feedback.Editors
+namespace Shababeek.Interactions.Editors
 {
     [CustomPropertyDrawer(typeof(FeedbackData))]
 

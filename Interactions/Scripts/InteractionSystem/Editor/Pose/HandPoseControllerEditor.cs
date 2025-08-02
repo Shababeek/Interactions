@@ -2,7 +2,7 @@
 using Shababeek.Interactions.Core;
 using UnityEditor;
 using UnityEngine;
-namespace Shababeek.InteractionSystem.Animations
+namespace Shababeek.Interactions.Editors
 {
     [CustomEditor(typeof(HandPoseController))]
     public class HandAnimationControllerEditor : Editor

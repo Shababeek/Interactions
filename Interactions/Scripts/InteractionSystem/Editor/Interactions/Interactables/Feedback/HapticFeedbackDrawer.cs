@@ -3,7 +3,7 @@ using UnityEditor;
 using UnityEngine.UIElements;
 using UnityEditor.UIElements;
 
-namespace Shababeek.InteractionSystem.Interactions.Feedback.Editors
+namespace Shababeek.Interactions.Editors
 {
     [CustomPropertyDrawer(typeof(HapticFeedback))]
     public class HapticFeedbackDrawer : PropertyDrawer

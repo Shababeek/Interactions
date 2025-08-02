@@ -3,7 +3,7 @@ using Shababeek.Interactions.Core;
 using UnityEditor;
 using UnityEngine;
 
-namespace Shababeek.InteractionSystem.Core
+namespace Shababeek.Interactions.Editors
 {
     public class GameObjectMenuHelpers : Editor
     {

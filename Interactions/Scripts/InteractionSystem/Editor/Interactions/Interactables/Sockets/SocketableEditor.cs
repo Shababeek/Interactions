@@ -1,9 +1,9 @@
 using Shababeek.Interactions;
 using UnityEngine;
 using UnityEditor;
-using Shababeek.InteractionSystem.Interactions;
+using Shababeek.Interactions;
 
-namespace Shababeek.InteractionSystem.Interactions.Editors
+namespace Shababeek.Interactions.Editors
 {
     [CustomEditor(typeof(Socketable))]
     [CanEditMultipleObjects]

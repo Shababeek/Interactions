@@ -3,7 +3,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Shababeek.InteractionSystem.Interactions.Feedback.Editors
+namespace Shababeek.Interactions.Editors
 {
     /// <summary>
     /// Base class for feedback property drawers that provides common functionality

@@ -1,7 +1,7 @@
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
-using Shababeek.InteractionSystem.Interactions;
+using Shababeek.Interactions;
 
 namespace Shababeek.Interactions.Editors
 {

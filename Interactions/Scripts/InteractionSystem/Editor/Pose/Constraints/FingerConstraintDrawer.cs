@@ -4,7 +4,7 @@ using Shababeek.Interactions.Core;
 using UnityEngine;
 using UnityEditor;
 
-namespace Shababeek.InteractionSystem.Core.Editors
+namespace Shababeek.Interactions.Editors
 {
     [CustomPropertyDrawer(typeof(FingerConstraints))]
     //TODO : refactor
