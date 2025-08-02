@@ -7,7 +7,7 @@ namespace Shababeek.Interactions.Core
         Grip,
     }
 
-    public enum ButtonState
+    public enum VRButtonState
     {
         Up,
         Down,

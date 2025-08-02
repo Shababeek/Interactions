@@ -21,8 +21,8 @@ namespace Shababeek.Interactions
         [SerializeField] [ReadOnly] protected bool isInteracting;
         private Hand _hand;
         private Transform _attachmentPoint;
-        private readonly Subject<ButtonState> _onInteractionStateChanged = new();
-        private readonly Subject<ButtonState> _onActivate = new();
+        private readonly Subject<VRButtonState> _onInteractionStateChanged = new();
+        private readonly Subject<VRButtonState> _onActivate = new();
         private IDisposable _hoverSubscriber, _activationSubscriber;
         private Joint _attachmentJoint;
         /// <summary>
@@ -58,11 +58,11 @@ namespace Shababeek.Interactions
                     if (currentInteractable is null) return;
                     switch (state)
                     {
-                        case ButtonState.Up:
+                        case VRButtonState.Up:
                             if (currentInteractable.CurrentState == InteractionState.Selected && currentInteractable.CurrentInteractor == this) OnDeSelect();
 
                             break;
-                        case ButtonState.Down:
+                        case VRButtonState.Down:
                             if (currentInteractable.CurrentState == InteractionState.Hovering) OnSelect();
 
                             break;
@@ -75,7 +75,7 @@ namespace Shababeek.Interactions
                     if (currentInteractable is null) return;
                     switch (state)
                     {
-                        case ButtonState.Down:
+                        case VRButtonState.Down:
                             OnActivate();
                             break;
                     }

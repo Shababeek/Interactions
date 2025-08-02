@@ -22,13 +22,13 @@ namespace Shababeek.Sequencing
             config.InputManager[hand].TriggerObservable
                 .Where(_ => Started)
                 .Where(_ => button == XRButton.Trigger)
-                .Where(state => state == ButtonState.Down)
+                .Where(state => state == VRButtonState.Down)
                 .Do(_=>listener.OnActionCompleted())
                 .Subscribe().AddTo(this);
             config.InputManager[hand].GripObservable
                 .Where(_ => Started)
                 .Where(_ => button == XRButton.Grip)
-                .Where(state => state == ButtonState.Down)
+                .Where(state => state == VRButtonState.Down)
                 .Do(_=>listener.OnActionCompleted())
                 .Subscribe().AddTo(this);
         }

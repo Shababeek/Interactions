@@ -36,14 +36,14 @@ namespace Shababeek.Interactions.Core
         /// Provides real-time updates when the trigger button is pressed or released.
         /// </summary>
         /// <value>An observable that emits ButtonState changes for the trigger button.</value>
-        public IObservable<ButtonState> OnTriggerTriggerButtonStateChange => config.InputManager[hand].TriggerObservable;
+        public IObservable<VRButtonState> OnTriggerTriggerButtonStateChange => config.InputManager[hand].TriggerObservable;
         
         /// <summary>
         /// Observable stream for grip button state changes on this hand.
         /// Provides real-time updates when the grip button is pressed or released.
         /// </summary>
         /// <value>An observable that emits ButtonState changes for the grip button.</value>
-        public IObservable<ButtonState> OnGripButtonStateChange => config.InputManager[hand].GripObservable;
+        public IObservable<VRButtonState> OnGripButtonStateChange => config.InputManager[hand].GripObservable;
         
         /// <summary>
         /// Indexer that provides access to individual finger values by finger name.

@@ -26,10 +26,10 @@ namespace Shababeek.Interactions.Core
         /// </summary>
         public interface IHandInputManager
         {
-            public IObservable<ButtonState> TriggerObservable { get; }
-            public IObservable<ButtonState> GripObservable { get; }
-            public IObservable<ButtonState> AButtonObserver { get; }
-            public IObservable<ButtonState> BButtonObserver { get; }
+            public IObservable<VRButtonState> TriggerObservable { get; }
+            public IObservable<VRButtonState> GripObservable { get; }
+            public IObservable<VRButtonState> AButtonObserver { get; }
+            public IObservable<VRButtonState> BButtonObserver { get; }
             public float this[int index] { get; }
         }
 
@@ -41,10 +41,10 @@ namespace Shababeek.Interactions.Core
             internal readonly ButtonObservable ButtonBObserver = new();
             private readonly float[] _fingers = new float[5];
 
-            public IObservable<ButtonState> TriggerObservable => TriggerObserver.OnStateChanged;
-            public IObservable<ButtonState> GripObservable => GripObserver.OnStateChanged;
-            public IObservable<ButtonState> AButtonObserver => ButtonAObserver.OnStateChanged;
-            public IObservable<ButtonState> BButtonObserver => ButtonBObserver.OnStateChanged;
+            public IObservable<VRButtonState> TriggerObservable => TriggerObserver.OnStateChanged;
+            public IObservable<VRButtonState> GripObservable => GripObserver.OnStateChanged;
+            public IObservable<VRButtonState> AButtonObserver => ButtonAObserver.OnStateChanged;
+            public IObservable<VRButtonState> BButtonObserver => ButtonBObserver.OnStateChanged;
 
             public float this[int index]
             {
