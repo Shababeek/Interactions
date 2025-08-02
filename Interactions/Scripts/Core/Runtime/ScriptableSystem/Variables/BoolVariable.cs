@@ -100,5 +100,7 @@ namespace Shababeek.Core
     /// </summary>
     [System.Serializable]
     public class BoolReference : VariableReference<bool>
-    { }
+    {
+        
+    }
 } 
