@@ -42,10 +42,8 @@ namespace Shababeek.Core
             }
             else
             {
-                // Draw variable reference field
                 var variableProperty = property.FindPropertyRelative("variable");
                 
-                // Check if the variable property is valid
                 if (variableProperty != null)
                 {
                     EditorGUI.PropertyField(contentRect, variableProperty, new GUIContent("Variable"));
