@@ -107,14 +107,9 @@ namespace Shababeek.Interactions
         /// Removes all pose constraints and restores hand visibility.
         /// </summary>
         /// <param name="interactor">The interactor whose hand should be unconstrained.</param>
-        public void RemoveConstraints(InteractorBase interactor)
+        public void RemoveConstraints(Hand hand)
         {
-            var hand = interactor.Hand;
-            
-            // Remove pose constraints
             hand.Unconstrain(this);
-            
-            // Restore hand visibility
             hand.ToggleRenderer(true);
         }
         
