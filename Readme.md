@@ -54,19 +54,19 @@ The **Shababeek Interaction System** is a modular, extensible Unity package for 
 
 ## Documentation
 
-All detailed documentation is located in [`Assets/Shababeek/Documentation`](Assets/Shababeek/Documentation):
+All detailed documentation is located in [`Assets/Shababeek/Documentation`](Documentation):
 
-- [UserManual.md](Assets/Shababeek/Documentation/UserManual.md) — General usage and concepts
-- [GettingStarted.md](Assets/Shababeek/Documentation/GettingStarted.md) — Quick setup and first steps
-- [ComponentReference.md](Assets/Shababeek/Documentation/ComponentReference.md) — Index of all core components
-- [Interactors.md](Assets/Shababeek/Documentation/Interactors.md) — How to use and configure interactors
-- [Interactables.md](Assets/Shababeek/Documentation/Interactables.md) — All interactable types and setup
-- [FeedbackSystem.md](Assets/Shababeek/Documentation/FeedbackSystem.md) — Adding haptic, audio, and visual feedback
-- [ScriptableVariable.md](Assets/Shababeek/Documentation/ScriptableVariable.md) — Using scriptable variables
-- [Sockets.md](Assets/Shababeek/Documentation/Sockets.md) — Using the socket system
-- [HandDataAndPoses.md](Assets/Shababeek/Documentation/HandDataAndPoses.md) — Importing hands and configuring poses
-- [Config.md](Assets/Shababeek/Documentation/Config.md), [Hand.md](Assets/Shababeek/Documentation/Hand.md), etc. — Detailed component manuals
-- [ScriptingReference.md](Assets/Shababeek/Documentation/ScriptingReference.md) — API and code samples
+- [UserManual.md](Documentation/UserManual.md) — General usage and concepts
+- [GettingStarted.md](Documentation/GettingStarted.md) — Quick setup and first steps
+- [ComponentReference.md](Documentation/ComponentReference.md) — Index of all core components
+- [Interactors.md](Documentation/Interactors.md) — How to use and configure interactors
+- [Interactables.md](Documentation/Interactables.md) — All interactable types and setup
+- [FeedbackSystem.md](Documentation/FeedbackSystem.md) — Adding haptic, audio, and visual feedback
+- [ScriptableVariable.md](Documentation/ScriptableVariable.md) — Using scriptable variables
+- [Sockets.md](Documentation/Sockets.md) — Using the socket system
+- [HandDataAndPoses.md](Documentation/HandDataAndPoses.md) — Importing hands and configuring poses
+- [Config.md](Documentation/Config.md), [Hand.md](Documentation/Hand.md), etc. — Detailed component manuals
+- [ScriptingReference.md](Documentation/ScriptingReference.md) — API and code samples
 
 ## Getting Started
 
