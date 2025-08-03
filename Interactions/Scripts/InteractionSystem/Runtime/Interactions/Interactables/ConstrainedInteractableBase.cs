@@ -93,12 +93,7 @@ namespace Shababeek.Interactions
                 Quaternion.Lerp(_fakeHandTransform.localRotation, _currentPivot.rotation, _positionLerper);
         }
 
-        private enum HandConstrainType
-        {
-            HideHand,
-            FreeHand,
-            Constrained
-        }
+
 
         public PoseConstrains LeftPoseConstrains => leftConstraints;
         public PoseConstrains RightPoseConstrains => rightConstraints;
@@ -117,6 +112,11 @@ namespace Shababeek.Interactions
 
         public Transform PivotParent => pivotParent;
         public bool HasChanged => transform.hasChanged;
+        
+        // New interface properties for backward compatibility
+        public HandConstrainType ConstraintType => constraintsType;
+        public bool UseSmoothTransitions => smoothHandTransition;
+        public float TransitionSpeed => 10f;
 
         public void UpdatePivots()
         {
@@ -170,6 +170,50 @@ namespace Shababeek.Interactions
             hand.parent = pivotParent;
             hand.localPosition = Vector3.zero;
             return hand;
+        }
+        
+        /// <summary>
+        /// Applies pose constraints to the specified interactor's hand.
+        /// This method handles all constraint types (Hide, Free, Constrained) and smooth transitions.
+        /// </summary>
+        /// <param name="interactor">The interactor whose hand should be constrained.</param>
+        public void ApplyConstraints(InteractorBase interactor)
+        {
+            // Use the existing Select logic for constraint application
+            if (constraintsType == HandConstrainType.FreeHand) return;
+            
+            interactor.ToggleHandModel(false);
+            if (constraintsType == HandConstrainType.HideHand) return;
+
+            _fakeHandTransform = (interactor.Hand.HandIdentifier == HandIdentifier.Left ? leftHand : rightHand);
+            _fakeHandTransform.gameObject.SetActive(true);
+            _currentPivot = interactor.Hand.HandIdentifier == HandIdentifier.Left ? _leftHandPivot : _rightHandPivot;
+            
+            var interactableTransform = interactor.transform;
+            if (smoothHandTransition)
+            {
+                _fakeHandTransform.position = interactableTransform.position;
+                _fakeHandTransform.rotation = interactableTransform.rotation;
+                _positionLerper = 0;
+            }
+            else
+            {
+                _fakeHandTransform.localRotation = _currentPivot.rotation;
+                _fakeHandTransform.position = _currentPivot.position;
+            }
+        }
+        
+        /// <summary>
+        /// Removes all pose constraints from the specified interactor's hand.
+        /// This method restores the hand to its default state.
+        /// </summary>
+        /// <param name="interactor">The interactor whose hand should be unconstrained.</param>
+        public void RemoveConstraints(InteractorBase interactor)
+        {
+            // Use the existing DeSelected logic for constraint removal
+            interactor.ToggleHandModel(true);
+            leftHand.gameObject.SetActive(false);
+            rightHand.gameObject.SetActive(false);
         }
     }
 }

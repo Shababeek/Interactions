@@ -11,12 +11,12 @@ namespace Shababeek.Interactions
     /// between grab states using pose constraints and tweening.
     /// </summary>
     /// <remarks>
-    /// This component requires an InteractionPoseConstrainer for proper hand positioning.
+    /// This component requires a UnifiedPoseConstraintSystem for proper hand positioning.
     /// It automatically handles the grab/ungrab process and manages the attachment
     /// of objects to hand attachment points with smooth animations.
     /// </remarks>
     [CreateAssetMenu(menuName = "Shababeek/Interactions/Interactables/Grabable")]
-    [RequireComponent(typeof(InteractionPoseConstrainer))]
+    [RequireComponent(typeof(UnifiedPoseConstraintSystem))]
     public class Grabable : InteractableBase
     {
         [Tooltip("Whether to hide the hand model when this object is grabbed.")]
@@ -27,19 +27,31 @@ namespace Shababeek.Interactions
         
         private readonly TransformTweenable _transformTweenable= new();
         private GrabStrategy _grabStrategy;
-        private InteractionPoseConstrainer _poseConstrainer;
+        private UnifiedPoseConstraintSystem _poseConstraintSystem;
         
         /// <summary>
         /// Gets the transform for the right hand's relative position during grabbing.
         /// </summary>
         /// <value>The transform representing the right hand's grab position.</value>
-        public Transform RightHandRelativePosition => _poseConstrainer.RightHandTransform;
+        public Transform RightHandRelativePosition => _poseConstraintSystem.RightHandTransform;
         
         /// <summary>
         /// Gets the transform for the left hand's relative position during grabbing.
         /// </summary>
         /// <value>The transform representing the left hand's grab position.</value>
-        public Transform LeftHandRelativePosition => _poseConstrainer.LeftHandTransform;
+        public Transform LeftHandRelativePosition => _poseConstraintSystem.LeftHandTransform;
+        
+        /// <summary>
+        /// Gets the target position and rotation for the right hand during grabbing.
+        /// </summary>
+        /// <returns>The target position and rotation for the right hand.</returns>
+        public (Vector3 position, Quaternion rotation) GetRightHandTarget() => _poseConstraintSystem.GetTargetHandTransform(HandIdentifier.Right);
+        
+        /// <summary>
+        /// Gets the target position and rotation for the left hand during grabbing.
+        /// </summary>
+        /// <returns>The target position and rotation for the left hand.</returns>
+        public (Vector3 position, Quaternion rotation) GetLeftHandTarget() => _poseConstraintSystem.GetTargetHandTransform(HandIdentifier.Left);
 
         protected override void Activate(){}
         protected override void StartHover(){}
@@ -47,22 +59,27 @@ namespace Shababeek.Interactions
 
         protected override bool Select()
         {
-            if (hideHand) CurrentInteractor.ToggleHandModel(false);
+            // Apply pose constraints and visibility control
+            _poseConstraintSystem.ApplyConstraints(CurrentInteractor);
+            
             _grabStrategy.Initialize(CurrentInteractor);
             InitializeAttachmentPointTransform();
             MoveObjectToPosition(() => _grabStrategy.Grab(this, CurrentInteractor));
             return false;
         }
+        
         protected override void DeSelected()
         {
-            if (hideHand) CurrentInteractor.ToggleHandModel(true);
+            // Remove pose constraints and restore hand visibility
+            _poseConstraintSystem.RemoveConstraints(CurrentInteractor);
+            
             tweener.RemoveTweenable(_transformTweenable);
             _grabStrategy.UnGrab(this, CurrentInteractor);
         }
         
         protected virtual void Awake()
         {
-            _poseConstrainer ??= GetComponent<InteractionPoseConstrainer>();
+            _poseConstraintSystem ??= GetComponent<UnifiedPoseConstraintSystem>();
             tweener ??= GetComponent<VariableTweener>();
             if (!tweener)
             {
@@ -83,13 +100,23 @@ namespace Shababeek.Interactions
         
         private void InitializeAttachmentPointTransform()
         {
-            var relativeTransform = CurrentInteractor.HandIdentifier == HandIdentifier.Left ? LeftHandRelativePosition : RightHandRelativePosition;
-            relativeTransform.parent = null;
-            transform.parent = relativeTransform;
+            // Get target position and rotation for the current hand
+            var (targetPosition, targetRotation) = CurrentInteractor.Hand.HandIdentifier == HandIdentifier.Left ? 
+                GetLeftHandTarget() : GetRightHandTarget();
+            
+            // Create a temporary transform to calculate the attachment point
+            var tempTransform = new GameObject("TempAttachment").transform;
+            tempTransform.position = targetPosition;
+            tempTransform.rotation = targetRotation;
+            
+            // Calculate the attachment point relative to the target
+            transform.parent = tempTransform;
             CurrentInteractor.AttachmentPoint.localPosition = transform.localPosition;
             CurrentInteractor.AttachmentPoint.localRotation = transform.localRotation;
             transform.parent = null;
-            relativeTransform.parent = _poseConstrainer.PivotParent;
+            
+            // Clean up temporary transform
+            DestroyImmediate(tempTransform.gameObject);
         }
 
         private void MoveObjectToPosition(Action callBack)
