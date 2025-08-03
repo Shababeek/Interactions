@@ -9,54 +9,54 @@ namespace Shababeek.Interactions.Editors
     [CanEditMultipleObjects]
     public class DrawerInteractableEditor : Editor
     {
-        private static bool editDrawerRange = false;
-        private bool showEvents = true;
+        private static bool _editDrawerRange = false;
+        private bool _showEvents = true;
 
         // Editable properties
-        private SerializedProperty interactionHandProp;
-        private SerializedProperty selectionButtonProp;
-        private SerializedProperty interactableObjectProp;
-        private SerializedProperty snapDistanceProp;
-        private SerializedProperty localStartProp;
-        private SerializedProperty localEndProp;
-        private SerializedProperty returnToOriginalProp;
-        private SerializedProperty returnSpeedProp;
+        private SerializedProperty _interactionHandProp;
+        private SerializedProperty _selectionButtonProp;
+        private SerializedProperty _interactableObjectProp;
+        private SerializedProperty _snapDistanceProp;
+        private SerializedProperty _localStartProp;
+        private SerializedProperty _localEndProp;
+        private SerializedProperty _returnToOriginalProp;
+        private SerializedProperty _returnSpeedProp;
 
         // Events
-        private SerializedProperty onSelectedProp;
-        private SerializedProperty onDeselectedProp;
-        private SerializedProperty onHoverStartProp;
-        private SerializedProperty onHoverEndProp;
-        private SerializedProperty onActivatedProp;
-        private SerializedProperty onMovedProp;
+        private SerializedProperty _onSelectedProp;
+        private SerializedProperty _onDeselectedProp;
+        private SerializedProperty _onHoverStartProp;
+        private SerializedProperty _onHoverEndProp;
+        private SerializedProperty _onActivatedProp;
+        private SerializedProperty _onMovedProp;
 
-        private SerializedProperty onLimitReachedProp;
+        private SerializedProperty _onLimitReachedProp;
 
         // Read-only
-        private SerializedProperty isSelectedProp;
-        private SerializedProperty currentInteractorProp;
-        private SerializedProperty currentStateProp;
+        private SerializedProperty _isSelectedProp;
+        private SerializedProperty _currentInteractorProp;
+        private SerializedProperty _currentStateProp;
 
         protected  void OnEnable()
         {
-            interactionHandProp = serializedObject.FindProperty("interactionHand");
-            selectionButtonProp = serializedObject.FindProperty("selectionButton");
-            interactableObjectProp = serializedObject.FindProperty("interactableObject");
-            snapDistanceProp = serializedObject.FindProperty("snapDistance");
-            localStartProp = serializedObject.FindProperty("_localStart");
-            localEndProp = serializedObject.FindProperty("_localEnd");
-            returnToOriginalProp = serializedObject.FindProperty("returnToOriginal");
-            returnSpeedProp = serializedObject.FindProperty("returnSpeed");
-            onSelectedProp = serializedObject.FindProperty("onSelected");
-            onDeselectedProp = serializedObject.FindProperty("onDeselected");
-            onHoverStartProp = serializedObject.FindProperty("onHoverStart");
-            onHoverEndProp = serializedObject.FindProperty("onHoverEnd");
-            onActivatedProp = serializedObject.FindProperty("onActivated");
-            onMovedProp = serializedObject.FindProperty("onMoved");
-            onLimitReachedProp = serializedObject.FindProperty("onLimitReached");
-            isSelectedProp = serializedObject.FindProperty("isSelected");
-            currentInteractorProp = serializedObject.FindProperty("currentInteractor");
-            currentStateProp = serializedObject.FindProperty("currentState");
+            _interactionHandProp = serializedObject.FindProperty("interactionHand");
+            _selectionButtonProp = serializedObject.FindProperty("selectionButton");
+            _interactableObjectProp = serializedObject.FindProperty("interactableObject");
+            _snapDistanceProp = serializedObject.FindProperty("snapDistance");
+            _localStartProp = serializedObject.FindProperty("_localStart");
+            _localEndProp = serializedObject.FindProperty("_localEnd");
+            _returnToOriginalProp = serializedObject.FindProperty("returnToOriginal");
+            _returnSpeedProp = serializedObject.FindProperty("returnSpeed");
+            _onSelectedProp = serializedObject.FindProperty("onSelected");
+            _onDeselectedProp = serializedObject.FindProperty("onDeselected");
+            _onHoverStartProp = serializedObject.FindProperty("onHoverStart");
+            _onHoverEndProp = serializedObject.FindProperty("onHoverEnd");
+            _onActivatedProp = serializedObject.FindProperty("onActivated");
+            _onMovedProp = serializedObject.FindProperty("onMoved");
+            _onLimitReachedProp = serializedObject.FindProperty("onLimitReached");
+            _isSelectedProp = serializedObject.FindProperty("isSelected");
+            _currentInteractorProp = serializedObject.FindProperty("currentInteractor");
+            _currentStateProp = serializedObject.FindProperty("currentState");
         }
 
         public override void OnInspectorGUI()
@@ -68,58 +68,57 @@ namespace Shababeek.Interactions.Editors
             );
             serializedObject.Update();
             DoEditButton();
-            // Editable properties
-            if (interactionHandProp != null)
-                EditorGUILayout.PropertyField(interactionHandProp);
-            if (selectionButtonProp != null)
-                EditorGUILayout.PropertyField(selectionButtonProp);
-            if (interactableObjectProp != null)
-                EditorGUILayout.PropertyField(interactableObjectProp, new GUIContent("Interactable Object"));
-            if (snapDistanceProp != null)
-                EditorGUILayout.PropertyField(snapDistanceProp);
-            if (localStartProp != null)
-                EditorGUILayout.PropertyField(localStartProp);
-            if (localEndProp != null)
-                EditorGUILayout.PropertyField(localEndProp);
-            if (returnToOriginalProp != null)
-                EditorGUILayout.PropertyField(returnToOriginalProp, new GUIContent("Return to Original Position"));
-            if (returnSpeedProp != null)
-                EditorGUILayout.PropertyField(returnSpeedProp, new GUIContent("Return Speed"));
+            if (_interactionHandProp != null)
+                EditorGUILayout.PropertyField(_interactionHandProp);
+            if (_selectionButtonProp != null)
+                EditorGUILayout.PropertyField(_selectionButtonProp);
+            if (_interactableObjectProp != null)
+                EditorGUILayout.PropertyField(_interactableObjectProp, new GUIContent("Interactable Object"));
+            if (_snapDistanceProp != null)
+                EditorGUILayout.PropertyField(_snapDistanceProp);
+            if (_localStartProp != null)
+                EditorGUILayout.PropertyField(_localStartProp);
+            if (_localEndProp != null)
+                EditorGUILayout.PropertyField(_localEndProp);
+            if (_returnToOriginalProp != null)
+                EditorGUILayout.PropertyField(_returnToOriginalProp, new GUIContent("Return to Original Position"));
+            if (_returnSpeedProp != null)
+                EditorGUILayout.PropertyField(_returnSpeedProp, new GUIContent("Return Speed"));
             // Events foldout
-            showEvents = EditorGUILayout.BeginFoldoutHeaderGroup(showEvents, "Events");
-            if (showEvents)
+            _showEvents = EditorGUILayout.BeginFoldoutHeaderGroup(_showEvents, "Events");
+            if (_showEvents)
             {
-                if (onSelectedProp != null)
-                    EditorGUILayout.PropertyField(onSelectedProp);
-                if (onDeselectedProp != null)
-                    EditorGUILayout.PropertyField(onDeselectedProp);
-                if (onHoverStartProp != null)
-                    EditorGUILayout.PropertyField(onHoverStartProp);
-                if (onHoverEndProp != null)
-                    EditorGUILayout.PropertyField(onHoverEndProp);
-                if (onActivatedProp != null)
-                    EditorGUILayout.PropertyField(onActivatedProp);
-                if (onMovedProp != null)
-                    EditorGUILayout.PropertyField(onMovedProp);
-                if (onLimitReachedProp != null)
-                    EditorGUILayout.PropertyField(onLimitReachedProp);
+                if (_onSelectedProp != null)
+                    EditorGUILayout.PropertyField(_onSelectedProp);
+                if (_onDeselectedProp != null)
+                    EditorGUILayout.PropertyField(_onDeselectedProp);
+                if (_onHoverStartProp != null)
+                    EditorGUILayout.PropertyField(_onHoverStartProp);
+                if (_onHoverEndProp != null)
+                    EditorGUILayout.PropertyField(_onHoverEndProp);
+                if (_onActivatedProp != null)
+                    EditorGUILayout.PropertyField(_onActivatedProp);
+                if (_onMovedProp != null)
+                    EditorGUILayout.PropertyField(_onMovedProp);
+                if (_onLimitReachedProp != null)
+                    EditorGUILayout.PropertyField(_onLimitReachedProp);
             }
 
             EditorGUILayout.EndFoldoutHeaderGroup();
 
             #region ReadOnly
             EditorGUI.BeginDisabledGroup(true);
-            if (isSelectedProp != null)
+            if (_isSelectedProp != null)
 
-                EditorGUILayout.PropertyField(isSelectedProp);
+                EditorGUILayout.PropertyField(_isSelectedProp);
 
-            if (currentInteractorProp != null)
+            if (_currentInteractorProp != null)
 
-                EditorGUILayout.PropertyField(currentInteractorProp);
+                EditorGUILayout.PropertyField(_currentInteractorProp);
 
-            if (currentStateProp != null)
+            if (_currentStateProp != null)
 
-                EditorGUILayout.PropertyField(currentStateProp);
+                EditorGUILayout.PropertyField(_currentStateProp);
 
             EditorGUI.EndDisabledGroup();
             serializedObject.ApplyModifiedProperties();
@@ -130,7 +129,7 @@ namespace Shababeek.Interactions.Editors
         private static void DoEditButton()
         {
             EditorGUILayout.Space();
-            var icon = EditorGUIUtility.IconContent(editDrawerRange ? "d_EditCollider" : "EditCollider");
+            var icon = EditorGUIUtility.IconContent(_editDrawerRange ? "d_EditCollider" : "EditCollider");
             var iconButtonStyle = new GUIStyle(GUI.skin.button)
             {
                 fixedWidth = 32,
@@ -138,17 +137,17 @@ namespace Shababeek.Interactions.Editors
                 padding = new RectOffset(2, 2, 2, 2)
             };
             Color prevColor = GUI.color;
-            if (editDrawerRange)
+            if (_editDrawerRange)
                 GUI.color = Color.green;
             if (GUILayout.Button(icon, iconButtonStyle))
-                editDrawerRange = !editDrawerRange;
+                _editDrawerRange = !_editDrawerRange;
             GUI.color = prevColor;
             EditorGUILayout.Space();
         }
 
         protected  void OnSceneGUI()
         {
-            if (!editDrawerRange) return;
+            if (!_editDrawerRange) return;
             var drawer = (DrawerInteractable)target;
             Transform t = drawer.transform;
             Undo.RecordObject(drawer, "Move Drawer Points");

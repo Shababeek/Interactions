@@ -8,40 +8,40 @@ namespace Shababeek.Interactions.Editors
     public class WheelInteractableEditor : Editor
     {
         // Events
-        private SerializedProperty onWheelRotatedProp;
-        private SerializedProperty onSelectedProp;
-        private SerializedProperty onDeselectedProp;
-        private SerializedProperty onHoverStartProp;
-        private SerializedProperty onHoverEndProp;
-        private SerializedProperty onActivatedProp;
+        private SerializedProperty _onWheelRotatedProp;
+        private SerializedProperty _onSelectedProp;
+        private SerializedProperty _onDeselectedProp;
+        private SerializedProperty _onHoverStartProp;
+        private SerializedProperty _onHoverEndProp;
+        private SerializedProperty _onActivatedProp;
         // Read-only
-        private SerializedProperty currentRotationProp;
-        private SerializedProperty isSelectedProp;
-        private SerializedProperty currentInteractorProp;
-        private SerializedProperty currentStateProp;
+        private SerializedProperty _currentRotationProp;
+        private SerializedProperty _isSelectedProp;
+        private SerializedProperty _currentInteractorProp;
+        private SerializedProperty _currentStateProp;
         // Editable properties
-        private SerializedProperty interactionHandProp;
-        private SerializedProperty selectionButtonProp;
-        private SerializedProperty interactableObjectProp;
-        private SerializedProperty snapDistanceProp;
-        private bool showEvents = true;
+        private SerializedProperty _interactionHandProp;
+        private SerializedProperty _selectionButtonProp;
+        private SerializedProperty _interactableObjectProp;
+        private SerializedProperty _snapDistanceProp;
+        private bool _showEvents = true;
 
         protected  void OnEnable()
         {
-            onWheelRotatedProp = serializedObject.FindProperty("onWheelRotated");
-            onSelectedProp = serializedObject.FindProperty("onSelected");
-            onDeselectedProp = serializedObject.FindProperty("onDeselected");
-            onHoverStartProp = serializedObject.FindProperty("onHoverStart");
-            onHoverEndProp = serializedObject.FindProperty("onHoverEnd");
-            onActivatedProp = serializedObject.FindProperty("onActivated");
-            currentRotationProp = serializedObject.FindProperty("currentRotation");
-            isSelectedProp = serializedObject.FindProperty("isSelected");
-            currentInteractorProp = serializedObject.FindProperty("currentInteractor");
-            currentStateProp = serializedObject.FindProperty("currentState");
-            interactionHandProp = serializedObject.FindProperty("interactionHand");
-            selectionButtonProp = serializedObject.FindProperty("selectionButton");
-            interactableObjectProp = serializedObject.FindProperty("interactableObject");
-            snapDistanceProp = serializedObject.FindProperty("snapDistance");
+            _onWheelRotatedProp = serializedObject.FindProperty("onWheelRotated");
+            _onSelectedProp = serializedObject.FindProperty("onSelected");
+            _onDeselectedProp = serializedObject.FindProperty("onDeselected");
+            _onHoverStartProp = serializedObject.FindProperty("onHoverStart");
+            _onHoverEndProp = serializedObject.FindProperty("onHoverEnd");
+            _onActivatedProp = serializedObject.FindProperty("onActivated");
+            _currentRotationProp = serializedObject.FindProperty("currentRotation");
+            _isSelectedProp = serializedObject.FindProperty("isSelected");
+            _currentInteractorProp = serializedObject.FindProperty("currentInteractor");
+            _currentStateProp = serializedObject.FindProperty("currentState");
+            _interactionHandProp = serializedObject.FindProperty("interactionHand");
+            _selectionButtonProp = serializedObject.FindProperty("selectionButton");
+            _interactableObjectProp = serializedObject.FindProperty("interactableObject");
+            _snapDistanceProp = serializedObject.FindProperty("snapDistance");
         }
 
         public override void OnInspectorGUI()
@@ -53,42 +53,42 @@ namespace Shababeek.Interactions.Editors
             );
             serializedObject.Update();
             // Editable properties
-            if (interactionHandProp != null)
-                EditorGUILayout.PropertyField(interactionHandProp);
-            if (selectionButtonProp != null)
-                EditorGUILayout.PropertyField(selectionButtonProp);
-            if (interactableObjectProp != null)
-                EditorGUILayout.PropertyField(interactableObjectProp, new GUIContent("Interactable Object"));
-            if (snapDistanceProp != null)
-                EditorGUILayout.PropertyField(snapDistanceProp);
+            if (_interactionHandProp != null)
+                EditorGUILayout.PropertyField(_interactionHandProp);
+            if (_selectionButtonProp != null)
+                EditorGUILayout.PropertyField(_selectionButtonProp);
+            if (_interactableObjectProp != null)
+                EditorGUILayout.PropertyField(_interactableObjectProp, new GUIContent("Interactable Object"));
+            if (_snapDistanceProp != null)
+                EditorGUILayout.PropertyField(_snapDistanceProp);
             // Events foldout
-            showEvents = EditorGUILayout.BeginFoldoutHeaderGroup(showEvents, "Events");
-            if (showEvents)
+            _showEvents = EditorGUILayout.BeginFoldoutHeaderGroup(_showEvents, "Events");
+            if (_showEvents)
             {
-                if (onWheelRotatedProp != null)
-                    EditorGUILayout.PropertyField(onWheelRotatedProp);
-                if (onSelectedProp != null)
-                    EditorGUILayout.PropertyField(onSelectedProp);
-                if (onDeselectedProp != null)
-                    EditorGUILayout.PropertyField(onDeselectedProp);
-                if (onHoverStartProp != null)
-                    EditorGUILayout.PropertyField(onHoverStartProp);
-                if (onHoverEndProp != null)
-                    EditorGUILayout.PropertyField(onHoverEndProp);
-                if (onActivatedProp != null)
-                    EditorGUILayout.PropertyField(onActivatedProp);
+                if (_onWheelRotatedProp != null)
+                    EditorGUILayout.PropertyField(_onWheelRotatedProp);
+                if (_onSelectedProp != null)
+                    EditorGUILayout.PropertyField(_onSelectedProp);
+                if (_onDeselectedProp != null)
+                    EditorGUILayout.PropertyField(_onDeselectedProp);
+                if (_onHoverStartProp != null)
+                    EditorGUILayout.PropertyField(_onHoverStartProp);
+                if (_onHoverEndProp != null)
+                    EditorGUILayout.PropertyField(_onHoverEndProp);
+                if (_onActivatedProp != null)
+                    EditorGUILayout.PropertyField(_onActivatedProp);
             }
             EditorGUILayout.EndFoldoutHeaderGroup();
             // Read-only fields at the end
             EditorGUI.BeginDisabledGroup(true);
-            if (currentRotationProp != null)
-                EditorGUILayout.PropertyField(currentRotationProp);
-            if (isSelectedProp != null)
-                EditorGUILayout.PropertyField(isSelectedProp);
-            if (currentInteractorProp != null)
-                EditorGUILayout.PropertyField(currentInteractorProp);
-            if (currentStateProp != null)
-                EditorGUILayout.PropertyField(currentStateProp);
+            if (_currentRotationProp != null)
+                EditorGUILayout.PropertyField(_currentRotationProp);
+            if (_isSelectedProp != null)
+                EditorGUILayout.PropertyField(_isSelectedProp);
+            if (_currentInteractorProp != null)
+                EditorGUILayout.PropertyField(_currentInteractorProp);
+            if (_currentStateProp != null)
+                EditorGUILayout.PropertyField(_currentStateProp);
             EditorGUI.EndDisabledGroup();
             serializedObject.ApplyModifiedProperties();
         }

@@ -11,6 +11,8 @@ namespace Shababeek.Interactions.Editors
     {
         private UnifiedPoseConstraintSystem _constraintSystem;
         private SerializedProperty _constraintTypeProperty;
+        private SerializedProperty _useSmoothTransitionsProperty;
+        private SerializedProperty _transitionSpeedProperty;
         private SerializedProperty _leftPoseConstraintsProperty;
         private SerializedProperty _rightPoseConstraintsProperty;
         private SerializedProperty _leftHandPositioningProperty;
@@ -29,6 +31,8 @@ namespace Shababeek.Interactions.Editors
             _constraintSystem = (UnifiedPoseConstraintSystem)target;
 
             _constraintTypeProperty = serializedObject.FindProperty("constraintType");
+            _useSmoothTransitionsProperty = serializedObject.FindProperty("useSmoothTransitions");
+            _transitionSpeedProperty = serializedObject.FindProperty("transitionSpeed");
             _leftPoseConstraintsProperty = serializedObject.FindProperty("leftPoseConstraints");
             _rightPoseConstraintsProperty = serializedObject.FindProperty("rightPoseConstraints");
             _leftHandPositioningProperty = serializedObject.FindProperty("leftHandPositioning");
@@ -73,6 +77,34 @@ namespace Shababeek.Interactions.Editors
         private void DrawConstraintType()
         {
             EditorGUILayout.PropertyField(_constraintTypeProperty, new GUIContent("Hand Constraint Type"));
+            
+            // Smooth transition settings
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Transition Settings", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(_useSmoothTransitionsProperty, new GUIContent("Use Smooth Transitions"));
+            
+            if (_useSmoothTransitionsProperty.boolValue)
+            {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(_transitionSpeedProperty, new GUIContent("Transition Speed"));
+                
+                // Validate transition speed
+                if (_transitionSpeedProperty.floatValue <= 0)
+                {
+                    EditorGUILayout.HelpBox("Transition speed must be greater than 0 for smooth transitions to work.", MessageType.Warning);
+                }
+                
+                EditorGUI.indentLevel--;
+                EditorGUILayout.HelpBox(
+                    "When enabled, hands will smoothly transition to their target positions instead of instantly appearing.\n\n" +
+                    "Smooth transitions are useful for:\n" +
+                    "• More natural hand movements\n" +
+                    "• Reducing jarring visual changes\n" +
+                    "• Better user experience in VR\n\n" +
+                    "Higher transition speeds make the movement faster.",
+                    MessageType.Info);
+            }
+            
             switch ((HandConstrainType)_constraintTypeProperty.enumValueIndex)
             {
                 case HandConstrainType.HideHand:

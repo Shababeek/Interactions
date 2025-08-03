@@ -108,16 +108,16 @@ namespace Shababeek.Interactions.Editors
 
         private static void DestroyOldRigAndCamera()
         {
-            var rig = FindFirstObjectByType<CameraRig>();
-            if (rig) Destroy(rig.gameObject);
+            var rig = Object.FindFirstObjectByType<CameraRig>();
+            if (rig) Object.Destroy(rig.gameObject);
             else
             {
-                var cameras = FindObjectsByType<Camera>(FindObjectsSortMode.None);
+                var cameras = Object.FindObjectsByType<Camera>(FindObjectsSortMode.None);
                 foreach (var camera in cameras)
                 {
                     if (camera.CompareTag("MainCamera"))
                     {
-                        Destroy(camera.gameObject);
+                        Object.Destroy(camera.gameObject);
                     }
                 }
             }

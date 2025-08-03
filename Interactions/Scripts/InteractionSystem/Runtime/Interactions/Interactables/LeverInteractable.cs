@@ -16,17 +16,18 @@ namespace Shababeek.Interactions
     public class LeverInteractable : ConstrainedInteractableBase
     {
         public IObservable<float> OnLeverChanged => onLeverChanged.AsObservable();
-        
-        [SerializeField] private bool returnToOriginal;
-        
-        [SerializeField,MinMax(-180,-1)] private float min = -40;
-        [SerializeField,MinMax(1,180)] private float max = 40;
+
+
+        [SerializeField, MinMax(-180, -1)] private float min = -40;
+        [SerializeField, MinMax(1, 180)] private float max = 40;
         [SerializeField] public RotationAxis rotationAxis = RotationAxis.Right;
-        [SerializeField] private FloatUnityEvent onLeverChanged=new();
+        [SerializeField] private FloatUnityEvent onLeverChanged = new();
+        [SerializeField] private bool returnToOriginal;
 
         [ReadOnly] [SerializeField] private float currentNormalizedAngle = 0;
         private float _oldNormalizedAngle = 0;
         private Quaternion _originalRotation;
+
         public float Min
         {
             get => min;
@@ -63,7 +64,7 @@ namespace Shababeek.Interactions
         protected override void HandleObjectMovement()
         {
             if (!IsSelected) return;
-            
+
             var (plane, normal) = GetRotationAxis();
             Rotate(CalculateAngle(plane, normal));
             InvokeEvents();
@@ -109,7 +110,7 @@ namespace Shababeek.Interactions
             onLeverChanged.Invoke(currentNormalizedAngle);
         }
 
-        private float CalculateAngle(Vector3 plane,Vector3 normal)
+        private float CalculateAngle(Vector3 plane, Vector3 normal)
         {
             var direction = CurrentInteractor.transform.position - transform.position;
             direction = Vector3.ProjectOnPlane(direction, -plane).normalized;
@@ -118,7 +119,7 @@ namespace Shababeek.Interactions
         }
 
 
-        public (Vector3 plane,Vector3 normal) GetRotationAxis()
+        public (Vector3 plane, Vector3 normal) GetRotationAxis()
         {
             return rotationAxis switch
             {

@@ -41,6 +41,12 @@ namespace Shababeek.Interactions
         [Tooltip("The type of constraint to apply to hands during interaction.")]
         [SerializeField] private HandConstrainType constraintType = HandConstrainType.Constrained;
         
+        [Tooltip("Whether to use smooth transitions when positioning hands.")]
+        [SerializeField] private bool useSmoothTransitions = false;
+        
+        [Tooltip("Speed of smooth transitions (units per second).")]
+        [SerializeField] private float transitionSpeed = 10f;
+        
         [Header("Pose Constraints")]
         [Tooltip("Constraints for the left hand's pose during interactions.")]
         [SerializeField] private PoseConstrains leftPoseConstraints;
@@ -76,8 +82,8 @@ namespace Shababeek.Interactions
         
         // Interface properties
         public HandConstrainType ConstraintType => constraintType;
-        public bool UseSmoothTransitions => false;
-        public float TransitionSpeed => 10f;
+        public bool UseSmoothTransitions => useSmoothTransitions;
+        public float TransitionSpeed => transitionSpeed;
         
         /// <summary>
         /// Applies pose constraints and visibility control to the specified interactor's hand.

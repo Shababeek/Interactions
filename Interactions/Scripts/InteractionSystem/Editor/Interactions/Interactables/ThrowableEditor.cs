@@ -7,34 +7,32 @@ namespace Shababeek.Interactions.Editors
     [CanEditMultipleObjects]
     public class ThrowableEditor : Editor
     {
-        private SerializedProperty velocitySampleCountProp;
-        private SerializedProperty throwMultiplierProp;
-        private SerializedProperty enableAngularVelocityProp;
-        private SerializedProperty angularVelocityMultiplierProp;
+        private SerializedProperty _velocitySampleCountProp;
+        private SerializedProperty _throwMultiplierProp;
+        private SerializedProperty _enableAngularVelocityProp;
+        private SerializedProperty _angularVelocityMultiplierProp;
         
-        // Events
-        private SerializedProperty onThrowEndProp;
+        private SerializedProperty _onThrowEndProp;
         
-        // Debug
-        private SerializedProperty isBeingThrownProp;
-        private SerializedProperty currentVelocityProp;
-        private SerializedProperty lastThrowVelocityProp;
+        private SerializedProperty _isBeingThrownProp;
+        private SerializedProperty _currentVelocityProp;
+        private SerializedProperty _lastThrowVelocityProp;
         
-        private bool showEvents = true;
-        private bool showDebug = true;
+        private bool _showEvents = true;
+        private bool _showDebug = true;
 
         protected void OnEnable()
         {
-            velocitySampleCountProp = serializedObject.FindProperty("velocitySampleCount");
-            throwMultiplierProp = serializedObject.FindProperty("throwMultiplier");
-            enableAngularVelocityProp = serializedObject.FindProperty("enableAngularVelocity");
-            angularVelocityMultiplierProp = serializedObject.FindProperty("angularVelocityMultiplier");
+            _velocitySampleCountProp = serializedObject.FindProperty("velocitySampleCount");
+            _throwMultiplierProp = serializedObject.FindProperty("throwMultiplier");
+            _enableAngularVelocityProp = serializedObject.FindProperty("enableAngularVelocity");
+            _angularVelocityMultiplierProp = serializedObject.FindProperty("angularVelocityMultiplier");
             
-            onThrowEndProp = serializedObject.FindProperty("onThrowEnd");
+            _onThrowEndProp = serializedObject.FindProperty("onThrowEnd");
             
-            isBeingThrownProp = serializedObject.FindProperty("isBeingThrown");
-            currentVelocityProp = serializedObject.FindProperty("currentVelocity");
-            lastThrowVelocityProp = serializedObject.FindProperty("lastThrowVelocity");
+            _isBeingThrownProp = serializedObject.FindProperty("isBeingThrown");
+            _currentVelocityProp = serializedObject.FindProperty("currentVelocity");
+            _lastThrowVelocityProp = serializedObject.FindProperty("lastThrowVelocity");
         }
 
         public override void OnInspectorGUI()
@@ -48,35 +46,35 @@ namespace Shababeek.Interactions.Editors
             
             // Throw Settings
             EditorGUILayout.LabelField("Throw Settings", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(velocitySampleCountProp, new GUIContent("Velocity Sample Count"));
-            EditorGUILayout.PropertyField(throwMultiplierProp, new GUIContent("Throw Multiplier"));
-            EditorGUILayout.PropertyField(enableAngularVelocityProp, new GUIContent("Enable Angular Velocity"));
+            EditorGUILayout.PropertyField(_velocitySampleCountProp, new GUIContent("Velocity Sample Count"));
+            EditorGUILayout.PropertyField(_throwMultiplierProp, new GUIContent("Throw Multiplier"));
+            EditorGUILayout.PropertyField(_enableAngularVelocityProp, new GUIContent("Enable Angular Velocity"));
             
-            if (enableAngularVelocityProp.boolValue)
+            if (_enableAngularVelocityProp.boolValue)
             {
                 EditorGUI.indentLevel++;
-                EditorGUILayout.PropertyField(angularVelocityMultiplierProp, new GUIContent("Angular Velocity Multiplier"));
+                EditorGUILayout.PropertyField(_angularVelocityMultiplierProp, new GUIContent("Angular Velocity Multiplier"));
                 EditorGUI.indentLevel--;
             }
             
             EditorGUILayout.Space();
             
             // Events
-            showEvents = EditorGUILayout.BeginFoldoutHeaderGroup(showEvents, "Events");
-            if (showEvents)
+            _showEvents = EditorGUILayout.BeginFoldoutHeaderGroup(_showEvents, "Events");
+            if (_showEvents)
             {
-                EditorGUILayout.PropertyField(onThrowEndProp, new GUIContent("On Throw End"));
+                EditorGUILayout.PropertyField(_onThrowEndProp, new GUIContent("On Throw End"));
             }
             EditorGUILayout.EndFoldoutHeaderGroup();
             
             // Debug Information
-            showDebug = EditorGUILayout.BeginFoldoutHeaderGroup(showDebug, "Debug Information");
-            if (showDebug)
+            _showDebug = EditorGUILayout.BeginFoldoutHeaderGroup(_showDebug, "Debug Information");
+            if (_showDebug)
             {
                 EditorGUI.BeginDisabledGroup(true);
-                EditorGUILayout.PropertyField(isBeingThrownProp, new GUIContent("Is Being Thrown"));
-                EditorGUILayout.PropertyField(currentVelocityProp, new GUIContent("Current Velocity"));
-                EditorGUILayout.PropertyField(lastThrowVelocityProp, new GUIContent("Last Throw Velocity"));
+                EditorGUILayout.PropertyField(_isBeingThrownProp, new GUIContent("Is Being Thrown"));
+                EditorGUILayout.PropertyField(_currentVelocityProp, new GUIContent("Current Velocity"));
+                EditorGUILayout.PropertyField(_lastThrowVelocityProp, new GUIContent("Last Throw Velocity"));
                 EditorGUI.EndDisabledGroup();
             }
             EditorGUILayout.EndFoldoutHeaderGroup();

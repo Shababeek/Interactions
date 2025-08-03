@@ -7,43 +7,43 @@ namespace Shababeek.Interactions.Editors
     [CanEditMultipleObjects]
     public class GrabableEditor : Editor
     {
-        private bool showEvents = true;
+        private bool _showEvents = true;
 
         // Editable properties
-        private SerializedProperty hideHandProp;
-        private SerializedProperty tweenerProp;
-        private SerializedProperty interactionHandProp;
+        private SerializedProperty _hideHandProp;
+        private SerializedProperty _tweenerProp;
+        private SerializedProperty _interactionHandProp;
 
-        private SerializedProperty selectionButtonProp;
+        private SerializedProperty _selectionButtonProp;
 
         // Events
-        private SerializedProperty onSelectedProp;
-        private SerializedProperty onDeselectedProp;
-        private SerializedProperty onHoverStartProp;
-        private SerializedProperty onHoverEndProp;
+        private SerializedProperty _onSelectedProp;
+        private SerializedProperty _onDeselectedProp;
+        private SerializedProperty _onHoverStartProp;
+        private SerializedProperty _onHoverEndProp;
 
-        private SerializedProperty onActivatedProp;
+        private SerializedProperty _onActivatedProp;
 
         // Read-only
-        private SerializedProperty isSelectedProp;
-        private SerializedProperty currentInteractorProp;
-        private SerializedProperty currentStateProp;
+        private SerializedProperty _isSelectedProp;
+        private SerializedProperty _currentInteractorProp;
+        private SerializedProperty _currentStateProp;
 
         private void OnEnable()
         {
-            hideHandProp = serializedObject.FindProperty("hideHand");
-            tweenerProp = serializedObject.FindProperty("tweener");
-            interactionHandProp = serializedObject.FindProperty("interactionHand");
-            selectionButtonProp = serializedObject.FindProperty("selectionButton");
-            onSelectedProp = serializedObject.FindProperty("onSelected");
-            onDeselectedProp = serializedObject.FindProperty("onDeselected");
-            onHoverStartProp = serializedObject.FindProperty("onHoverStart");
-            onHoverEndProp = serializedObject.FindProperty("onHoverEnd");
-            onActivatedProp = serializedObject.FindProperty("onActivated");
+            _hideHandProp = serializedObject.FindProperty("hideHand");
+            _tweenerProp = serializedObject.FindProperty("tweener");
+            _interactionHandProp = serializedObject.FindProperty("interactionHand");
+            _selectionButtonProp = serializedObject.FindProperty("selectionButton");
+            _onSelectedProp = serializedObject.FindProperty("onSelected");
+            _onDeselectedProp = serializedObject.FindProperty("onDeselected");
+            _onHoverStartProp = serializedObject.FindProperty("onHoverStart");
+            _onHoverEndProp = serializedObject.FindProperty("onHoverEnd");
+            _onActivatedProp = serializedObject.FindProperty("onActivated");
             // Read-only fields 
-            isSelectedProp = serializedObject.FindProperty("isSelected");
-            currentInteractorProp = serializedObject.FindProperty("currentInteractor");
-            currentStateProp = serializedObject.FindProperty("currentState");
+            _isSelectedProp = serializedObject.FindProperty("isSelected");
+            _currentInteractorProp = serializedObject.FindProperty("currentInteractor");
+            _currentStateProp = serializedObject.FindProperty("currentState");
         }
 
         public override void OnInspectorGUI()
@@ -54,46 +54,46 @@ namespace Shababeek.Interactions.Editors
             );
             serializedObject.Update();
             // Editable properties
-            if (hideHandProp != null)
-                EditorGUILayout.PropertyField(hideHandProp);
-            if (tweenerProp != null)
-                EditorGUILayout.PropertyField(tweenerProp);
-            if (interactionHandProp != null)
-                EditorGUILayout.PropertyField(interactionHandProp);
-            if (selectionButtonProp != null)
-                EditorGUILayout.PropertyField(selectionButtonProp);
+            if (_hideHandProp != null)
+                EditorGUILayout.PropertyField(_hideHandProp);
+            if (_tweenerProp != null)
+                EditorGUILayout.PropertyField(_tweenerProp);
+            if (_interactionHandProp != null)
+                EditorGUILayout.PropertyField(_interactionHandProp);
+            if (_selectionButtonProp != null)
+                EditorGUILayout.PropertyField(_selectionButtonProp);
             // Events foldout
-            showEvents = EditorGUILayout.BeginFoldoutHeaderGroup(showEvents, "Events");
-            if (showEvents)
+            _showEvents = EditorGUILayout.BeginFoldoutHeaderGroup(_showEvents, "Events");
+            if (_showEvents)
             {
-                if (onSelectedProp != null)
-                    EditorGUILayout.PropertyField(onSelectedProp);
-                if (onDeselectedProp != null)
-                    EditorGUILayout.PropertyField(onDeselectedProp);
-                if (onHoverStartProp != null)
-                    EditorGUILayout.PropertyField(onHoverStartProp);
-                if (onHoverEndProp != null)
-                    EditorGUILayout.PropertyField(onHoverEndProp);
-                if (onActivatedProp != null)
-                    EditorGUILayout.PropertyField(onActivatedProp);
+                if (_onSelectedProp != null)
+                    EditorGUILayout.PropertyField(_onSelectedProp);
+                if (_onDeselectedProp != null)
+                    EditorGUILayout.PropertyField(_onDeselectedProp);
+                if (_onHoverStartProp != null)
+                    EditorGUILayout.PropertyField(_onHoverStartProp);
+                if (_onHoverEndProp != null)
+                    EditorGUILayout.PropertyField(_onHoverEndProp);
+                if (_onActivatedProp != null)
+                    EditorGUILayout.PropertyField(_onActivatedProp);
             }
 
             EditorGUILayout.EndFoldoutHeaderGroup();
             // Read-only fields at the end
             EditorGUI.BeginDisabledGroup(true);
-            if (isSelectedProp != null)
+            if (_isSelectedProp != null)
 
-                EditorGUILayout.PropertyField(isSelectedProp);
-
-
-            if (currentInteractorProp != null)
-
-                EditorGUILayout.PropertyField(currentInteractorProp);
+                EditorGUILayout.PropertyField(_isSelectedProp);
 
 
-            if (currentStateProp != null)
+            if (_currentInteractorProp != null)
 
-                EditorGUILayout.PropertyField(currentStateProp);
+                EditorGUILayout.PropertyField(_currentInteractorProp);
+
+
+            if (_currentStateProp != null)
+
+                EditorGUILayout.PropertyField(_currentStateProp);
 
 
             EditorGUI.EndDisabledGroup();

@@ -9,77 +9,76 @@ namespace Shababeek.Interactions.Editors
     public class TurretInteractableEditor : Editor
     {
         // Editable properties
-        private SerializedProperty limitXRotationProp;
-        private SerializedProperty minXAngleProp;
-        private SerializedProperty maxXAngleProp;
-        private SerializedProperty limitYRotationProp;
-        private SerializedProperty minYAngleProp;
-        private SerializedProperty maxYAngleProp;
-        private SerializedProperty limitZRotationProp;
-        private SerializedProperty minZAngleProp;
-        private SerializedProperty maxZAngleProp;
-        private SerializedProperty returnToOriginalProp;
-        private SerializedProperty returnSpeedProp;
-        private SerializedProperty interactionHandProp;
-        private SerializedProperty selectionButtonProp;
-        private SerializedProperty interactableObjectProp;
-        private SerializedProperty snapDistanceProp;
-
-        // Events
-        private SerializedProperty onRotationChangedProp;
-        private SerializedProperty onXRotationChangedProp;
-        private SerializedProperty onYRotationChangedProp;
-        private SerializedProperty onZRotationChangedProp;
-        private SerializedProperty onSelectedProp;
-        private SerializedProperty onDeselectedProp;
-        private SerializedProperty onHoverStartProp;
-        private SerializedProperty onHoverEndProp;
-        private SerializedProperty onActivatedProp;
+        private SerializedProperty _limitXRotationProp;
+        private SerializedProperty _minXAngleProp;
+        private SerializedProperty _maxXAngleProp;
+        private SerializedProperty _limitYRotationProp;
+        private SerializedProperty _minYAngleProp;
+        private SerializedProperty _maxYAngleProp;
+        private SerializedProperty _limitZRotationProp;
+        private SerializedProperty _minZAngleProp;
+        private SerializedProperty _maxZAngleProp;
+        private SerializedProperty _returnToOriginalProp;
+        private SerializedProperty _returnSpeedProp;
+        private SerializedProperty _interactionHandProp;
+        private SerializedProperty _selectionButtonProp;
+        private SerializedProperty _interactableObjectProp;
+        private SerializedProperty _snapDistanceProp;
+        //events
+        private SerializedProperty _onRotationChangedProp;
+        private SerializedProperty _onXRotationChangedProp;
+        private SerializedProperty _onYRotationChangedProp;
+        private SerializedProperty _onZRotationChangedProp;
+        private SerializedProperty _onSelectedProp;
+        private SerializedProperty _onDeselectedProp;
+        private SerializedProperty _onHoverStartProp;
+        private SerializedProperty _onHoverEndProp;
+        private SerializedProperty _onActivatedProp;
 
         // Read-only
-        private SerializedProperty currentRotationProp;
-        private SerializedProperty normalizedRotationProp;
-        private SerializedProperty isSelectedProp;
-        private SerializedProperty currentInteractorProp;
-        private SerializedProperty currentStateProp;
+        private SerializedProperty _currentRotationProp;
+        private SerializedProperty _normalizedRotationProp;
+        private SerializedProperty _isSelectedProp;
+        private SerializedProperty _currentInteractorProp;
+        private SerializedProperty _currentStateProp;
 
-        private bool showEvents = true;
-        private bool showRotationLimits = true;
-        private static bool editRotationLimits = false;
+        private bool _showEvents = true;
+        private bool _showRotationLimits = true;
+        private static bool _editRotationLimits = false;
 
         protected  void OnEnable()
         {
-            limitXRotationProp = serializedObject.FindProperty("limitXRotation");
-            minXAngleProp = serializedObject.FindProperty("minXAngle");
-            maxXAngleProp = serializedObject.FindProperty("maxXAngle");
-            limitYRotationProp = serializedObject.FindProperty("limitYRotation");
-            minYAngleProp = serializedObject.FindProperty("minYAngle");
-            maxYAngleProp = serializedObject.FindProperty("maxYAngle");
-            limitZRotationProp = serializedObject.FindProperty("limitZRotation");
-            minZAngleProp = serializedObject.FindProperty("minZAngle");
-            maxZAngleProp = serializedObject.FindProperty("maxZAngle");
-            returnToOriginalProp = serializedObject.FindProperty("returnToOriginal");
-            returnSpeedProp = serializedObject.FindProperty("returnSpeed");
-            interactionHandProp = serializedObject.FindProperty("interactionHand");
-            selectionButtonProp = serializedObject.FindProperty("selectionButton");
-            interactableObjectProp = serializedObject.FindProperty("interactableObject");
-            snapDistanceProp = serializedObject.FindProperty("snapDistance");
+            _limitXRotationProp = serializedObject.FindProperty("limitXRotation");
+            _minXAngleProp = serializedObject.FindProperty("minXAngle");
+            _maxXAngleProp = serializedObject.FindProperty("maxXAngle");
+            _limitYRotationProp = serializedObject.FindProperty("limitYRotation");
+            _minYAngleProp = serializedObject.FindProperty("minYAngle");
+            _maxYAngleProp = serializedObject.FindProperty("maxYAngle");
+            _limitZRotationProp = serializedObject.FindProperty("limitZRotation");
+            _minZAngleProp = serializedObject.FindProperty("minZAngle");
+            _maxZAngleProp = serializedObject.FindProperty("maxZAngle");
+            _returnToOriginalProp = serializedObject.FindProperty("returnToOriginal");
+            _returnSpeedProp = serializedObject.FindProperty("returnSpeed");
+            _interactionHandProp = serializedObject.FindProperty("interactionHand");
+            _selectionButtonProp = serializedObject.FindProperty("selectionButton");
+            _interactableObjectProp = serializedObject.FindProperty("interactableObject");
+            _snapDistanceProp = serializedObject.FindProperty("snapDistance");
             
-            onRotationChangedProp = serializedObject.FindProperty("onRotationChanged");
-            onXRotationChangedProp = serializedObject.FindProperty("onXRotationChanged");
-            onYRotationChangedProp = serializedObject.FindProperty("onYRotationChanged");
-            onZRotationChangedProp = serializedObject.FindProperty("onZRotationChanged");
-            onSelectedProp = serializedObject.FindProperty("onSelected");
-            onDeselectedProp = serializedObject.FindProperty("onDeselected");
-            onHoverStartProp = serializedObject.FindProperty("onHoverStart");
-            onHoverEndProp = serializedObject.FindProperty("onHoverEnd");
-            onActivatedProp = serializedObject.FindProperty("onActivated");
+            _onRotationChangedProp = serializedObject.FindProperty("onRotationChanged");
+            _onXRotationChangedProp = serializedObject.FindProperty("onXRotationChanged");
+            _onYRotationChangedProp = serializedObject.FindProperty("onYRotationChanged");
+            _onZRotationChangedProp = serializedObject.FindProperty("onZRotationChanged");
+            _onSelectedProp = serializedObject.FindProperty("onSelected");
+            _onDeselectedProp = serializedObject.FindProperty("onDeselected");
+            _onHoverStartProp = serializedObject.FindProperty("onHoverStart");
+            _onHoverEndProp = serializedObject.FindProperty("onHoverEnd");
+            _onActivatedProp = serializedObject.FindProperty("onActivated");
             
-            currentRotationProp = serializedObject.FindProperty("currentRotation");
-            normalizedRotationProp = serializedObject.FindProperty("normalizedRotation");
-            isSelectedProp = serializedObject.FindProperty("isSelected");
-            currentInteractorProp = serializedObject.FindProperty("currentInteractor");
-            currentStateProp = serializedObject.FindProperty("currentState");
+            _currentRotationProp = serializedObject.FindProperty("currentRotation");
+            _normalizedRotationProp = serializedObject.FindProperty("normalizedRotation");
+            _isSelectedProp = serializedObject.FindProperty("isSelected");
+            _currentInteractorProp = serializedObject.FindProperty("currentInteractor");
+            _currentStateProp = serializedObject.FindProperty("currentState");
             
         }
 
@@ -95,63 +94,63 @@ namespace Shababeek.Interactions.Editors
             DoEditButton();
             
             // Basic settings
-            if (interactionHandProp != null)
-                EditorGUILayout.PropertyField(interactionHandProp);
-            if (selectionButtonProp != null)
-                EditorGUILayout.PropertyField(selectionButtonProp);
-            if (interactableObjectProp != null)
-                EditorGUILayout.PropertyField(interactableObjectProp, new GUIContent("Interactable Object"));
-            if (snapDistanceProp != null)
-                EditorGUILayout.PropertyField(snapDistanceProp);
+            if (_interactionHandProp != null)
+                EditorGUILayout.PropertyField(_interactionHandProp);
+            if (_selectionButtonProp != null)
+                EditorGUILayout.PropertyField(_selectionButtonProp);
+            if (_interactableObjectProp != null)
+                EditorGUILayout.PropertyField(_interactableObjectProp, new GUIContent("Interactable Object"));
+            if (_snapDistanceProp != null)
+                EditorGUILayout.PropertyField(_snapDistanceProp);
             
             // Return behavior
-            if (returnToOriginalProp != null)
-                EditorGUILayout.PropertyField(returnToOriginalProp, new GUIContent("Return to Original Position"));
-            if (returnSpeedProp != null)
-                EditorGUILayout.PropertyField(returnSpeedProp, new GUIContent("Return Speed"));
+            if (_returnToOriginalProp != null)
+                EditorGUILayout.PropertyField(_returnToOriginalProp, new GUIContent("Return to Original Position"));
+            if (_returnSpeedProp != null)
+                EditorGUILayout.PropertyField(_returnSpeedProp, new GUIContent("Return Speed"));
             
             // Rotation limits foldout
-            showRotationLimits = EditorGUILayout.BeginFoldoutHeaderGroup(showRotationLimits, "Rotation Limits");
-            if (showRotationLimits)
+            _showRotationLimits = EditorGUILayout.BeginFoldoutHeaderGroup(_showRotationLimits, "Rotation Limits");
+            if (_showRotationLimits)
             {
                 EditorGUI.indentLevel++;
                 
                 // X Rotation
-                if (limitXRotationProp != null)
-                    EditorGUILayout.PropertyField(limitXRotationProp, new GUIContent("Limit X Rotation"));
-                if (limitXRotationProp.boolValue)
+                if (_limitXRotationProp != null)
+                    EditorGUILayout.PropertyField(_limitXRotationProp, new GUIContent("Limit X Rotation"));
+                if (_limitXRotationProp.boolValue)
                 {
                     EditorGUILayout.BeginHorizontal();
-                    if (minXAngleProp != null)
-                        EditorGUILayout.PropertyField(minXAngleProp, new GUIContent("Min X (°)"));
-                    if (maxXAngleProp != null)
-                        EditorGUILayout.PropertyField(maxXAngleProp, new GUIContent("Max X (°)"));
+                    if (_minXAngleProp != null)
+                        EditorGUILayout.PropertyField(_minXAngleProp, new GUIContent("Min X (°)"));
+                    if (_maxXAngleProp != null)
+                        EditorGUILayout.PropertyField(_maxXAngleProp, new GUIContent("Max X (°)"));
                     EditorGUILayout.EndHorizontal();
                 }
                 
                 // Y Rotation
-                if (limitYRotationProp != null)
-                    EditorGUILayout.PropertyField(limitYRotationProp, new GUIContent("Limit Y Rotation"));
-                if (limitYRotationProp.boolValue)
+                if (_limitYRotationProp != null)
+                    EditorGUILayout.PropertyField(_limitYRotationProp, new GUIContent("Limit Y Rotation"));
+                if (_limitYRotationProp.boolValue)
                 {
                     EditorGUILayout.BeginHorizontal();
-                    if (minYAngleProp != null)
-                        EditorGUILayout.PropertyField(minYAngleProp, new GUIContent("Min Y (°)"));
-                    if (maxYAngleProp != null)
-                        EditorGUILayout.PropertyField(maxYAngleProp, new GUIContent("Max Y (°)"));
+                    if (_minYAngleProp != null)
+                        EditorGUILayout.PropertyField(_minYAngleProp, new GUIContent("Min Y (°)"));
+                    if (_maxYAngleProp != null)
+                        EditorGUILayout.PropertyField(_maxYAngleProp, new GUIContent("Max Y (°)"));
                     EditorGUILayout.EndHorizontal();
                 }
                 
                 // Z Rotation
-                if (limitZRotationProp != null)
-                    EditorGUILayout.PropertyField(limitZRotationProp, new GUIContent("Limit Z Rotation"));
-                if (limitZRotationProp.boolValue)
+                if (_limitZRotationProp != null)
+                    EditorGUILayout.PropertyField(_limitZRotationProp, new GUIContent("Limit Z Rotation"));
+                if (_limitZRotationProp.boolValue)
                 {
                     EditorGUILayout.BeginHorizontal();
-                    if (minZAngleProp != null)
-                        EditorGUILayout.PropertyField(minZAngleProp, new GUIContent("Min Z (°)"));
-                    if (maxZAngleProp != null)
-                        EditorGUILayout.PropertyField(maxZAngleProp, new GUIContent("Max Z (°)"));
+                    if (_minZAngleProp != null)
+                        EditorGUILayout.PropertyField(_minZAngleProp, new GUIContent("Min Z (°)"));
+                    if (_maxZAngleProp != null)
+                        EditorGUILayout.PropertyField(_maxZAngleProp, new GUIContent("Max Z (°)"));
                     EditorGUILayout.EndHorizontal();
                 }
                 
@@ -160,42 +159,42 @@ namespace Shababeek.Interactions.Editors
             EditorGUILayout.EndFoldoutHeaderGroup();
             
             // Events foldout
-            showEvents = EditorGUILayout.BeginFoldoutHeaderGroup(showEvents, "Events");
-            if (showEvents)
+            _showEvents = EditorGUILayout.BeginFoldoutHeaderGroup(_showEvents, "Events");
+            if (_showEvents)
             {
-                if (onRotationChangedProp != null)
-                    EditorGUILayout.PropertyField(onRotationChangedProp);
-                if (onXRotationChangedProp != null)
-                    EditorGUILayout.PropertyField(onXRotationChangedProp);
-                if (onYRotationChangedProp != null)
-                    EditorGUILayout.PropertyField(onYRotationChangedProp);
-                if (onZRotationChangedProp != null)
-                    EditorGUILayout.PropertyField(onZRotationChangedProp);
-                if (onSelectedProp != null)
-                    EditorGUILayout.PropertyField(onSelectedProp);
-                if (onDeselectedProp != null)
-                    EditorGUILayout.PropertyField(onDeselectedProp);
-                if (onHoverStartProp != null)
-                    EditorGUILayout.PropertyField(onHoverStartProp);
-                if (onHoverEndProp != null)
-                    EditorGUILayout.PropertyField(onHoverEndProp);
-                if (onActivatedProp != null)
-                    EditorGUILayout.PropertyField(onActivatedProp);
+                if (_onRotationChangedProp != null)
+                    EditorGUILayout.PropertyField(_onRotationChangedProp);
+                if (_onXRotationChangedProp != null)
+                    EditorGUILayout.PropertyField(_onXRotationChangedProp);
+                if (_onYRotationChangedProp != null)
+                    EditorGUILayout.PropertyField(_onYRotationChangedProp);
+                if (_onZRotationChangedProp != null)
+                    EditorGUILayout.PropertyField(_onZRotationChangedProp);
+                if (_onSelectedProp != null)
+                    EditorGUILayout.PropertyField(_onSelectedProp);
+                if (_onDeselectedProp != null)
+                    EditorGUILayout.PropertyField(_onDeselectedProp);
+                if (_onHoverStartProp != null)
+                    EditorGUILayout.PropertyField(_onHoverStartProp);
+                if (_onHoverEndProp != null)
+                    EditorGUILayout.PropertyField(_onHoverEndProp);
+                if (_onActivatedProp != null)
+                    EditorGUILayout.PropertyField(_onActivatedProp);
             }
             EditorGUILayout.EndFoldoutHeaderGroup();
             
             // Read-only fields
             EditorGUI.BeginDisabledGroup(true);
-            if (currentRotationProp != null)
-                EditorGUILayout.PropertyField(currentRotationProp);
-            if (normalizedRotationProp != null)
-                EditorGUILayout.PropertyField(normalizedRotationProp);
-            if (isSelectedProp != null)
-                EditorGUILayout.PropertyField(isSelectedProp);
-            if (currentInteractorProp != null)
-                EditorGUILayout.PropertyField(currentInteractorProp);
-            if (currentStateProp != null)
-                EditorGUILayout.PropertyField(currentStateProp);
+            if (_currentRotationProp != null)
+                EditorGUILayout.PropertyField(_currentRotationProp);
+            if (_normalizedRotationProp != null)
+                EditorGUILayout.PropertyField(_normalizedRotationProp);
+            if (_isSelectedProp != null)
+                EditorGUILayout.PropertyField(_isSelectedProp);
+            if (_currentInteractorProp != null)
+                EditorGUILayout.PropertyField(_currentInteractorProp);
+            if (_currentStateProp != null)
+                EditorGUILayout.PropertyField(_currentStateProp);
             EditorGUI.EndDisabledGroup();
             
             serializedObject.ApplyModifiedProperties();
@@ -205,7 +204,7 @@ namespace Shababeek.Interactions.Editors
         private static void DoEditButton()
         {
             EditorGUILayout.Space();
-            var icon = EditorGUIUtility.IconContent(editRotationLimits ? "d_EditCollider" : "EditCollider");
+            var icon = EditorGUIUtility.IconContent(_editRotationLimits ? "d_EditCollider" : "EditCollider");
             var iconButtonStyle = new GUIStyle(GUI.skin.button)
             {
                 fixedWidth = 32,
@@ -213,10 +212,10 @@ namespace Shababeek.Interactions.Editors
                 padding = new RectOffset(2, 2, 2, 2)
             };
             Color prevColor = GUI.color;
-            if (editRotationLimits)
+            if (_editRotationLimits)
                 GUI.color = Color.green;
             if (GUILayout.Button(icon, iconButtonStyle))
-                editRotationLimits = !editRotationLimits;
+                _editRotationLimits = !_editRotationLimits;
             GUI.color = prevColor;
             EditorGUILayout.Space();
         }
@@ -224,7 +223,7 @@ namespace Shababeek.Interactions.Editors
         protected  void OnSceneGUI()
         {
             
-            if (!editRotationLimits) return;
+            if (!_editRotationLimits) return;
             
             var turret = (TurretInteractable)target;
             Transform t = turret.transform;
@@ -278,7 +277,7 @@ namespace Shababeek.Interactions.Editors
             Handles.Label(minPos, $"Min {axisName} ({minAngle:F1}°)");
             Handles.Label(maxPos, $"Max {axisName} ({maxAngle:F1}°)");
 
-            if (!editRotationLimits) return;
+            if (!_editRotationLimits) return;
             Undo.RecordObject(turret, $"Edit {axisName} Rotation Limits");
 
             // Draw and move min handle
