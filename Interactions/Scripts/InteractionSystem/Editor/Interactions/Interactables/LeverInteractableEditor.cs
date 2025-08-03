@@ -17,8 +17,6 @@ namespace Shababeek.Interactions.Editors
         private SerializedProperty selectionButtonProp;
         private SerializedProperty interactableObjectProp;
         private SerializedProperty snapDistanceProp;
-        private SerializedProperty constraintsTypeProp;
-        private SerializedProperty smoothHandTransitionProp;
         // Events
         private SerializedProperty onLeverChangedProp;
         private SerializedProperty onSelectedProp;
@@ -44,8 +42,6 @@ namespace Shababeek.Interactions.Editors
             selectionButtonProp = serializedObject.FindProperty("selectionButton");
             interactableObjectProp = serializedObject.FindProperty("interactableObject");
             snapDistanceProp = serializedObject.FindProperty("snapDistance");
-            constraintsTypeProp = serializedObject.FindProperty("constraintsType");
-            smoothHandTransitionProp = serializedObject.FindProperty("smoothHandTransition");
             onLeverChangedProp = serializedObject.FindProperty("onLeverChanged");
             onSelectedProp = serializedObject.FindProperty("onSelected");
             onDeselectedProp = serializedObject.FindProperty("onDeselected");
@@ -61,7 +57,8 @@ namespace Shababeek.Interactions.Editors
         public override void OnInspectorGUI()
         {
             EditorGUILayout.HelpBox(
-                "The LeverInteractable component allows objects to be rotated like a lever with configurable limits and events.",
+                "Configure the lever's rotation limits and behavior. The lever will rotate based on hand position.\n\n" +
+                "Pose constraints are automatically handled by the UnifiedPoseConstraintSystem component (automatically added). Use it to configure hand poses and positioning.",
                 MessageType.Info
             );
             serializedObject.Update();
@@ -79,10 +76,6 @@ namespace Shababeek.Interactions.Editors
                 EditorGUILayout.PropertyField(interactableObjectProp, new GUIContent("Interactable Object"));
             if (snapDistanceProp != null)
                 EditorGUILayout.PropertyField(snapDistanceProp);
-            if (constraintsTypeProp != null)
-                EditorGUILayout.PropertyField(constraintsTypeProp);
-            if (smoothHandTransitionProp != null)
-                EditorGUILayout.PropertyField(smoothHandTransitionProp);
             // Min/Max editable fields in a single row before events
             if (minProp != null && maxProp != null)
             {

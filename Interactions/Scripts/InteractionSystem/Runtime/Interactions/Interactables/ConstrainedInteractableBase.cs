@@ -8,24 +8,25 @@ namespace Shababeek.Interactions
     public abstract class ConstrainedInteractableBase : InteractableBase
     {
         [SerializeField] protected Transform interactableObject;
-        [SerializeField] private UnifiedPoseConstraintSystem poseConstraintSystem;
-
         [SerializeField] private float snapDistance = .5f;
 
         // Cache for fake hands
-        private Hand _leftFakeHand;
-        private Hand _rightFakeHand;
-        private Hand _currentFakeHand;
+        private HandPoseController _leftFakeHand;
+        private HandPoseController _rightFakeHand;
+        private HandPoseController _currentFakeHand;
+        
+        // Private reference to the required UnifiedPoseConstraintSystem
+        private UnifiedPoseConstraintSystem _poseConstraintSystem;
 
         public Transform InteractableObject
         {
             get => interactableObject;
             set => interactableObject = value;
         }
-        
+
         protected override bool Select()
         {
-            if (!poseConstraintSystem) poseConstraintSystem = GetComponent<UnifiedPoseConstraintSystem>();
+            if (!_poseConstraintSystem) _poseConstraintSystem = GetComponent<UnifiedPoseConstraintSystem>();
             var handIdentifier = CurrentInteractor.HandIdentifier;
             if (poseConstraintSystem.ConstraintType == HandConstrainType.Constrained)
             {
@@ -40,20 +41,20 @@ namespace Shababeek.Interactions
             }
 
             HandleObjectMovement();
-
+            
             return false;
         }
 
         protected override void DeSelected()
         {
             CurrentInteractor.ToggleHandModel(true);
-
+            
             if (_currentFakeHand != null)
             {
                 _currentFakeHand.gameObject.SetActive(false);
                 _currentFakeHand = null;
             }
-
+            
             HandleObjectDeselection();
         }
 
@@ -77,7 +78,7 @@ namespace Shababeek.Interactions
             {
                 _rightFakeHand = newFakeHand;
             }
-
+            
             return newFakeHand;
         }
 
@@ -100,11 +101,23 @@ namespace Shababeek.Interactions
 
         private void PositionFakeHand(Transform fakeHand, HandIdentifier handIdentifier)
         {
-            //TODO: lerp the hand into position from currentInteractop to the desired position
-            if (fakeHand == null || poseConstraintSystem == null) return;
-            var positioning = poseConstraintSystem.GetTargetHandTransform(handIdentifier);
-            fakeHand.localPosition = positioning.position;
-            fakeHand.localRotation = positioning.rotation;
+            if (fakeHand == null || _poseConstraintSystem == null) return;
+            
+            var positioning = _poseConstraintSystem.GetTargetHandTransform(handIdentifier);
+            
+            if (_poseConstraintSystem.UseSmoothTransitions)
+            {
+                // Lerp from current hand position to target position
+                var currentInteractorTransform = CurrentInteractor.transform;
+                fakeHand.position = Vector3.Lerp(currentInteractorTransform.position, positioning.position, Time.deltaTime * _poseConstraintSystem.TransitionSpeed);
+                fakeHand.rotation = Quaternion.Lerp(currentInteractorTransform.rotation, positioning.rotation, Time.deltaTime * _poseConstraintSystem.TransitionSpeed);
+            }
+            else
+            {
+                // Instant positioning
+                fakeHand.localPosition = positioning.position;
+                fakeHand.localRotation = positioning.rotation;
+            }
         }
 
         private void Awake()
@@ -131,7 +144,6 @@ namespace Shababeek.Interactions
 
         private void OnDestroy()
         {
-            // Clean up cached fake hands
             if (_leftFakeHand != null)
             {
                 DestroyImmediate(_leftFakeHand.gameObject);

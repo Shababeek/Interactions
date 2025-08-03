@@ -24,8 +24,6 @@ namespace Shababeek.Interactions.Editors
         private SerializedProperty selectionButtonProp;
         private SerializedProperty interactableObjectProp;
         private SerializedProperty snapDistanceProp;
-        private SerializedProperty constraintsTypeProp;
-        private SerializedProperty smoothHandTransitionProp;
 
         // Events
         private SerializedProperty onRotationChangedProp;
@@ -66,8 +64,6 @@ namespace Shababeek.Interactions.Editors
             selectionButtonProp = serializedObject.FindProperty("selectionButton");
             interactableObjectProp = serializedObject.FindProperty("interactableObject");
             snapDistanceProp = serializedObject.FindProperty("snapDistance");
-            constraintsTypeProp = serializedObject.FindProperty("constraintsType");
-            smoothHandTransitionProp = serializedObject.FindProperty("smoothHandTransition");
             
             onRotationChangedProp = serializedObject.FindProperty("onRotationChanged");
             onXRotationChangedProp = serializedObject.FindProperty("onXRotationChanged");
@@ -90,7 +86,8 @@ namespace Shababeek.Interactions.Editors
         public override void OnInspectorGUI()
         {
             EditorGUILayout.HelpBox(
-                "The TurretInteractable component allows objects to rotate around multiple axes like a camera tripod or turret gun.",
+                "Configure the turret's rotation limits for each axis. The turret will rotate to follow the hand position.\n\n" +
+                "Pose constraints are automatically handled by the UnifiedPoseConstraintSystem component (automatically added). Use it to configure hand poses and positioning.",
                 MessageType.Info
             );
             
@@ -106,10 +103,6 @@ namespace Shababeek.Interactions.Editors
                 EditorGUILayout.PropertyField(interactableObjectProp, new GUIContent("Interactable Object"));
             if (snapDistanceProp != null)
                 EditorGUILayout.PropertyField(snapDistanceProp);
-            if (constraintsTypeProp != null)
-                EditorGUILayout.PropertyField(constraintsTypeProp);
-            if (smoothHandTransitionProp != null)
-                EditorGUILayout.PropertyField(smoothHandTransitionProp);
             
             // Return behavior
             if (returnToOriginalProp != null)

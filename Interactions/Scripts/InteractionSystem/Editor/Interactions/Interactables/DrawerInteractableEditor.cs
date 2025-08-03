@@ -17,8 +17,6 @@ namespace Shababeek.Interactions.Editors
         private SerializedProperty selectionButtonProp;
         private SerializedProperty interactableObjectProp;
         private SerializedProperty snapDistanceProp;
-        private SerializedProperty constraintsTypeProp;
-        private SerializedProperty smoothHandTransitionProp;
         private SerializedProperty localStartProp;
         private SerializedProperty localEndProp;
         private SerializedProperty returnToOriginalProp;
@@ -45,8 +43,6 @@ namespace Shababeek.Interactions.Editors
             selectionButtonProp = serializedObject.FindProperty("selectionButton");
             interactableObjectProp = serializedObject.FindProperty("interactableObject");
             snapDistanceProp = serializedObject.FindProperty("snapDistance");
-            constraintsTypeProp = serializedObject.FindProperty("constraintsType");
-            smoothHandTransitionProp = serializedObject.FindProperty("smoothHandTransition");
             localStartProp = serializedObject.FindProperty("_localStart");
             localEndProp = serializedObject.FindProperty("_localEnd");
             returnToOriginalProp = serializedObject.FindProperty("returnToOriginal");
@@ -66,7 +62,8 @@ namespace Shababeek.Interactions.Editors
         public override void OnInspectorGUI()
         {
             EditorGUILayout.HelpBox(
-                "Place the object you want to move inside the 'Interactable Object' field. This object should be a child of this component.",
+                "Place the object you want to move inside the 'Interactable Object' field. This object should be a child of this component.\n\n" +
+                "Pose constraints are automatically handled by the UnifiedPoseConstraintSystem component (automatically added). Use it to configure hand poses and positioning.",
                 MessageType.Info
             );
             serializedObject.Update();
@@ -80,10 +77,6 @@ namespace Shababeek.Interactions.Editors
                 EditorGUILayout.PropertyField(interactableObjectProp, new GUIContent("Interactable Object"));
             if (snapDistanceProp != null)
                 EditorGUILayout.PropertyField(snapDistanceProp);
-            if (constraintsTypeProp != null)
-                EditorGUILayout.PropertyField(constraintsTypeProp);
-            if (smoothHandTransitionProp != null)
-                EditorGUILayout.PropertyField(smoothHandTransitionProp);
             if (localStartProp != null)
                 EditorGUILayout.PropertyField(localStartProp);
             if (localEndProp != null)
