@@ -37,11 +37,26 @@ namespace Shababeek.Interactions
         {
         }
 
-        private void Update()
+        protected override void HandleObjectMovement()
         {
             if (!IsSelected) return;
+            
             Rotate(CalculateAngle(transform.right), CalculateAngle(transform.forward));
             InvokeEvents();
+        }
+
+        protected override void HandleObjectDeselection()
+        {
+            Rotate(0, 0);
+            InvokeEvents();
+        }
+
+        private void Update()
+        {
+            if (IsSelected)
+            {
+                HandleObjectMovement();
+            }
         }
         private void Rotate(float x, float z)
         {

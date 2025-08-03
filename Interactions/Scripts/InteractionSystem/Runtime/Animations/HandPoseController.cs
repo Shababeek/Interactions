@@ -86,7 +86,9 @@ namespace Shababeek.Interactions.Animations
         {
             set => _constrains = value;
         }
-        
+
+
+
         /// <summary>
         /// Gets or sets the current pose index with proper animation blending.
         /// When setting a new pose, the system smoothly transitions between poses

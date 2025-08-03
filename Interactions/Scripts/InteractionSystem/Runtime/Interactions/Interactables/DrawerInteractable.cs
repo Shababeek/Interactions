@@ -90,28 +90,43 @@ namespace Shababeek.Interactions
             }
         }
 
+        protected override void HandleObjectMovement()
+        {
+            if (!IsSelected) return;
+            
+            var localInteractorPos = transform.InverseTransformPoint(CurrentInteractor.transform.position);
+            var newLocalPos = GetPositionBetweenTwoPoints(localInteractorPos, _localStart, _localEnd);
+
+            if (interactableObject.transform.localPosition != newLocalPos)
+            {
+                interactableObject.transform.localPosition = newLocalPos;
+                UpdateValue(newLocalPos);
+                onMoved?.Invoke();
+            }
+
+            // Check for limits
+            if ((newLocalPos - _localStart).sqrMagnitude < LimitEpsilon * LimitEpsilon ||
+                (newLocalPos - _localEnd).sqrMagnitude < LimitEpsilon * LimitEpsilon)
+            {
+                onLimitReached?.Invoke();
+            }
+
+            _isReturning = false;
+        }
+
+        protected override void HandleObjectDeselection()
+        {
+            if (returnToOriginal)
+            {
+                _isReturning = true;
+            }
+        }
+
         private void Update()
         {
             if (IsSelected)
             {
-                var localInteractorPos = transform.InverseTransformPoint(CurrentInteractor.transform.position);
-                var newLocalPos = GetPositionBetweenTwoPoints(localInteractorPos, _localStart, _localEnd);
-
-                if (interactableObject.transform.localPosition != newLocalPos)
-                {
-                    interactableObject.transform.localPosition = newLocalPos;
-                    UpdateValue(newLocalPos);
-                    onMoved?.Invoke();
-                }
-
-                // Check for limits
-                if ((newLocalPos - _localStart).sqrMagnitude < LimitEpsilon * LimitEpsilon ||
-                    (newLocalPos - _localEnd).sqrMagnitude < LimitEpsilon * LimitEpsilon)
-                {
-                    onLimitReached?.Invoke();
-                }
-
-                _isReturning = false;
+                HandleObjectMovement();
             }
             else if (returnToOriginal && _isReturning)
             {
@@ -183,11 +198,7 @@ namespace Shababeek.Interactions
         protected override void DeSelected()
         {
             base.DeSelected();
-            if (returnToOriginal)
-            {
-                _isReturning = true;
-            }
-
+            HandleObjectDeselection();
         }
 
         private void UpdateValue(Vector3 position)

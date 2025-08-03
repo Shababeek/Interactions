@@ -1,9 +1,7 @@
 using System;
 using UnityEngine;
-using Shababeek.Interactions.Core;
 using Shababeek.Core;
 using UniRx;
-using UnityEngine.Serialization;
 
 namespace Shababeek.Interactions
 {
@@ -62,12 +60,30 @@ namespace Shababeek.Interactions
         {
         }
 
-        private void Update()
+        protected override void HandleObjectMovement()
         {
             if (!IsSelected) return;
-            var (plane,normal) = GetRotationAxis();
-            Rotate(CalculateAngle(plane,normal));
+            
+            var (plane, normal) = GetRotationAxis();
+            Rotate(CalculateAngle(plane, normal));
             InvokeEvents();
+        }
+
+        protected override void HandleObjectDeselection()
+        {
+            if (returnToOriginal)
+            {
+                ReturnToOriginal();
+                InvokeEvents();
+            }
+        }
+
+        private void Update()
+        {
+            if (IsSelected)
+            {
+                HandleObjectMovement();
+            }
         }
 
         private void Rotate(float x)

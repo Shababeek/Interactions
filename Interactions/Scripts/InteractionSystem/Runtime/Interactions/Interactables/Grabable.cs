@@ -60,7 +60,7 @@ namespace Shababeek.Interactions
         protected override bool Select()
         {
             // Apply pose constraints and visibility control
-            _poseConstraintSystem.ApplyConstraints(CurrentInteractor);
+            _poseConstraintSystem.ApplyConstraints(CurrentInteractor.Hand);
             
             _grabStrategy.Initialize(CurrentInteractor);
             InitializeAttachmentPointTransform();
@@ -71,7 +71,7 @@ namespace Shababeek.Interactions
         protected override void DeSelected()
         {
             // Remove pose constraints and restore hand visibility
-            _poseConstraintSystem.RemoveConstraints(CurrentInteractor);
+            _poseConstraintSystem.RemoveConstraints(CurrentInteractor.Hand);
             
             tweener.RemoveTweenable(_transformTweenable);
             _grabStrategy.UnGrab(this, CurrentInteractor);

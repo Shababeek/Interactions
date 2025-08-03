@@ -157,5 +157,6 @@ namespace Shababeek.Interactions
 
             currentInteractable.OnStateChanged(InteractionState.Activated, this);
         }
+        
     }
 }
