@@ -67,14 +67,12 @@ namespace Shababeek.Interactions
             {
                 case > 5 when direction!=Direction.Down:
                     direction = Direction.Down;
-                    Debug.Log("down");
                     t = 0;
                     targetRotation = downRotation;
                     onUp.Invoke();
                     break;
                 case < -5 when direction!=Direction.Up:
                     direction = Direction.Up;
-                    Debug.Log("down");
                     t = 0;
                     targetRotation = upRotation;
                     onDown.Invoke();
