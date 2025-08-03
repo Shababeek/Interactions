@@ -5,7 +5,7 @@ namespace Shababeek.Interactions.Editors
 {
     [CustomEditor(typeof(WheelInteractable))]
     [CanEditMultipleObjects]
-    public class WheelInteractableEditor : ConstrainedInteractableEditor
+    public class WheelInteractableEditor : Editor
     {
         // Events
         private SerializedProperty onWheelRotatedProp;
@@ -28,7 +28,7 @@ namespace Shababeek.Interactions.Editors
         private SerializedProperty smoothHandTransitionProp;
         private bool showEvents = true;
 
-        protected override void OnEnable()
+        protected  void OnEnable()
         {
             onWheelRotatedProp = serializedObject.FindProperty("onWheelRotated");
             onSelectedProp = serializedObject.FindProperty("onSelected");
@@ -46,7 +46,6 @@ namespace Shababeek.Interactions.Editors
             snapDistanceProp = serializedObject.FindProperty("snapDistance");
             constraintsTypeProp = serializedObject.FindProperty("constraintsType");
             smoothHandTransitionProp = serializedObject.FindProperty("smoothHandTransition");
-            base.OnEnable();
         }
 
         public override void OnInspectorGUI()
@@ -99,7 +98,6 @@ namespace Shababeek.Interactions.Editors
                 EditorGUILayout.PropertyField(currentStateProp);
             EditorGUI.EndDisabledGroup();
             serializedObject.ApplyModifiedProperties();
-            base.OnInspectorGUI();
         }
     }
 } 

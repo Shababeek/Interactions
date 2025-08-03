@@ -6,7 +6,7 @@ namespace Shababeek.Interactions.Editors
 {
     [CustomEditor(typeof(TurretInteractable))]
     [CanEditMultipleObjects]
-    public class TurretInteractableEditor : ConstrainedInteractableEditor
+    public class TurretInteractableEditor : Editor
     {
         // Editable properties
         private SerializedProperty limitXRotationProp;
@@ -49,7 +49,7 @@ namespace Shababeek.Interactions.Editors
         private bool showRotationLimits = true;
         private static bool editRotationLimits = false;
 
-        protected override void OnEnable()
+        protected  void OnEnable()
         {
             limitXRotationProp = serializedObject.FindProperty("limitXRotation");
             minXAngleProp = serializedObject.FindProperty("minXAngle");
@@ -85,7 +85,6 @@ namespace Shababeek.Interactions.Editors
             currentInteractorProp = serializedObject.FindProperty("currentInteractor");
             currentStateProp = serializedObject.FindProperty("currentState");
             
-            base.OnEnable();
         }
 
         public override void OnInspectorGUI()
@@ -229,9 +228,8 @@ namespace Shababeek.Interactions.Editors
             EditorGUILayout.Space();
         }
 
-        protected override void OnSceneGUI()
+        protected  void OnSceneGUI()
         {
-            base.OnSceneGUI();
             
             if (!editRotationLimits) return;
             

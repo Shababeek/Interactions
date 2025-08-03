@@ -7,7 +7,7 @@ namespace Shababeek.Interactions.Editors
 {
     [CustomEditor(typeof(DrawerInteractable))]
     [CanEditMultipleObjects]
-    public class DrawerInteractableEditor : ConstrainedInteractableEditor
+    public class DrawerInteractableEditor : Editor
     {
         private static bool editDrawerRange = false;
         private bool showEvents = true;
@@ -39,7 +39,7 @@ namespace Shababeek.Interactions.Editors
         private SerializedProperty currentInteractorProp;
         private SerializedProperty currentStateProp;
 
-        protected override void OnEnable()
+        protected  void OnEnable()
         {
             interactionHandProp = serializedObject.FindProperty("interactionHand");
             selectionButtonProp = serializedObject.FindProperty("selectionButton");
@@ -61,7 +61,6 @@ namespace Shababeek.Interactions.Editors
             isSelectedProp = serializedObject.FindProperty("isSelected");
             currentInteractorProp = serializedObject.FindProperty("currentInteractor");
             currentStateProp = serializedObject.FindProperty("currentState");
-            base.OnEnable();
         }
 
         public override void OnInspectorGUI()
@@ -133,7 +132,6 @@ namespace Shababeek.Interactions.Editors
             serializedObject.ApplyModifiedProperties();
             #endregion
 
-            base.OnInspectorGUI();
         }
 
         private static void DoEditButton()
@@ -155,10 +153,9 @@ namespace Shababeek.Interactions.Editors
             EditorGUILayout.Space();
         }
 
-        protected override void OnSceneGUI()
+        protected  void OnSceneGUI()
         {
             if (!editDrawerRange) return;
-            base.OnSceneGUI();
             var drawer = (DrawerInteractable)target;
             Transform t = drawer.transform;
             Undo.RecordObject(drawer, "Move Drawer Points");

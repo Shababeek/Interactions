@@ -6,7 +6,7 @@ namespace Shababeek.Interactions.Editors
 {
     [CustomEditor(typeof(LeverInteractable))]
     [CanEditMultipleObjects]
-    public class LeverInteractableEditor : ConstrainedInteractableEditor
+    public class LeverInteractableEditor : Editor
     {
         // Editable properties
         private SerializedProperty returnToOriginalProp;
@@ -34,7 +34,7 @@ namespace Shababeek.Interactions.Editors
         private bool showEvents = true;
         private static bool editLeverRange = false;
 
-        protected override void OnEnable()
+        protected  void OnEnable()
         {
             returnToOriginalProp = serializedObject.FindProperty("returnToOriginal");
             minProp = serializedObject.FindProperty("min");
@@ -56,7 +56,6 @@ namespace Shababeek.Interactions.Editors
             isSelectedProp = serializedObject.FindProperty("isSelected");
             currentInteractorProp = serializedObject.FindProperty("currentInteractor");
             currentStateProp = serializedObject.FindProperty("currentState");
-            base.OnEnable();
         }
 
         public override void OnInspectorGUI()
@@ -130,9 +129,8 @@ namespace Shababeek.Interactions.Editors
             base.OnInspectorGUI();
         }
 
-        protected override void OnSceneGUI()
+        protected  void OnSceneGUI()
         {
-            base.OnSceneGUI();
             var lever = (LeverInteractable)target;
             Transform t = lever.transform;
             Vector3 pivot = t.position;

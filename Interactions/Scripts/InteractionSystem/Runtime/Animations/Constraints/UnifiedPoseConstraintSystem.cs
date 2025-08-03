@@ -83,9 +83,8 @@ namespace Shababeek.Interactions
         /// Applies pose constraints and visibility control to the specified interactor's hand.
         /// </summary>
         /// <param name="interactor">The interactor whose hand should be constrained.</param>
-        public void ApplyConstraints(InteractorBase interactor)
+        public void ApplyConstraints(Hand hand)
         {
-            var hand = interactor.Hand;
             
             switch (constraintType)
             {
