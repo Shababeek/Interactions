@@ -1,3 +1,5 @@
+using Shababeek.Interactions.Animations;
+
 namespace Shababeek.Interactions.Core
 {
     public interface IPoseable
@@ -32,7 +34,9 @@ namespace Shababeek.Interactions.Core
         /// <summary>
         ///  changes the pose constraints
         /// </summary>
-        public PoseConstrains  Constrains { set; } 
+        public PoseConstrains  Constrains { set; }
+
+        HandData HandData { get;}
     }
     
 }

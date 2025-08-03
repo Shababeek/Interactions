@@ -1,6 +1,8 @@
 using System;
+using Shababeek.Interactions.Animations;
 using Shababeek.Interactions.Animations.Constraints;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Shababeek.Interactions.Core
 {
@@ -70,6 +72,8 @@ namespace Shababeek.Interactions.Core
         {
             set => config = value;
         }
+
+        public HandData HandData =>poseDriver.HandData;
 
         /// <summary>
         /// Toggles the visibility of the hand model renderer.
