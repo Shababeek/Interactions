@@ -1,0 +1,379 @@
+using Shababeek.Interactions.Animations.Constraints;
+using Shababeek.Interactions.Animations;
+using Shababeek.Interactions.Core;
+using UnityEditor;
+using UnityEngine;
+
+namespace Shababeek.Interactions.Editors
+{
+    [CustomEditor(typeof(UnifiedPoseConstraintSystem))]
+    public class UnifiedPoseConstraintSystemEditor : Editor
+    {
+        private UnifiedPoseConstraintSystem _constraintSystem;
+        private SerializedProperty _constraintTypeProperty;
+        private SerializedProperty _leftPoseConstraintsProperty;
+        private SerializedProperty _rightPoseConstraintsProperty;
+        private SerializedProperty _leftHandPositioningProperty;
+        private SerializedProperty _rightHandPositioningProperty;
+
+        private Config _config;
+        private HandData _handdata;
+        private HandPoseController _currentHand;
+        private HandPoseController _leftHandPrefab, _rightHandPrefab;
+        private HandIdentifier _selectedHand = HandIdentifier.None;
+        private float _t = 0;
+
+
+        private void OnEnable()
+        {
+            _constraintSystem = (UnifiedPoseConstraintSystem)target;
+
+            _constraintTypeProperty = serializedObject.FindProperty("constraintType");
+            _leftPoseConstraintsProperty = serializedObject.FindProperty("leftPoseConstraints");
+            _rightPoseConstraintsProperty = serializedObject.FindProperty("rightPoseConstraints");
+            _leftHandPositioningProperty = serializedObject.FindProperty("leftHandPositioning");
+            _rightHandPositioningProperty = serializedObject.FindProperty("rightHandPositioning");
+            InitializeVariables();
+            EditorApplication.update += OnUpdate;
+        }
+
+        private void OnDisable()
+        {
+            _selectedHand = HandIdentifier.None;
+            Tools.hidden = false;
+            EditorApplication.update -= OnUpdate;
+            DeselectHands();
+        }
+
+        public override void OnInspectorGUI()
+        {
+            serializedObject.Update();
+            DrawConstraintType();
+            EditorGUILayout.Space();
+            if (_constraintSystem.ConstraintType == HandConstrainType.Constrained)
+            {
+                DrawHandSelection();
+                if (_selectedHand != HandIdentifier.None)
+                {
+                    DrawHandPositionEditor();
+                    EditorGUILayout.Space();
+                    DrawHandConstraints();
+                }
+            }
+
+            if (GUI.changed)
+            {
+                UpdateHandTransformFromVectors();
+            }
+
+            serializedObject.ApplyModifiedProperties();
+        }
+
+
+        private void DrawConstraintType()
+        {
+            EditorGUILayout.PropertyField(_constraintTypeProperty, new GUIContent("Hand Constraint Type"));
+            switch ((HandConstrainType)_constraintTypeProperty.enumValueIndex)
+            {
+                case HandConstrainType.HideHand:
+                    EditorGUILayout.HelpBox("Hands will be hidden during interaction.", MessageType.Info);
+                    break;
+
+                case HandConstrainType.FreeHand:
+                    EditorGUILayout.HelpBox("Hands will move freely without constraints.", MessageType.Info);
+                    break;
+
+                case HandConstrainType.Constrained:
+                    EditorGUILayout.HelpBox(
+                        "Hands will be constrained with pose click one of the buttons below toedit a hand",
+                        MessageType.Info);
+                    break;
+            }
+        }
+
+        private void DrawHandSelection()
+        {
+            EditorGUILayout.LabelField("Interactive Hand Selection", EditorStyles.boldLabel);
+
+            EditorGUILayout.BeginHorizontal();
+            var style = new GUIStyle(GUI.skin.button);
+            var rightHandClicked =
+                GUILayout.Toggle(_selectedHand == HandIdentifier.Right, "Edit Right Hand constraints", style) ^
+                _selectedHand == HandIdentifier.Right;
+            var leftHandClicked =
+                GUILayout.Toggle(_selectedHand == HandIdentifier.Left, "Edit Left Hand constraints", style) ^
+                _selectedHand == HandIdentifier.Left;
+
+            if (rightHandClicked)
+            {
+                SelectHand(_selectedHand == HandIdentifier.Right ? HandIdentifier.None : HandIdentifier.Right);
+            }
+
+            if (leftHandClicked)
+            {
+                SelectHand(_selectedHand == HandIdentifier.Left ? HandIdentifier.None : HandIdentifier.Left);
+            }
+
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void DrawHandPositionEditor()
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.HelpBox(
+                $"Editing {_selectedHand} hand constraints. Use the scene view to move the hand transform.",
+                MessageType.Info);
+            EditorGUILayout.LabelField("Hand Positioning", EditorStyles.boldLabel);
+            EditorGUI.indentLevel++;
+            if (_selectedHand == HandIdentifier.Left)
+            {
+                EditorGUILayout.PropertyField(_leftHandPositioningProperty, new GUIContent("Positioning"));
+            }
+            else if (_selectedHand == HandIdentifier.Right)
+            {
+                EditorGUILayout.PropertyField(_rightHandPositioningProperty, new GUIContent("Positioning"));
+            }
+
+            EditorGUI.indentLevel--;
+        }
+
+        private void DrawHandConstraints()
+        {
+            EditorGUILayout.LabelField("Pose Constraints", EditorStyles.boldLabel);
+            var poseConstraintsProperty = _selectedHand == HandIdentifier.Left
+                ? _leftPoseConstraintsProperty
+                : _rightPoseConstraintsProperty;
+            DrawPoseSelection(poseConstraintsProperty, _config.HandData);
+            var isStaticPose = IsStaticPose();
+            if (isStaticPose)
+            {
+                EditorGUILayout.HelpBox("Static pose detected - all fingers are locked. Finger constraints are hidden.",
+                    MessageType.Info);
+            }
+            else
+            {
+                EditorGUILayout.Space();
+                EditorGUILayout.LabelField("Finger Constraints", EditorStyles.boldLabel);
+                DrawFingerConstraint(poseConstraintsProperty, "thumbFingerLimits", "Thumb");
+                DrawFingerConstraint(poseConstraintsProperty, "indexFingerLimits", "Index");
+                DrawFingerConstraint(poseConstraintsProperty, "middleFingerLimits", "Middle");
+                DrawFingerConstraint(poseConstraintsProperty, "ringFingerLimits", "Ring");
+                DrawFingerConstraint(poseConstraintsProperty, "pinkyFingerLimits", "Pinky");
+            }
+            serializedObject.ApplyModifiedProperties();
+        }
+        
+        private void DrawPoseSelection(SerializedProperty poseConstraintsProperty, HandData handData)
+        {
+            var targetPoseIndexProperty = poseConstraintsProperty.FindPropertyRelative("targetPoseIndex");
+
+            var availablePoses = GetAvailablePoses(handData);
+
+            if (availablePoses.Length == 0)
+            {
+                EditorGUILayout.HelpBox("No poses found in HandData.", MessageType.Warning);
+                return;
+            }
+
+            var poseNames = new string[availablePoses.Length];
+            for (int i = 0; i < availablePoses.Length; i++)
+            {
+                poseNames[i] = availablePoses[i].Name;
+            }
+
+            // Get current selection
+            var currentIndex = targetPoseIndexProperty.intValue;
+            if (currentIndex >= availablePoses.Length || currentIndex < 0)
+            {
+                currentIndex = 0;
+            }
+
+            var newIndex = EditorGUILayout.Popup($"{_selectedHand} Hand Target Pose", currentIndex, poseNames);
+
+            // Update property if selection changed
+            if (newIndex != currentIndex)
+            {
+                targetPoseIndexProperty.intValue = newIndex;
+            }
+            serializedObject.ApplyModifiedProperties();
+        }
+
+        /// <summary>
+        /// Gets available poses from HandData.
+        /// </summary>
+        /// <param name="handData">The HandData asset.</param>
+        /// <returns>Array of available poses.</returns>
+        private PoseData[] GetAvailablePoses(HandData handData)
+        {
+            if (handData == null) return new PoseData[0];
+
+            // Try to get poses from HandData
+            // This assumes HandData has a poses array or similar
+            // You may need to adjust this based on your actual HandData structure
+            return handData.Poses ?? new PoseData[0];
+        }
+        
+        private bool IsStaticPose()
+        {
+            var constraint = _selectedHand == HandIdentifier.Left
+                ? _constraintSystem.LeftPoseConstrains
+                : _constraintSystem.RightPoseConstrains;
+            var targetPoseIndex = constraint.targetPoseIndex;
+            if (targetPoseIndex <= 0 || targetPoseIndex >= _handdata.Poses.Length) return false;
+            var selectedPose = _handdata.Poses[targetPoseIndex];
+            return (selectedPose.Type == PoseData.PoseType.Static);
+        }
+
+
+        private void DrawFingerConstraint(SerializedProperty poseConstraintsProperty, string fingerPropertyName,
+            string fingerDisplayName)
+        {
+            var fingerProperty = poseConstraintsProperty.FindPropertyRelative(fingerPropertyName);
+            EditorGUILayout.PropertyField(fingerProperty, new GUIContent(fingerDisplayName));
+        }
+
+        private void InitializeVariables()
+        {
+            _selectedHand = HandIdentifier.None;
+
+            _config = FindAnyObjectByType<CameraRig>()?.Config;
+            if (!_config)
+            {
+                var configAsset = AssetDatabase.FindAssets("t:Shababeek.Interactions.Core.Config");
+                if (configAsset.Length > 0)
+                {
+                    var path = AssetDatabase.GUIDToAssetPath(configAsset[0]);
+                    _config = AssetDatabase.LoadAssetAtPath<Config>(path);
+                }
+            }
+
+            if (_config?.HandData != null)
+            {
+                _handdata=_config.HandData;
+                _leftHandPrefab = _handdata.LeftHandPrefab;
+                _rightHandPrefab = _handdata.RightHandPrefab;
+            }
+            else
+            {
+                Debug.LogWarning("No HandData found in Config. Interactive hand preview will not work.");
+            }
+        }
+
+
+        private HandPoseController CreateHandInPivot(Transform pivot, HandPoseController handPrefab)
+        {
+            if (handPrefab == null) return null;
+
+            var initializedHand = Instantiate(handPrefab);
+            var handObject = initializedHand.gameObject;
+            handObject.transform.localScale = Vector3.one;
+            handObject.transform.parent = pivot;
+            handObject.transform.localPosition = Vector3.zero;
+            handObject.transform.localRotation = Quaternion.identity;
+            initializedHand.Initialize();
+            return initializedHand;
+        }
+
+
+        private void SelectHand(HandIdentifier hand)
+        {
+            if (_selectedHand == hand) return;
+
+            DeselectHands();
+            _selectedHand = hand;
+
+            if (_selectedHand != HandIdentifier.None)
+            {
+                // Create the hand as a child of the constraint system object
+                var handPrefab = _selectedHand == HandIdentifier.Left ? _leftHandPrefab : _rightHandPrefab;
+                _currentHand = CreateHandInPivot(_constraintSystem.transform, handPrefab);
+
+                // Set the hand's local position and rotation based on the vector values
+                UpdateHandTransformFromVectors();
+            }
+        }
+
+        private void UpdateHandTransformFromVectors()
+        {
+            if (_currentHand == null || _selectedHand == HandIdentifier.None) return;
+
+            var positioningProperty = _selectedHand == HandIdentifier.Left
+                ? _leftHandPositioningProperty
+                : _rightHandPositioningProperty;
+
+            var positionOffset = positioningProperty.FindPropertyRelative("positionOffset").vector3Value;
+            var rotationOffset = positioningProperty.FindPropertyRelative("rotationOffset").vector3Value;
+
+            _currentHand.transform.localPosition = positionOffset;
+            _currentHand.transform.localRotation = Quaternion.Euler(rotationOffset);
+        }
+        
+        private void UpdateVectorsFromTransform()
+        {
+            if (_currentHand == null || _selectedHand == HandIdentifier.None) return;
+
+            var positioningProperty = _selectedHand == HandIdentifier.Left
+                ? _leftHandPositioningProperty
+                : _rightHandPositioningProperty;
+
+            positioningProperty.FindPropertyRelative("positionOffset").vector3Value =
+                _currentHand.transform.localPosition;
+            positioningProperty.FindPropertyRelative("rotationOffset").vector3Value =
+                _currentHand.transform.localEulerAngles;
+
+            serializedObject.ApplyModifiedProperties();
+        }
+        
+        private void DeselectHands()
+        {
+            if (_currentHand)
+            {
+                DestroyImmediate(_currentHand.gameObject);
+                _currentHand = null;
+            }
+        }
+        
+        private void OnUpdate()
+        {
+            SetPose();
+        }
+        
+        private void SetPose()
+        {
+            if (_selectedHand == HandIdentifier.None || _currentHand == null) return;
+
+            this._t += 0.01f;
+            var finger = Mathf.PingPong(this._t, 1);
+
+            var handConstraints = _selectedHand == HandIdentifier.Left
+                ? _constraintSystem.LeftPoseConstrains
+                : _constraintSystem.RightPoseConstrains;
+
+            for (var i = 0; i < 5; i++)
+            {
+                _currentHand[i] = handConstraints[i].constraints.GetConstrainedValue(finger);
+            }
+
+            _currentHand.Pose = handConstraints[0].pose;
+            _currentHand.UpdateGraphVariables();
+        }
+        
+        protected virtual void OnSceneGUI()
+        {
+            if (!_currentHand || _selectedHand == HandIdentifier.None)
+            {
+                Tools.hidden = false;
+                return;
+            }
+            Tools.hidden = true;
+            var position = _currentHand.transform.localPosition;
+            var rotation = _currentHand.transform.localEulerAngles;
+            var worldPosition = _currentHand.transform.position;
+            var worldRotation = _currentHand.transform.rotation;
+            Handles.TransformHandle(ref worldPosition, ref worldRotation);
+            _currentHand.transform.position = worldPosition;
+            _currentHand.transform.rotation = worldRotation;
+            UpdateVectorsFromTransform();
+        }
+    }
+}
