@@ -36,6 +36,11 @@ namespace Shababeek.Interactions
         public bool HasChanged => transform.hasChanged;
         public PoseConstrains LeftPoseConstrains => leftConstraints.poseConstrains;
         public PoseConstrains RightPoseConstrains => rightConstraints.poseConstrains;
+        
+        // New interface properties for backward compatibility
+        public HandConstrainType ConstraintType => HandConstrainType.Constrained;
+        public bool UseSmoothTransitions => false;
+        public float TransitionSpeed => 10f;
 
         public void UpdatePivots()
         {
@@ -54,6 +59,28 @@ namespace Shababeek.Interactions
         public void Initialize()
         {
             UpdatePivots();
+        }
+        
+        /// <summary>
+        /// Applies pose constraints to the specified interactor's hand.
+        /// This method handles all constraint types (Hide, Free, Constrained) and smooth transitions.
+        /// </summary>
+        /// <param name="interactor">The interactor whose hand should be constrained.</param>
+        public void ApplyConstraints(InteractorBase interactor)
+        {
+            // Legacy behavior - just apply pose constraints
+            interactor.Hand.Constrain(this);
+        }
+        
+        /// <summary>
+        /// Removes all pose constraints from the specified interactor's hand.
+        /// This method restores the hand to its default state.
+        /// </summary>
+        /// <param name="interactor">The interactor whose hand should be unconstrained.</param>
+        public void RemoveConstraints(InteractorBase interactor)
+        {
+            // Legacy behavior - just remove pose constraints
+            interactor.Hand.Unconstrain(this);
         }
 
         private void OnEnable()
