@@ -110,4 +110,5 @@ namespace Shababeek.Core
             return Value.GetHashCode();
         }
     }
+    public class Vector3Reference: VariableReference<Vector3>{}
 } 
