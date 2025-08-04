@@ -1,11 +1,7 @@
-using Shababeek.Interactions;
 using Shababeek.Interactions.Animations.Constraints;
 using Shababeek.Interactions.Core;
-using UniRx;
-using UniRx.Triggers;
-using UnityEngine;
-using Shababeek.Interactions.Animations;
 
+using UnityEngine;
 namespace Shababeek.Interactions
 {
     /// <summary>
