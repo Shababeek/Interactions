@@ -1,96 +1,279 @@
 using UnityEditor;
 using UnityEngine;
+using Shababeek.Interactions;
 
 namespace Shababeek.Interactions.Editors
 {
+    /// <summary>
+    /// Custom editor for the WheelInteractable component with enhanced visualization and interactive editing.
+    /// </summary>
     [CustomEditor(typeof(WheelInteractable))]
     [CanEditMultipleObjects]
     public class WheelInteractableEditor : Editor
     {
-        // Events
-        private SerializedProperty _onWheelRotatedProp;
-        private SerializedProperty _onSelectedProp;
-        private SerializedProperty _onDeselectedProp;
-        private SerializedProperty _onHoverStartProp;
-        private SerializedProperty _onHoverEndProp;
-        private SerializedProperty _onActivatedProp;
-        // Read-only
-        private SerializedProperty _currentRotationProp;
-        private SerializedProperty _isSelectedProp;
-        private SerializedProperty _currentInteractorProp;
-        private SerializedProperty _currentStateProp;
-        // Editable properties
-        private SerializedProperty _interactionHandProp;
-        private SerializedProperty _selectionButtonProp;
-        private SerializedProperty _interactableObjectProp;
-        private SerializedProperty _snapDistanceProp;
-        private bool _showEvents = true;
+        private WheelInteractable _wheelComponent;
 
-        protected  void OnEnable()
+        private SerializedProperty _rotationAxis;
+
+        private SerializedProperty _returnToStart;
+        private SerializedProperty _returnSpeed;
+        
+        private SerializedProperty _interactionHand;
+        private SerializedProperty _selectionButton;
+        private SerializedProperty _interactableObject;
+
+        // Events
+        private SerializedProperty _onWheelAngleChanged;
+        private SerializedProperty _onWheelRotated;
+        private SerializedProperty _onSelected;
+        private SerializedProperty _onDeselected;
+        private SerializedProperty _onHoverStart;
+        private SerializedProperty _onHoverEnd;
+        private SerializedProperty _onActivated;
+
+        // Debug
+        private SerializedProperty _currentAngle;
+        private SerializedProperty _currentRotation;
+        private SerializedProperty _isSelected;
+        private SerializedProperty _currentInteractor;
+        private SerializedProperty _currentState;
+
+        private bool _showEvents = true;
+        private void OnEnable()
         {
-            _onWheelRotatedProp = serializedObject.FindProperty("onWheelRotated");
-            _onSelectedProp = serializedObject.FindProperty("onSelected");
-            _onDeselectedProp = serializedObject.FindProperty("onDeselected");
-            _onHoverStartProp = serializedObject.FindProperty("onHoverStart");
-            _onHoverEndProp = serializedObject.FindProperty("onHoverEnd");
-            _onActivatedProp = serializedObject.FindProperty("onActivated");
-            _currentRotationProp = serializedObject.FindProperty("currentRotation");
-            _isSelectedProp = serializedObject.FindProperty("isSelected");
-            _currentInteractorProp = serializedObject.FindProperty("currentInteractor");
-            _currentStateProp = serializedObject.FindProperty("currentState");
-            _interactionHandProp = serializedObject.FindProperty("interactionHand");
-            _selectionButtonProp = serializedObject.FindProperty("selectionButton");
-            _interactableObjectProp = serializedObject.FindProperty("interactableObject");
-            _snapDistanceProp = serializedObject.FindProperty("snapDistance");
+            _wheelComponent = (WheelInteractable)target;
+
+            _rotationAxis = serializedObject.FindProperty("rotationAxis");
+
+            _returnToStart = serializedObject.FindProperty("returnToStart");
+            _returnSpeed = serializedObject.FindProperty("returnSpeed");
+
+            _interactionHand = serializedObject.FindProperty("interactionHand");
+            _selectionButton = serializedObject.FindProperty("selectionButton");
+            _interactableObject = serializedObject.FindProperty("interactableObject");
+
+            _onWheelAngleChanged = serializedObject.FindProperty("onWheelAngleChanged");
+            _onWheelRotated = serializedObject.FindProperty("onWheelRotated");
+            _onSelected = serializedObject.FindProperty("onSelected");
+            _onDeselected = serializedObject.FindProperty("onDeselected");
+            _onHoverStart = serializedObject.FindProperty("onHoverStart");
+            _onHoverEnd = serializedObject.FindProperty("onHoverEnd");
+            _onActivated = serializedObject.FindProperty("onActivated");
+
+            _currentAngle = serializedObject.FindProperty("currentAngle");
+            _currentRotation = serializedObject.FindProperty("currentRotation");
+            _isSelected = serializedObject.FindProperty("isSelected");
+            _currentInteractor = serializedObject.FindProperty("currentInteractor");
+            _currentState = serializedObject.FindProperty("currentState");
         }
 
         public override void OnInspectorGUI()
         {
-            EditorGUILayout.HelpBox(
-                "The wheel will rotate based on hand position and track full rotations.\n\n" +
-                "Pose constraints are automatically handled by the UnifiedPoseConstraintSystem component (automatically added). Use it to configure hand poses and positioning.",
-                MessageType.Info
-            );
             serializedObject.Update();
-            // Editable properties
-            if (_interactionHandProp != null)
-                EditorGUILayout.PropertyField(_interactionHandProp);
-            if (_selectionButtonProp != null)
-                EditorGUILayout.PropertyField(_selectionButtonProp);
-            if (_interactableObjectProp != null)
-                EditorGUILayout.PropertyField(_interactableObjectProp, new GUIContent("Interactable Object"));
-            if (_snapDistanceProp != null)
-                EditorGUILayout.PropertyField(_snapDistanceProp);
-            // Events foldout
+
+            // Header
+            EditorGUILayout.HelpBox(
+                "Configure the wheel rotation axis. Visual gizmos will show in the scene view.",
+                MessageType.Info);
+            
+            // Rotation limits disabled for now
+            //DrawPresets();
+
+            EditorGUILayout.Space();
+
+            // Base Interaction Settings
+            EditorGUILayout.LabelField("Interaction Settings", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(_interactionHand);
+            EditorGUILayout.PropertyField(_selectionButton);
+            EditorGUILayout.PropertyField(_interactableObject);
+
+            EditorGUILayout.Space();
+            EditorGUILayout.PropertyField(_rotationAxis);
+            EditorGUILayout.Space();
+            EditorGUILayout.PropertyField(_returnToStart);
+            if (_returnToStart.boolValue)
+            {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(_returnSpeed);
+                EditorGUI.indentLevel--;
+            }
+
+            EditorGUILayout.Space();
+            
+            
+
             _showEvents = EditorGUILayout.BeginFoldoutHeaderGroup(_showEvents, "Events");
             if (_showEvents)
             {
-                if (_onWheelRotatedProp != null)
-                    EditorGUILayout.PropertyField(_onWheelRotatedProp);
-                if (_onSelectedProp != null)
-                    EditorGUILayout.PropertyField(_onSelectedProp);
-                if (_onDeselectedProp != null)
-                    EditorGUILayout.PropertyField(_onDeselectedProp);
-                if (_onHoverStartProp != null)
-                    EditorGUILayout.PropertyField(_onHoverStartProp);
-                if (_onHoverEndProp != null)
-                    EditorGUILayout.PropertyField(_onHoverEndProp);
-                if (_onActivatedProp != null)
-                    EditorGUILayout.PropertyField(_onActivatedProp);
+                DrawEventsInspector();
             }
             EditorGUILayout.EndFoldoutHeaderGroup();
-            // Read-only fields at the end
-            EditorGUI.BeginDisabledGroup(true);
-            if (_currentRotationProp != null)
-                EditorGUILayout.PropertyField(_currentRotationProp);
-            if (_isSelectedProp != null)
-                EditorGUILayout.PropertyField(_isSelectedProp);
-            if (_currentInteractorProp != null)
-                EditorGUILayout.PropertyField(_currentInteractorProp);
-            if (_currentStateProp != null)
-                EditorGUILayout.PropertyField(_currentStateProp);
-            EditorGUI.EndDisabledGroup();
+
+            EditorGUILayout.Space();
+
+            EditorGUILayout.LabelField("Debug", EditorStyles.boldLabel);
+            GUI.enabled = false;
+            EditorGUILayout.PropertyField(_currentAngle);
+            EditorGUILayout.PropertyField(_currentRotation);
+            EditorGUILayout.PropertyField(_isSelected);
+            EditorGUILayout.PropertyField(_currentInteractor);
+            EditorGUILayout.PropertyField(_currentState);
+            GUI.enabled = true;
+
+            if (Application.isPlaying)
+            {
+                EditorGUILayout.Space();
+                EditorGUILayout.LabelField("Runtime Controls", EditorStyles.boldLabel);
+
+                EditorGUILayout.BeginHorizontal();
+                if (GUILayout.Button("Reset Wheel"))
+                {
+                    _wheelComponent.ResetWheel();
+                }
+
+                if (GUILayout.Button("Set to 0°"))
+                {
+                    _wheelComponent.SetWheelAngle(0);
+                }
+
+                EditorGUILayout.EndHorizontal();
+
+                // Angle slider
+                var currentAngle = _wheelComponent.CurrentAngle;
+                var newAngle = EditorGUILayout.Slider("Set Angle", currentAngle, -720f, 720f);
+                if (!Mathf.Approximately(newAngle, currentAngle))
+                {
+                    _wheelComponent.SetWheelAngle(newAngle);
+                }
+            }
+
+            // Visual Guide
+            DrawVisualGuide();
+
             serializedObject.ApplyModifiedProperties();
         }
+
+        private void DrawEventsInspector()
+        {
+            EditorGUILayout.PropertyField(_onWheelAngleChanged);
+            EditorGUILayout.PropertyField(_onWheelRotated);
+            EditorGUILayout.PropertyField(_onSelected);
+            EditorGUILayout.PropertyField(_onDeselected);
+            EditorGUILayout.PropertyField(_onHoverStart);
+            EditorGUILayout.PropertyField(_onHoverEnd);
+            EditorGUILayout.PropertyField(_onActivated);
+        }
+
+
+        /// <summary>
+        /// Draws quick preset buttons for common wheel configurations.
+        /// </summary>
+        private void DrawPresets()
+        {
+            EditorGUILayout.LabelField("Quick Presets", EditorStyles.boldLabel);
+
+            EditorGUILayout.BeginHorizontal();
+
+            if (GUILayout.Button("Steering Wheel\n(spring back)"))
+            {
+                _returnToStart.boolValue = true;
+                _returnSpeed.floatValue = 180f;
+            }
+
+            if (GUILayout.Button("Control Knob\n(stays in place)"))
+            {
+                _returnToStart.boolValue = false;
+                _returnSpeed.floatValue = 90f;
+            }
+
+            if (GUILayout.Button("Valve Wheel\n(free rotation)"))
+            {
+                _returnToStart.boolValue = false;
+                _returnSpeed.floatValue = 90f;
+            }
+
+            EditorGUILayout.EndHorizontal();
+        }
+
+        /// <summary>
+        /// Draws a visual guide showing the gizmo colors and meanings.
+        /// </summary>
+        private void DrawVisualGuide()
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Scene View Visual Guide", EditorStyles.boldLabel);
+
+            var originalColor = GUI.color;
+
+            EditorGUILayout.BeginHorizontal();
+            GUI.color = Color.yellow;
+            EditorGUILayout.LabelField("█", GUILayout.Width(12));
+            GUI.color = originalColor;
+            EditorGUILayout.LabelField("Rotation Axis", GUILayout.Width(80));
+
+            GUI.color = Color.cyan;
+            EditorGUILayout.LabelField("█", GUILayout.Width(12));
+            GUI.color = originalColor;
+            EditorGUILayout.LabelField("Reference Direction", GUILayout.Width(120));
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.BeginHorizontal();
+            GUI.color = Color.green;
+            EditorGUILayout.LabelField("█", GUILayout.Width(12));
+            GUI.color = originalColor;
+            EditorGUILayout.LabelField("Current Rotation", GUILayout.Width(120));
+            EditorGUILayout.EndHorizontal();
+
+            GUI.color = originalColor;
+        }
+
+        /// <summary>
+        /// Draws handles in the scene view for interactive configuration.
+        /// </summary>
+        private void OnSceneGUI()
+        {
+            // TODO: Limits visualization and editing
+            return;
+            if (_wheelComponent == null || _wheelComponent.InteractableObject == null) return;
+
+            var wheelTransform = _wheelComponent.InteractableObject.transform;
+            var position = wheelTransform.position;
+            var rotationAxisVector = GetRotationAxisVector();
+            var referenceVector = GetReferenceVector();
+            var radius = HandleUtility.GetHandleSize(position) * 1.2f;
+
+            return;
+            
+        }
+
+        /// <summary>
+        /// Gets the rotation axis vector based on the configured rotation axis.
+        /// </summary>
+        private Vector3 GetRotationAxisVector()
+        {
+            var axis = (Axis)_rotationAxis.enumValueIndex;
+            return axis switch
+            {
+                Axis.X => _wheelComponent.InteractableObject.transform.right,
+                Axis.Y => _wheelComponent.InteractableObject.transform.up,
+                Axis.Z => _wheelComponent.InteractableObject.transform.forward,
+                _ => _wheelComponent.InteractableObject.transform.forward
+            };
+        }
+
+        /// <summary>
+        /// Gets the reference vector based on the configured rotation axis.
+        /// </summary>
+        private Vector3 GetReferenceVector()
+        {
+            var axis = (Axis)_rotationAxis.enumValueIndex;
+            return axis switch
+            {
+                Axis.X => _wheelComponent.InteractableObject.transform.forward,
+                Axis.Y => _wheelComponent.InteractableObject.transform.forward,
+                Axis.Z => _wheelComponent.InteractableObject.transform.up,
+                _ => _wheelComponent.InteractableObject.transform.up
+            };
+        }
     }
-} 
+}
