@@ -1,3 +1,4 @@
+using Shababeek.Core;
 using Shababeek.Interactions.Animations.Constraints;
 using Shababeek.Interactions.Core;
 
@@ -56,8 +57,15 @@ namespace Shababeek.Interactions
         
         [Tooltip("Positioning data for the right hand relative to the interactable.")]
         [SerializeField] private HandPositioning rightHandPositioning = HandPositioning.Zero;
-        
-        // IPoseConstrainer Implementation (for backward compatibility)
+
+        [SerializeField, ReadOnly] private Transform parent;
+
+        public Transform Parent
+        {
+            get => parent==null ? transform : parent;
+            set => parent = value;
+        }
+
         public PoseConstrains LeftPoseConstrains => leftPoseConstraints;
         public PoseConstrains RightPoseConstrains => rightPoseConstraints;
         
@@ -119,21 +127,33 @@ namespace Shababeek.Interactions
         /// Gets the target position and rotation for the specified hand identifier.
         /// </summary>
         /// <param name="handIdentifier">The hand identifier (Left or Right).</param>
-        /// <returns>The target position and rotation for the specified hand.</returns>
+        /// <returns>The target position and rotation for the specified hand in LOCAL coordinates relative to this transform.</returns>
         public (Vector3 position, Quaternion rotation) GetTargetHandTransform(HandIdentifier handIdentifier)
         {
             if (handIdentifier == HandIdentifier.Left)
             {
-                var position = transform.position + transform.rotation * leftHandPositioning.positionOffset;
-                var rotation = transform.rotation * Quaternion.Euler(leftHandPositioning.rotationOffset);
+                var position = leftHandPositioning.positionOffset;
+                var rotation = Quaternion.Euler(leftHandPositioning.rotationOffset);
                 return (position, rotation);
             }
             else
             {
-                var position = transform.position + transform.rotation * rightHandPositioning.positionOffset;
-                var rotation = transform.rotation * Quaternion.Euler(rightHandPositioning.rotationOffset);
+                var position = rightHandPositioning.positionOffset;
+                var rotation = Quaternion.Euler(rightHandPositioning.rotationOffset);
                 return (position, rotation);
             }
+        }
+        
+        public (Vector3 position, Quaternion rotation) GetRelativeTargetHandTransform(Transform parent,HandIdentifier handIdentifier)
+        {
+            var transfom = GetTargetHandTransform(handIdentifier);
+            Vector3 worldPosition = transform.TransformPoint(transfom.position);
+            Quaternion worldRotation = transform.rotation * transfom.rotation;
+            
+            //  convert from world space to interactableObject's local space
+            transfom.position = parent.InverseTransformPoint(worldPosition);
+            transfom.rotation = Quaternion.Inverse(parent.rotation) * worldRotation;
+            return transfom;
         }
         
         /// <summary>

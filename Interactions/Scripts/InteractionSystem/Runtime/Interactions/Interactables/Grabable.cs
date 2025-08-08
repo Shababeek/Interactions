@@ -100,14 +100,18 @@ namespace Shababeek.Interactions
         
         private void InitializeAttachmentPointTransform()
         {
-            // Get target position and rotation for the current hand
-            var (targetPosition, targetRotation) = CurrentInteractor.Hand.HandIdentifier == HandIdentifier.Left ? 
+            // Get target position and rotation for the current hand (in local coordinates)
+            var (localPosition, localRotation) = CurrentInteractor.Hand.HandIdentifier == HandIdentifier.Left ? 
                 GetLeftHandTarget() : GetRightHandTarget();
+            
+            // Convert local coordinates to world coordinates
+            var worldPosition = _poseConstraintSystem.transform.TransformPoint(localPosition);
+            var worldRotation = _poseConstraintSystem.transform.rotation * localRotation;
             
             // Create a temporary transform to calculate the attachment point
             var tempTransform = new GameObject("TempAttachment").transform;
-            tempTransform.position = targetPosition;
-            tempTransform.rotation = targetRotation;
+            tempTransform.position = worldPosition;
+            tempTransform.rotation = worldRotation;
             
             // Calculate the attachment point relative to the target
             transform.parent = tempTransform;
