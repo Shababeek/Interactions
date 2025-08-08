@@ -4,153 +4,142 @@ using Shababeek.Interactions;
 
 namespace Shababeek.Interactions.Editors
 {
+    /// <summary>
+    /// Custom editor for the TurretInteractable component with enhanced visualization and interactive editing.
+    /// </summary>
     [CustomEditor(typeof(TurretInteractable))]
     [CanEditMultipleObjects]
     public class TurretInteractableEditor : Editor
     {
-        // Editable properties
-        private SerializedProperty _limitXRotationProp;
-        private SerializedProperty _minXAngleProp;
-        private SerializedProperty _maxXAngleProp;
-        private SerializedProperty _limitYRotationProp;
-        private SerializedProperty _minYAngleProp;
-        private SerializedProperty _maxYAngleProp;
-        private SerializedProperty _limitZRotationProp;
-        private SerializedProperty _minZAngleProp;
-        private SerializedProperty _maxZAngleProp;
-        private SerializedProperty _returnToOriginalProp;
-        private SerializedProperty _returnSpeedProp;
-        private SerializedProperty _interactionHandProp;
-        private SerializedProperty _selectionButtonProp;
-        private SerializedProperty _interactableObjectProp;
-        private SerializedProperty _snapDistanceProp;
-        //events
-        private SerializedProperty _onRotationChangedProp;
-        private SerializedProperty _onXRotationChangedProp;
-        private SerializedProperty _onYRotationChangedProp;
-        private SerializedProperty _onZRotationChangedProp;
-        private SerializedProperty _onSelectedProp;
-        private SerializedProperty _onDeselectedProp;
-        private SerializedProperty _onHoverStartProp;
-        private SerializedProperty _onHoverEndProp;
-        private SerializedProperty _onActivatedProp;
-
-        // Read-only
-        private SerializedProperty _currentRotationProp;
-        private SerializedProperty _normalizedRotationProp;
-        private SerializedProperty _isSelectedProp;
-        private SerializedProperty _currentInteractorProp;
-        private SerializedProperty _currentStateProp;
-
+        private TurretInteractable turretComponent;
+        
+        // Rotation Limits
+        private SerializedProperty _limitXRotation;
+        private SerializedProperty _minXAngle;
+        private SerializedProperty _maxXAngle;
+        private SerializedProperty _limitZRotation;
+        private SerializedProperty _minZAngle;
+        private SerializedProperty _maxZAngle;
+            
+        // Return Behavior
+        private SerializedProperty _returnToOriginal;
+        private SerializedProperty _returnSpeed;
+        
+        private SerializedProperty _interactionHand;
+        private SerializedProperty _selectionButton;
+        private SerializedProperty _interactableObject;
+        
+        // Events
+        private SerializedProperty _onRotationChanged;
+        private SerializedProperty _onXRotationChanged;
+        private SerializedProperty _onZRotationChanged;
+        private SerializedProperty _onSelected;
+        private SerializedProperty _onDeselected;
+        private SerializedProperty _onHoverStart;
+        private SerializedProperty _onHoverEnd;
+        private SerializedProperty _onActivated;
+        
+        // Debug
+        private SerializedProperty _currentRotation;
+        private SerializedProperty _normalizedRotation;
+        private SerializedProperty _isSelected;
+        private SerializedProperty _currentInteractor;
+        private SerializedProperty _currentState;
+        
         private bool _showEvents = true;
         private bool _showRotationLimits = true;
+        private bool _showMovementSettings = true;
         private static bool _editRotationLimits = false;
 
-        protected  void OnEnable()
+        private void OnEnable()
         {
-            _limitXRotationProp = serializedObject.FindProperty("limitXRotation");
-            _minXAngleProp = serializedObject.FindProperty("minXAngle");
-            _maxXAngleProp = serializedObject.FindProperty("maxXAngle");
-            _limitYRotationProp = serializedObject.FindProperty("limitYRotation");
-            _minYAngleProp = serializedObject.FindProperty("minYAngle");
-            _maxYAngleProp = serializedObject.FindProperty("maxYAngle");
-            _limitZRotationProp = serializedObject.FindProperty("limitZRotation");
-            _minZAngleProp = serializedObject.FindProperty("minZAngle");
-            _maxZAngleProp = serializedObject.FindProperty("maxZAngle");
-            _returnToOriginalProp = serializedObject.FindProperty("returnToOriginal");
-            _returnSpeedProp = serializedObject.FindProperty("returnSpeed");
-            _interactionHandProp = serializedObject.FindProperty("interactionHand");
-            _selectionButtonProp = serializedObject.FindProperty("selectionButton");
-            _interactableObjectProp = serializedObject.FindProperty("interactableObject");
-            _snapDistanceProp = serializedObject.FindProperty("snapDistance");
+            turretComponent = (TurretInteractable)target;
             
-            _onRotationChangedProp = serializedObject.FindProperty("onRotationChanged");
-            _onXRotationChangedProp = serializedObject.FindProperty("onXRotationChanged");
-            _onYRotationChangedProp = serializedObject.FindProperty("onYRotationChanged");
-            _onZRotationChangedProp = serializedObject.FindProperty("onZRotationChanged");
-            _onSelectedProp = serializedObject.FindProperty("onSelected");
-            _onDeselectedProp = serializedObject.FindProperty("onDeselected");
-            _onHoverStartProp = serializedObject.FindProperty("onHoverStart");
-            _onHoverEndProp = serializedObject.FindProperty("onHoverEnd");
-            _onActivatedProp = serializedObject.FindProperty("onActivated");
+            // Rotation Limits
+            _limitXRotation = serializedObject.FindProperty("limitXRotation");
+            _minXAngle = serializedObject.FindProperty("minXAngle");
+            _maxXAngle = serializedObject.FindProperty("maxXAngle");
+            _limitZRotation = serializedObject.FindProperty("limitZRotation");
+            _minZAngle = serializedObject.FindProperty("minZAngle");
+            _maxZAngle = serializedObject.FindProperty("maxZAngle");
+
+            _returnToOriginal = serializedObject.FindProperty("returnToOriginal");
+            _returnSpeed = serializedObject.FindProperty("returnSpeed");
             
-            _currentRotationProp = serializedObject.FindProperty("currentRotation");
-            _normalizedRotationProp = serializedObject.FindProperty("normalizedRotation");
-            _isSelectedProp = serializedObject.FindProperty("isSelected");
-            _currentInteractorProp = serializedObject.FindProperty("currentInteractor");
-            _currentStateProp = serializedObject.FindProperty("currentState");
+            _interactionHand = serializedObject.FindProperty("interactionHand");
+            _selectionButton = serializedObject.FindProperty("selectionButton");
+            _interactableObject = serializedObject.FindProperty("interactableObject");
             
+            _onRotationChanged = serializedObject.FindProperty("onRotationChanged");
+            _onXRotationChanged = serializedObject.FindProperty("onXRotationChanged");
+            _onZRotationChanged = serializedObject.FindProperty("onZRotationChanged");
+            _onSelected = serializedObject.FindProperty("onSelected");
+            _onDeselected = serializedObject.FindProperty("onDeselected");
+            _onHoverStart = serializedObject.FindProperty("onHoverStart");
+            _onHoverEnd = serializedObject.FindProperty("onHoverEnd");
+            _onActivated = serializedObject.FindProperty("onActivated");
+            
+            _currentRotation = serializedObject.FindProperty("currentRotation");
+            _normalizedRotation = serializedObject.FindProperty("normalizedRotation");
+            _isSelected = serializedObject.FindProperty("isSelected");
+            _currentInteractor = serializedObject.FindProperty("currentInteractor");
+            _currentState = serializedObject.FindProperty("currentState");
         }
 
         public override void OnInspectorGUI()
         {
-            EditorGUILayout.HelpBox(
-                "Configure the turret's rotation limits for each axis. The turret will rotate to follow the hand position.\n\n" +
-                "Pose constraints are automatically handled by the UnifiedPoseConstraintSystem component (automatically added). Use it to configure hand poses and positioning.",
-                MessageType.Info
-            );
-            
             serializedObject.Update();
-            DoEditButton();
             
-            // Basic settings
-            if (_interactionHandProp != null)
-                EditorGUILayout.PropertyField(_interactionHandProp);
-            if (_selectionButtonProp != null)
-                EditorGUILayout.PropertyField(_selectionButtonProp);
-            if (_interactableObjectProp != null)
-                EditorGUILayout.PropertyField(_interactableObjectProp, new GUIContent("Interactable Object"));
-            if (_snapDistanceProp != null)
-                EditorGUILayout.PropertyField(_snapDistanceProp);
+            // Header
+            EditorGUILayout.HelpBox(
+                "Turret-style interactable with X (pitch) and Z (roll) axis rotation.\n\n" +
+                "Hand Movement Mapping:\n" +
+                "• Hand up/down → X-axis rotation (pitch)\n" +
+                "• Hand left/right → Z-axis rotation (roll)\n\n" +
+                "Use the edit button to interactively adjust rotation limits in the scene view.",
+                MessageType.Info);
             
-            // Return behavior
-            if (_returnToOriginalProp != null)
-                EditorGUILayout.PropertyField(_returnToOriginalProp, new GUIContent("Return to Original Position"));
-            if (_returnSpeedProp != null)
-                EditorGUILayout.PropertyField(_returnSpeedProp, new GUIContent("Return Speed"));
+            // Edit button
+            DrawEditButton();
             
-            // Rotation limits foldout
+            // Quick Presets
+            DrawPresets();
+            
+            EditorGUILayout.Space();
+            
+            // Base Interaction Settings
+            EditorGUILayout.LabelField("Interaction Settings", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(_interactionHand);
+            EditorGUILayout.PropertyField(_selectionButton);
+            EditorGUILayout.PropertyField(_interactableObject);
+            
+            EditorGUILayout.Space();
+            
+            // Rotation Limits Section
             _showRotationLimits = EditorGUILayout.BeginFoldoutHeaderGroup(_showRotationLimits, "Rotation Limits");
             if (_showRotationLimits)
             {
                 EditorGUI.indentLevel++;
                 
-                // X Rotation
-                if (_limitXRotationProp != null)
-                    EditorGUILayout.PropertyField(_limitXRotationProp, new GUIContent("Limit X Rotation"));
-                if (_limitXRotationProp.boolValue)
+                // X Rotation (Pitch)
+                EditorGUILayout.PropertyField(_limitXRotation, new GUIContent("Limit X Rotation (Pitch)"));
+                if (_limitXRotation.boolValue)
                 {
                     EditorGUILayout.BeginHorizontal();
-                    if (_minXAngleProp != null)
-                        EditorGUILayout.PropertyField(_minXAngleProp, new GUIContent("Min X (°)"));
-                    if (_maxXAngleProp != null)
-                        EditorGUILayout.PropertyField(_maxXAngleProp, new GUIContent("Max X (°)"));
+                    EditorGUILayout.PropertyField(_minXAngle, new GUIContent("Min Pitch (°)", "Minimum pitch angle (down)"));
+                    EditorGUILayout.PropertyField(_maxXAngle, new GUIContent("Max Pitch (°)", "Maximum pitch angle (up)"));
                     EditorGUILayout.EndHorizontal();
                 }
                 
-                // Y Rotation
-                if (_limitYRotationProp != null)
-                    EditorGUILayout.PropertyField(_limitYRotationProp, new GUIContent("Limit Y Rotation"));
-                if (_limitYRotationProp.boolValue)
-                {
-                    EditorGUILayout.BeginHorizontal();
-                    if (_minYAngleProp != null)
-                        EditorGUILayout.PropertyField(_minYAngleProp, new GUIContent("Min Y (°)"));
-                    if (_maxYAngleProp != null)
-                        EditorGUILayout.PropertyField(_maxYAngleProp, new GUIContent("Max Y (°)"));
-                    EditorGUILayout.EndHorizontal();
-                }
+                EditorGUILayout.Space(5);
                 
-                // Z Rotation
-                if (_limitZRotationProp != null)
-                    EditorGUILayout.PropertyField(_limitZRotationProp, new GUIContent("Limit Z Rotation"));
-                if (_limitZRotationProp.boolValue)
+                // Z Rotation (Roll)
+                EditorGUILayout.PropertyField(_limitZRotation, new GUIContent("Limit Z Rotation (Roll)"));
+                if (_limitZRotation.boolValue)
                 {
                     EditorGUILayout.BeginHorizontal();
-                    if (_minZAngleProp != null)
-                        EditorGUILayout.PropertyField(_minZAngleProp, new GUIContent("Min Z (°)"));
-                    if (_maxZAngleProp != null)
-                        EditorGUILayout.PropertyField(_maxZAngleProp, new GUIContent("Max Z (°)"));
+                    EditorGUILayout.PropertyField(_minZAngle, new GUIContent("Min Roll (°)", "Minimum roll angle (left)"));
+                    EditorGUILayout.PropertyField(_maxZAngle, new GUIContent("Max Roll (°)", "Maximum roll angle (right)"));
                     EditorGUILayout.EndHorizontal();
                 }
                 
@@ -158,50 +147,86 @@ namespace Shababeek.Interactions.Editors
             }
             EditorGUILayout.EndFoldoutHeaderGroup();
             
-            // Events foldout
+            
+            EditorGUILayout.Space();
+            
+            EditorGUILayout.LabelField("Return Behavior", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(_returnToOriginal, new GUIContent("Return to Original"));
+            if (_returnToOriginal.boolValue)
+            {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(_returnSpeed, new GUIContent("Return Speed"));
+                EditorGUI.indentLevel--;
+            }
+            
+            EditorGUILayout.Space();
+            
             _showEvents = EditorGUILayout.BeginFoldoutHeaderGroup(_showEvents, "Events");
             if (_showEvents)
             {
-                if (_onRotationChangedProp != null)
-                    EditorGUILayout.PropertyField(_onRotationChangedProp);
-                if (_onXRotationChangedProp != null)
-                    EditorGUILayout.PropertyField(_onXRotationChangedProp);
-                if (_onYRotationChangedProp != null)
-                    EditorGUILayout.PropertyField(_onYRotationChangedProp);
-                if (_onZRotationChangedProp != null)
-                    EditorGUILayout.PropertyField(_onZRotationChangedProp);
-                if (_onSelectedProp != null)
-                    EditorGUILayout.PropertyField(_onSelectedProp);
-                if (_onDeselectedProp != null)
-                    EditorGUILayout.PropertyField(_onDeselectedProp);
-                if (_onHoverStartProp != null)
-                    EditorGUILayout.PropertyField(_onHoverStartProp);
-                if (_onHoverEndProp != null)
-                    EditorGUILayout.PropertyField(_onHoverEndProp);
-                if (_onActivatedProp != null)
-                    EditorGUILayout.PropertyField(_onActivatedProp);
+                EditorGUILayout.PropertyField(_onRotationChanged, new GUIContent("On Rotation Changed (Vector2)"));
+                EditorGUILayout.PropertyField(_onXRotationChanged, new GUIContent("On X Rotation Changed (Pitch)"));
+                EditorGUILayout.PropertyField(_onZRotationChanged, new GUIContent("On Z Rotation Changed (Roll)"));
+                EditorGUILayout.PropertyField(_onSelected);
+                EditorGUILayout.PropertyField(_onDeselected);
+                EditorGUILayout.PropertyField(_onHoverStart);
+                EditorGUILayout.PropertyField(_onHoverEnd);
+                EditorGUILayout.PropertyField(_onActivated);
             }
             EditorGUILayout.EndFoldoutHeaderGroup();
             
-            // Read-only fields
-            EditorGUI.BeginDisabledGroup(true);
-            if (_currentRotationProp != null)
-                EditorGUILayout.PropertyField(_currentRotationProp);
-            if (_normalizedRotationProp != null)
-                EditorGUILayout.PropertyField(_normalizedRotationProp);
-            if (_isSelectedProp != null)
-                EditorGUILayout.PropertyField(_isSelectedProp);
-            if (_currentInteractorProp != null)
-                EditorGUILayout.PropertyField(_currentInteractorProp);
-            if (_currentStateProp != null)
-                EditorGUILayout.PropertyField(_currentStateProp);
-            EditorGUI.EndDisabledGroup();
+            EditorGUILayout.Space();
+            
+            // Debug section
+            EditorGUILayout.LabelField("Debug", EditorStyles.boldLabel);
+            GUI.enabled = false;
+            EditorGUILayout.PropertyField(_currentRotation, new GUIContent("Current Rotation (X=pitch, Z=roll)"));
+            EditorGUILayout.PropertyField(_normalizedRotation, new GUIContent("Normalized Rotation"));
+            EditorGUILayout.PropertyField(_isSelected);
+            EditorGUILayout.PropertyField(_currentInteractor);
+            EditorGUILayout.PropertyField(_currentState);
+            GUI.enabled = true;
+            
+            // Runtime controls
+            if (Application.isPlaying)
+            {
+                EditorGUILayout.Space();
+                EditorGUILayout.LabelField("Runtime Controls", EditorStyles.boldLabel);
+                
+                EditorGUILayout.BeginHorizontal();
+                if (GUILayout.Button("Reset to Original"))
+                {
+                    turretComponent.ResetToOriginal();
+                }
+                if (GUILayout.Button("Set to Center"))
+                {
+                    turretComponent.SetRotation(0, 0);
+                }
+                EditorGUILayout.EndHorizontal();
+                
+                // Rotation sliders
+                var currentRot = turretComponent.CurrentRotation;
+                float minX = turretComponent.LimitXRotation ? turretComponent.MinXAngle : -90f;
+                float maxX = turretComponent.LimitXRotation ? turretComponent.MaxXAngle : 90f;
+                float minZ = turretComponent.LimitZRotation ? turretComponent.MinZAngle : -90f;
+                float maxZ = turretComponent.LimitZRotation ? turretComponent.MaxZAngle : 90f;
+                
+                float newX = EditorGUILayout.Slider("Set X Rotation (Pitch)", currentRot.x, minX, maxX);
+                float newZ = EditorGUILayout.Slider("Set Z Rotation (Roll)", currentRot.y, minZ, maxZ);
+                
+                if (!Mathf.Approximately(newX, currentRot.x) || !Mathf.Approximately(newZ, currentRot.y))
+                {
+                    turretComponent.SetRotation(newX, newZ);
+                }
+            }
+            
+            // Visual Guide
+            DrawVisualGuide();
             
             serializedObject.ApplyModifiedProperties();
-            base.OnInspectorGUI();
         }
 
-        private static void DoEditButton()
+        private void DrawEditButton()
         {
             EditorGUILayout.Space();
             var icon = EditorGUIUtility.IconContent(_editRotationLimits ? "d_EditCollider" : "EditCollider");
@@ -220,117 +245,197 @@ namespace Shababeek.Interactions.Editors
             EditorGUILayout.Space();
         }
 
-        protected  void OnSceneGUI()
+        /// <summary>
+        /// Draws quick preset buttons for common turret configurations.
+        /// </summary>
+        private void DrawPresets()
         {
+            EditorGUILayout.LabelField("Quick Presets", EditorStyles.boldLabel);
             
-            if (!_editRotationLimits) return;
+            EditorGUILayout.BeginHorizontal();
             
-            var turret = (TurretInteractable)target;
-            Transform t = turret.transform;
-            Vector3 pivot = t.position;
-            float radius = HandleUtility.GetHandleSize(pivot) * 1.5f;
+            if (GUILayout.Button("Security Camera\n(±30°, spring back)"))
+            {
+                _limitXRotation.boolValue = true;
+                _minXAngle.floatValue = -30f;
+                _maxXAngle.floatValue = 30f;
+                _limitZRotation.boolValue = true;
+                _minZAngle.floatValue = -30f;
+                _maxZAngle.floatValue = 30f;
+                _returnToOriginal.boolValue = true;
+                _returnSpeed.floatValue = 3f;
+            }
+            
+            if (GUILayout.Button("Gun Turret\n(±45°, responsive)"))
+            {
+                _limitXRotation.boolValue = true;
+                _minXAngle.floatValue = -45f;
+                _maxXAngle.floatValue = 45f;
+                _limitZRotation.boolValue = true;
+                _minZAngle.floatValue = -45f;
+                _maxZAngle.floatValue = 45f;
+                _returnToOriginal.boolValue = false;
+                _returnSpeed.floatValue = 5f;
+            }
+            
+            if (GUILayout.Button("Radar Dish\n(±60°, smooth)"))
+            {
+                _limitXRotation.boolValue = true;
+                _minXAngle.floatValue = -60f;
+                _maxXAngle.floatValue = 60f;
+                _limitZRotation.boolValue = true;
+                _minZAngle.floatValue = -60f;
+                _maxZAngle.floatValue = 60f;
+                _returnToOriginal.boolValue = false;
+                _returnSpeed.floatValue = 2f;
+            }
+            
+            EditorGUILayout.EndHorizontal();
+            
+            EditorGUILayout.BeginHorizontal();
+            
+            if (GUILayout.Button("Joystick\n(±30°, spring back)"))
+            {
+                _limitXRotation.boolValue = true;
+                _minXAngle.floatValue = -30f;
+                _maxXAngle.floatValue = 30f;
+                _limitZRotation.boolValue = true;
+                _minZAngle.floatValue = -30f;
+                _maxZAngle.floatValue = 30f;
+                _returnToOriginal.boolValue = true;
+                _returnSpeed.floatValue = 8f;
+            }
+            
+            EditorGUILayout.EndHorizontal();
+        }
+
+        /// <summary>
+        /// Draws a visual guide showing the gizmo colors and meanings.
+        /// </summary>
+        private void DrawVisualGuide()
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Scene View Visual Guide", EditorStyles.boldLabel);
+            
+            var originalColor = GUI.color;
+            
+            EditorGUILayout.BeginHorizontal();
+            GUI.color = Color.red;
+            EditorGUILayout.LabelField("█", GUILayout.Width(12));
+            GUI.color = originalColor;
+            EditorGUILayout.LabelField("X-Axis Limits (Pitch)", GUILayout.Width(120));
+            
+            GUI.color = Color.blue;
+            EditorGUILayout.LabelField("█", GUILayout.Width(12));
+            GUI.color = originalColor;
+            EditorGUILayout.LabelField("Z-Axis Limits (Roll)", GUILayout.Width(120));
+            EditorGUILayout.EndHorizontal();
+            
+            EditorGUILayout.BeginHorizontal();
+            GUI.color = Color.yellow;
+            EditorGUILayout.LabelField("█", GUILayout.Width(12));
+            GUI.color = originalColor;
+            EditorGUILayout.LabelField("Turret Center", GUILayout.Width(120));
+            
+            GUI.color = Color.green;
+            EditorGUILayout.LabelField("█", GUILayout.Width(12));
+            GUI.color = originalColor;
+            EditorGUILayout.LabelField("Current Direction", GUILayout.Width(120));
+            EditorGUILayout.EndHorizontal();
+            
+            EditorGUILayout.BeginHorizontal();
+            GUI.color = new Color(1f, 0.5f, 0f);
+            EditorGUILayout.LabelField("█", GUILayout.Width(12));
+            GUI.color = originalColor;
+            EditorGUILayout.LabelField("Dead Zone", GUILayout.Width(120));
+            EditorGUILayout.EndHorizontal();
+            
+            GUI.color = originalColor;
+        }
+
+        /// <summary>
+        /// Draws handles in the scene view for interactive configuration.
+        /// </summary>
+        private void OnSceneGUI()
+        {
+            if (turretComponent == null || turretComponent.InteractableObject == null) return;
+            
+            var turretTransform = turretComponent.InteractableObject.transform;
+            var position = turretTransform.position;
+            var radius = HandleUtility.GetHandleSize(position) * 1.2f;
             
             // Draw rotation limit visualization
-            DrawRotationLimits(turret, pivot, radius);
-        }
-
-        private void DrawRotationLimits(TurretInteractable turret, Vector3 pivot, float radius)
-        {
-            // Draw X rotation limits (Red)
-            if (turret.LimitXRotation)
+            if (_editRotationLimits)
             {
-                DrawAxisLimits(turret, pivot, radius, Vector3.right, Vector3.forward, 
-                    turret.MinXAngle, turret.MaxXAngle, Color.red, "X");
-            }
-            
-            // Draw Y rotation limits (Green)
-            if (turret.LimitYRotation)
-            {
-                DrawAxisLimits(turret, pivot, radius, Vector3.up, Vector3.forward, 
-                    turret.MinYAngle, turret.MaxYAngle, Color.green, "Y");
-            }
-            
-            // Draw Z rotation limits (Blue)
-            if (turret.LimitZRotation)
-            {
-                DrawAxisLimits(turret, pivot, radius, Vector3.forward, Vector3.up, 
-                    turret.MinZAngle, turret.MaxZAngle, Color.blue, "Z");
+                DrawInteractiveRotationLimits(position, radius);
             }
         }
-        
-        private void DrawAxisLimits(TurretInteractable turret, Vector3 pivot, float radius, 
-            Vector3 axis, Vector3 up, float minAngle, float maxAngle, Color color, string axisName)
-        {
-            // Calculate world positions for min/max
-            Quaternion minRot = Quaternion.AngleAxis(minAngle, axis);
-            Quaternion maxRot = Quaternion.AngleAxis(maxAngle, axis);
-            Vector3 minDir = minRot * up;
-            Vector3 maxDir = maxRot * up;
-            Vector3 minPos = pivot + minDir * radius;
-            Vector3 maxPos = pivot + maxDir * radius;
 
-            // Draw arc for visual feedback
+        private void DrawInteractiveRotationLimits(Vector3 position, float radius)
+        {
+            // Draw X rotation limits (pitch) - Red
+            if (turretComponent.LimitXRotation)
+            {
+                DrawAxisLimits(position, radius, turretComponent.transform.right, turretComponent.transform.forward,
+                    _minXAngle, _maxXAngle, Color.red, "X (Pitch)");
+            }
+            
+            // Draw Z rotation limits (roll) - Blue  
+            if (turretComponent.LimitZRotation)
+            {
+                DrawAxisLimits(position, radius, turretComponent.transform.forward, turretComponent.transform.up,
+                    _minZAngle, _maxZAngle, Color.blue, "Z (Roll)");
+            }
+        }
+
+        private void DrawAxisLimits(Vector3 position, float radius, Vector3 axis, Vector3 reference, 
+            SerializedProperty minAngleProp, SerializedProperty maxAngleProp, Color color, string axisName)
+        {
+            var minAngle = minAngleProp.floatValue;
+            var maxAngle = maxAngleProp.floatValue;
+            
+            var minRotation = Quaternion.AngleAxis(minAngle, axis);
+            var maxRotation = Quaternion.AngleAxis(maxAngle, axis);
+            var minDir = minRotation * reference;
+            var maxDir = maxRotation * reference;
+            var minPos = position + minDir * radius;
+            var maxPos = position + maxDir * radius;
+            
             Handles.color = new Color(color.r, color.g, color.b, 0.2f);
-            Handles.DrawSolidArc(pivot, axis, minDir, maxAngle - minAngle, radius);
+            Handles.DrawSolidArc(position, axis, minDir, maxAngle - minAngle, radius);
             Handles.color = color;
-            Handles.DrawWireArc(pivot, axis, minDir, maxAngle - minAngle, radius);
-            Handles.Label(minPos, $"Min {axisName} ({minAngle:F1}°)");
-            Handles.Label(maxPos, $"Max {axisName} ({maxAngle:F1}°)");
-
-            if (!_editRotationLimits) return;
-            Undo.RecordObject(turret, $"Edit {axisName} Rotation Limits");
-
-            // Draw and move min handle
-            Handles.color = Handles.preselectionColor;
+            Handles.DrawWireArc(position, axis, minDir, maxAngle - minAngle, radius);
+            Handles.Label(minPos + minDir * 0.1f, $"Min {axisName} ({minAngle:F1}°)");
+            Handles.Label(maxPos + maxDir * 0.1f, $"Max {axisName} ({maxAngle:F1}°)");
+            
+            Undo.RecordObject(turretComponent, $"Edit {axisName} Rotation Limits");
+            
+            Handles.color = color;
             EditorGUI.BeginChangeCheck();
-            Vector3 newMinPos = Handles.FreeMoveHandle(minPos, HandleUtility.GetHandleSize(minPos) * 0.08f, Vector3.zero, Handles.DotHandleCap);
+            var newMinPos = Handles.FreeMoveHandle(minPos, HandleUtility.GetHandleSize(minPos) * 0.08f, Vector3.zero, Handles.DotHandleCap);
             if (EditorGUI.EndChangeCheck())
             {
-                Vector3 from = up;
-                Vector3 to = (newMinPos - pivot).normalized;
-                float newMin = Vector3.SignedAngle(from, to, axis);
-                
-                // Update the appropriate property based on axis
-                switch (axisName)
-                {
-                    case "X":
-                        turret.SetMinXAngle(Mathf.Clamp(newMin, -180, turret.MaxXAngle - 1f));
-                        break;
-                    case "Y":
-                        turret.SetMinYAngle(Mathf.Clamp(newMin, -180, turret.MaxYAngle - 1f));
-                        break;
-                    case "Z":
-                        turret.SetMinZAngle(Mathf.Clamp(newMin, -180, turret.MaxZAngle - 1f));
-                        break;
-                }
-                EditorUtility.SetDirty(turret);
+                var from = reference;
+                var to = (newMinPos - position).normalized;
+                var newMinAngle = Vector3.SignedAngle(from, to, axis);
+                minAngleProp.floatValue = Mathf.Clamp(newMinAngle, -90f, maxAngleProp.floatValue - 1f);
+                serializedObject.ApplyModifiedProperties();
+                EditorUtility.SetDirty(turretComponent);
             }
-
-            // Draw and move max handle
-            Handles.color = Handles.preselectionColor;
+            
             EditorGUI.BeginChangeCheck();
-            Vector3 newMaxPos = Handles.FreeMoveHandle(maxPos, HandleUtility.GetHandleSize(maxPos) * 0.08f, Vector3.zero, Handles.DotHandleCap);
+            var newMaxPos = Handles.FreeMoveHandle(maxPos, HandleUtility.GetHandleSize(maxPos) * 0.08f, Vector3.zero, Handles.DotHandleCap);
             if (EditorGUI.EndChangeCheck())
             {
-                Vector3 from = up;
-                Vector3 to = (newMaxPos - pivot).normalized;
-                float newMax = Vector3.SignedAngle(from, to, axis);
-                
-                // Update the appropriate property based on axis
-                switch (axisName)
-                {
-                    case "X":
-                        turret.SetMaxXAngle(Mathf.Clamp(newMax, turret.MinXAngle + 1f, 180));
-                        break;
-                    case "Y":
-                        turret.SetMaxYAngle(Mathf.Clamp(newMax, turret.MinYAngle + 1f, 180));
-                        break;
-                    case "Z":
-                        turret.SetMaxZAngle(Mathf.Clamp(newMax, turret.MinZAngle + 1f, 180));
-                        break;
-                }
-                EditorUtility.SetDirty(turret);
+                var from = reference;
+                var to = (newMaxPos - position).normalized;
+                var newMaxAngle = Vector3.SignedAngle(from, to, axis);
+                maxAngleProp.floatValue = Mathf.Clamp(newMaxAngle, minAngleProp.floatValue + 1f, 90f);
+                serializedObject.ApplyModifiedProperties();
+                EditorUtility.SetDirty(turretComponent);
             }
+            
+            Handles.color = Color.white;
         }
     }
-} 
+}
