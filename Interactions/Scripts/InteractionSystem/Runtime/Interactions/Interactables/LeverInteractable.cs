@@ -27,6 +27,10 @@ namespace Shababeek.Interactions
         [ReadOnly] [SerializeField] private float currentNormalizedAngle = 0;
         private float _oldNormalizedAngle = 0;
         private Quaternion _originalRotation;
+        
+        private Vector3 _axisWorld;
+        private Vector3 _referenceNormalWorld;
+        private const float ProjectedEpsilon = 1e-5f;
 
         public float Min
         {
@@ -42,6 +46,13 @@ namespace Shababeek.Interactions
 
         private void Start()
         {
+            // Cache the original local rotation of the interactable pivot
+            _originalRotation = interactableObject != null
+                ? interactableObject.transform.localRotation
+                : Quaternion.identity;
+
+            CacheWorldRotationBasis();
+
             OnDeselected
                 .Where(_ => returnToOriginal)
                 .Do(_ => ReturnToOriginal())
@@ -65,8 +76,7 @@ namespace Shababeek.Interactions
         {
             if (!IsSelected) return;
 
-            var (plane, normal) = GetRotationAxis();
-            Rotate(CalculateAngle(plane, normal));
+            Rotate(CalculateAngle(_axisWorld, _referenceNormalWorld));
             InvokeEvents();
         }
 
@@ -79,18 +89,21 @@ namespace Shababeek.Interactions
             }
         }
 
-        private void Update()
-        {
-            if (IsSelected)
-            {
-                HandleObjectMovement();
-            }
-        }
+ 
 
         private void Rotate(float x)
         {
             var angle = LimitAngle(x, min, max);
-            interactableObject.transform.localRotation = Quaternion.AngleAxis(angle, GetRotationAxis().plane);
+            Vector3 localAxis = rotationAxis switch
+            {
+                RotationAxis.Right => Vector3.right,
+                RotationAxis.Up => Vector3.up,
+                RotationAxis.Forward => Vector3.forward,
+                _ => Vector3.right
+            };
+
+            var relative = Quaternion.AngleAxis(angle, localAxis);
+            interactableObject.transform.localRotation = _originalRotation * relative;
             currentNormalizedAngle = (angle - min) / (max - min);
         }
 
@@ -110,24 +123,61 @@ namespace Shababeek.Interactions
             onLeverChanged.Invoke(currentNormalizedAngle);
         }
 
-        private float CalculateAngle(Vector3 plane, Vector3 normal)
+        private float CalculateAngle(Vector3 axisWorld, Vector3 referenceNormalWorld)
         {
-            var direction = CurrentInteractor.transform.position - transform.position;
-            direction = Vector3.ProjectOnPlane(direction, -plane).normalized;
-            var angle = -Vector3.SignedAngle(direction, normal, plane);
+            // Direction from pivot to hand
+            var fromPivotToHand = CurrentInteractor.transform.position - interactableObject.transform.position;
+
+            // Project the vector onto the plane perpendicular to the axis
+            var projected = Vector3.ProjectOnPlane(fromPivotToHand, axisWorld);
+            if (projected.sqrMagnitude < ProjectedEpsilon)
+            {
+                // Keep previous angle when the hand is on/near the axis to avoid jitter
+                return (currentNormalizedAngle * (max - min)) + min;
+            }
+            var projectedDirection = projected.normalized;
+
+            // Signed angle from reference normal to projected direction around the axis
+            var angle = Vector3.SignedAngle(referenceNormalWorld, projectedDirection, axisWorld);
             return angle;
         }
 
 
         public (Vector3 plane, Vector3 normal) GetRotationAxis()
         {
+            var t = interactableObject.transform;
             return rotationAxis switch
             {
-                RotationAxis.Right => (transform.right, transform.up),
-                RotationAxis.Up => (transform.up, transform.forward),
-                RotationAxis.Forward => (transform.forward, transform.up),
-                _ => (transform.right, transform.up)
+                RotationAxis.Right => (t.right, t.up),
+                RotationAxis.Up => (t.up, t.forward),
+                RotationAxis.Forward => (t.forward, t.up),
+                _ => (t.right, t.up)
             };
+        }
+
+        private void CacheWorldRotationBasis()
+        {
+            var parent = interactableObject.transform.parent;
+            var basisRotation = parent != null ? parent.rotation : Quaternion.identity;
+
+            Vector3 LocalAxis() => rotationAxis switch
+            {
+                RotationAxis.Right => Vector3.right,
+                RotationAxis.Up => Vector3.up,
+                RotationAxis.Forward => Vector3.forward,
+                _ => Vector3.right
+            };
+
+            Vector3 LocalReference() => rotationAxis switch
+            {
+                RotationAxis.Right => Vector3.up,
+                RotationAxis.Up => Vector3.forward,
+                RotationAxis.Forward => Vector3.up,
+                _ => Vector3.up
+            };
+
+            _axisWorld = basisRotation * LocalAxis();
+            _referenceNormalWorld = basisRotation * LocalReference();
         }
 
         private float LimitAngle(float angle, float min, float max)
