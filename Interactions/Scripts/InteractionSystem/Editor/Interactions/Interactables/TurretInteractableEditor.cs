@@ -7,11 +7,11 @@ namespace Shababeek.Interactions.Editors
     /// <summary>
     /// Custom editor for the TurretInteractable component with enhanced visualization and interactive editing.
     /// </summary>
-    [CustomEditor(typeof(TurretInteractable))]
+    [CustomEditor(typeof(JoystickInteractable))]
     [CanEditMultipleObjects]
-    public class TurretInteractableEditor : Editor
+    public class JoystickInteractableEditor : Editor
     {
-        private TurretInteractable turretComponent;
+        private JoystickInteractable _joystickComponent;
         
         // Rotation Limits
         private SerializedProperty _limitXRotation;
@@ -45,7 +45,7 @@ namespace Shababeek.Interactions.Editors
         private SerializedProperty _isSelected;
         private SerializedProperty _currentInteractor;
         private SerializedProperty _currentState;
-        
+
         private bool _showEvents = true;
         private bool _showRotationLimits = true;
         private bool _showMovementSettings = true;
@@ -53,7 +53,7 @@ namespace Shababeek.Interactions.Editors
 
         private void OnEnable()
         {
-            turretComponent = (TurretInteractable)target;
+            _joystickComponent = (JoystickInteractable)target;
             
             // Rotation Limits
             _limitXRotation = serializedObject.FindProperty("limitXRotation");
@@ -196,27 +196,27 @@ namespace Shababeek.Interactions.Editors
                 EditorGUILayout.BeginHorizontal();
                 if (GUILayout.Button("Reset to Original"))
                 {
-                    turretComponent.ResetToOriginal();
+                    _joystickComponent.ResetToOriginal();
                 }
                 if (GUILayout.Button("Set to Center"))
                 {
-                    turretComponent.SetRotation(0, 0);
+                    _joystickComponent.SetRotation(0, 0);
                 }
                 EditorGUILayout.EndHorizontal();
                 
                 // Rotation sliders
-                var currentRot = turretComponent.CurrentRotation;
-                float minX = turretComponent.LimitXRotation ? turretComponent.MinXAngle : -90f;
-                float maxX = turretComponent.LimitXRotation ? turretComponent.MaxXAngle : 90f;
-                float minZ = turretComponent.LimitZRotation ? turretComponent.MinZAngle : -90f;
-                float maxZ = turretComponent.LimitZRotation ? turretComponent.MaxZAngle : 90f;
+                var currentRot = _joystickComponent.CurrentRotation;
+                float minX = _joystickComponent.LimitXRotation ? _joystickComponent.MinXAngle : -90f;
+                float maxX = _joystickComponent.LimitXRotation ? _joystickComponent.MaxXAngle : 90f;
+                float minZ = _joystickComponent.LimitZRotation ? _joystickComponent.MinZAngle : -90f;
+                float maxZ = _joystickComponent.LimitZRotation ? _joystickComponent.MaxZAngle : 90f;
                 
                 float newX = EditorGUILayout.Slider("Set X Rotation (Pitch)", currentRot.x, minX, maxX);
                 float newZ = EditorGUILayout.Slider("Set Z Rotation (Roll)", currentRot.y, minZ, maxZ);
                 
                 if (!Mathf.Approximately(newX, currentRot.x) || !Mathf.Approximately(newZ, currentRot.y))
                 {
-                    turretComponent.SetRotation(newX, newZ);
+                    _joystickComponent.SetRotation(newX, newZ);
                 }
             }
             
@@ -358,9 +358,9 @@ namespace Shababeek.Interactions.Editors
         /// </summary>
         private void OnSceneGUI()
         {
-            if (turretComponent == null || turretComponent.InteractableObject == null) return;
+            if (_joystickComponent == null || _joystickComponent.InteractableObject == null) return;
             
-            var turretTransform = turretComponent.InteractableObject.transform;
+            var turretTransform = _joystickComponent.InteractableObject.transform;
             var position = turretTransform.position;
             var radius = HandleUtility.GetHandleSize(position) * 1.2f;
             
@@ -374,16 +374,16 @@ namespace Shababeek.Interactions.Editors
         private void DrawInteractiveRotationLimits(Vector3 position, float radius)
         {
             // Draw X rotation limits (pitch) - Red
-            if (turretComponent.LimitXRotation)
+            if (_joystickComponent.LimitXRotation)
             {
-                DrawAxisLimits(position, radius, turretComponent.transform.right, turretComponent.transform.forward,
+                DrawAxisLimits(position, radius, _joystickComponent.transform.right, _joystickComponent.transform.forward,
                     _minXAngle, _maxXAngle, Color.red, "X (Pitch)");
             }
             
             // Draw Z rotation limits (roll) - Blue  
-            if (turretComponent.LimitZRotation)
+            if (_joystickComponent.LimitZRotation)
             {
-                DrawAxisLimits(position, radius, turretComponent.transform.forward, turretComponent.transform.up,
+                DrawAxisLimits(position, radius, _joystickComponent.transform.forward, _joystickComponent.transform.up,
                     _minZAngle, _maxZAngle, Color.blue, "Z (Roll)");
             }
         }
@@ -408,7 +408,7 @@ namespace Shababeek.Interactions.Editors
             Handles.Label(minPos + minDir * 0.1f, $"Min {axisName} ({minAngle:F1}°)");
             Handles.Label(maxPos + maxDir * 0.1f, $"Max {axisName} ({maxAngle:F1}°)");
             
-            Undo.RecordObject(turretComponent, $"Edit {axisName} Rotation Limits");
+            Undo.RecordObject(_joystickComponent, $"Edit {axisName} Rotation Limits");
             
             Handles.color = color;
             EditorGUI.BeginChangeCheck();
@@ -420,7 +420,7 @@ namespace Shababeek.Interactions.Editors
                 var newMinAngle = Vector3.SignedAngle(from, to, axis);
                 minAngleProp.floatValue = Mathf.Clamp(newMinAngle, -90f, maxAngleProp.floatValue - 1f);
                 serializedObject.ApplyModifiedProperties();
-                EditorUtility.SetDirty(turretComponent);
+                EditorUtility.SetDirty(_joystickComponent);
             }
             
             EditorGUI.BeginChangeCheck();
@@ -432,10 +432,10 @@ namespace Shababeek.Interactions.Editors
                 var newMaxAngle = Vector3.SignedAngle(from, to, axis);
                 maxAngleProp.floatValue = Mathf.Clamp(newMaxAngle, minAngleProp.floatValue + 1f, 90f);
                 serializedObject.ApplyModifiedProperties();
-                EditorUtility.SetDirty(turretComponent);
+                EditorUtility.SetDirty(_joystickComponent);
             }
             
             Handles.color = Color.white;
         }
     }
-}
+} 
