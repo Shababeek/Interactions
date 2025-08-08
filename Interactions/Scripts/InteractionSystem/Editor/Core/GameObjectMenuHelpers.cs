@@ -91,7 +91,7 @@ namespace Shababeek.Interactions.Editors
             }
 
             var turretObject = new GameObject(selectedObject.name).transform;
-            InitializeConstrainedInteractable<TurretInteractable>(turretObject, selectedObject);
+            InitializeConstrainedInteractable<JoystickInteractable>(turretObject, selectedObject);
             Selection.activeGameObject = turretObject.gameObject;
         }
         [MenuItem("GameObject/Shababeek/Initialize CameraRig", priority = 0)]

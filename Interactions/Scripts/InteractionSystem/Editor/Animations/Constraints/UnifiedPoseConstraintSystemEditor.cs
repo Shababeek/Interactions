@@ -6,10 +6,10 @@ using UnityEngine;
 
 namespace Shababeek.Interactions.Editors
 {
-    [CustomEditor(typeof(UnifiedPoseConstraintSystem))]
-    public class UnifiedPoseConstraintSystemEditor : Editor
+    [CustomEditor(typeof(PoseConstrainter))]
+    public class PoseConstrainerEditor : Editor
     {
-        private UnifiedPoseConstraintSystem _constraintSystem;
+        private PoseConstrainter _constrainter;
         private SerializedProperty _constraintTypeProperty;
         private SerializedProperty _useSmoothTransitionsProperty;
         private SerializedProperty _transitionSpeedProperty;
@@ -28,7 +28,7 @@ namespace Shababeek.Interactions.Editors
 
         private void OnEnable()
         {
-            _constraintSystem = (UnifiedPoseConstraintSystem)target;
+            _constrainter = (PoseConstrainter)target;
 
             _constraintTypeProperty = serializedObject.FindProperty("constraintType");
             _useSmoothTransitionsProperty = serializedObject.FindProperty("useSmoothTransitions");
@@ -54,7 +54,7 @@ namespace Shababeek.Interactions.Editors
             serializedObject.Update();
             DrawConstraintType();
             EditorGUILayout.Space();
-            if (_constraintSystem.ConstraintType == HandConstrainType.Constrained)
+            if (_constrainter.ConstraintType == HandConstrainType.Constrained)
             {
                 DrawHandSelection();
                 if (_selectedHand != HandIdentifier.None)
@@ -248,8 +248,8 @@ namespace Shababeek.Interactions.Editors
         private bool IsStaticPose()
         {
             var constraint = _selectedHand == HandIdentifier.Left
-                ? _constraintSystem.LeftPoseConstrains
-                : _constraintSystem.RightPoseConstrains;
+                ? _constrainter.LeftPoseConstrains
+                : _constrainter.RightPoseConstrains;
             var targetPoseIndex = constraint.targetPoseIndex;
             if (targetPoseIndex <= 0 || targetPoseIndex >= _handdata.Poses.Length) return false;
             var selectedPose = _handdata.Poses[targetPoseIndex];
@@ -318,7 +318,7 @@ namespace Shababeek.Interactions.Editors
             {
                 // Create the hand as a child of the constraint system object
                 var handPrefab = _selectedHand == HandIdentifier.Left ? _leftHandPrefab : _rightHandPrefab;
-                _currentHand = CreateHandInPivot(_constraintSystem.transform, handPrefab);
+                _currentHand = CreateHandInPivot(_constrainter.transform, handPrefab);
 
                 // Set the hand's local position and rotation based on the vector values
                 UpdateHandTransformFromVectors();
@@ -378,8 +378,8 @@ namespace Shababeek.Interactions.Editors
             var finger = Mathf.PingPong(this._t, 1);
 
             var handConstraints = _selectedHand == HandIdentifier.Left
-                ? _constraintSystem.LeftPoseConstrains
-                : _constraintSystem.RightPoseConstrains;
+                ? _constrainter.LeftPoseConstrains
+                : _constrainter.RightPoseConstrains;
 
             for (var i = 0; i < 5; i++)
             {

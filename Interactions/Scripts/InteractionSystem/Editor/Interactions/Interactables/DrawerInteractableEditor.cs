@@ -63,7 +63,7 @@ namespace Shababeek.Interactions.Editors
         {
             EditorGUILayout.HelpBox(
                 "Place the object you want to move inside the 'Interactable Object' field. This object should be a child of this component.\n\n" +
-                "Pose constraints are automatically handled by the UnifiedPoseConstraintSystem component (automatically added). Use it to configure hand poses and positioning.",
+                "Pose constraints are automatically handled by the Pose Constrainer component (automatically added). Use it to configure hand poses and positioning.",
                 MessageType.Info
             );
             serializedObject.Update();

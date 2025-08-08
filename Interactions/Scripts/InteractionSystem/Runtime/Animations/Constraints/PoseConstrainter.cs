@@ -27,7 +27,7 @@ namespace Shababeek.Interactions
     }
     
     /// <summary>
-    /// Unified system for constraining hand poses during interactions.
+    /// constrains hand poses during interactions.
     /// This component provides pose constraints, transform positioning, and hand visibility control.
     /// Movement strategy (object to hand vs hand to object) is handled by individual interactables.
     /// </summary>
@@ -182,10 +182,5 @@ namespace Shababeek.Interactions
             UpdatePivots();
         }
         
-        private void OnEnable()
-        {
-            // Ensure proper initialization
-            // This part is no longer needed as pivotParent is removed
-        }
     }
 } 

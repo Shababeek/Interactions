@@ -142,75 +142,294 @@ namespace Shababeek.Interactions
 
         protected override void HandleObjectMovement()
         {
-            if (!IsSelected) return;
+            if (!IsSelected || _isReturning) return;
             
-            Rotate(CalculateAngle(transform.right), CalculateAngle(transform.forward));
+            CalculateAndApplyRotationImmediate();
+            UpdateDebugValues();
             InvokeEvents();
         }
 
         protected override void HandleObjectDeselection()
         {
-            Rotate(0, 0);
-            InvokeEvents();
+            if (returnToOriginal)
+            {
+                _isReturning = true;
+            }
         }
 
         private void Update()
         {
-            if (IsSelected)
+            if (IsSelected && !_isReturning)
             {
                 HandleObjectMovement();
             }
+            else if (_isReturning && returnToOriginal)
+            {
+                HandleReturnToOriginal();
+            }
         }
-        private void Rotate(float x, float z)
+
+        /// <summary>
+        /// Calculates the target rotation based on hand position relative to turret.
+        /// </summary>
+        private void CalculateAndApplyRotationImmediate()
         {
-            var angleX = LimitAngle(x, limits.x);
-            var angleZ = LimitAngle(z, limits.y);
-            interactableObject.transform.localRotation = Quaternion.Euler(angleX, 0, angleZ);
-            _currentNormalizedAngle.x = angleX / (limits.x / 2);
-            _currentNormalizedAngle.y = angleZ / (limits.y / 2);
+            if (CurrentInteractor == null) return;
+
+            // Compute hand vector in the coordinate space of the pivot's parent (stable basis)
+            Transform pivot = interactableObject.transform;
+            Transform basis = pivot.parent != null ? pivot.parent : pivot;
+
+            Vector3 toHandWorld = CurrentInteractor.transform.position - pivot.position;
+            Vector3 toHandLocal = basis.InverseTransformDirection(toHandWorld);
+
+            // Calculate angles using atan2 against depth (Z) to get intuitive joystick-like mapping
+            // Pitch around local X (right): up/down vs forward depth
+            float targetX = -Mathf.Atan2(toHandLocal.y, Mathf.Max(1e-4f, toHandLocal.z)) * Mathf.Rad2Deg;
+            // Roll around local Z (forward): left/right vs forward depth (negative to match conventional right-handed roll)
+            float targetZ = -Mathf.Atan2(toHandLocal.x, Mathf.Max(1e-4f, toHandLocal.z)) * Mathf.Rad2Deg;
+
+            // Apply limits
+            if (limitXRotation)
+                targetX = Mathf.Clamp(targetX, minXAngle, maxXAngle);
+            if (limitZRotation)
+                targetZ = Mathf.Clamp(targetZ, minZAngle, maxZAngle);
+
+            currentRotation = new Vector2(targetX, targetZ);
+            ApplyRotationToTransform();
         }
+
+        /// <summary>
+        /// Applies the current rotation values to the turret transform.
+        /// </summary>
+        private void ApplyRotationToTransform()
+        {
+            // Compose rotation relative to original around local X then local Z
+            var xRot = Quaternion.AngleAxis(currentRotation.x, Vector3.right);
+            var zRot = Quaternion.AngleAxis(currentRotation.y, Vector3.forward);
+            interactableObject.transform.localRotation = _originalRotation * xRot * zRot;
+        }
+
+        /// <summary>
+        /// Updates current rotation from the transform (used during initialization and return).
+        /// </summary>
+        private void UpdateCurrentRotationFromTransform()
+        {
+            Vector3 eulerAngles = interactableObject.transform.localRotation.eulerAngles;
+            
+            // Normalize angles to -180 to 180 range
+            float x = NormalizeAngle(eulerAngles.x);
+            float z = NormalizeAngle(eulerAngles.z);
+            
+            currentRotation = new Vector2(x, z);
+        }
+
+        /// <summary>
+        /// Updates debug values and normalized rotation.
+        /// </summary>
+        private void UpdateDebugValues()
+        {
+            // Calculate normalized values
+            normalizedRotation = new Vector2(
+                limitXRotation ? Mathf.InverseLerp(minXAngle, maxXAngle, currentRotation.x) : 0.5f,
+                limitZRotation ? Mathf.InverseLerp(minZAngle, maxZAngle, currentRotation.y) : 0.5f
+            );
+        }
+
+        /// <summary>
+        /// Handles smooth return to original position.
+        /// </summary>
+        private void HandleReturnToOriginal()
+        {
+            // Smoothly return to original rotation
+            interactableObject.transform.localRotation = Quaternion.Slerp(
+                interactableObject.transform.localRotation,
+                _originalRotation,
+                returnSpeed * Time.deltaTime
+            );
+
+            // Update current rotation from transform
+            UpdateCurrentRotationFromTransform();
+            UpdateDebugValues();
+            InvokeEvents();
+
+            // Stop returning when close enough
+            if (Quaternion.Angle(interactableObject.transform.localRotation, _originalRotation) < 1f)
+            {
+                _isReturning = false;
+                interactableObject.transform.localRotation = _originalRotation;
+                UpdateCurrentRotationFromTransform();
+                // Keep currentRotation synchronized
+            }
+        }
+
+        /// <summary>
+        /// Normalizes an angle to the -180 to 180 degree range.
+        /// </summary>
+        /// <param name="angle">The angle to normalize.</param>
+        /// <returns>The normalized angle.</returns>
+        private float NormalizeAngle(float angle)
+        {
+            while (angle > 180f) angle -= 360f;
+            while (angle < -180f) angle += 360f;
+            return angle;
+        }
+
+        /// <summary>
+        /// Invokes rotation change events.
+        /// </summary>
         private void InvokeEvents()
         {
-            var differenceX = _currentNormalizedAngle.x - _oldNormalizedAngle.x;
-            var differenceZ = _currentNormalizedAngle.y - _oldNormalizedAngle.y;
-            var absDifference = Mathf.Max(Mathf.Abs(differenceX), Mathf.Abs(differenceZ));
-            if (!(Math.Abs(absDifference) > .1f)) return;
-            onLeverChanged.Invoke(_currentNormalizedAngle);
-            _oldNormalizedAngle = _currentNormalizedAngle;
+            onRotationChanged?.Invoke(currentRotation);
+            onXRotationChanged?.Invoke(currentRotation.x);
+            onZRotationChanged?.Invoke(currentRotation.y);
         }
 
-        private float CalculateAngle(Vector3 plane)
+        /// <summary>
+        /// Sets the turret's rotation to the specified angles, respecting rotation limits.
+        /// </summary>
+        /// <param name="xAngle">The target X rotation (pitch) in degrees.</param>
+        /// <param name="zAngle">The target Z rotation (roll) in degrees.</param>
+        public void SetRotation(float xAngle, float zAngle)
         {
-            //-transform.right
-            var direction = CurrentInteractor.transform.position - transform.position;
-            direction = Vector3.ProjectOnPlane(direction, -plane).normalized;
-            var angle = -Vector3.SignedAngle(direction, transform.up, plane);
-            return angle;
+            Vector2 clampedAngles = new Vector2(
+                limitXRotation ? Mathf.Clamp(xAngle, minXAngle, maxXAngle) : xAngle,
+                limitZRotation ? Mathf.Clamp(zAngle, minZAngle, maxZAngle) : zAngle
+            );
+            
+            currentRotation = clampedAngles;
+            ApplyRotationToTransform();
+            UpdateDebugValues();
+            InvokeEvents();
         }
 
-        private float LimitAngle(float angle, float limit)
+        /// <summary>
+        /// Sets the turret's rotation using normalized values (0-1) that are mapped to the min/max limits.
+        /// </summary>
+        /// <param name="normalizedX">Normalized X rotation value where 0 = min angle, 1 = max angle.</param>
+        /// <param name="normalizedZ">Normalized Z rotation value where 0 = min angle, 1 = max angle.</param>
+        public void SetNormalizedRotation(float normalizedX, float normalizedZ)
         {
-            if (angle > limit / 2)
-            {
-                angle = limit / 2;
-            }
-
-            if (angle < -limit / 2)
-            {
-                angle = -limit / 2;
-            }
-
-            return angle;
+            float xAngle = limitXRotation ? Mathf.Lerp(minXAngle, maxXAngle, normalizedX) : 0f;
+            float zAngle = limitZRotation ? Mathf.Lerp(minZAngle, maxZAngle, normalizedZ) : 0f;
+            
+            SetRotation(xAngle, zAngle);
         }
 
-        #region private classes
+        /// <summary>
+        /// Resets the turret to its original rotation.
+        /// </summary>
+        public void ResetToOriginal()
+        {
+            interactableObject.transform.localRotation = _originalRotation;
+            UpdateCurrentRotationFromTransform();
+            _isReturning = false;
+            UpdateDebugValues();
+            InvokeEvents();
+        }
+
+        /// <summary>
+        /// Validates the turret configuration in the editor.
+        /// </summary>
+        private void OnValidate()
+        {
+            // Ensure min is less than max for rotation limits
+            if (limitXRotation && minXAngle >= maxXAngle)
+            {
+                maxXAngle = minXAngle + 1f;
+            }
+            
+            if (limitZRotation && minZAngle >= maxZAngle)
+            {
+                maxZAngle = minZAngle + 1f;
+            }
+            
+            // Clamp values to reasonable ranges
+            minXAngle = Mathf.Clamp(minXAngle, -90f, 90f);
+            maxXAngle = Mathf.Clamp(maxXAngle, -90f, 90f);
+            minZAngle = Mathf.Clamp(minZAngle, -90f, 90f);
+            maxZAngle = Mathf.Clamp(maxZAngle, -90f, 90f);
+            
+            returnSpeed = Mathf.Clamp(returnSpeed, 1f, 20f);
+        }
+
+        #if UNITY_EDITOR
+        /// <summary>
+        /// Draws gizmos in the scene view to visualize turret configuration.
+        /// </summary>
+        private void OnDrawGizmos()
+        {
+            if (interactableObject == null) return;
+            
+            DrawTurretVisualization();
+        }
         
-
-        [System.Serializable]
-        private class Vector2Event : UnityEvent<Vector2>
+        /// <summary>
+        /// Draws selected gizmos with more detail when the object is selected.
+        /// </summary>
+        private void OnDrawGizmosSelected()
         {
+            if (interactableObject == null) return;
+            
+            DrawTurretVisualization(true);
+            DrawRotationLimits();
         }
-
-        #endregion
+        
+        /// <summary>
+        /// Draws the turret visualization gizmos.
+        /// </summary>
+        /// <param name="selected">Whether the object is selected (for more detailed visualization).</param>
+        private void DrawTurretVisualization(bool selected = false)
+        {
+            var position = interactableObject.transform.position;
+            
+            // Draw center point
+            Gizmos.color = selected ? Color.yellow : new Color(1f, 1f, 0f, 0.5f);
+            Gizmos.DrawWireSphere(position, 0.02f);
+            
+            // Dead zone visualization removed
+            
+            // Draw current rotation indicator
+            if (Application.isPlaying)
+            {
+                var forward = interactableObject.transform.forward;
+                Gizmos.color = selected ? Color.green : new Color(0f, 1f, 0f, 0.7f);
+                Gizmos.DrawRay(position, forward * 0.3f);
+            }
+        }
+        
+        /// <summary>
+        /// Draws the rotation limits visualization.
+        /// </summary>
+        private void DrawRotationLimits()
+        {
+            var position = interactableObject.transform.position;
+            float radius = 0.5f;
+            
+            // Draw X rotation limits (pitch)
+            if (limitXRotation)
+            {
+                Gizmos.color = Color.red;
+                var minRotX = Quaternion.AngleAxis(minXAngle, transform.right);
+                var maxRotX = Quaternion.AngleAxis(maxXAngle, transform.right);
+                var minDirX = minRotX * transform.forward;
+                var maxDirX = maxRotX * transform.forward;
+                Gizmos.DrawRay(position, minDirX * radius);
+                Gizmos.DrawRay(position, maxDirX * radius);
+            }
+            
+            // Draw Z rotation limits (roll)
+            if (limitZRotation)
+            {
+                Gizmos.color = Color.blue;
+                var minRotZ = Quaternion.AngleAxis(minZAngle, transform.forward);
+                var maxRotZ = Quaternion.AngleAxis(maxZAngle, transform.forward);
+                var minDirZ = minRotZ * transform.up;
+                var maxDirZ = maxRotZ * transform.up;
+                Gizmos.DrawRay(position, minDirZ * radius);
+                Gizmos.DrawRay(position, maxDirZ * radius);
+            }
+        }
+        #endif
     }
 }
