@@ -398,13 +398,21 @@ namespace Shababeek.Interactions.Editors
                 return;
             }
             Tools.hidden = true;
-            var position = _currentHand.transform.localPosition;
-            var rotation = _currentHand.transform.localEulerAngles;
+            
+            // Use local coordinates for the transform handle since the hand is parented
+            var localPosition = _currentHand.transform.localPosition;
+            var localRotation = _currentHand.transform.localEulerAngles;
+            
+            // Convert to world space for the handle
             var worldPosition = _currentHand.transform.position;
             var worldRotation = _currentHand.transform.rotation;
+            
             Handles.TransformHandle(ref worldPosition, ref worldRotation);
+            
+            // Convert back to local space and update
             _currentHand.transform.position = worldPosition;
             _currentHand.transform.rotation = worldRotation;
+            
             UpdateVectorsFromTransform();
         }
     }
