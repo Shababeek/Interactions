@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -66,6 +67,7 @@ namespace Shababeek.Interactions
                     _ => Vector3.forward
                 };
             }
+            
 
             public override Transform Insert(Socketable socketable)
             {
@@ -119,27 +121,23 @@ namespace Shababeek.Interactions
                 return socket;
             }
 
-#if UNITY_EDITOR
             private void OnDrawGizmos()
             {
                 // Draw the local projection plane
                 Gizmos.color = Color.yellow;
-                var worldNormal = transform.TransformDirection(GetLocalNormal());
-                var worldOffset = transform.TransformPoint(localOffset);
-
-                // Draw normal vector
-                Gizmos.DrawRay(worldOffset, worldNormal * 0.5f);
-
-                // Draw a small plane representation
-                var right = Vector3.Cross(worldNormal, Vector3.up).normalized;
-                if (right.magnitude < 0.1f) right = Vector3.Cross(worldNormal, Vector3.forward).normalized;
-                var up = Vector3.Cross(right, worldNormal).normalized;
-
+                Gizmos.matrix = transform.localToWorldMatrix;
+                Gizmos.DrawRay(localOffset, GetLocalNormal() * 0.5f);
+                
                 Gizmos.color = new Color(1f, 1f, 0f, 0.3f);
-                var size = 0.5f;
-                Gizmos.DrawCube(worldOffset, new Vector3(size, size, 0.01f));
+                var size = projectionDirection switch
+                {
+                    LocalDirection.Forward or LocalDirection.Back => new Vector3(1, 1, 0.1f),
+                    LocalDirection.Right or LocalDirection.Left => new Vector3(0.1f, 1, 1),
+                    LocalDirection.Up or LocalDirection.Down => new Vector3(1, 0.1f, 1),
+                    _ => new Vector3(1, 1, 0.1f)
+                };
+                Gizmos.DrawCube(localOffset, size);
             }
-#endif
         }
     }
 }
