@@ -12,7 +12,7 @@ namespace Shababeek.Interactions
         [SerializeField] private UnityEvent<Socketable> onHoverStart;
         [SerializeField] private UnityEvent<Socketable> onHoverEnd;
 
-        protected virtual Transform Pivot => transform;
+        public virtual Transform Pivot => transform;
 
         public IObservable<Socketable> OnSocketConnected => onSocketConnected.AsObservable();
         public IObservable<Socketable> OnSocketDisconnected => onSocketDisconnected.AsObservable();

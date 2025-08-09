@@ -1,75 +1,57 @@
 using Shababeek.Core;
-using Shababeek.Interactions;
-using Shababeek.Interactions.Core;
 using UniRx;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.Serialization;
 
 namespace Shababeek.Interactions
 {
     /// <summary>
-    /// Component that allows objects to be socketed into specific locations.
+    /// Component that allows objects to be socketed into specific locations using trigger-based detection.
     /// Handles socket detection, positioning, and return-to-original-position functionality.
     /// </summary>
     /// <remarks>
     /// This component requires both an InteractableBase and VariableTweener component.
-    /// It automatically detects nearby sockets and handles the socketing process
-    /// with optional smooth return animations.
+    /// It uses trigger colliders to detect nearby sockets and handles the socketing process
+    /// when the user deselects the object, with optional smooth return animations.
     /// </remarks>
     [RequireComponent(typeof(InteractableBase))]
     [RequireComponent(typeof(VariableTweener))]
     public class Socketable : MonoBehaviour
     {
-        [Tooltip("Whether the object should return to its original parent when unsocketed.")]
-        [SerializeField] private bool shouldReturnToParent = true;
-        
-        [Tooltip("Whether to use smooth animation when returning to original position.")]
-        [SerializeField] private bool useSmoothReturn = true;
-        
-        [Tooltip("Duration of the smooth return animation in seconds.")]
-        [SerializeField] private float returnDuration = 0.5f;
-        
-        [Tooltip("Layer mask for socket detection.")]
-        [SerializeField] private LayerMask mask;
-        
-        [Tooltip("Renderer used to calculate bounds for socket detection.")]
-        [SerializeField] private Renderer boundsRenderer;
-        
-        [Tooltip("Keyboard key for debug socket/unsocket operations.")]
-        [SerializeField] private KeyCode debugKey = KeyCode.S;
-        
-        [Tooltip("Whether to automatically find bounds from child renderers.")]
-        [SerializeField] private bool findBoundsAutomatically = true;
-        
-        [Tooltip("Custom bounds for socket detection if not using automatic bounds.")]
-        [SerializeField] private Bounds bounds;
-        
-        [Tooltip("Rotation to apply when the object is socketed.")]
-        [SerializeField] private Vector3 rotationWhenSocketed = Vector3.zero;
-        
-        [Tooltip("Transform used as a visual indicator for socket position.")]
-        [SerializeField] private Transform indicator;
-        
-        [Tooltip("Event raised when the object is successfully socketed.")]
-        [SerializeField] private UnityEvent onSocketed;
-        
-        [Tooltip("The currently detected socket.")]
-        [ReadOnly] [SerializeField] private AbstractSocket socket;
-        
-        [Tooltip("Indicates whether the object is currently socketed.")]
-        [ReadOnly] [SerializeField] private bool isSocketed = false;
+        [Tooltip("Whether the object should return to its original parent when unsocketed.")] [SerializeField]
+        private bool shouldReturnToParent = true;
+
+        [Tooltip("Whether to use smooth animation when returning to original position.")] [SerializeField]
+        private bool useSmoothReturn = true;
+
+        [Tooltip("Duration of the smooth return animation in seconds.")] [SerializeField]
+        private float returnDuration = 0.5f;
+
+        [Tooltip("Keyboard key for debug socket/unsocket operations.")] [SerializeField]
+        private KeyCode debugKey = KeyCode.Space;
+
+        [Tooltip("Rotation to apply when the object is socketed.")] [SerializeField]
+        private Vector3 rotationWhenSocketed = Vector3.zero;
+
+        [Tooltip("Transform used as a visual indicator for socket position.")] [SerializeField]
+        private Transform indicator;
+
+        [Tooltip("Event raised when the object is successfully socketed.")] [SerializeField]
+        private UnityEvent onSocketed;
+
+        [Tooltip("The currently detected socket.")] [ReadOnly] [SerializeField]
+        private AbstractSocket socket;
+
+        [Tooltip("Indicates whether the object is currently socketed.")] [ReadOnly] [SerializeField]
+        private bool isSocketed = false;
 
         private Transform _initialParent;
         private Vector3 _initialLocalPosition;
         private Quaternion _initialLocalRotation;
 
         private InteractableBase _interactable;
+        private Collider _triggerCollider;
 
-        private readonly Collider[] _colliders = new Collider [4];
-        private Collider _currentCollider;
-        private Rigidbody _rb;
-        
         // Tweening system for smooth return
         private VariableTweener _tweener;
         private TransformTweenable _returnTweenable;
@@ -78,7 +60,7 @@ namespace Shababeek.Interactions
         public bool IsSocketed
         {
             get => isSocketed;
-            set
+            private set
             {
                 isSocketed = value;
                 if (isSocketed) return;
@@ -86,51 +68,27 @@ namespace Shababeek.Interactions
                 {
                     Return();
                 }
-                else
-                {
-                    if (_rb) _rb.isKinematic = false;
-                }
             }
         }
 
-        public Vector3 RotationWhenSocketed => rotationWhenSocketed;
-        
-        /// <summary>
-        /// Gets the keyboard key used for debug socket/unsocket operations.
-        /// </summary>
-        public KeyCode DebugKey => debugKey;
-        
         /// <summary>
         /// Gets the currently detected socket.
         /// </summary>
         public AbstractSocket CurrentSocket => socket;
-        
+
         /// <summary>
         /// Gets whether the object is currently returning to its original position.
         /// </summary>
         public bool IsReturning => _isReturning;
 
-        public Bounds Bounds
-        {
-            get => bounds;
-            set => bounds = value;
-        }
-
-        public Renderer BondsRenderer
-        {
-            get => boundsRenderer;
-            set => boundsRenderer = value;
-        }
-
         private void Awake()
         {
-            _rb = GetComponent<Rigidbody>();
             _tweener = GetComponent<VariableTweener>();
             _returnTweenable = new TransformTweenable();
 
             if (indicator)
             {
-                indicator?.gameObject.SetActive(false);                
+                indicator?.gameObject.SetActive(false);
             }
 
             if (shouldReturnToParent)
@@ -140,24 +98,17 @@ namespace Shababeek.Interactions
                 _initialLocalRotation = transform.localRotation;
             }
 
-            
-            if (findBoundsAutomatically)
-            {
-                GetBounds();
-            }
             _interactable = GetComponent<InteractableBase>();
             _interactable.OnDeselected
                 .Where(_ => !IsSocketed && socket != null && socket.CanSocket())
                 .Do(_ => IsSocketed = true)
-                .Do(_=>onSocketed.Invoke())
+                .Do(_ => onSocketed.Invoke())
                 .Select(_ => socket.Insert(this))
                 .Do(LerpToPosition)
                 .Subscribe().AddTo(this);
             _interactable.OnDeselected
-                .Where(_=>shouldReturnToParent && !IsSocketed && socket == null)
-                .Do(_=>Return()).Subscribe().AddTo(this);
-        
-
+                .Where(_ => shouldReturnToParent && !IsSocketed && socket == null)
+                .Do(_ => Return()).Subscribe().AddTo(this);
 
             _interactable.OnSelected
                 .Where(_ => IsSocketed)
@@ -166,103 +117,30 @@ namespace Shababeek.Interactions
                 .Subscribe().AddTo(this);
         }
 
-        private void GetBounds()
+        private void Update()
         {
-            if (!BondsRenderer) BondsRenderer = GetComponentInChildren<MeshRenderer>();
-            Bounds = BondsRenderer.bounds;
-            bounds.size *= 1.5f;
+            HandeIndicator();
+            DebugKeyHandling();
         }
 
-        private void LerpToPosition(Transform pivot)
+        private void HandeIndicator()
         {
-            _interactable.OnStateChanged(InteractionState.None,_interactable.CurrentInteractor);
-            this.transform.parent = pivot.transform;
-            this.transform.position = pivot.transform.position;
-            this.transform.rotation = pivot.transform.rotation * Quaternion.Euler(rotationWhenSocketed);
-
-            _rb.isKinematic = true;
-        }
-
-        private void Return()
-        {
-            if (_isReturning) return; // Prevent multiple return operations
-            
-            isSocketed = false;
-            this.transform.parent = null;
-            
-            if (shouldReturnToParent)
+            if (socket != null && socket.CanSocket())
             {
-                if (useSmoothReturn && _tweener != null)
+                if (indicator)
                 {
-                    ReturnWithTween();
+                    indicator.gameObject.SetActive(true);
+                    indicator.position = socket.Pivot.position;
+                    indicator.rotation = socket.Pivot.rotation * Quaternion.Euler(rotationWhenSocketed);
                 }
-                else
-                {
-                    ReturnImmediate();
-                }
-            }
-        }
-        
-        private void ReturnImmediate()
-        {
-            this.transform.SetParent(_initialParent);
-            this.transform.localPosition = _initialLocalPosition;
-            this.transform.localRotation = _initialLocalRotation;
-            
-            // Re-enable physics if needed
-            if (_rb && !_rb.isKinematic)
-            {
-                _rb.isKinematic = false;
-            }
-        }
-        
-        private void ReturnWithTween()
-        {
-            _isReturning = true;
-            
-            // Create a temporary target transform for the tween
-            var targetTransform = new GameObject($"{gameObject.name}_ReturnTarget").transform;
-            if (_initialParent != null)
-            {
-                targetTransform.SetParent(_initialParent);
-                targetTransform.localPosition = _initialLocalPosition;
-                targetTransform.localRotation = _initialLocalRotation;
             }
             else
             {
-                targetTransform.position = transform.position; // Fallback to world position
-                targetTransform.rotation = transform.rotation;
+                indicator?.gameObject.SetActive(false);
             }
-            
-            // Initialize and start the tween
-            _returnTweenable.Initialize(transform, targetTransform);
-            _tweener.AddTweenable(_returnTweenable);
-            
-            // Set up completion callback
-            _returnTweenable.OnTweenComplete += () =>
-            {
-                // Clean up
-                this.transform.SetParent(_initialParent);
-                this.transform.localPosition = _initialLocalPosition;
-                this.transform.localRotation = _initialLocalRotation;
-                
-                // Re-enable physics if needed
-                if (_rb && !_rb.isKinematic)
-                {
-                    _rb.isKinematic = false;
-                }
-                
-                // Clean up temporary target
-                if (targetTransform != null)
-                {
-                    DestroyImmediate(targetTransform.gameObject);
-                }
-                
-                _isReturning = false;
-            };
         }
 
-        private void Update()
+        private void DebugKeyHandling()
         {
             if (!Input.GetKeyDown(debugKey)) return;
             if (isSocketed)
@@ -279,41 +157,98 @@ namespace Shababeek.Interactions
             }
         }
 
-        private void FixedUpdate()
+        private void LerpToPosition(Transform pivot)
         {
-            bool found = false;
-            bounds.center = transform.position;
-            var count = Physics.OverlapBoxNonAlloc(Bounds.center, Bounds.extents, _colliders, Quaternion.identity,
-                mask);
-            if (count > 0)
-            {
-                for (int i = 0; i < count; i++)
-                {
-                    if (_colliders[i] == _currentCollider)
-                    {
-                        found = true;
-                        break;
-                    }
+            _interactable.OnStateChanged(InteractionState.None, _interactable.CurrentInteractor);
+            transform.parent = pivot.transform;
+            transform.position = pivot.transform.position;
+            transform.rotation = pivot.transform.rotation * Quaternion.Euler(rotationWhenSocketed);
+        }
 
-                    var s = _colliders[i].GetComponent<AbstractSocket>();
-                    if (s == null) continue;
-                    found = true;
-                    _currentCollider = _colliders[i];
-                    socket = s;
-                    break;
+        private void Return()
+        {
+            if (_isReturning) return;
+
+            isSocketed = false;
+            transform.parent = null;
+
+            if (shouldReturnToParent)
+            {
+                if (useSmoothReturn && _tweener != null)
+                {
+                    ReturnWithTween();
+                }
+                else
+                {
+                    ReturnImmediate();
                 }
             }
+        }
 
-            if (found)
+        private void ReturnImmediate()
+        {
+            transform.SetParent(_initialParent);
+            transform.localPosition = _initialLocalPosition;
+            transform.localRotation = _initialLocalRotation;
+        }
+
+        private void ReturnWithTween()
+        {
+            _isReturning = true;
+
+            var targetTransform = new GameObject($"{gameObject.name}_ReturnTarget").transform;
+            if (_initialParent != null)
             {
-                socket.StartHovering(this);
+                targetTransform.SetParent(_initialParent);
+                targetTransform.localPosition = _initialLocalPosition;
+                targetTransform.localRotation = _initialLocalRotation;
             }
             else
             {
-                if (socket) socket.EndHovering(this);
-                socket = null;
-                _currentCollider = null;
+                targetTransform.position = transform.position;
+                targetTransform.rotation = transform.rotation;
             }
+
+            // Initialize and start the tween
+            _returnTweenable.Initialize(transform, targetTransform);
+            _tweener.AddTweenable(_returnTweenable);
+
+            // Set up completion callback
+            _returnTweenable.OnTweenComplete += () =>
+            {
+                transform.SetParent(_initialParent);
+                transform.localPosition = _initialLocalPosition;
+                transform.localRotation = _initialLocalRotation;
+
+
+                if (targetTransform != null)
+                {
+                    DestroyImmediate(targetTransform.gameObject);
+                }
+
+                _isReturning = false;
+            };
+        }
+
+
+        private void OnTriggerEnter(Collider other)
+        {
+            var detectedSocket = other.GetComponent<AbstractSocket>();
+            if (detectedSocket == null) return;
+
+            if (socket == null || socket != detectedSocket)
+            {
+                socket = detectedSocket;
+                socket.StartHovering(this);
+            }
+        }
+
+        private void OnTriggerExit(Collider other)
+        {
+            var detectedSocket = other.GetComponent<AbstractSocket>();
+            if (detectedSocket == null || detectedSocket != socket) return;
+            socket.EndHovering(this);
+            socket = null;
         }
 
         public void Indicate(Vector3 position, Quaternion rotation)
@@ -327,27 +262,28 @@ namespace Shababeek.Interactions
         {
             indicator.gameObject.SetActive(false);
         }
-        
+
         /// <summary>
-        /// Forces the object to return to its original position immediately.
+        /// For use with editor only please ignore
         /// </summary>
         public void ForceReturn()
         {
             if (_isReturning)
             {
-                // Stop any ongoing tween
                 if (_tweener != null)
                 {
                     _tweener.RemoveTweenable(_returnTweenable);
                 }
+
                 _isReturning = false;
             }
-            
+
             ReturnImmediate();
         }
-        
+
         /// <summary>
         /// Forces the object to return to its original position with smooth animation.
+        /// mainly for use with editor 
         /// </summary>
         public void ForceReturnWithTween()
         {
@@ -358,16 +294,11 @@ namespace Shababeek.Interactions
                 {
                     _tweener.RemoveTweenable(_returnTweenable);
                 }
+
                 _isReturning = false;
             }
-            
-            ReturnWithTween();
-        }
 
-        private void OnDrawGizmosSelected()
-        {
-            Gizmos.color = Color.green;
-            Gizmos.DrawWireCube(Bounds.center+transform.position, Bounds.extents);
+            ReturnWithTween();
         }
     }
 }

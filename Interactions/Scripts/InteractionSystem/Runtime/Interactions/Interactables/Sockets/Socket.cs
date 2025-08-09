@@ -9,19 +9,19 @@ namespace Shababeek.Interactions
         [ReadOnly] [SerializeField] private Socketable current;
         public override Transform Insert(Socketable socketable)
         {
-            this.current = socketable;
+            current = socketable;
             return base.Insert(socketable);
         }
 
         public override void Remove(Socketable socketable)
         {
-            this.current = null;
+            current = null;
             base.Remove(socketable);
         }
 
         public override bool CanSocket()
         {
-            return current;
+            return !current;// true if current is null
         }
     }
 }
