@@ -13,9 +13,7 @@ namespace Shababeek.Interactions
         private Hand _leftFakeHand;
         private Hand _rightFakeHand;
         private Hand _currentFakeHand;
-
         private PoseConstrainter _poseConstrainter;
-
         private float _transitionProgress = 0f;
         private Vector3 _startPosition;
         private Quaternion _startRotation;
@@ -28,7 +26,8 @@ namespace Shababeek.Interactions
             get => interactableObject;
             set => interactableObject = value;
         }
-        
+
+
         protected override bool Select()
         {
             if (!_poseConstrainter) _poseConstrainter = GetComponent<PoseConstrainter>();
@@ -98,8 +97,6 @@ namespace Shababeek.Interactions
             fakeHandTransform.position = CurrentInteractor.transform.position;
             fakeHandTransform.rotation = CurrentInteractor.transform.rotation;
             fakeHandTransform.parent = interactableObject.transform;
-            // Compensate parent non-uniform scale to prevent skewing the hand
-            ApplyScaleCompensation(fakeHandTransform, interactableObject);
             fakeHand.name = $"FakeHand_{handData.name}_{handIdentifier}";
             return fakeHand;
         }
@@ -118,27 +115,15 @@ namespace Shababeek.Interactions
                 _targetRotation = positioning.rotation;
                 _transitionProgress = 0f;
                 _isTransitioning = true;
-                ApplyScaleCompensation(fakeHand, interactableObject);
             }
             else
             {
                 fakeHand.localPosition = positioning.position;
                 fakeHand.localRotation = positioning.rotation;
-                ApplyScaleCompensation(fakeHand, interactableObject);
                 _isTransitioning = false;
             }
         }
 
-        private static void ApplyScaleCompensation(Transform child, Transform parent)
-        {
-            if (child == null || parent == null) return;
-            var s = parent.lossyScale;
-            const float eps = 1e-5f;
-            float ix = Mathf.Abs(s.x) < eps ? 1f : 1f / s.x;
-            float iy = Mathf.Abs(s.y) < eps ? 1f : 1f / s.y;
-            float iz = Mathf.Abs(s.z) < eps ? 1f : 1f / s.z;
-            child.localScale = new Vector3(ix, iy, iz);
-        }
 
         private void Update()
         {
@@ -165,6 +150,22 @@ namespace Shababeek.Interactions
         {
             DestroyFakeHands();
             Initialize();
+            CompnstateScale();
+        }
+
+        private void CompnstateScale()
+        {
+            if(!interactableObject.parent)return;
+            var scaleCompensator = new GameObject("ScaleCompensator").transform;
+            scaleCompensator.parent = interactableObject.parent;
+            scaleCompensator.position = interactableObject.position;
+            scaleCompensator.rotation = interactableObject.rotation;
+            var x = 1 / interactableObject.parent.lossyScale.x;
+            var y = 1 / interactableObject.parent.lossyScale.y;
+            var z = 1 / interactableObject.parent.lossyScale.z;
+            scaleCompensator.localScale =  new Vector3(x, y, z);
+            interactableObject.parent = scaleCompensator;
+            interactableObject = scaleCompensator;
         }
 
         public void Initialize()
@@ -175,14 +176,13 @@ namespace Shababeek.Interactions
             if (existingChild != null)
             {
                 interactableObject = existingChild;
+
                 return;
             }
-
             interactableObject = new GameObject("interactableObject").transform;
-            interactableObject.parent = transform;
             interactableObject.localPosition = Vector3.zero;
-            Debug.Log($"Created new interactableObject for {gameObject.name} at {Time.time}");
         }
+
 
         private void OnDestroy()
         {
