@@ -125,13 +125,14 @@ namespace Shababeek.Interactions
 
         private void HandeIndicator()
         {
-            if (socket != null && socket.CanSocket())
+            if (!isSocketed&& socket != null && socket.CanSocket())
             {
                 if (indicator)
                 {
                     indicator.gameObject.SetActive(true);
-                    indicator.position = socket.Pivot.position;
-                    indicator.rotation = socket.Pivot.rotation * Quaternion.Euler(rotationWhenSocketed);
+                    var pivotInfo = socket.GetPivotForSocketable(this);
+                    indicator.position = pivotInfo.position;
+                    indicator.rotation = pivotInfo.rotation * Quaternion.Euler(rotationWhenSocketed);
                 }
             }
             else

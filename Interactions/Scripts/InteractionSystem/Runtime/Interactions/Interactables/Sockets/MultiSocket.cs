@@ -1,89 +1,145 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace Shababeek.Interactions
 {
-    public class MultiSocket : AbstractSocket
+    using System.Collections.Generic;
+    using UnityEngine;
+
+    namespace Shababeek.Interactions
     {
-        [SerializeField] private Vector3 shift;
-
-        private Socketable _hoverSocketable;
-        private readonly List<Transform> _availablePivots = new(20);
-
-        private void Awake()
+        public enum LocalDirection
         {
-            _availablePivots.Clear();
-            for (var i = 0; i < 10; i++)
+            Forward = 0,
+            Back = 1,
+            Right = 2,
+            Left = 3,
+            Up = 4,
+            Down = 5
+        }
+
+        public class MultiSocket : AbstractSocket
+        {
+            [Header("Positioning")] [SerializeField]
+            private Vector3 localOffset = Vector3.zero;
+
+            [SerializeField] private LocalDirection projectionDirection = LocalDirection.Forward;
+
+            [Header("Pivot Settings")] [SerializeField]
+            private Vector3 pivotRotationOffset = Vector3.zero;
+
+            [SerializeField] private int initialPivotCount = 10;
+
+            private readonly List<Transform> _availablePivots = new();
+            private int _nextPivotIndex = 0;
+
+            private void Awake()
             {
-                CreateNewPivot(i);
-            }
-        }
-
-        private void CreateNewPivot(int i)
-        {
-            var parent = Pivot;
-            var attachmentPoint = new GameObject($"Pivot{i}").transform;
-            attachmentPoint.parent = parent;
-            attachmentPoint.localRotation = Quaternion.identity;
-            attachmentPoint.Rotate(90, 0, 0);
-            attachmentPoint.localPosition = Vector3.zero;
-            _availablePivots.Add(attachmentPoint);
-        }
-
-        public override Transform Insert(Socketable socketable)
-        {
-            var socket = GetSocket();
-            socket.transform.position =
-                shift + Vector3.ProjectOnPlane(socketable.transform.position, transform.forward);
-            base.Insert(socketable);
-            return socket;
-        }
-
-        public override void Remove(Socketable socketable)
-        {
-            _availablePivots.Add(socketable.transform.parent);
-            base.Remove(socketable);
-        }
-
-        public override bool CanSocket()
-        {
-            return true;
-        }
-
-        public override void StartHovering(Socketable socketable)
-        {
-            _hoverSocketable = socketable;
-            base.StartHovering(socketable);
-        }
-
-        public override void EndHovering(Socketable socketable)
-        {
-            _hoverSocketable.StopIndication();
-            _hoverSocketable = null;
-            base.EndHovering(socketable);
-        }
-
-        private Transform GetSocket()
-        {
-            if (_availablePivots.Count == 0)
-            {
-                CreateNewPivot(_availablePivots.Capacity);
+                _availablePivots.Clear();
+                for (var i = 0; i < initialPivotCount; i++)
+                {
+                    CreateNewPivot();
+                }
             }
 
-            var socket = _availablePivots[^1];
-            _availablePivots.RemoveAt(_availablePivots.Count - 1);
-            return socket;
-        }
-
-        private void Update()
-        {
-            if (_hoverSocketable)
+            private void CreateNewPivot()
             {
-                var position = shift +
-                               Vector3.ProjectOnPlane(_hoverSocketable.transform.position, transform.forward);
-                 _hoverSocketable.Indicate(position, transform.rotation);
+                var parent = Pivot;
+                var attachmentPoint = new GameObject($"Pivot{_nextPivotIndex}").transform;
+                attachmentPoint.SetParent(parent);
+                attachmentPoint.localPosition = Vector3.zero;
+                attachmentPoint.localRotation = Quaternion.Euler(pivotRotationOffset);
+
+                _availablePivots.Add(attachmentPoint);
+                _nextPivotIndex++;
             }
+            private Vector3 GetLocalNormal()
+            {
+                return projectionDirection switch
+                {
+                    LocalDirection.Forward => Vector3.forward,
+                    LocalDirection.Back => Vector3.back,
+                    LocalDirection.Right => Vector3.right,
+                    LocalDirection.Left => Vector3.left,
+                    LocalDirection.Up => Vector3.up,
+                    LocalDirection.Down => Vector3.down,
+                    _ => Vector3.forward
+                };
+            }
+
+            public override Transform Insert(Socketable socketable)
+            {
+                var socket = GetSocket();
+                var pivotInfo = GetPivotForSocketable(socketable);
+                socket.position = pivotInfo.position;
+                socket.rotation = pivotInfo.rotation;
+                base.Insert(socketable);
+                return socket;
+            }
+
+            public override void Remove(Socketable socketable)
+            {
+                // Return the pivot to the pool
+                var pivotTransform = socketable.transform.parent;
+                if (pivotTransform != null && pivotTransform != transform)
+                {
+                    pivotTransform.SetParent(Pivot);
+                    _availablePivots.Add(pivotTransform);
+                }
+
+                base.Remove(socketable);
+            }
+
+            public override bool CanSocket()
+            {
+                return true; // Always can socket (will create more pivots if needed)
+            }
+
+            public override (Vector3 position, Quaternion rotation) GetPivotForSocketable(Socketable socketable)
+            {
+                
+                var localProjectedPosition = localOffset + Vector3.ProjectOnPlane(transform.InverseTransformPoint(socketable.transform.position), GetLocalNormal());
+
+                var worldPosition = transform.TransformPoint(localProjectedPosition);
+                var worldRotation = transform.rotation * Quaternion.Euler(pivotRotationOffset);
+
+                return (worldPosition, worldRotation);
+            }
+
+            private Transform GetSocket()
+            {
+                // If no available pivots, create a new one
+                if (_availablePivots.Count == 0)
+                {
+                    CreateNewPivot();
+                }
+
+                var socket = _availablePivots[^1];
+                _availablePivots.RemoveAt(_availablePivots.Count - 1);
+                return socket;
+            }
+
+#if UNITY_EDITOR
+            private void OnDrawGizmos()
+            {
+                // Draw the local projection plane
+                Gizmos.color = Color.yellow;
+                var worldNormal = transform.TransformDirection(GetLocalNormal());
+                var worldOffset = transform.TransformPoint(localOffset);
+
+                // Draw normal vector
+                Gizmos.DrawRay(worldOffset, worldNormal * 0.5f);
+
+                // Draw a small plane representation
+                var right = Vector3.Cross(worldNormal, Vector3.up).normalized;
+                if (right.magnitude < 0.1f) right = Vector3.Cross(worldNormal, Vector3.forward).normalized;
+                var up = Vector3.Cross(right, worldNormal).normalized;
+
+                Gizmos.color = new Color(1f, 1f, 0f, 0.3f);
+                var size = 0.5f;
+                Gizmos.DrawCube(worldOffset, new Vector3(size, size, 0.01f));
+            }
+#endif
         }
     }
 }

@@ -26,7 +26,16 @@ namespace Shababeek.Interactions
         {
             onHoverStart.Invoke(socketable);
         }
-
+        /// <summary>
+        /// Gets the pivot transform for a specific socketable. 
+        /// Default implementation returns the main Pivot, but can be overridden for dynamic positioning.
+        /// </summary>
+        /// <param name="socketable">The socketable to get the pivot for</param>
+        /// <returns>Transform representing where the socketable should be positioned</returns>
+        public virtual (Vector3 position, Quaternion rotation) GetPivotForSocketable(Socketable socketable)
+        {
+            return (Pivot.position, Pivot.rotation);
+        }
         /// <summary>
         /// Called when the object is no longer near the object
         /// </summary>
