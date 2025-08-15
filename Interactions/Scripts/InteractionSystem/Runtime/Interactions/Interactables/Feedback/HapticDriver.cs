@@ -1,4 +1,3 @@
-using Shababeek.Interactions;
 using Shababeek.Interactions.Core;
 using UniRx;
 using UnityEngine;
@@ -67,7 +66,7 @@ namespace Shababeek.Interactions.Feedback
                 .Where(_ => hapticsOnSelected)
                 .Select(interactor => (interactor.HandIdentifier, selectedAmplitude, selectedDuration))
                 .Do(ExecuteHaptic).Subscribe().AddTo(this);
-            interactable.OnActivated
+            interactable.OnUseStarted
                 .Where(_ => hapticsOnActivated)
                 .Select(interactor => (interactor.HandIdentifier, activatedAmplitude, activatedDuration))
                 .Do(ExecuteHaptic).Subscribe().AddTo(this);

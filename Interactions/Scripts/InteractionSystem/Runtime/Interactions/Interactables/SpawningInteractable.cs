@@ -7,7 +7,7 @@ namespace Shababeek.Interactions
     public class SpawningInteractable : InteractableBase
     {
         [SerializeField] private Grabable  prefab;
-        protected override void Activate(){}
+        protected override void UseStarted(){}
         protected override void StartHover(){}
         protected override void EndHover(){}
 

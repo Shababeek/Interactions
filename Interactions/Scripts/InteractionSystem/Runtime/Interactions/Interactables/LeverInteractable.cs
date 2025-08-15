@@ -60,7 +60,7 @@ namespace Shababeek.Interactions
                 .Subscribe().AddTo(this);
         }
 
-        protected override void Activate()
+        protected override void UseStarted()
         {
         }
 

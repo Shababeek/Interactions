@@ -5,7 +5,7 @@ namespace Shababeek.Interactions
 {
     public class DebugInteractable : InteractableBase
     {
-        protected override void Activate()
+        protected override void UseStarted()
         {
             Debug.Log("Activated");
         }

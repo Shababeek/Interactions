@@ -53,7 +53,7 @@ namespace Shababeek.Interactions
         /// <returns>The target position and rotation for the left hand.</returns>
         public (Vector3 position, Quaternion rotation) GetLeftHandTarget() => _poseConstrainter.GetTargetHandTransform(HandIdentifier.Left);
 
-        protected override void Activate(){}
+        protected override void UseStarted(){}
         protected override void StartHover(){}
         protected override void EndHover(){}
 

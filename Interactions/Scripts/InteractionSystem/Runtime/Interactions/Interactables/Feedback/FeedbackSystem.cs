@@ -62,7 +62,7 @@ namespace Shababeek.Interactions.Feedback
                 .Subscribe().AddTo(_disposables);
 
             // Activation events
-            _interactable.OnActivated
+            _interactable.OnUseStarted
                 .Do(OnActivated)
                 .Subscribe().AddTo(_disposables);
         }

@@ -268,7 +268,7 @@ namespace Shababeek.Interactions
             onWheelAngleChanged?.Invoke(currentAngle);
         }
 
-        protected override void Activate()
+        protected override void UseStarted()
         {
         }
 

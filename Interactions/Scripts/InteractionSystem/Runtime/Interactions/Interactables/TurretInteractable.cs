@@ -128,7 +128,7 @@ namespace Shababeek.Interactions
             UpdateCurrentRotationFromTransform();
         }
 
-        protected override void Activate()
+        protected override void UseStarted()
         {
         }
 

@@ -8,6 +8,5 @@ namespace Shababeek.Interactions
         None,
         Hovering,
         Selected,
-        Activated
     }
 }

@@ -91,7 +91,7 @@ namespace Shababeek.Interactions.Feedback
             // Activation events
             if (playActivationSFX)
             {
-                _interactable.OnActivated
+                _interactable.OnUseStarted
                     .Where(_ => activateClip != null)
                     .Do(_ => PlaySound(activateClip, activationVolume))
                     .Subscribe().AddTo(this);

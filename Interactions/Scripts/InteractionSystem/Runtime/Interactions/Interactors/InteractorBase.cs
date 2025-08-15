@@ -1,10 +1,7 @@
 using System;
 using Shababeek.Core;
-using Shababeek.Interactions;
-using Shababeek.Interactions.Core;
 using Shababeek.Interactions.Core;
 using UniRx;
-using UnityEditor.EditorTools;
 using UnityEngine;
 
 namespace Shababeek.Interactions
@@ -24,7 +21,6 @@ namespace Shababeek.Interactions
         private readonly Subject<VRButtonState> _onInteractionStateChanged = new();
         private readonly Subject<VRButtonState> _onActivate = new();
         private IDisposable _hoverSubscriber, _activationSubscriber;
-        private Joint _attachmentJoint;
         /// <summary>
         /// The attachment point transform for objects held by this interactor.
         /// </summary>
@@ -76,8 +72,12 @@ namespace Shababeek.Interactions
                     switch (state)
                     {
                         case VRButtonState.Down:
-                            OnActivate();
+                            OnUse();
                             break;
+                        case VRButtonState.Up:
+                            OnUnused();
+                            break;
+                        
                     }
                 })
                 .Subscribe().AddTo(this);
@@ -115,7 +115,7 @@ namespace Shababeek.Interactions
 
         protected virtual void OnHoverEnd()
         {
-            if (currentInteractable.CurrentState != InteractionState.Hovering) return;
+            if (currentInteractable && currentInteractable.CurrentState != InteractionState.Hovering) return;
             currentInteractable.OnStateChanged(InteractionState.None, this);
             _hoverSubscriber?.Dispose();
             currentInteractable = null;
@@ -151,11 +151,21 @@ namespace Shababeek.Interactions
             OnHoverStart();
         }
 
-        private void OnActivate()
+        private void OnUse()
         {
             if (!currentInteractable) return;
+            if (currentInteractable.CurrentState != InteractionState.Selected) return;
+    
+            // Call directly on the interactable without state change
+            currentInteractable.StartUsing(this);
+        }
 
-            currentInteractable.OnStateChanged(InteractionState.Activated, this);
+        private void OnUnused()
+        {
+            if (!currentInteractable) return;
+            if (currentInteractable.CurrentState != InteractionState.Selected) return;
+    
+            currentInteractable.StopUsing(this);
         }
         
     }

@@ -45,7 +45,7 @@ namespace Shababeek.Interactions
         private bool _isReturning = false;
         private Vector3 _originalPosition;
 
-        protected override void Activate()
+        protected override void UseStarted()
         {
         }
 

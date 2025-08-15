@@ -2,11 +2,7 @@ using System;
 using Shababeek.Core;
 using UnityEngine;
 using Shababeek.Interactions.Core;
-using Shababeek.Interactions.Core;
-using Shababeek.Interactions;
 using UniRx;
-using UniRx.Triggers;
-
 
 namespace Shababeek.Interactions
 {
@@ -42,8 +38,11 @@ namespace Shababeek.Interactions
         [Tooltip("Event raised when an interactor stops hovering over this interactable.")]
         [SerializeField] private InteractorUnityEvent onHoverEnd;
         
-        [Tooltip("Event raised when this the alterntive button is pressed while the object is being interacted with by an interactor.")]
-        [SerializeField] private InteractorUnityEvent onActivated;
+        [Tooltip("Event raised when the secondary button is pressed while selected.")]
+        [SerializeField] private InteractorUnityEvent onUseStarted;
+
+        [Tooltip("Event raised when the secondary button is released while selected.")]
+        [SerializeField] private InteractorUnityEvent onUseEnded;
         
         [Tooltip("Indicates whether this interactable is currently selected.")]
         [SerializeField][ReadOnly] private bool isSelected;
@@ -53,7 +52,7 @@ namespace Shababeek.Interactions
         
         [Tooltip("The current interaction state of this interactable.")]
         [SerializeField][ReadOnly] private InteractionState currentState;
-        
+        [SerializeField][ReadOnly] private bool isUsing;
         /// <summary>
         /// The interaction point transform for this interactable.
         /// </summary>
@@ -97,8 +96,15 @@ namespace Shababeek.Interactions
         /// Observable that fires when this interactable is activated by an interactor.
         /// </summary>
         /// <value>An observable that emits the interactor that activated this object.</value>
-        public IObservable<InteractorBase> OnActivated => onActivated.AsObservable();
-        
+        /// <summary>
+        /// Observable that fires when the secondary button is pressed while this interactable is selected.
+        /// </summary>
+        public IObservable<InteractorBase> OnUseStarted => onUseStarted.AsObservable();
+
+        /// <summary>
+        /// Observable that fires when the secondary button is released while this interactable is selected.
+        /// </summary>
+        public IObservable<InteractorBase> OnUseEnded => onUseEnded.AsObservable();        
         /// <summary>
         /// The button that triggers selection of this interactable.
         /// </summary>
@@ -108,7 +114,7 @@ namespace Shababeek.Interactions
         /// <summary>
         /// The current interaction state of this interactable.
         /// </summary>
-        /// <value>The current interaction state (None, Hovering, Selected, or Activated).</value>
+        /// <value>The current interaction state (None, Hovering, Selected).</value>
         public InteractionState CurrentState => currentState;
         
         /// <summary>
@@ -117,6 +123,7 @@ namespace Shababeek.Interactions
         /// <value>The current interactor, or null if no interaction is active.</value>
         public InteractorBase CurrentInteractor => currentInteractor;
         
+        public bool IsUsing => isUsing;
 
         /// <summary>
         /// Handles state changes for this interactable.
@@ -130,24 +137,30 @@ namespace Shababeek.Interactions
         {
             if (this.currentState == state) return;
             currentInteractor = interactor;
-            if (state == InteractionState.None)
-                HandleNoneState();
-            else if (state == InteractionState.Hovering)
-                HandleHoverState();
-            else if (state == InteractionState.Selected)
-                HandleSelectionState();
-            else if (state == InteractionState.Activated)
-                HandleActiveState();
+            switch (state)
+            {
+                case InteractionState.None:
+                    HandleNoneState();
+                    break;
+                case InteractionState.Hovering:
+                    HandleHoverState();
+                    break;
+                case InteractionState.Selected:
+                    HandleSelectionState();
+                    break;
+            }
         }
+
+
 
         private void HandleNoneState()
         {
             if (currentState == InteractionState.Selected)
             {
+                isUsing = false;
                 DeSelected();
                 isSelected = false;
                 onDeselected.Invoke(currentInteractor);
-                currentInteractor = null;
             }
 
             else if (currentState == InteractionState.Hovering)
@@ -164,6 +177,7 @@ namespace Shababeek.Interactions
         {
             if (currentState == InteractionState.Selected)
             {
+                isUsing = false;
                 isSelected = false;
                 onDeselected.Invoke(currentInteractor);
                 DeSelected();
@@ -184,7 +198,7 @@ namespace Shababeek.Interactions
 
             try
             {
-                if(Select())return;
+                if (Select()) return;
 
             }
             catch (Exception e)
@@ -196,26 +210,44 @@ namespace Shababeek.Interactions
             currentState = InteractionState.Selected;
         }
         
-        private void HandleActiveState()
-        {
-            if (this.currentState == InteractionState.Selected)
-            {
-                onActivated.Invoke(currentInteractor);
-                Activate();
-            }
-        }
 
-        protected abstract void Activate();
+        protected abstract void UseStarted();
         protected abstract void StartHover();
         protected abstract void EndHover();
+        /// <summary>
+        /// Attempts to select this interactable.
+        /// </summary>
+        /// <returns>True if selection should be cancelled/aborted, false to proceed normally.</returns>
         protected abstract bool Select();
         protected abstract void DeSelected();
+        protected virtual void UseEnded() { }
 
         public bool IsValidHand(HandIdentifier hand)
         {
             var handID = (int)hand;
             var valid = (int)interactionHand;
             return (valid & handID) != 0;
+        }
+
+        public void StartUsing(InteractorBase interactorBase)
+        {
+            if (this.currentState == InteractionState.Selected)
+            {
+                isUsing = true;
+
+                onUseStarted.Invoke(currentInteractor);
+                UseStarted();
+            }        }
+
+        public void StopUsing(InteractorBase interactorBase)
+        {
+            if (this.currentState == InteractionState.Selected)
+            {
+                isUsing = false;
+                onUseEnded.Invoke(currentInteractor);
+                UseEnded();
+            }
+            
         }
     }
 }
