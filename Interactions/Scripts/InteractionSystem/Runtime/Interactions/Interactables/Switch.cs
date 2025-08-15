@@ -1,9 +1,6 @@
-using System;
 using Shababeek.Core;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.UI;
-using Shababeek.Interactions.Core;
 
 namespace Shababeek.Interactions
 {
@@ -22,6 +19,16 @@ namespace Shababeek.Interactions
         Up=1,
         Down=-1,
         None=0
+    }
+    
+    /// <summary>
+    /// Enum representing the starting position of the switch.
+    /// </summary>
+    public enum StartingPosition
+    {
+        Off,
+        Neutral,
+        On
     }
     
     /// <summary>
@@ -68,6 +75,12 @@ namespace Shababeek.Interactions
         [Tooltip("Angle threshold for direction detection.")]
         [SerializeField] private float angleThreshold = 5f;
         
+        [Tooltip("When enabled, the switch will stay in its current position instead of returning to neutral when the trigger exits.")]
+        [SerializeField] private bool stayInPosition = false;
+        
+        [Tooltip("The starting position of the switch when the scene starts.")]
+        [SerializeField] private StartingPosition startingPosition = StartingPosition.Neutral;
+        
         [Header("Debug")]
         [Tooltip("Current direction of the switch.")]
         [ReadOnly][SerializeField] private Direction direction;
@@ -82,9 +95,58 @@ namespace Shababeek.Interactions
             set => switchBody = value;
         }
 
+        /// <summary>
+        /// Gets or sets whether the switch should stay in position instead of returning to neutral.
+        /// </summary>
+        public bool StayInPosition
+        {
+            get => stayInPosition;
+            set => stayInPosition = value;
+        }
+        
+        /// <summary>
+        /// Gets or sets the starting position of the switch.
+        /// </summary>
+        public StartingPosition StartingPosition
+        {
+            get => startingPosition;
+            set => startingPosition = value;
+        }
+
         private void Update()
         {
             ChooseDirection();
+            Rotate();
+        }
+        
+        private void Start()
+        {
+            SetStartingPosition();
+        }
+        
+        private void SetStartingPosition()
+        {
+            if (switchBody == null) return;
+            
+            switch (startingPosition)
+            {
+                case StartingPosition.On:
+                    direction = Direction.Up;
+                    targetRotation = upRotation;
+                    break;
+                case StartingPosition.Off:
+                    direction = Direction.Down;
+                    targetRotation = downRotation;
+                    break;
+                case StartingPosition.Neutral:
+                default:
+                    direction = Direction.None;
+                    targetRotation = (upRotation + downRotation) / 2f; // Calculate middle position
+                    break;
+            }
+            
+            // Apply the starting rotation immediately
+            t = 1f; // Set to 1 to skip animation
             Rotate();
         }
 
@@ -124,10 +186,10 @@ namespace Shababeek.Interactions
         {
             return detectionAxis switch
             {
-                Axis.X => switchBody.right,
-                Axis.Y => switchBody.up,
-                Axis.Z => switchBody.forward,
-                _ => switchBody.right
+                Axis.X => transform.right,
+                Axis.Y => transform.up,
+                Axis.Z => transform.forward,
+                _ => transform.right
             };
         }
         
@@ -139,10 +201,10 @@ namespace Shababeek.Interactions
         {
             return rotationAxis switch
             {
-                Axis.X => switchBody.right,
-                Axis.Y => switchBody.up,
-                Axis.Z => switchBody.forward,
-                _ => switchBody.forward
+                Axis.X => transform.right,
+                Axis.Y => transform.up,
+                Axis.Z => transform.forward,
+                _ => transform.forward
             };
         }
 
@@ -175,8 +237,13 @@ namespace Shababeek.Interactions
             if(other!=activeCollider)return;
             direction = Direction.None;
             activeCollider =null;
-            targetRotation = 0;
-            t = 0;
+            
+            // Only reset to neutral position if stayInPosition is false
+            if (!stayInPosition)
+            {
+                targetRotation = 0;
+                t = 0;
+            }
         }
         
         /// <summary>
@@ -198,22 +265,51 @@ namespace Shababeek.Interactions
         
         /// <summary>
         /// Resets the switch to its neutral position.
+        /// Note: This method will only reset to neutral if stayInPosition is false.
         /// </summary>
         public void ResetSwitch()
         {
             direction = Direction.None;
             activeCollider = null;
-            targetRotation = 0;
+            
+            // Only reset to neutral position if stayInPosition is false
+            if (!stayInPosition)
+            {
+                targetRotation = (upRotation + downRotation) / 2f; // Calculate middle position
+                t = 0;
+                
+                // Reset rotation to neutral position
+                var currentRotation = switchBody.localRotation.eulerAngles;
+                var neutralRotation = rotationAxis switch
+                {
+                    Axis.X => new Vector3(targetRotation, currentRotation.y, currentRotation.z),
+                    Axis.Y => new Vector3(currentRotation.x, targetRotation, currentRotation.z),
+                    Axis.Z => new Vector3(currentRotation.x, currentRotation.y, targetRotation),
+                    _ => new Vector3(currentRotation.x, currentRotation.y, targetRotation)
+                };
+                
+                switchBody.localRotation = Quaternion.Euler(neutralRotation);
+            }
+        }
+        
+        /// <summary>
+        /// Forces the switch to reset to neutral position regardless of the stayInPosition setting.
+        /// </summary>
+        public void ForceResetSwitch()
+        {
+            direction = Direction.None;
+            activeCollider = null;
+            targetRotation = (upRotation + downRotation) / 2f; // Calculate middle position
             t = 0;
             
             // Reset rotation to neutral position
             var currentRotation = switchBody.localRotation.eulerAngles;
             var neutralRotation = rotationAxis switch
             {
-                Axis.X => new Vector3(0, currentRotation.y, currentRotation.z),
-                Axis.Y => new Vector3(currentRotation.x, 0, currentRotation.z),
-                Axis.Z => new Vector3(currentRotation.x, currentRotation.y, 0),
-                _ => new Vector3(currentRotation.x, currentRotation.y, 0)
+                Axis.X => new Vector3(targetRotation, currentRotation.y, currentRotation.z),
+                Axis.Y => new Vector3(currentRotation.x, targetRotation, currentRotation.z),
+                Axis.Z => new Vector3(currentRotation.x, currentRotation.y, targetRotation),
+                _ => new Vector3(currentRotation.x, currentRotation.y, targetRotation)
             };
             
             switchBody.localRotation = Quaternion.Euler(neutralRotation);
@@ -232,6 +328,45 @@ namespace Shababeek.Interactions
                 Direction.None => null,
                 _ => null
             };
+        }
+        
+        /// <summary>
+        /// Gets the current rotation of the switch body.
+        /// </summary>
+        /// <returns>The current local rotation as a Vector3.</returns>
+        public Vector3 GetCurrentRotation()
+        {
+            return switchBody != null ? switchBody.localRotation.eulerAngles : Vector3.zero;
+        }
+        
+        /// <summary>
+        /// Sets the switch to a specific position.
+        /// </summary>
+        /// <param name="position">The position to set the switch to.</param>
+        public void SetPosition(StartingPosition position)
+        {
+            if (switchBody == null) return;
+            
+            switch (position)
+            {
+                case StartingPosition.On:
+                    direction = Direction.Up;
+                    targetRotation = upRotation;
+                    break;
+                case StartingPosition.Off:
+                    direction = Direction.Down;
+                    targetRotation = downRotation;
+                    break;
+                case StartingPosition.Neutral:
+                default:
+                    direction = Direction.None;
+                    targetRotation = (upRotation + downRotation) / 2f; // Calculate middle position
+                    break;
+            }
+            
+            // Apply the position immediately
+            t = 1f;
+            Rotate();
         }
         
         #if UNITY_EDITOR
@@ -317,7 +452,7 @@ namespace Shababeek.Interactions
             var to = rotation * from;
             
             // Draw arc
-            var steps = 20;
+            var steps = 10;
             var stepAngle = angle / steps;
             var currentVector = from;
             

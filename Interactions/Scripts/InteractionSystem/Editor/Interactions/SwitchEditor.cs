@@ -23,6 +23,8 @@ namespace Shababeek.Interactions.Editors
         private SerializedProperty _downRotation;
         private SerializedProperty _rotateSpeed;
         private SerializedProperty _angleThreshold;
+        private SerializedProperty _stayInPosition;
+        private SerializedProperty _startingPosition;
         private SerializedProperty _direction;
         
         // UI state
@@ -44,12 +46,18 @@ namespace Shababeek.Interactions.Editors
             _downRotation = serializedObject.FindProperty("downRotation");
             _rotateSpeed = serializedObject.FindProperty("rotateSpeed");
             _angleThreshold = serializedObject.FindProperty("angleThreshold");
+            _stayInPosition = serializedObject.FindProperty("stayInPosition");
+            _startingPosition = serializedObject.FindProperty("startingPosition");
             _direction = serializedObject.FindProperty("direction");
         }
         
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
+            
+            // Check for property changes to update switch body rotation
+            EditorGUI.BeginChangeCheck();
+            
             EditorGUILayout.HelpBox(
                 "Configure the switch rotation and detection axes. Visual gizmos will show in the scene view.\n\n" +
                 "Use the edit button to interactively adjust rotation angles in the scene view.",
@@ -78,6 +86,10 @@ namespace Shababeek.Interactions.Editors
             EditorGUILayout.PropertyField(_rotateSpeed, new GUIContent("Rotate Speed", "Speed of rotation animation"));
             EditorGUILayout.PropertyField(_angleThreshold, new GUIContent("Angle Threshold (°)", "Minimum angle for direction detection"));
             EditorGUILayout.EndHorizontal();
+            
+            EditorGUILayout.PropertyField(_stayInPosition, new GUIContent("Stay In Position", "When enabled, the switch will stay in its current position instead of returning to neutral when the trigger exits"));
+            
+            EditorGUILayout.PropertyField(_startingPosition, new GUIContent("Starting Position", "The starting position of the switch when the scene starts"));
             #endregion
             EditorGUILayout.Space();
             #region eventFoldOut
@@ -108,6 +120,11 @@ namespace Shababeek.Interactions.Editors
                     switchComponent.ResetSwitch();
                 }
                 
+                if (GUILayout.Button("Force Reset Switch"))
+                {
+                    switchComponent.ForceResetSwitch();
+                }
+                
                 var state = switchComponent.GetSwitchState();
                 var stateText = state switch
                 {
@@ -117,11 +134,23 @@ namespace Shababeek.Interactions.Editors
                 };
                 EditorGUILayout.LabelField($"Current State: {stateText}");
                 EditorGUILayout.EndHorizontal();
+                
+                EditorGUILayout.HelpBox(
+                    "Reset Switch: Respects the 'Stay In Position' setting\n" +
+                    "Force Reset Switch: Always resets to neutral regardless of settings",
+                    MessageType.Info);
             }
             
             // Visual Guide
             EditorGUILayout.Space();
             DrawVisualGuide();
+            
+            // Check if any properties changed and update switch body rotation if needed
+            if (EditorGUI.EndChangeCheck())
+            {
+                serializedObject.ApplyModifiedProperties();
+                UpdateSwitchBodyRotation(_upRotation.floatValue, _downRotation.floatValue);
+            }
             
             serializedObject.ApplyModifiedProperties();
         }
@@ -282,6 +311,9 @@ namespace Shababeek.Interactions.Editors
                 _upRotation.floatValue = Mathf.Clamp(newUpAngle, _downRotation.floatValue + 1f, 180f);
                 serializedObject.ApplyModifiedProperties();
                 EditorUtility.SetDirty(switchComponent);
+                
+                // Update the switch body rotation to reflect the new angle
+                UpdateSwitchBodyRotation(newUpAngle, _downRotation.floatValue);
             }
             
             // Draw and move down handle (red circle)
@@ -296,11 +328,53 @@ namespace Shababeek.Interactions.Editors
                 _downRotation.floatValue = Mathf.Clamp(newDownAngle, -180f, _upRotation.floatValue - 1f);
                 serializedObject.ApplyModifiedProperties();
                 EditorUtility.SetDirty(switchComponent);
+                
+                // Update the switch body rotation to reflect the new angle
+                UpdateSwitchBodyRotation(_upRotation.floatValue, newDownAngle);
             }
             
             Handles.color = Color.white;
         }
         
+        /// <summary>
+        /// Updates the switch body rotation to reflect the current angle values.
+        /// </summary>
+        private void UpdateSwitchBodyRotation(float upAngle, float downAngle)
+        {
+            if (switchComponent == null || switchComponent.SwitchBody == null) return;
+            
+            // Get the current starting position to determine which angle to apply
+            var startingPosition = (StartingPosition)_startingPosition.enumValueIndex;
+            float targetAngle = 0;
+            
+            switch (startingPosition)
+            {
+                case StartingPosition.On:
+                    targetAngle = upAngle;
+                    break;
+                case StartingPosition.Off:
+                    targetAngle = downAngle;
+                    break;
+                case StartingPosition.Neutral:
+                default:
+                    targetAngle = (upAngle + downAngle) / 2f; // Calculate middle position
+                    break;
+            }
+            
+            // Apply the rotation to the switch body
+            var currentRotation = switchComponent.SwitchBody.localRotation.eulerAngles;
+            var rotationAxis = (Axis)_rotationAxis.enumValueIndex;
+            
+            var newRotation = rotationAxis switch
+            {
+                Axis.X => new Vector3(targetAngle, currentRotation.y, currentRotation.z),
+                Axis.Y => new Vector3(currentRotation.x, targetAngle, currentRotation.z),
+                Axis.Z => new Vector3(currentRotation.x, currentRotation.y, targetAngle),
+                _ => new Vector3(currentRotation.x, currentRotation.y, targetAngle)
+            };
+            
+            switchComponent.SwitchBody.localRotation = Quaternion.Euler(newRotation);
+        }
                  private Vector3 GetRotationAxisVector()
          {
              var axis = (Axis)_rotationAxis.enumValueIndex;
