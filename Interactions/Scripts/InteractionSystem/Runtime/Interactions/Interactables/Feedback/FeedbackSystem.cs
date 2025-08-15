@@ -18,7 +18,6 @@ namespace Shababeek.Interactions.Feedback
     {
         [Header("Feedback Configuration")]
         [Tooltip("List of feedback components that respond to interaction events. Add feedbacks via code/editor only.")]
-        // IMPORTANT: Only add feedbacks via code/editor, not via the inspector + button, to ensure correct managed reference type.
         [SerializeReference]
         private List<FeedbackData> feedbacks = new List<FeedbackData>();
 
@@ -45,7 +44,6 @@ namespace Shababeek.Interactions.Feedback
 
         private void SubscribeToEvents()
         {
-            // Hover events
             _interactable.OnHoverStarted
                 .Do(OnHoverStarted)
                 .Subscribe().AddTo(_disposables);
