@@ -172,6 +172,22 @@ namespace Shababeek.Interactions.Editors
         private void DrawHandConstraints()
         {
             EditorGUILayout.LabelField("Pose Constraints", EditorStyles.boldLabel);
+            
+            // Add copy from other hand button
+            EditorGUILayout.BeginHorizontal();
+            var otherHand = _selectedHand == HandIdentifier.Left ? "Right" : "Left";
+            if (GUILayout.Button(new GUIContent($"Copy from {otherHand} Hand", "Copies finger constraints and pose data from the other hand, with rotation values flipped for proper mirroring")))
+            {
+                CopyFromOtherHand();
+            }
+            EditorGUILayout.EndHorizontal();
+            
+            EditorGUILayout.HelpBox(
+                $"This will copy all finger constraints and pose data from the {otherHand.ToLower()} hand to the {_selectedHand} hand.\n" +
+                "Rotation values are automatically flipped to create a proper mirror effect.",
+                MessageType.Info);
+            EditorGUILayout.Space();
+            
             var poseConstraintsProperty = _selectedHand == HandIdentifier.Left
                 ? _leftPoseConstraintsProperty
                 : _rightPoseConstraintsProperty;
@@ -348,12 +364,143 @@ namespace Shababeek.Interactions.Editors
                 ? _leftHandPositioningProperty
                 : _rightHandPositioningProperty;
 
-            positioningProperty.FindPropertyRelative("positionOffset").vector3Value =
-                _currentHand.transform.localPosition;
-            positioningProperty.FindPropertyRelative("rotationOffset").vector3Value =
-                _currentHand.transform.localEulerAngles;
+            var positionOffset = positioningProperty.FindPropertyRelative("positionOffset");
+            var rotationOffset = positioningProperty.FindPropertyRelative("rotationOffset");
+
+            positionOffset.vector3Value = _currentHand.transform.localPosition;
+            rotationOffset.vector3Value = _currentHand.transform.localEulerAngles;
 
             serializedObject.ApplyModifiedProperties();
+        }
+        
+        /// <summary>
+        /// Copies finger constraints and pose data from the other hand, with rotation values flipped.
+        /// </summary>
+        private void CopyFromOtherHand()
+        {
+            if (_selectedHand == HandIdentifier.None) return;
+            
+            // Determine which hand to copy from
+            var isLeftHandSelected = _selectedHand == HandIdentifier.Left;
+            var sourcePoseConstraintsProperty = isLeftHandSelected ? _rightPoseConstraintsProperty : _leftPoseConstraintsProperty;
+            var targetPoseConstraintsProperty = isLeftHandSelected ? _leftPoseConstraintsProperty : _rightPoseConstraintsProperty;
+            var sourceHandPositioningProperty = isLeftHandSelected ? _rightHandPositioningProperty : _leftHandPositioningProperty;
+            var targetHandPositioningProperty = isLeftHandSelected ? _leftHandPositioningProperty : _rightHandPositioningProperty;
+            
+            // Copy pose constraints
+            CopyPoseConstraints(sourcePoseConstraintsProperty, targetPoseConstraintsProperty);
+            
+            // Copy hand positioning with flipped rotation
+            CopyHandPositioning(sourceHandPositioningProperty, targetHandPositioningProperty);
+            
+            // Apply changes
+            serializedObject.ApplyModifiedProperties();
+            
+            // Update the hand preview if it exists
+            if (_currentHand != null)
+            {
+                UpdateHandTransformFromVectors();
+            }
+            
+            Debug.Log($"Copied {(_selectedHand == HandIdentifier.Left ? "right" : "left")} hand data to {_selectedHand} hand with flipped rotation values.");
+        }
+        
+        /// <summary>
+        /// Copies pose constraints from source to target.
+        /// </summary>
+        private void CopyPoseConstraints(SerializedProperty source, SerializedProperty target)
+        {
+            // Copy target pose index
+            var sourceTargetPoseIndex = source.FindPropertyRelative("targetPoseIndex");
+            var targetTargetPoseIndex = target.FindPropertyRelative("targetPoseIndex");
+            targetTargetPoseIndex.intValue = sourceTargetPoseIndex.intValue;
+            
+            // Copy finger constraints
+            CopyFingerConstraints(source.FindPropertyRelative("thumbFingerLimits"), target.FindPropertyRelative("thumbFingerLimits"));
+            CopyFingerConstraints(source.FindPropertyRelative("indexFingerLimits"), target.FindPropertyRelative("indexFingerLimits"));
+            CopyFingerConstraints(source.FindPropertyRelative("middleFingerLimits"), target.FindPropertyRelative("middleFingerLimits"));
+            CopyFingerConstraints(source.FindPropertyRelative("ringFingerLimits"), target.FindPropertyRelative("ringFingerLimits"));
+            CopyFingerConstraints(source.FindPropertyRelative("pinkyFingerLimits"), target.FindPropertyRelative("pinkyFingerLimits"));
+        }
+        
+        /// <summary>
+        /// Copies finger constraints from source to target.
+        /// </summary>
+        private void CopyFingerConstraints(SerializedProperty source, SerializedProperty target)
+        {
+            if (source == null || target == null) return;
+            
+            // Copy all properties of the finger constraints
+            var iterator = source.Copy();
+            var enterChildren = iterator.Next(true);
+            if (enterChildren)
+            {
+                do
+                {
+                    var targetProperty = target.FindPropertyRelative(iterator.name);
+                    if (targetProperty != null)
+                    {
+                        // Copy the value based on the property type
+                        switch (iterator.propertyType)
+                        {
+                            case SerializedPropertyType.Integer:
+                                targetProperty.intValue = iterator.intValue;
+                                break;
+                            case SerializedPropertyType.Boolean:
+                                targetProperty.boolValue = iterator.boolValue;
+                                break;
+                            case SerializedPropertyType.Float:
+                                targetProperty.floatValue = iterator.floatValue;
+                                break;
+                            case SerializedPropertyType.String:
+                                targetProperty.stringValue = iterator.stringValue;
+                                break;
+                            case SerializedPropertyType.Vector3:
+                                targetProperty.vector3Value = iterator.vector3Value;
+                                break;
+                            case SerializedPropertyType.Quaternion:
+                                targetProperty.quaternionValue = iterator.quaternionValue;
+                                break;
+                            case SerializedPropertyType.Enum:
+                                targetProperty.enumValueIndex = iterator.enumValueIndex;
+                                break;
+                        }
+                    }
+                } while (iterator.Next(false));
+            }
+        }
+        
+        /// <summary>
+        /// Copies hand positioning from source to target with flipped rotation values.
+        /// </summary>
+        private void CopyHandPositioning(SerializedProperty source, SerializedProperty target)
+        {
+            // Copy position offset (no flipping needed)
+            var sourcePosition = source.FindPropertyRelative("positionOffset");
+            var targetPosition = target.FindPropertyRelative("positionOffset");
+            targetPosition.vector3Value = sourcePosition.vector3Value;
+            
+            // Copy rotation offset with flipping
+            var sourceRotation = source.FindPropertyRelative("rotationOffset");
+            var targetRotation = target.FindPropertyRelative("rotationOffset");
+            
+            // Flip rotation values for the other hand
+            var flippedRotation = FlipRotationForOtherHand(sourceRotation.vector3Value);
+            targetRotation.vector3Value = flippedRotation;
+        }
+        
+        /// <summary>
+        /// Flips rotation values for the other hand (mirrors the rotation).
+        /// </summary>
+        private Vector3 FlipRotationForOtherHand(Vector3 rotation)
+        {
+            // For left/right hand mirroring, we typically flip the Y and Z rotations
+            // This creates a mirror effect where the hands look like they're doing the same pose
+            return new Vector3(
+                rotation.x,           // Keep X rotation (forward/backward tilt)
+                -rotation.y,          // Flip Y rotation (left/right tilt)
+                -rotation.z           // Flip Z rotation (roll)
+            );
         }
         
         private void DeselectHands()
