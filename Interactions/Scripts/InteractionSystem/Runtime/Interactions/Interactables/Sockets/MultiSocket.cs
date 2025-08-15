@@ -123,7 +123,9 @@ namespace Shababeek.Interactions
 
             private void OnDrawGizmos()
             {
-                // Draw the local projection plane
+                
+                
+                var oldMatrix = Gizmos.matrix;
                 Gizmos.color = Color.yellow;
                 Gizmos.matrix = transform.localToWorldMatrix;
                 Gizmos.DrawRay(localOffset, GetLocalNormal() * 0.5f);
@@ -137,6 +139,7 @@ namespace Shababeek.Interactions
                     _ => new Vector3(1, 1, 0.1f)
                 };
                 Gizmos.DrawCube(localOffset, size);
+                Gizmos.matrix = oldMatrix;
             }
         }
     }
