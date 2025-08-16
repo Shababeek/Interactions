@@ -34,7 +34,7 @@ namespace Shababeek.Sequencing
             if (status == SequenceStatus.Started)
             {
                 _disposable = new CompositeDisposable();
-                interactableObject.OnActivated.Do(OnInteractionStarted).Subscribe().AddTo(_disposable);
+                interactableObject.OnUseStarted.Do(OnInteractionStarted).Subscribe().AddTo(_disposable);
             }
             else
             {

@@ -34,7 +34,7 @@ namespace Shababeek.Sequencing
                     interactableObject.OnDeselected.Do(OnInteractionStarted).Subscribe().AddTo(_disposable);
                     break;
                 case InteractionType.Activation:
-                    interactableObject.OnActivated.Do(OnInteractionStarted).Subscribe().AddTo(_disposable);
+                    interactableObject.OnUseStarted.Do(OnInteractionStarted).Subscribe().AddTo(_disposable);
                     break;
                 case InteractionType.HoverStart:
                     interactableObject.OnHoverStarted.Do(OnInteractionStarted).Subscribe().AddTo(_disposable);

@@ -110,7 +110,7 @@ namespace Shababeek.Sequencing
                         break;
 
                     case OrderedInteraction.InteractionType.Activation:
-                        interaction.targetInteractable.OnActivated
+                        interaction.targetInteractable.OnUseStarted
                             .Do(_ => OnInteraction(interaction))
                             .Subscribe()
                             .AddTo(interactionDisposables);
