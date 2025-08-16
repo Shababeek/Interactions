@@ -13,11 +13,11 @@ namespace Shababeek.Interactions.Editors
     [ScriptedImporter(1, "shababeek")]
     public class InteractionSystemLoader : ScriptedImporter
     {
-        private const string XRI_LAYERS_INITIALIZED = "XRI_Layers_Initialized";
-        private const string PLAYER_LAYER_NAME = "XRI_PlayerLayer";
-        private const string LEFT_INTERACTOR_LAYER_NAME = "XRI_LeftInteractor";
-        private const string RIGHT_INTERACTOR_LAYER_NAME = "XRI_RightInteractor";
-        private const string INTERACTABLE_LAYER_NAME = "XRI_Interactable";
+        private const string Shababeek_LAYERS_INITIALIZED = "Shababeek_Layers_Initialized";
+        private const string PLAYER_LAYER_NAME = "Shababeek_PlayerLayer";
+        private const string LEFT_INTERACTOR_LAYER_NAME = "Shababeek_LeftInteractor";
+        private const string RIGHT_INTERACTOR_LAYER_NAME = "Shababeek_RightInteractor";
+        private const string INTERACTABLE_LAYER_NAME = "Shababeek_Interactable";
 
 
         /// <summary>
@@ -35,7 +35,7 @@ namespace Shababeek.Interactions.Editors
                 // Axis Data
                 new()
                 {
-                    name = "XRI_Left_Trigger",
+                    name = "Shababeek_Left_Trigger",
                     descriptiveName = "Device trigger axis",
                     axis = 9,
                     type = 2,
@@ -43,7 +43,7 @@ namespace Shababeek.Interactions.Editors
                 },
                 new()
                 {
-                    name = "XRI_Left_Grip",
+                    name = "Shababeek_Left_Grip",
                     descriptiveName = "Device grip axis",
                     axis = 11,
                     type = 2,
@@ -51,7 +51,7 @@ namespace Shababeek.Interactions.Editors
                 },
                 new()
                 {
-                    name = "XRI_Left_PrimaryButton",
+                    name = "Shababeek_Left_PrimaryButton",
                     descriptiveName = "Device primary button",
                     positiveButton = "joystick button 2",
                     gravity = 1000.0f,
@@ -60,7 +60,7 @@ namespace Shababeek.Interactions.Editors
                 },
                 new()
                 {
-                    name = "XRI_Left_SecondaryButton",
+                    name = "Shababeek_Left_SecondaryButton",
                     descriptiveName = "Device secondary button",
                     positiveButton = "joystick button 3",
                     gravity = 1000.0f,
@@ -69,7 +69,7 @@ namespace Shababeek.Interactions.Editors
                 },
                 new()
                 {
-                    name = "XRI_Left_GripButton",
+                    name = "Shababeek_Left_GripButton",
                     descriptiveName = "Device grip button",
                     positiveButton = "joystick button 4",
                     gravity = 0.0f,
@@ -79,7 +79,7 @@ namespace Shababeek.Interactions.Editors
                 },
                 new()
                 {
-                    name = "XRI_Left_TriggerButton",
+                    name = "Shababeek_Left_TriggerButton",
                     descriptiveName = "Device trigger button",
                     positiveButton = "joystick button 14",
                     gravity = 0.0f,
@@ -89,7 +89,7 @@ namespace Shababeek.Interactions.Editors
                 },
                 new()
                 {
-                    name = "XRI_Left_Grip_DebugKey",
+                    name = "Shababeek_Left_Grip_DebugKey",
                     descriptiveName = "Left Grip Debug Key (Z)",
                     positiveButton = "z",
                     gravity = 1000.0f,
@@ -98,7 +98,7 @@ namespace Shababeek.Interactions.Editors
                 },
                 new()
                 {
-                    name = "XRI_Left_Index_DebugKey",
+                    name = "Shababeek_Left_Index_DebugKey",
                     descriptiveName = "Left Index Debug Key (X)",
                     positiveButton = "x",
                     gravity = 1000.0f,
@@ -107,7 +107,7 @@ namespace Shababeek.Interactions.Editors
                 },
                 new()
                 {
-                    name = "XRI_Left_Primary_DebugKey",
+                    name = "Shababeek_Left_Primary_DebugKey",
                     descriptiveName = "Left Primary Debug Key (C)",
                     positiveButton = "c",
                     gravity = 1000.0f,
@@ -123,7 +123,7 @@ namespace Shababeek.Interactions.Editors
                 //######################################################################################################################################
                 new()
                 {
-                    name = "XRI_Right_Trigger",
+                    name = "Shababeek_Right_Trigger",
                     descriptiveName = "Device trigger axis",
                     axis = 10,
                     type = 2,
@@ -131,7 +131,7 @@ namespace Shababeek.Interactions.Editors
                 },
                 new()
                 {
-                    name = "XRI_Right_Grip",
+                    name = "Shababeek_Right_Grip",
                     descriptiveName = "Device grip axis",
                     axis = 12,
                     type = 2,
@@ -139,7 +139,7 @@ namespace Shababeek.Interactions.Editors
                 },
                 new()
                 {
-                    name = "XRI_Right_PrimaryButton",
+                    name = "Shababeek_Right_PrimaryButton",
                     descriptiveName = "Device primary button",
                     positiveButton = "joystick button 0",
                     gravity = 1000.0f,
@@ -148,7 +148,7 @@ namespace Shababeek.Interactions.Editors
                 },
                 new()
                 {
-                    name = "XRI_Right_SecondaryButton",
+                    name = "Shababeek_Right_SecondaryButton",
                     descriptiveName = "Device secondary button",
                     positiveButton = "joystick button 1",
                     gravity = 1000.0f,
@@ -157,7 +157,7 @@ namespace Shababeek.Interactions.Editors
                 },
                 new()
                 {
-                    name = "XRI_Right_GripButton",
+                    name = "Shababeek_Right_GripButton",
                     descriptiveName = "Device grip button",
                     positiveButton = "joystick button 5",
                     gravity = 0.0f,
@@ -167,7 +167,7 @@ namespace Shababeek.Interactions.Editors
                 },
                 new()
                 {
-                    name = "XRI_Right_TriggerButton",
+                    name = "Shababeek_Right_TriggerButton",
                     descriptiveName = "Device trigger button",
                     positiveButton = "joystick button 15",
                     gravity = 0.0f,
@@ -177,7 +177,7 @@ namespace Shababeek.Interactions.Editors
                 },
                 new()
                 {
-                    name = "XRI_Right_Grip_DebugKey",
+                    name = "Shababeek_Right_Grip_DebugKey",
                     descriptiveName = "Right Grip Debug Key (m)",
                     positiveButton = "m",
                     gravity = 1000.0f,
@@ -186,7 +186,7 @@ namespace Shababeek.Interactions.Editors
                 },
                 new()
                 {
-                    name = "XRI_Right_Index_DebugKey",
+                    name = "Shababeek_Right_Index_DebugKey",
                     descriptiveName = "Right Index Debug Key (n)",
                     positiveButton = "n",
                     gravity = 1000.0f,
@@ -195,7 +195,7 @@ namespace Shababeek.Interactions.Editors
                 },
                 new()
                 {
-                    name = "XRI_Right_Primary_DebugKey",
+                    name = "Shababeek_Right_Primary_DebugKey",
                     descriptiveName = "Right Primary Debug Key (b)",
                     positiveButton = "b",
                     gravity = 1000.0f,
@@ -275,7 +275,7 @@ namespace Shababeek.Interactions.Editors
             }
 
             tagManager.ApplyModifiedProperties();
-            EditorPrefs.SetBool(XRI_LAYERS_INITIALIZED, true);
+            EditorPrefs.SetBool(Shababeek_LAYERS_INITIALIZED, true);
         }
         
         private void InitializeInputManager()

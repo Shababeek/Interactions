@@ -154,6 +154,9 @@ namespace Shababeek.Interactions.Core
             get => oldInputSettings;
             set => oldInputSettings = value;
         }
+
+        public InputManagerType InputType => inputType;
+
         private InputManagerBase CreateInputManager()
         {
             switch (inputType)
@@ -198,7 +201,7 @@ namespace Shababeek.Interactions.Core
 
      
 
-        private enum InputManagerType
+        public enum InputManagerType
         {
             InputManager = 0,
             InputSystem = 1,
