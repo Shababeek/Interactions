@@ -112,9 +112,9 @@ The Hand Posing and Constraints system provides sophisticated control over VR ha
   - **Default**: Dynamic
   - **When to use**: Static for single poses, Dynamic for finger control
 
-### **UnifiedPoseConstraintSystem**
+### **PoseConstrainter**
 
-**Menu Location**: `Component > Shababeek > Interactions > Unified Pose Constraint System`
+**Menu Location**: `Component > Shababeek > Interactions > Pose Constrainter`
 
 **What it does**: Unified system for constraining hand poses during interactions.
 
@@ -163,7 +163,7 @@ The Hand Posing and Constraints system provides sophisticated control over VR ha
   - **When to use**: Set position and rotation offsets for right hand
 
 **Setup Example**:
-1. Add the UnifiedPoseConstraintSystem component to your interactable
+1. Add the Pose Constrainter component to your interactable
 2. Set the Constraint Type (HideHand, FreeHand, or Constrained)
 3. Configure pose constraints for left and right hands
 4. Set hand positioning offsets if needed
@@ -307,16 +307,15 @@ hand.Constrain(poseConstraints);
 ### **Hand Positioning**
 
 ```csharp
-// Get the unified pose constraint system
-UnifiedPoseConstraintSystem constraintSystem = GetComponent<UnifiedPoseConstraintSystem>();
+// Get the pose constrainter
+PoseConstrainter constrainter = GetComponent<PoseConstrainter>();
 
-// Get target transform for left hand
-var (position, rotation) = constraintSystem.GetTargetHandTransform(HandIdentifier.Left);
+// Get target transform for left hand (local to constrainter)
+var (localPos, localRot) = constrainter.GetTargetHandTransform(HandIdentifier.Left);
 
-// Apply positioning
-Transform leftHand = GetComponent<Transform>();
-leftHand.position = position;
-leftHand.rotation = rotation;
+// Convert to world or another parent as needed
+var worldPos = constrainter.transform.TransformPoint(localPos);
+var worldRot = constrainter.transform.rotation * localRot;
 ```
 
 ## Troubleshooting
@@ -330,7 +329,7 @@ leftHand.rotation = rotation;
 - Check that the Playable Graph is initialized
 
 **Finger constraints not working:**
-- Verify UnifiedPoseConstraintSystem is attached
+- Verify Pose Constrainter is attached
 - Check constraint type is set to "Constrained"
 - Ensure finger constraint values are within valid ranges
 - Test with different constraint configurations

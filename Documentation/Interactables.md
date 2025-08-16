@@ -11,6 +11,7 @@ All interactables require these components to function properly:
 - **Collider** - For physical interaction detection
 - **InteractableBase** (or derived class) - Core interaction logic
 - **Rigidbody** - For physics-based interactions (optional for some types)
+- **Pose Constrainter** (automatic on constrained interactables) - For hand pose/positioning
 
 ## Common Inspector Properties
 
@@ -352,12 +353,37 @@ All interactables share these base properties in the Inspector:
   - **Default**: Empty
   - **Common uses**: Continuous actions, sustained effects
 
+- **Stay In Position** (bool)
+  - **What it does**: When enabled, the switch will stay in its current position instead of returning to neutral when the trigger exits
+  - **Default**: false
+  - **When to use**: Enable for switches that should maintain their state (like light switches), disable for momentary switches that return to neutral
+
+- **Starting Position** (StartingPosition)
+  - **What it does**: Sets the initial position of the switch when the scene starts
+  - **Options**: Off, Neutral, On
+  - **Default**: Neutral
+  - **When to use**: Set to Off for switches that start in the down position, On for switches that start in the up position, or Neutral for switches that start in the middle
+
 **Setup Example**:
 1. Add a Collider to your switch object
 2. Add the Switch component
 3. Set up visual feedback (materials, animations) using the UnityEvents
 4. Configure the rotation angles and speed
-5. Test the toggle behavior in play mode
+5. Set "Stay In Position" based on your switch behavior needs
+6. Test the toggle behavior in play mode
+
+**Common Uses**:
+- **Momentary switches** (Stay In Position = false): Return to neutral when released, good for temporary actions
+- **Toggle switches** (Stay In Position = true): Stay in position when released, good for persistent states like light switches
+
+**Public Methods**:
+- `GetSwitchState()`: Returns the current switch state (true = up, false = down, null = neutral)
+- `GetCurrentRotation()`: Returns the current rotation of the switch body
+- `ResetSwitch()`: Resets the switch respecting the "Stay In Position" setting
+- `ForceResetSwitch()`: Always resets the switch to neutral regardless of settings
+- `StayInPosition`: Property to get/set whether the switch stays in position
+- `StartingPosition`: Property to get/set the starting position of the switch
+- `SetPosition(StartingPosition)`: Sets the switch to a specific position programmatically
 
 ### **SpawningInteractable**
 
@@ -489,11 +515,10 @@ Connect interactables to the feedback system:
 
 ## Event Subscription Examples
 
-### **Subscribing to Interactable Events**
-
 ```csharp
-// Get a reference to an interactable
-InteractableBase interactable = GetComponent<InteractableBase>();
+// Lever
+var lever = GetComponent<LeverInteractable>();
+lever.OnLeverChanged.Subscribe(value => Debug.Log($"Lever: {value}"));
 
 // Subscribe to selection events
 interactable.OnSelected.Subscribe(interactor => {

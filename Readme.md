@@ -141,7 +141,7 @@ A comprehensive Unity package for building advanced VR/AR and 3D interactions wi
 - Demo scenes and examples
 
 ### **Documentation**
-- Complete user manual (300+ pages)
+- Complete user manual
 - API reference documentation
 - Video tutorials and examples
 - Best practices guide
