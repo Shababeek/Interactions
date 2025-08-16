@@ -5,81 +5,66 @@ namespace Shababeek.Interactions.Editors
 {
     [CustomEditor(typeof(LeverInteractable))]
     [CanEditMultipleObjects]
-    public class LeverInteractableEditor : Editor
+    public class LeverInteractableEditor : InteractableBaseEditor
     {
         // Editable properties
         private SerializedProperty _returnToOriginalProp;
         private SerializedProperty _minProp;
         private SerializedProperty _maxProp;
         private SerializedProperty _rotationAxisProp;
-        private SerializedProperty _interactionHandProp;
-        private SerializedProperty _selectionButtonProp;
         private SerializedProperty _interactableObjectProp;
-
         private SerializedProperty _snapDistanceProp;
 
         // Events
         private SerializedProperty _onLeverChangedProp;
-        private SerializedProperty _onSelectedProp;
-        private SerializedProperty _onDeselectedProp;
-        private SerializedProperty _onHoverStartProp;
-        private SerializedProperty _onHoverEndProp;
-
-        private SerializedProperty _onActivatedProp;
 
         // Read-only
         private SerializedProperty _currentNormalizedAngleProp;
-        private SerializedProperty _isSelectedProp;
-        private SerializedProperty _currentInteractorProp;
-        private SerializedProperty _currentStateProp;
-        private bool _showEvents = true;
+        
         private static bool _editLeverRange = false;
 
-        protected  void OnEnable()
+        protected override void OnEnable()
         {
-            _returnToOriginalProp = serializedObject.FindProperty("returnToOriginal");
-            _minProp = serializedObject.FindProperty("min");
-            _maxProp = serializedObject.FindProperty("max");
-            _rotationAxisProp = serializedObject.FindProperty("rotationAxis");
-            _interactionHandProp = serializedObject.FindProperty("interactionHand");
-            _selectionButtonProp = serializedObject.FindProperty("selectionButton");
-            _interactableObjectProp = serializedObject.FindProperty("interactableObject");
-            _snapDistanceProp = serializedObject.FindProperty("snapDistance");
-            _onLeverChangedProp = serializedObject.FindProperty("onLeverChanged");
-            _onSelectedProp = serializedObject.FindProperty("onSelected");
-            _onDeselectedProp = serializedObject.FindProperty("onDeselected");
-            _onHoverStartProp = serializedObject.FindProperty("onHoverStart");
-            _onHoverEndProp = serializedObject.FindProperty("onHoverEnd");
-            _onActivatedProp = serializedObject.FindProperty("onActivated");
-            _currentNormalizedAngleProp = serializedObject.FindProperty("currentNormalizedAngle");
-            _isSelectedProp = serializedObject.FindProperty("isSelected");
-            _currentInteractorProp = serializedObject.FindProperty("currentInteractor");
-            _currentStateProp = serializedObject.FindProperty("currentState");
+            base.OnEnable();
+            
+            // Find custom properties
+            _returnToOriginalProp = base.serializedObject.FindProperty("returnToOriginal");
+            _minProp = base.serializedObject.FindProperty("min");
+            _maxProp = base.serializedObject.FindProperty("max");
+            _rotationAxisProp = base.serializedObject.FindProperty("rotationAxis");
+            _interactableObjectProp = base.serializedObject.FindProperty("interactableObject");
+            _snapDistanceProp = base.serializedObject.FindProperty("_snapDistance");
+            _onLeverChangedProp = base.serializedObject.FindProperty("onLeverChanged");
+            _currentNormalizedAngleProp = base.serializedObject.FindProperty("currentNormalizedAngle");
         }
 
-        public override void OnInspectorGUI()
+        protected override void DrawCustomHeader()
         {
             EditorGUILayout.HelpBox(
-                "Configure the lever's rotation limits and behavior. The lever will rotate based on hand position.\n\n" +
-                "Pose constraints are automatically handled by the UnifiedPoseConstraintSystem component (automatically added). Use it to configure hand poses and positioning.",
+                "The LeverInteractable component creates a lever that can be pulled to different positions.",
                 MessageType.Info
             );
-            serializedObject.Update();
-            DoEditButton();
-            // Editable properties
-            if (_returnToOriginalProp != null)
-                EditorGUILayout.PropertyField(_returnToOriginalProp, new GUIContent("Return to Original Position"));
-            if (_rotationAxisProp != null)
-                EditorGUILayout.PropertyField(_rotationAxisProp, new GUIContent("Rotation Axis"));
-            if (_interactionHandProp != null)
-                EditorGUILayout.PropertyField(_interactionHandProp);
-            if (_selectionButtonProp != null)
-                EditorGUILayout.PropertyField(_selectionButtonProp);
+        }
+
+        protected override void DrawCustomProperties()
+        {
+            EditorGUILayout.LabelField("Lever Settings", EditorStyles.boldLabel);
+            
             if (_interactableObjectProp != null)
-                EditorGUILayout.PropertyField(_interactableObjectProp, new GUIContent("Interactable Object"));
+                EditorGUILayout.PropertyField(_interactableObjectProp, new GUIContent("Interactable Object", "The visual part of the lever object that rotates"));
             if (_snapDistanceProp != null)
-                EditorGUILayout.PropertyField(_snapDistanceProp);
-            // Min/Max editable fields in a single row before events
+                EditorGUILayout.PropertyField(_snapDistanceProp, new GUIContent("Snap Distance", "Distance threshold for snapping to positions"));
+            
+            EditorGUILayout.Space();
+            
+            if (_rotationAxisProp != null)
+                EditorGUILayout.PropertyField(_rotationAxisProp, new GUIContent("Rotation Axis", "The axis around which the lever rotates"));
+            if (_returnToOriginalProp != null)
+                EditorGUILayout.PropertyField(_returnToOriginalProp, new GUIContent("Return To Original", "Whether the lever returns to its original position when released"));
+            
+            EditorGUILayout.Space();
+            
+            EditorGUILayout.LabelField("Rotation Limits", EditorStyles.boldLabel);
             if (_minProp != null && _maxProp != null)
             {
                 EditorGUILayout.BeginHorizontal();
@@ -87,46 +72,40 @@ namespace Shababeek.Interactions.Editors
                 EditorGUILayout.PropertyField(_maxProp, new GUIContent("Max (°)"));
                 EditorGUILayout.EndHorizontal();
             }
-            // Events foldout
-            _showEvents = EditorGUILayout.BeginFoldoutHeaderGroup(_showEvents, "Events");
-            if (_showEvents)
-            {
-                if (_onLeverChangedProp != null)
-                    EditorGUILayout.PropertyField(_onLeverChangedProp);
-                if (_onSelectedProp != null)
-                    EditorGUILayout.PropertyField(_onSelectedProp);
-                if (_onDeselectedProp != null)
-                    EditorGUILayout.PropertyField(_onDeselectedProp);
-                if (_onHoverStartProp != null)
-                    EditorGUILayout.PropertyField(_onHoverStartProp);
-                if (_onHoverEndProp != null)
-                    EditorGUILayout.PropertyField(_onHoverEndProp);
-                if (_onActivatedProp != null)
-                    EditorGUILayout.PropertyField(_onActivatedProp);
-            }
-            EditorGUILayout.EndFoldoutHeaderGroup();
-            // Min/Max after events
-            if (_minProp != null)
-                EditorGUILayout.PropertyField(_minProp);
-            if (_maxProp != null)
-                EditorGUILayout.PropertyField(_maxProp);
-            // Read-only fields at the end
-            EditorGUI.BeginDisabledGroup(true);
-            if (_currentNormalizedAngleProp != null)
-                EditorGUILayout.PropertyField(_currentNormalizedAngleProp);
-            if (_isSelectedProp != null)
-                EditorGUILayout.PropertyField(_isSelectedProp);
-            if (_currentInteractorProp != null)
-                EditorGUILayout.PropertyField(_currentInteractorProp);
-            if (_currentStateProp != null)
-                EditorGUILayout.PropertyField(_currentStateProp);
-            EditorGUI.EndDisabledGroup();
-            serializedObject.ApplyModifiedProperties();
+            
+            
         }
 
-        protected  void OnSceneGUI()
+        protected override void DrawCustomDebugInfo()
+        {
+            if (_currentNormalizedAngleProp != null)
+                EditorGUILayout.PropertyField(_currentNormalizedAngleProp, new GUIContent("Current Normalized Angle", "Current lever position (0-1)"));
+        }
+
+        private void DrawEditButton()
+        {
+            EditorGUILayout.Space();
+            var icon = EditorGUIUtility.IconContent(_editLeverRange ? "d_EditCollider" : "EditCollider");
+            var iconButtonStyle = new GUIStyle(GUI.skin.button)
+            {
+                fixedWidth = 32,
+                fixedHeight = 24,
+                padding = new RectOffset(2, 2, 2, 2)
+            };
+            Color prevColor = GUI.color;
+            if (_editLeverRange)
+                GUI.color = Color.green;
+            if (GUILayout.Button(icon, iconButtonStyle))
+                _editLeverRange = !_editLeverRange;
+            GUI.color = prevColor;
+            EditorGUILayout.Space();
+        }
+
+        private void OnSceneGUI()
         {
             var lever = (LeverInteractable)target;
+            if (lever == null || lever.InteractableObject == null) return;
+            
             Transform t = lever.transform;
             Vector3 pivot = t.position;
             Vector3 axis = lever.GetRotationAxis().plane;
@@ -198,23 +177,9 @@ namespace Shababeek.Interactions.Editors
             }
         }
 
-        private static void DoEditButton()
+        protected override void DrawImportantSettings()
         {
-            EditorGUILayout.Space();
-            var icon = EditorGUIUtility.IconContent(_editLeverRange ? "d_EditCollider" : "EditCollider");
-            var iconButtonStyle = new GUIStyle(GUI.skin.button)
-            {
-                fixedWidth = 32,
-                fixedHeight = 24,
-                padding = new RectOffset(2, 2, 2, 2)
-            };
-            Color prevColor = GUI.color;
-            if (_editLeverRange)
-                GUI.color = Color.green;
-            if (GUILayout.Button(icon, iconButtonStyle))
-                _editLeverRange = !_editLeverRange;
-            GUI.color = prevColor;
-            EditorGUILayout.Space();
+            DrawEditButton();
         }
     }
 } 

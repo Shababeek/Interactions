@@ -7,126 +7,102 @@ namespace Shababeek.Interactions.Editors
 {
     [CustomEditor(typeof(DrawerInteractable))]
     [CanEditMultipleObjects]
-    public class DrawerInteractableEditor : Editor
+    public class DrawerInteractableEditor : InteractableBaseEditor
     {
         private static bool _editDrawerRange = false;
-        private bool _showEvents = true;
 
-        // Editable properties
-        private SerializedProperty _interactionHandProp;
-        private SerializedProperty _selectionButtonProp;
+        // Custom properties specific to DrawerInteractable
         private SerializedProperty _interactableObjectProp;
         private SerializedProperty _snapDistanceProp;
         private SerializedProperty _localStartProp;
         private SerializedProperty _localEndProp;
         private SerializedProperty _returnToOriginalProp;
         private SerializedProperty _returnSpeedProp;
-
-        // Events
-        private SerializedProperty _onSelectedProp;
-        private SerializedProperty _onDeselectedProp;
-        private SerializedProperty _onHoverStartProp;
-        private SerializedProperty _onHoverEndProp;
-        private SerializedProperty _onActivatedProp;
         private SerializedProperty _onMovedProp;
-
         private SerializedProperty _onLimitReachedProp;
+        private SerializedProperty _onValueChangedProp;
+        private SerializedProperty _currentValueProp;
 
-        // Read-only
-        private SerializedProperty _isSelectedProp;
-        private SerializedProperty _currentInteractorProp;
-        private SerializedProperty _currentStateProp;
-
-        protected  void OnEnable()
+        protected override void OnEnable()
         {
-            _interactionHandProp = serializedObject.FindProperty("interactionHand");
-            _selectionButtonProp = serializedObject.FindProperty("selectionButton");
-            _interactableObjectProp = serializedObject.FindProperty("interactableObject");
-            _snapDistanceProp = serializedObject.FindProperty("snapDistance");
-            _localStartProp = serializedObject.FindProperty("_localStart");
-            _localEndProp = serializedObject.FindProperty("_localEnd");
-            _returnToOriginalProp = serializedObject.FindProperty("returnToOriginal");
-            _returnSpeedProp = serializedObject.FindProperty("returnSpeed");
-            _onSelectedProp = serializedObject.FindProperty("onSelected");
-            _onDeselectedProp = serializedObject.FindProperty("onDeselected");
-            _onHoverStartProp = serializedObject.FindProperty("onHoverStart");
-            _onHoverEndProp = serializedObject.FindProperty("onHoverEnd");
-            _onActivatedProp = serializedObject.FindProperty("onActivated");
-            _onMovedProp = serializedObject.FindProperty("onMoved");
-            _onLimitReachedProp = serializedObject.FindProperty("onLimitReached");
-            _isSelectedProp = serializedObject.FindProperty("isSelected");
-            _currentInteractorProp = serializedObject.FindProperty("currentInteractor");
-            _currentStateProp = serializedObject.FindProperty("currentState");
+            base.OnEnable();
+
+            // Find custom properties
+            _interactableObjectProp = base.serializedObject.FindProperty("interactableObject");
+            _snapDistanceProp = base.serializedObject.FindProperty("_snapDistance");
+            _localStartProp = base.serializedObject.FindProperty("_localStart");
+            _localEndProp = base.serializedObject.FindProperty("_localEnd");
+            _returnToOriginalProp = base.serializedObject.FindProperty("returnToOriginal");
+            _returnSpeedProp = base.serializedObject.FindProperty("returnSpeed");
+            _onMovedProp = base.serializedObject.FindProperty("onMoved");
+            _onLimitReachedProp = base.serializedObject.FindProperty("onLimitReached");
+            _onValueChangedProp = base.serializedObject.FindProperty("onValueChanged");
+            _currentValueProp = base.serializedObject.FindProperty("currentValue");
         }
 
-        public override void OnInspectorGUI()
+        protected override void DrawCustomHeader()
         {
             EditorGUILayout.HelpBox(
                 "Place the object you want to move inside the 'Interactable Object' field. This object should be a child of this component.\n\n" +
                 "Pose constraints are automatically handled by the Pose Constrainer component (automatically added). Use it to configure hand poses and positioning.",
                 MessageType.Info
             );
-            serializedObject.Update();
-            DoEditButton();
-            if (_interactionHandProp != null)
-                EditorGUILayout.PropertyField(_interactionHandProp);
-            if (_selectionButtonProp != null)
-                EditorGUILayout.PropertyField(_selectionButtonProp);
-            if (_interactableObjectProp != null)
-                EditorGUILayout.PropertyField(_interactableObjectProp, new GUIContent("Interactable Object"));
-            if (_snapDistanceProp != null)
-                EditorGUILayout.PropertyField(_snapDistanceProp);
-            if (_localStartProp != null)
-                EditorGUILayout.PropertyField(_localStartProp);
-            if (_localEndProp != null)
-                EditorGUILayout.PropertyField(_localEndProp);
-            if (_returnToOriginalProp != null)
-                EditorGUILayout.PropertyField(_returnToOriginalProp, new GUIContent("Return to Original Position"));
-            if (_returnSpeedProp != null)
-                EditorGUILayout.PropertyField(_returnSpeedProp, new GUIContent("Return Speed"));
-            // Events foldout
-            _showEvents = EditorGUILayout.BeginFoldoutHeaderGroup(_showEvents, "Events");
-            if (_showEvents)
-            {
-                if (_onSelectedProp != null)
-                    EditorGUILayout.PropertyField(_onSelectedProp);
-                if (_onDeselectedProp != null)
-                    EditorGUILayout.PropertyField(_onDeselectedProp);
-                if (_onHoverStartProp != null)
-                    EditorGUILayout.PropertyField(_onHoverStartProp);
-                if (_onHoverEndProp != null)
-                    EditorGUILayout.PropertyField(_onHoverEndProp);
-                if (_onActivatedProp != null)
-                    EditorGUILayout.PropertyField(_onActivatedProp);
-                if (_onMovedProp != null)
-                    EditorGUILayout.PropertyField(_onMovedProp);
-                if (_onLimitReachedProp != null)
-                    EditorGUILayout.PropertyField(_onLimitReachedProp);
-            }
-
-            EditorGUILayout.EndFoldoutHeaderGroup();
-
-            #region ReadOnly
-            EditorGUI.BeginDisabledGroup(true);
-            if (_isSelectedProp != null)
-
-                EditorGUILayout.PropertyField(_isSelectedProp);
-
-            if (_currentInteractorProp != null)
-
-                EditorGUILayout.PropertyField(_currentInteractorProp);
-
-            if (_currentStateProp != null)
-
-                EditorGUILayout.PropertyField(_currentStateProp);
-
-            EditorGUI.EndDisabledGroup();
-            serializedObject.ApplyModifiedProperties();
-            #endregion
-
         }
 
-        private static void DoEditButton()
+        protected override void DrawCustomProperties()
+        {
+            EditorGUILayout.LabelField("Drawer Settings", EditorStyles.boldLabel);
+
+            if (_interactableObjectProp != null)
+                EditorGUILayout.PropertyField(_interactableObjectProp, new GUIContent("Interactable Object", "The object that will be moved by the drawer"));
+            if (_snapDistanceProp != null)
+                EditorGUILayout.PropertyField(_snapDistanceProp, new GUIContent("Snap Distance", "Distance threshold for snapping to positions"));
+
+            EditorGUILayout.Space();
+
+            EditorGUILayout.LabelField("Movement Range", EditorStyles.boldLabel);
+            if (_localStartProp != null)
+                EditorGUILayout.PropertyField(_localStartProp, new GUIContent("Local Start", "Local position where the drawer starts"));
+            if (_localEndProp != null)
+                EditorGUILayout.PropertyField(_localEndProp, new GUIContent("Local End", "Local position where the drawer ends"));
+
+            EditorGUILayout.Space();
+
+            EditorGUILayout.LabelField("Behavior", EditorStyles.boldLabel);
+            if (_returnToOriginalProp != null)
+                EditorGUILayout.PropertyField(_returnToOriginalProp, new GUIContent("Return To Original", "Whether the drawer returns to its original position when released"));
+            if (_returnSpeedProp != null)
+                EditorGUILayout.PropertyField(_returnSpeedProp, new GUIContent("Return Speed", "Speed of return animation"));
+
+            // Draw range editing button
+        }
+
+        protected override void DrawCommonEvents()
+        {
+            EditorGUILayout.LabelField("Drawer Events", EditorStyles.boldLabel);
+
+            if (_onMovedProp != null)
+                EditorGUILayout.PropertyField(_onMovedProp, new GUIContent("On Moved", "Event raised when the drawer moves"));
+            if (_onLimitReachedProp != null)
+                EditorGUILayout.PropertyField(_onLimitReachedProp, new GUIContent("On Limit Reached", "Event raised when the drawer reaches its limits"));
+            if (_onValueChangedProp != null)
+                EditorGUILayout.PropertyField(_onValueChangedProp, new GUIContent("On Value Changed", "Event raised when the drawer value changes"));
+
+            EditorGUILayout.Space();
+
+            // Call base to show common events
+            base.DrawCommonEvents();
+        }
+
+        protected override void DrawCustomDebugInfo()
+        {
+            EditorGUILayout.LabelField("Drawer Debug", EditorStyles.boldLabel);
+
+            if (_currentValueProp != null)
+                EditorGUILayout.PropertyField(_currentValueProp, new GUIContent("Current Value", "Current drawer position (0-1)"));
+        }
+
+        private void DrawEditButton()
         {
             EditorGUILayout.Space();
             var icon = EditorGUIUtility.IconContent(_editDrawerRange ? "d_EditCollider" : "EditCollider");
@@ -145,31 +121,75 @@ namespace Shababeek.Interactions.Editors
             EditorGUILayout.Space();
         }
 
-        protected  void OnSceneGUI()
+        private void OnSceneGUI()
         {
-            if (!_editDrawerRange) return;
             var drawer = (DrawerInteractable)target;
-            Transform t = drawer.transform;
-            Undo.RecordObject(drawer, "Move Drawer Points");
-            // Draw and move localStart
-            Vector3 worldStart = t.TransformPoint(drawer.LocalStart);
-            EditorGUI.BeginChangeCheck();
-            Vector3 newWorldStart = Handles.PositionHandle(worldStart, Quaternion.identity);
-            if (EditorGUI.EndChangeCheck())
+            if (drawer == null || drawer.InteractableObject == null) return;
+
+            var worldStart = drawer.transform.TransformPoint(drawer.LocalStart);
+            var worldEnd = drawer.transform.TransformPoint(drawer.LocalEnd);
+            var direction = worldEnd - worldStart;
+            var radius = HandleUtility.GetHandleSize(worldStart) * 0.1f;
+
+            // Draw movement path
+            Handles.color = Color.green;
+            Handles.DrawLine(worldStart, worldEnd);
+
+            // Draw start and end points
+            Handles.color = Color.red;
+            Handles.DrawSolidDisc(worldStart, Vector3.up, radius);
+            Handles.DrawSolidDisc(worldEnd, Vector3.up, radius);
+
+            // Draw labels
+            Handles.Label(worldStart + Vector3.up * radius * 1.5f, "Start");
+            Handles.Label(worldEnd + Vector3.up * radius * 1.5f, "End");
+
+            if (_editDrawerRange)
             {
-                drawer.LocalStart = t.InverseTransformPoint(newWorldStart);
-                EditorUtility.SetDirty(drawer);
+                // Draw interactive handles for editing the range
+                EditorGUI.BeginChangeCheck();
+
+                Handles.color = Color.yellow;
+                var newStart = Handles.FreeMoveHandle(worldStart, HandleUtility.GetHandleSize(worldStart) * 0.1f, Vector3.zero, Handles.SphereHandleCap);
+                var newEnd = Handles.FreeMoveHandle(worldEnd, HandleUtility.GetHandleSize(worldEnd) * 0.1f, Vector3.zero, Handles.SphereHandleCap);
+
+                if (EditorGUI.EndChangeCheck())
+                {
+                    Undo.RecordObject(drawer, "Edit Drawer Range");
+
+                    var localStart = drawer.transform.InverseTransformPoint(newStart);
+                    var localEnd = drawer.transform.InverseTransformPoint(newEnd);
+
+                    // Use reflection to set private fields
+                    var startField = typeof(DrawerInteractable).GetField("_localStart", BindingFlags.NonPublic | BindingFlags.Instance);
+                    var endField = typeof(DrawerInteractable).GetField("_localEnd", BindingFlags.NonPublic | BindingFlags.Instance);
+
+                    if (startField != null) startField.SetValue(drawer, localStart);
+                    if (endField != null) endField.SetValue(drawer, localEnd);
+
+                    EditorUtility.SetDirty(drawer);
+                }
             }
 
-            // Draw and move localEnd
-            Vector3 worldEnd = t.TransformPoint(drawer.LocalEnd);
-            EditorGUI.BeginChangeCheck();
-            Vector3 newWorldEnd = Handles.PositionHandle(worldEnd, Quaternion.identity);
-            if (EditorGUI.EndChangeCheck())
+            // Draw current position indicator
+            if (drawer.InteractableObject != null)
             {
-                drawer.LocalEnd = t.InverseTransformPoint(newWorldEnd);
-                EditorUtility.SetDirty(drawer);
+                var localObjPos = drawer.InteractableObject.transform.localPosition;
+                var projectedPoint = Vector3.Project(localObjPos - drawer.LocalStart, drawer.LocalEnd - drawer.LocalStart) + drawer.LocalStart;
+                var worldProjected = drawer.transform.TransformPoint(projectedPoint);
+
+                Handles.color = Color.cyan;
+                Handles.DrawSolidDisc(worldProjected, Vector3.up, radius * 0.5f);
+                Handles.Label(worldProjected + Vector3.up * radius * 1.2f, "Current");
             }
+
+            Handles.color = Color.white;
+        }
+
+        protected override void DrawImportantSettings()
+        {
+            DrawEditButton();
         }
     }
+
 }
