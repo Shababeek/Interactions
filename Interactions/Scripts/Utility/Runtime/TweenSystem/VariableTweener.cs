@@ -35,7 +35,7 @@ namespace Shababeek.Core
         [Tooltip("The scale factor applied to delta time for tweening speed control. Higher values result in faster tweening across all managed tweenables.")]
         [SerializeField] private float _tweenScale = 12f;
         
-        private List<ITweenable> _values = new();
+        private List<ITweenable> _tweenables = new();
 
         /// <summary>
         /// Gets or sets the scale factor applied to delta time for tweening speed control.
@@ -66,7 +66,7 @@ namespace Shababeek.Core
         /// </remarks>
         private void OnEnable()
         {
-            _values = new List<ITweenable>();
+            _tweenables = new List<ITweenable>();
         }
         
         /// <summary>
@@ -86,13 +86,14 @@ namespace Shababeek.Core
         /// </example>
         public void AddTweenable(ITweenable value)
         {
+            if (_tweenables.Contains(value)) return; 
             if (value == null)
             {
                 Debug.LogWarning("VariableTweener: Attempted to add null tweenable.");
                 return;
             }
             
-            _values.Add(value);
+            _tweenables.Add(value);
         }
 
         /// <summary>
@@ -116,7 +117,7 @@ namespace Shababeek.Core
             
             try
             {
-                _values.Remove(value);
+                _tweenables.Remove(value);
             }
             catch
             {
@@ -135,11 +136,11 @@ namespace Shababeek.Core
         /// </remarks>
         private void Update()
         {
-            for (int i = _values.Count - 1; i >= 0; i--)
+            for (int i = _tweenables.Count - 1; i >= 0; i--)
             {
-                if (_values[i].Tween(Time.deltaTime * _tweenScale))
+                if (_tweenables[i].Tween(Time.deltaTime * _tweenScale))
                 {
-                    _values.RemoveAt(i);
+                    _tweenables.RemoveAt(i);
                 }
             }
         }
