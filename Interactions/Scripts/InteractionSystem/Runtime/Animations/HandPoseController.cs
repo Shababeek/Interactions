@@ -19,11 +19,14 @@ namespace Shababeek.Interactions.Animations
     /// The system automatically applies pose constraints and updates finger values based on input data.
     /// </remarks>
     [RequireComponent(typeof(VariableTweener))]
+    [AddComponentMenu("Shababeek/Interactions/Animations/Hand Pose Controller")]
     public class HandPoseController : MonoBehaviour, IPoseable
     {
+        [Header("Hand Configuration")]
+        [HideInInspector] [SerializeField] [Tooltip("The HandData asset containing all pose definitions and finger configurations.")]
+        private HandData handData;
 
-        [HideInInspector] [SerializeField] private HandData handData;
-
+ 
         [Range(0, 1)] [HideInInspector] [SerializeField]
         private float[] fingers = new float[5];
 
@@ -86,8 +89,6 @@ namespace Shababeek.Interactions.Animations
         {
             set => _constrains = value;
         }
-
-
 
         /// <summary>
         /// Gets or sets the current pose index with proper animation blending.
@@ -278,6 +279,5 @@ namespace Shababeek.Interactions.Animations
                 this[i] = _constrains[i].constraints.GetConstrainedValue(_hand[i]);
             }
         }
-
     }
 }
