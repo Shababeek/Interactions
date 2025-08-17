@@ -7,7 +7,23 @@ namespace Shababeek.Core
     /// Tweens a float value between two values over time using linear interpolation.
     /// Provides both event-based and async/await interfaces for tween completion.
     /// </summary>
-
+    /// <remarks>
+    /// This class automatically handles tweening between start and target values at a specified rate.
+    /// It integrates with VariableTweener for automatic frame updates and provides events for
+    /// real-time value changes and completion notifications.
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// // Create a tweenable float
+    /// var tweenable = new TweenableFloat(tweener, value => Debug.Log($"Value: {value}"));
+    /// 
+    /// // Start tweening to a new value
+    /// tweenable.Value = 10f;
+    /// 
+    /// // Listen for completion
+    /// tweenable.OnFinished += () => Debug.Log("Tween complete!");
+    /// </code>
+    /// </example>
     public class TweenableFloat : ITweenable
     {
         /// <summary>
@@ -38,6 +54,11 @@ namespace Shababeek.Core
         /// <summary>
         /// Gets or sets the current float value. Setting this property starts a tween to the new value.
         /// </summary>
+        /// <remarks>
+        /// When setting a new value, the current value becomes the start point and the new value
+        /// becomes the target. The tween automatically starts and will interpolate between these
+        /// values over time at the specified rate.
+        /// </remarks>
         /// <example>
         /// <code>
         /// tweenableFloat.Value = 5f; // Starts tweening to 5
@@ -45,11 +66,7 @@ namespace Shababeek.Core
         /// </example>
         public float Value
         {
-            get
-            {
-                return _value;
-            }
-
+            get => _value;
             set
             {
 #if UNITY_EDITOR
@@ -57,21 +74,19 @@ namespace Shababeek.Core
 #endif
                 {
                     _t = 0;
-                    _start = this._value;
+                    _start = _value;
                     _target = value;
                     _tweener.AddTweenable(this);
                 }
 #if UNITY_EDITOR
                 else
                 {
-                    this._value = value;
+                    _value = value;
                     OnChange?.Invoke(value);
                 }
 #endif
             }
         }
-
-        
 
         /// <summary>
         /// Initializes a new instance of the TweenableFloat class.
@@ -80,20 +95,32 @@ namespace Shababeek.Core
         /// <param name="onChange">Optional callback for value changes during tweening</param>
         /// <param name="rate">The tweening rate (speed). Default is 2f</param>
         /// <param name="value">The initial value. Default is 0f</param>
-        public TweenableFloat(VariableTweener tweener,Action<float> onChange=null, float rate = 2f, float value = 0)
+        /// <remarks>
+        /// The rate parameter controls how fast the tween progresses. Higher values result in faster
+        /// tweening, while lower values create slower, more gradual animations.
+        /// </remarks>
+        public TweenableFloat(VariableTweener tweener, Action<float> onChange = null, float rate = 2f, float value = 0)
         {
-            _start = _target = this._value = value;
-            this._rate = rate;
-            this._t = 0;
-            this.OnChange = onChange;
-            this._tweener = tweener;
+            _start = _target = _value = value;
+            _rate = rate;
+            _t = 0;
+            OnChange = onChange;
+            _tweener = tweener;
         }
         
-
+        /// <summary>
+        /// Performs one step of the tween animation.
+        /// </summary>
+        /// <param name="scaledDeltaTime">The scaled delta time for this frame</param>
+        /// <returns>True if the tween has completed, false if it's still running</returns>
+        /// <remarks>
+        /// This method is called by VariableTweener each frame to update the tween.
+        /// It interpolates between start and target values using linear interpolation.
+        /// </remarks>
         public bool Tween(float scaledDeltaTime)
         {
             _t += _rate * scaledDeltaTime;
-            this._value = Mathf.Lerp(_start, _target, _t);
+            _value = Mathf.Lerp(_start, _target, _t);
             OnChange?.Invoke(_value);
 
             if (_t >= 1)
@@ -103,7 +130,5 @@ namespace Shababeek.Core
             }
             return false;
         }
-        
     }
-
 }

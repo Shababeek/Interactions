@@ -28,8 +28,17 @@ namespace Shababeek.Core
     /// </example>
     public class VariableTweener : MonoBehaviour
     {
+
+        //TODO: add a way to manage  tweenablesfrom the inspector
+        //TODO: add animation curves for the tweenables
+        [Header("Tweening Settings")]
+        [Tooltip("The scale factor applied to delta time for tweening speed control. Higher values result in faster tweening across all managed tweenables.")]
+        [SerializeField] private float _tweenScale = 12f;
+        
+        private List<ITweenable> _values = new();
+
         /// <summary>
-        /// The scale factor applied to delta time for tweening speed control.
+        /// Gets or sets the scale factor applied to delta time for tweening speed control.
         /// </summary>
         /// <remarks>
         /// Higher values result in faster tweening across all managed tweenables.
@@ -38,13 +47,15 @@ namespace Shababeek.Core
         /// </remarks>
         /// <example>
         /// <code>
-        /// tweener.tweenScale = 2f; // Double speed
-        /// tweener.tweenScale = 0.5f; // Half speed
+        /// tweener.TweenScale = 2f; // Double speed
+        /// tweener.TweenScale = 0.5f; // Half speed
         /// </code>
         /// </example>
-        public float tweenScale = 12f;
-        
-        private List<ITweenable> _values= new();
+        public float TweenScale
+        {
+            get => _tweenScale;
+            set => _tweenScale = value;
+        }
 
         /// <summary>
         /// Initializes the tweenable list when the component is enabled.
@@ -75,6 +86,12 @@ namespace Shababeek.Core
         /// </example>
         public void AddTweenable(ITweenable value)
         {
+            if (value == null)
+            {
+                Debug.LogWarning("VariableTweener: Attempted to add null tweenable.");
+                return;
+            }
+            
             _values.Add(value);
         }
 
@@ -95,13 +112,15 @@ namespace Shababeek.Core
         /// </example>
         public void RemoveTweenable(ITweenable value)
         {
+            if (value == null) return;
+            
             try
             {
                 _values.Remove(value);
             }
             catch
             {
-                // ignored
+                // Ignored - safe to ignore removal errors
             }
         }
         
@@ -114,11 +133,11 @@ namespace Shababeek.Core
         /// have completed. The iteration is done in reverse order to safely handle
         /// removal during iteration.
         /// </remarks>
-        void Update()
+        private void Update()
         {
             for (int i = _values.Count - 1; i >= 0; i--)
             {
-                if (_values[i].Tween(Time.deltaTime * tweenScale))
+                if (_values[i].Tween(Time.deltaTime * _tweenScale))
                 {
                     _values.RemoveAt(i);
                 }
