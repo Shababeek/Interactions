@@ -64,7 +64,9 @@ namespace Shababeek.Interactions.Animations
     public class HandData : ScriptableObject, IAvatarMaskIndexer
     {
         [Tooltip("Preview image for this hand, shown in setup wizard and UI.")]
-        public Sprite previewSprite;
+        public Texture2D previewSprite;
+        [SerializeField] private string description;
+        
         [Tooltip("The Hand must have HandAnimationController Script attached")] [HideInInspector] [SerializeField]
         private HandPoseController leftHandPrefab;
 
@@ -76,9 +78,10 @@ namespace Shababeek.Interactions.Animations
         [Header("Custom Poses")] [HideInInspector] [SerializeField]
         private List<PoseData> poses;
 
+
         [HideInInspector] [SerializeField] private HandAvatarMaskContainer handAvatarMaskContainer;
         private PoseData[] posesArray;
-
+        
         public AvatarMask this[int i] => handAvatarMaskContainer[i];
         public AvatarMask this[FingerName i] => handAvatarMaskContainer[(int)i];
         public PoseData DefaultPose => defaultPose;
@@ -101,6 +104,8 @@ namespace Shababeek.Interactions.Animations
                 return posesArray;
             }
         }
+
+        public string Description => description;
     }
 
     /// <summary>

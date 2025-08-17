@@ -12,9 +12,9 @@ namespace Shababeek.Interactions.Editors
     {
         public string StepName => "Hand Setup";
 
-        private bool useExistingHands = true;
-        private HandData selectedHandData;
-        private Vector2 scrollPosition = Vector2.zero;
+        private bool _useExistingHands = true;
+        private HandData _selectedHandData;
+        private Vector2 _scrollPosition = Vector2.zero;
 
         public void DrawStep(ShababeekSetupWizard wizard)
         {
@@ -23,10 +23,10 @@ namespace Shababeek.Interactions.Editors
             EditorGUILayout.Space();
             
             // Toggle for existing vs new hands
-            useExistingHands = EditorGUILayout.Toggle("Use Existing Hands", useExistingHands);
+            _useExistingHands = EditorGUILayout.Toggle("Use Existing Hands", _useExistingHands);
             EditorGUILayout.Space();
             
-            if (useExistingHands)
+            if (_useExistingHands)
             {
                 DrawExistingHandsSelection(wizard);
             }
@@ -64,20 +64,19 @@ namespace Shababeek.Interactions.Editors
                 return;
             }
 
-            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
+            _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition);
             
             foreach (HandData handData in handDataAssets)
             {
                 EditorGUILayout.BeginHorizontal("box");
                 
-                // Preview image - display the actual sprite for visualization
-                if (handData.previewSprite != null)
+                if ( handData && handData.previewSprite)
                 {
-                    // Create a preview texture from the sprite
-                    Texture2D previewTexture = handData.previewSprite.texture;
+                    
+                    // Get the sprite's texture
+                    Texture2D previewTexture = handData.previewSprite;
                     if (previewTexture != null)
                     {
-                        // Calculate aspect ratio to maintain proportions
                         float aspectRatio = (float)previewTexture.width / previewTexture.height;
                         float previewHeight = 80f;
                         float previewWidth = previewHeight * aspectRatio;
@@ -85,12 +84,12 @@ namespace Shababeek.Interactions.Editors
                         // Clamp width to reasonable bounds
                         previewWidth = Mathf.Clamp(previewWidth, 60f, 120f);
                         
-                        // Draw the sprite preview
                         Rect previewRect = GUILayoutUtility.GetRect(previewWidth, previewHeight);
-                        GUI.DrawTextureWithTexCoords(previewRect, previewTexture, handData.previewSprite.rect);
-                        
-                        // Add a subtle border
-                        EditorGUI.DrawRect(new Rect(previewRect.x - 1, previewRect.y - 1, previewRect.width + 2, previewRect.height + 2), Color.gray);
+                        EditorGUI.DrawRect(new Rect(previewRect.x - 1, previewRect.y - 1, previewRect.width + 2, previewRect.height + 2), Color.black);
+                        if (previewTexture != null)
+                        {
+                            GUI.DrawTexture(previewRect, previewTexture);
+                        }
                     }
                     else
                     {
@@ -99,41 +98,20 @@ namespace Shababeek.Interactions.Editors
                 }
                 else
                 {
-                    // Try to get preview from hand prefabs if no sprite is set
-                    Texture2D prefabPreview = GetHandPrefabPreview(handData);
-                    if (prefabPreview != null)
-                    {
-                        // Draw the prefab preview
-                        Rect previewRect = GUILayoutUtility.GetRect(64, 64);
-                        GUI.DrawTexture(previewRect, prefabPreview);
-                        
-                        // Add a subtle border
-                        EditorGUI.DrawRect(new Rect(previewRect.x - 1, previewRect.y - 1, previewRect.width + 2, previewRect.height + 2), Color.gray);
-                    }
-                    else
-                    {
-                        DrawHandPreviewPlaceholder();
-                    }
+                    DrawHandPreviewPlaceholder();
                 }
                 
                 EditorGUILayout.BeginVertical();
                 EditorGUILayout.LabelField(handData.name, EditorStyles.boldLabel);
-                EditorGUILayout.LabelField($"Poses: {handData.Poses.Length}", EditorStyles.miniLabel);
+                EditorGUILayout.LabelField($"number of Poses: {handData.Poses.Length}", EditorStyles.miniLabel);
                 
-                // Show additional hand info if available
-                if (handData.LeftHandPrefab != null)
                 {
-                    EditorGUILayout.LabelField($"Left Hand: {handData.LeftHandPrefab.name}", EditorStyles.miniLabel);
-                }
-                if (handData.RightHandPrefab != null)
-                {
-                    EditorGUILayout.LabelField($"Right Hand: {handData.RightHandPrefab.name}", EditorStyles.miniLabel);
+                    EditorGUILayout.LabelField($"Description: {handData.Description}", EditorStyles.miniLabel);
                 }
                 
                 if (GUILayout.Button("Select This Hand"))
                 {
-                    selectedHandData = handData;
-                    // Link this hand data to the config
+                    _selectedHandData = handData;
                     if (wizard.ConfigAsset != null)
                     {
                         var serializedConfig = new SerializedObject(wizard.ConfigAsset);
@@ -177,85 +155,39 @@ namespace Shababeek.Interactions.Editors
             // Initialize with existing selection if available
             if (wizard.ConfigAsset != null && wizard.ConfigAsset.HandData != null)
             {
-                selectedHandData = wizard.ConfigAsset.HandData;
-                useExistingHands = true;
+                _selectedHandData = wizard.ConfigAsset.HandData;
+                _useExistingHands = true;
             }
         }
 
         public void OnStepExit(ShababeekSetupWizard wizard)
         {
-            // Update the wizard's hand selection
-            wizard.SelectedHandData = selectedHandData;
-            wizard.UseProvidedHands = useExistingHands;
-            
-            // If creating new hands, we'll need to add additional steps
-            // This will be handled by the main wizard flow
+            wizard.SelectedHandData = _selectedHandData;
+            wizard.UseProvidedHands = _useExistingHands;
+            //TODO: add logic for creating a new hand step
         }
 
         public bool CanProceed(ShababeekSetupWizard wizard)
         {
-            // Can proceed if using existing hands and one is selected, or if creating new hands
-            if (useExistingHands)
+            if (_useExistingHands)
             {
-                return selectedHandData != null;
+                return _selectedHandData != null;
             }
             return true;
         }
         
-        /// <summary>
-        /// Draws a placeholder preview when no sprite or prefab preview is available
-        /// </summary>
         private void DrawHandPreviewPlaceholder()
         {
             Rect placeholderRect = GUILayoutUtility.GetRect(64, 64);
             EditorGUI.DrawRect(placeholderRect, new Color(0.8f, 0.8f, 0.8f, 0.3f));
-            
-            // Draw a simple hand icon
+            EditorGUI.DrawRect(new Rect(placeholderRect.x - 1, placeholderRect.y - 1, placeholderRect.width + 2, placeholderRect.height + 2), Color.black);
             GUIStyle handIconStyle = new GUIStyle(EditorStyles.label);
             handIconStyle.alignment = TextAnchor.MiddleCenter;
-            handIconStyle.fontSize = 24;
-            handIconStyle.normal.textColor = Color.gray;
+            handIconStyle.fontSize = 50;
+            handIconStyle.normal.textColor = Color.black;
             
             GUI.Label(placeholderRect, "✋", handIconStyle);
             
-            // Add border
-            EditorGUI.DrawRect(new Rect(placeholderRect.x - 1, placeholderRect.y - 1, placeholderRect.width + 2, placeholderRect.height + 2), Color.gray);
-        }
-        
-        /// <summary>
-        /// Attempts to get a preview texture from the hand prefabs
-        /// </summary>
-        private Texture2D GetHandPrefabPreview(HandData handData)
-        {
-            // Try to get preview from left hand prefab first
-            if (handData.LeftHandPrefab != null)
-            {
-                var preview = AssetPreview.GetAssetPreview(handData.LeftHandPrefab);
-                if (preview != null) return preview;
-            }
-            
-            // Try right hand prefab if left doesn't have preview
-            if (handData.RightHandPrefab != null)
-            {
-                var preview = AssetPreview.GetAssetPreview(handData.RightHandPrefab);
-                if (preview != null) return preview;
-            }
-            
-            // Try to get a preview from the prefab's renderer if available
-            if (handData.LeftHandPrefab != null)
-            {
-                var renderer = handData.LeftHandPrefab.GetComponentInChildren<Renderer>();
-                if (renderer != null && renderer.sharedMaterial != null)
-                {
-                    var material = renderer.sharedMaterial;
-                    if (material.mainTexture != null)
-                    {
-                        return material.mainTexture as Texture2D;
-                    }
-                }
-            }
-            
-            return null;
         }
     }
 }
