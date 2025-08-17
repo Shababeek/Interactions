@@ -4,7 +4,7 @@
     "references": [
         "Shababeek.Interactions",
         "UniRx",
-        "Shababeek.Core"
+        "Shababeek.Utility"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
