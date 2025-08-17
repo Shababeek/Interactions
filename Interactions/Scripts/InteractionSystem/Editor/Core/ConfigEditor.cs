@@ -27,6 +27,10 @@ namespace Shababeek.Interactions.Editors
         private SerializedProperty linearDampingProp;
         private SerializedProperty angularDampingProp;
 
+        // Physics validation
+        private bool physicsLayersValid = true;
+        private string physicsValidationMessage = "";
+
         private void OnEnable()
         {
             config = (Config)target;
@@ -46,6 +50,9 @@ namespace Shababeek.Interactions.Editors
             handMassProp = serializedObject.FindProperty("handMass");
             linearDampingProp = serializedObject.FindProperty("linearDamping");
             angularDampingProp = serializedObject.FindProperty("angularDamping");
+            
+            // Validate physics layer matrix
+            ValidatePhysicsLayerMatrix();
         }
 
         public override void OnInspectorGUI()
@@ -54,6 +61,11 @@ namespace Shababeek.Interactions.Editors
             
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Interaction System Configuration", EditorStyles.boldLabel);
+            EditorGUILayout.Space();
+            
+            // Physics Layer Validation Section
+            DrawPhysicsLayerValidationSection();
+            
             EditorGUILayout.Space();
             
             // Validation Section
@@ -77,6 +89,7 @@ namespace Shababeek.Interactions.Editors
             if (newLeftHandLayer != leftHandLayerProp.intValue)
             {
                 leftHandLayerProp.intValue = newLeftHandLayer;
+                ValidatePhysicsLayerMatrix(); // Re-validate when layers change
             }
             
             int newRightHandLayer = EditorUtilities.LayerDropdown(
@@ -85,6 +98,7 @@ namespace Shababeek.Interactions.Editors
             if (newRightHandLayer != rightHandLayerProp.intValue)
             {
                 rightHandLayerProp.intValue = newRightHandLayer;
+                ValidatePhysicsLayerMatrix(); // Re-validate when layers change
             }
             
             int newInteractableLayer = EditorUtilities.LayerDropdown(
@@ -93,6 +107,7 @@ namespace Shababeek.Interactions.Editors
             if (newInteractableLayer != interactableLayerProp.intValue)
             {
                 interactableLayerProp.intValue = newInteractableLayer;
+                ValidatePhysicsLayerMatrix(); // Re-validate when layers change
             }
             
             int newPlayerLayer = EditorUtilities.LayerDropdown(
@@ -101,16 +116,15 @@ namespace Shababeek.Interactions.Editors
             if (newPlayerLayer != playerLayerProp.intValue)
             {
                 playerLayerProp.intValue = newPlayerLayer;
+                ValidatePhysicsLayerMatrix(); // Re-validate when layers change
             }
             
             EditorGUILayout.Space();
             
-     
-            
-            EditorGUILayout.Space();
             if (GUILayout.Button("Create Layers", GUILayout.Height(25)))
             {
                 CreateLayers();
+                ValidatePhysicsLayerMatrix(); // Re-validate after creating layers
             }
             EditorGUILayout.HelpBox("Click 'Create Layers' to automatically create the required layers in Unity's Layer Manager.", MessageType.Info);
             
@@ -133,11 +147,14 @@ namespace Shababeek.Interactions.Editors
                 EditorGUILayout.PropertyField(oldInputSettingsProp, new GUIContent("Input Settings", "Axis names and button IDs for the old input manager"));
                 
                 EditorGUILayout.Space();
-                if (GUILayout.Button("Create Input Axes", GUILayout.Height(25)))
+                DrawInputAxisValidationSection();
+                
+                EditorGUILayout.Space();
+                if (GUILayout.Button("Create All Input Axes", GUILayout.Height(25)))
                 {
                     CreateInputAxes();
                 }
-                EditorGUILayout.HelpBox("Click 'Create Input Axes' to automatically add the required input axes to Unity's Input Manager.", MessageType.Info);
+                EditorGUILayout.HelpBox("Click 'Create All Input Axes' to automatically add all required input axes to Unity's Input Manager.", MessageType.Info);
                 EditorGUI.indentLevel--;
             }
             else if (inputTypeProp.enumValueIndex == 2) // KeyboardMock (enum value = -1, but displayed as 2 in inspector)
@@ -165,6 +182,307 @@ namespace Shababeek.Interactions.Editors
             DrawDebugSection();
             
             serializedObject.ApplyModifiedProperties();
+        }
+        
+        private void DrawPhysicsLayerValidationSection()
+        {
+            if (!physicsLayersValid)
+            {
+                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                EditorGUILayout.LabelField("⚠️ Physics Layer Matrix Issues", EditorStyles.boldLabel);
+                EditorGUILayout.HelpBox(physicsValidationMessage, MessageType.Warning);
+                
+                if (GUILayout.Button("Apply Physics Settings", GUILayout.Height(25)))
+                {
+                    ApplyPhysicsSettings();
+                    ValidatePhysicsLayerMatrix(); // Re-validate after applying
+                }
+                
+                EditorGUILayout.EndVertical();
+                EditorGUILayout.Space();
+            }
+        }
+        
+        private void DrawInputAxisValidationSection()
+        {
+            var settings = config.OldInputSettings;
+            var defaultSettings = OldInputManagerSettings.Default;
+            
+            EditorGUILayout.LabelField("Input Axis Validation", EditorStyles.boldLabel);
+            
+            // Left Hand Inputs
+            EditorGUILayout.LabelField("Left Hand Inputs", EditorStyles.boldLabel);
+            DrawInputAxisField("Left Trigger Axis", settings.leftTriggerAxis, defaultSettings.leftTriggerAxis, "Shababeek_Left_Trigger");
+            DrawInputAxisField("Left Grip Axis", settings.leftGripAxis, defaultSettings.leftGripAxis, "Shababeek_Left_Grip");
+            DrawInputAxisField("Left Primary Button", settings.leftPrimaryButton, defaultSettings.leftPrimaryButton, "Shababeek_Left_PrimaryButton");
+            DrawInputAxisField("Left Secondary Button", settings.leftSecondaryButton, defaultSettings.leftSecondaryButton, "Shababeek_Left_SecondaryButton");
+            DrawInputAxisField("Left Grip Debug Key", settings.leftGripDebugKey, defaultSettings.leftGripDebugKey, "Shababeek_Left_Grip_DebugKey");
+            DrawInputAxisField("Left Trigger Debug Key", settings.leftTriggerDebugKey, defaultSettings.leftTriggerDebugKey, "Shababeek_Left_Index_DebugKey");
+            DrawInputAxisField("Left Thumb Debug Key", settings.leftThumbDebugKey, defaultSettings.leftThumbDebugKey, "Shababeek_Left_Primary_DebugKey");
+            
+            EditorGUILayout.Space();
+            
+            // Right Hand Inputs
+            EditorGUILayout.LabelField("Right Hand Inputs", EditorStyles.boldLabel);
+            DrawInputAxisField("Right Trigger Axis", settings.rightTriggerAxis, defaultSettings.rightTriggerAxis, "Shababeek_Right_Trigger");
+            DrawInputAxisField("Right Grip Axis", settings.rightGripAxis, defaultSettings.rightGripAxis, "Shababeek_Right_Grip");
+            DrawInputAxisField("Right Primary Button", settings.rightPrimaryButton, defaultSettings.rightPrimaryButton, "Shababeek_Right_PrimaryButton");
+            DrawInputAxisField("Right Secondary Button", settings.rightSecondaryButton, defaultSettings.rightSecondaryButton, "Shababeek_Right_SecondaryButton");
+            DrawInputAxisField("Right Grip Debug Key", settings.rightGripDebugKey, defaultSettings.rightGripDebugKey, "Shababeek_Right_Grip_DebugKey");
+            DrawInputAxisField("Right Trigger Debug Key", settings.rightTriggerDebugKey, defaultSettings.rightTriggerDebugKey, "Shababeek_Right_Index_DebugKey");
+            DrawInputAxisField("Right Thumb Debug Key", settings.rightThumbDebugKey, defaultSettings.rightThumbDebugKey, "Shababeek_Right_Primary_DebugKey");
+        }
+        
+        private void DrawInputAxisField(string label, string currentValue, string defaultValue, string axisName)
+        {
+            EditorGUILayout.BeginHorizontal();
+            
+            // Check if axis exists
+            bool axisExists = CheckIfAxisExists(currentValue);
+            if (string.IsNullOrEmpty(currentValue))
+            {
+                axisExists = CheckIfAxisExists(defaultValue);
+            }
+            
+            // Display field with warning if axis doesn't exist
+            EditorGUI.BeginDisabledGroup(axisExists);
+            EditorGUILayout.PropertyField(oldInputSettingsProp.FindPropertyRelative(GetPropertyPath(label)), 
+                new GUIContent(label, axisExists ? "Axis exists" : "Axis does not exist - click Create button to add it"));
+            EditorGUI.EndDisabledGroup();
+            
+            // Show create button if axis doesn't exist
+            if (!axisExists)
+            {
+                if (GUILayout.Button("Create and Configure", GUILayout.Width(120)))
+                {
+                    CreateSingleInputAxis(label, axisName);
+                }
+            }
+            else
+            {
+                EditorGUILayout.LabelField("✓", GUILayout.Width(120));
+            }
+            
+            EditorGUILayout.EndHorizontal();
+        }
+        
+        private string GetPropertyPath(string label)
+        {
+            // Map display labels to property paths
+            switch (label)
+            {
+                case "Left Trigger Axis": return "leftTriggerAxis";
+                case "Left Grip Axis": return "leftGripAxis";
+                case "Left Primary Button": return "leftPrimaryButton";
+                case "Left Secondary Button": return "leftSecondaryButton";
+                case "Left Grip Debug Key": return "leftGripDebugKey";
+                case "Left Trigger Debug Key": return "leftTriggerDebugKey";
+                case "Left Thumb Debug Key": return "leftThumbDebugKey";
+                case "Right Trigger Axis": return "rightTriggerAxis";
+                case "Right Grip Axis": return "rightGripAxis";
+                case "Right Primary Button": return "rightPrimaryButton";
+                case "Right Secondary Button": return "rightSecondaryButton";
+                case "Right Grip Debug Key": return "rightGripDebugKey";
+                case "Right Trigger Debug Key": return "rightTriggerDebugKey";
+                case "Right Thumb Debug Key": return "rightThumbDebugKey";
+                default: return "";
+            }
+        }
+        
+        private bool CheckIfAxisExists(string axisName)
+        {
+            if (string.IsNullOrEmpty(axisName)) return false;
+            
+            var inputManagerAsset = AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/InputManager.asset")[0];
+            var serializedObject = new SerializedObject(inputManagerAsset);
+            var axis = serializedObject.FindProperty("m_Axes");
+            
+            if (axis is not { isArray: true }) return false;
+            
+            for (int i = 0; i < axis.arraySize; i++)
+            {
+                var axisElement = axis.GetArrayElementAtIndex(i);
+                var name = axisElement.FindPropertyRelative("m_Name").stringValue;
+                if (name == axisName) return true;
+            }
+            
+            return false;
+        }
+        
+        private void CreateSingleInputAxis(string label, string axisName)
+        {
+            var inputManagerAsset = AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/InputManager.asset")[0];
+            var serializedObject = new SerializedObject(inputManagerAsset);
+            var axis = serializedObject.FindProperty("m_Axes");
+            
+            if (axis is not { isArray: true })
+            {
+                Debug.LogError("Failed to access Input Manager axes");
+                return;
+            }
+            
+            // Determine axis configuration based on the type
+            var axisConfig = GetAxisConfiguration(axisName);
+            
+            // Add new axis
+            int newIndex = axis.arraySize;
+            axis.arraySize = newIndex + 1;
+            var property = axis.GetArrayElementAtIndex(newIndex);
+            
+            SetAxis(property, axisConfig);
+            
+            serializedObject.ApplyModifiedProperties();
+            AssetDatabase.SaveAssets();
+            
+            // Update the config with the new axis name
+            UpdateConfigWithAxisName(label, axisName);
+            
+            Debug.Log($"Successfully created input axis: {axisName}");
+            
+            // Force repaint to update the UI
+            Repaint();
+        }
+        
+        private (string name, string descriptiveName, float dead, int axis, int type, string positiveButton, float gravity, float sensitivity, string altPositiveButton) GetAxisConfiguration(string axisName)
+        {
+            // Return appropriate configuration based on axis name
+            switch (axisName)
+            {
+                case "Shababeek_Left_Trigger":
+                    return (axisName, "Left Hand Trigger Axis", 0f, 9, 2, "", 0f, 1f, "");
+                case "Shababeek_Left_Grip":
+                    return (axisName, "Left Hand Grip Axis", 0f, 11, 2, "", 0f, 1f, "");
+                case "Shababeek_Left_PrimaryButton":
+                    return (axisName, "Left Hand Primary Button", 0f, 0, 0, "joystick button 2", 1000f, 1000f, "");
+                case "Shababeek_Left_SecondaryButton":
+                    return (axisName, "Left Hand Secondary Button", 0f, 0, 0, "joystick button 3", 1000f, 1000f, "");
+                case "Shababeek_Left_Grip_DebugKey":
+                    return (axisName, "Left Hand Grip Debug Key", 0f, 0, 0, "z", 1000f, 1000f, "");
+                case "Shababeek_Left_Index_DebugKey":
+                    return (axisName, "Left Hand Trigger Debug Key", 0f, 0, 0, "x", 1000f, 1000f, "");
+                case "Shababeek_Left_Primary_DebugKey":
+                    return (axisName, "Left Hand Thumb Debug Key", 0f, 0, 0, "c", 1000f, 1000f, "");
+                case "Shababeek_Right_Trigger":
+                    return (axisName, "Right Hand Trigger Axis", 0f, 10, 2, "", 0f, 1f, "");
+                case "Shababeek_Right_Grip":
+                    return (axisName, "Right Hand Grip Axis", 0f, 12, 2, "", 0f, 1f, "");
+                case "Shababeek_Right_PrimaryButton":
+                    return (axisName, "Right Hand Primary Button", 0f, 0, 0, "joystick button 0", 1000f, 1000f, "");
+                case "Shababeek_Right_SecondaryButton":
+                    return (axisName, "Right Hand Secondary Button", 0f, 0, 0, "joystick button 1", 1000f, 1000f, "");
+                case "Shababeek_Right_Grip_DebugKey":
+                    return (axisName, "Right Hand Grip Debug Key", 0f, 0, 0, "m", 1000f, 1000f, "");
+                case "Shababeek_Right_Index_DebugKey":
+                    return (axisName, "Right Hand Trigger Debug Key", 0f, 0, 0, "n", 1000f, 1000f, "");
+                case "Shababeek_Right_Primary_DebugKey":
+                    return (axisName, "Right Hand Thumb Debug Key", 0f, 0, 0, "b", 1000f, 1000f, "");
+                default:
+                    return (axisName, axisName, 0f, 0, 0, "", 1000f, 1000f, "");
+            }
+        }
+        
+        private void UpdateConfigWithAxisName(string label, string axisName)
+        {
+            var configSerializedObject = new SerializedObject(config);
+            var oldInputSettingsProp = configSerializedObject.FindProperty("oldInputSettings");
+            var propertyPath = GetPropertyPath(label);
+            
+            if (!string.IsNullOrEmpty(propertyPath))
+            {
+                var property = oldInputSettingsProp.FindPropertyRelative(propertyPath);
+                if (property != null)
+                {
+                    property.stringValue = axisName;
+                    configSerializedObject.ApplyModifiedProperties();
+                    EditorUtility.SetDirty(config);
+                    AssetDatabase.SaveAssets();
+                }
+            }
+        }
+        
+        private void ValidatePhysicsLayerMatrix()
+        {
+            physicsLayersValid = true;
+            physicsValidationMessage = "";
+            
+            var leftLayer = leftHandLayerProp.intValue;
+            var rightLayer = rightHandLayerProp.intValue;
+            var playerLayer = playerLayerProp.intValue;
+            
+            // Check if layers are valid
+            if (leftLayer < 0 || rightLayer < 0 || playerLayer < 0)
+            {
+                physicsLayersValid = false;
+                physicsValidationMessage = "One or more layers are not set. Please assign valid layers.";
+                return;
+            }
+            
+            // Check for invalid collisions
+            var issues = new List<string>();
+            
+            // Check if left hand can collide with itself
+            if (Physics.GetIgnoreLayerCollision(leftLayer, leftLayer) == false)
+            {
+                issues.Add("Left hand layer can collide with itself");
+            }
+            
+            // Check if right hand can collide with itself
+            if (Physics.GetIgnoreLayerCollision(rightLayer, rightLayer) == false)
+            {
+                issues.Add("Right hand layer can collide with itself");
+            }
+            
+            // Check if hands can collide with each other
+            if (Physics.GetIgnoreLayerCollision(leftLayer, rightLayer) == false)
+            {
+                issues.Add("Left and right hand layers can collide with each other");
+            }
+            
+            // Check if player can collide with hands
+            if (Physics.GetIgnoreLayerCollision(playerLayer, leftLayer) == false)
+            {
+                issues.Add("Player layer can collide with left hand layer");
+            }
+            
+            if (Physics.GetIgnoreLayerCollision(playerLayer, rightLayer) == false)
+            {
+                issues.Add("Player layer can collide with right hand layer");
+            }
+            
+            // Check if player can collide with itself
+            if (Physics.GetIgnoreLayerCollision(playerLayer, playerLayer) == false)
+            {
+                issues.Add("Player layer can collide with itself");
+            }
+            
+            if (issues.Count > 0)
+            {
+                physicsLayersValid = false;
+                physicsValidationMessage = "Physics layer collision issues detected:\n" + string.Join("\n", issues);
+            }
+        }
+        
+        private void ApplyPhysicsSettings()
+        {
+            var leftLayer = leftHandLayerProp.intValue;
+            var rightLayer = rightHandLayerProp.intValue;
+            var playerLayer = playerLayerProp.intValue;
+            
+            if (leftLayer < 0 || rightLayer < 0 || playerLayer < 0)
+            {
+                Debug.LogError("Cannot apply physics settings: One or more layers are not set");
+                return;
+            }
+            
+            // Apply the same physics settings as in InteractionSystemLoader
+            Physics.IgnoreLayerCollision(leftLayer, leftLayer);
+            Physics.IgnoreLayerCollision(rightLayer, rightLayer);
+            Physics.IgnoreLayerCollision(rightLayer, leftLayer);
+            Physics.IgnoreLayerCollision(playerLayer, leftLayer);
+            Physics.IgnoreLayerCollision(playerLayer, rightLayer);
+            Physics.IgnoreLayerCollision(playerLayer, playerLayer);
+            
+            Debug.Log("Physics layer collision settings applied successfully");
         }
         
         private void DrawValidationSection()
