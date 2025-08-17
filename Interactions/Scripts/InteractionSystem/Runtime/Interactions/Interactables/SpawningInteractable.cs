@@ -17,7 +17,7 @@ namespace Shababeek.Interactions
                 grabable.transform.position = this.transform.position;
                 var interactor = CurrentInteractor;
                 interactor.OnDeSelect();
-                interactor.currentInteractable = grabable;
+                interactor.CurrentInteractable = grabable;
                 interactor.OnSelect();
                 return true;
 

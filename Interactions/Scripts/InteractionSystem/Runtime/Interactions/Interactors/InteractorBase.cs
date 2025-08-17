@@ -14,12 +14,16 @@ namespace Shababeek.Interactions
     [RequireComponent(typeof(Hand))]
     public abstract class InteractorBase : MonoBehaviour
     {
-        [SerializeField] [ReadOnly] public InteractableBase currentInteractable;
-        [SerializeField] [ReadOnly] protected bool isInteracting;
+        [SerializeField] [ReadOnly] [Tooltip("The currently hovered or selected interactable object")]
+        private InteractableBase currentInteractable;
+        
+        [SerializeField] [ReadOnly] [Tooltip("Whether this interactor is currently interacting with an object")]
+        protected bool isInteracting;
         private Hand _hand;
         private Transform _attachmentPoint;
         private readonly Subject<VRButtonState> _onInteractionStateChanged = new();
         private readonly Subject<VRButtonState> _onActivate = new();
+        private readonly CompositeDisposable _disposables = new();
         private IDisposable _hoverSubscriber, _activationSubscriber;
         /// <summary>
         /// The attachment point transform for objects held by this interactor.
@@ -33,7 +37,19 @@ namespace Shababeek.Interactions
         /// The Hand component associated with this interactor.
         /// </summary>
         public Hand Hand => _hand;
+        /// <summary>
+        /// Gets whether this interactor is currently interacting with an object.
+        /// </summary>
         protected bool IsInteracting => isInteracting;
+
+        /// <summary>
+        /// Gets or sets the currently hovered or selected interactable object.
+        /// </summary>
+        public InteractableBase CurrentInteractable
+        {
+            get => currentInteractable;
+            set => currentInteractable = value;
+        }
 
         /// <summary>
         /// Toggles the visibility of the hand model.
@@ -49,38 +65,14 @@ namespace Shababeek.Interactions
             GetDependencies();
             InitializeAttachmentPoint();
             _onInteractionStateChanged
-                .Do((state) =>
-                {
-                    if (currentInteractable is null) return;
-                    switch (state)
-                    {
-                        case VRButtonState.Up:
-                            if (currentInteractable.CurrentState == InteractionState.Selected && currentInteractable.CurrentInteractor == this) OnDeSelect();
-
-                            break;
-                        case VRButtonState.Down:
-                            if (currentInteractable.CurrentState == InteractionState.Hovering) OnSelect();
-
-                            break;
-                    }
-                })
-                .Subscribe().AddTo(this);
+                .Do(HandleInteractionStateChanged)
+                .Subscribe()
+                .AddTo(_disposables);
+            
             _onActivate
-                .Do((state) =>
-                {
-                    if (currentInteractable is null) return;
-                    switch (state)
-                    {
-                        case VRButtonState.Down:
-                            OnUse();
-                            break;
-                        case VRButtonState.Up:
-                            OnUnused();
-                            break;
-                        
-                    }
-                })
-                .Subscribe().AddTo(this);
+                .Do(HandleActivation)
+                .Subscribe()
+                .AddTo(_disposables);
         }
 
 
@@ -104,20 +96,15 @@ namespace Shababeek.Interactions
             if (!currentInteractable.IsValidHand(Hand)) return;
 
             currentInteractable.OnStateChanged(InteractionState.Hovering, this);
-            var onInteractButtonPressed = currentInteractable.SelectionButton switch
-            {
-                XRButton.Grip => _hand.OnGripButtonStateChange,
-                XRButton.Trigger => _hand.OnTriggerTriggerButtonStateChange,
-                _ => null
-            };
-            _hoverSubscriber = onInteractButtonPressed.Do(_onInteractionStateChanged).Subscribe();
+            var buttonObservable = GetButtonObservable(currentInteractable.SelectionButton, ButtonMappingType.Selection);
+            _hoverSubscriber = buttonObservable?.Do(_onInteractionStateChanged).Subscribe();
         }
 
         protected virtual void OnHoverEnd()
         {
             if (currentInteractable && currentInteractable.CurrentState != InteractionState.Hovering) return;
             currentInteractable.OnStateChanged(InteractionState.None, this);
-            _hoverSubscriber?.Dispose();
+            DisposeHoverSubscription();
             currentInteractable = null;
         }
 
@@ -130,13 +117,8 @@ namespace Shababeek.Interactions
             isInteracting = true;
             currentInteractable.OnStateChanged(InteractionState.Selected, this);
 
-            var onInteractButtonPressed = currentInteractable.SelectionButton switch
-            {
-                XRButton.Trigger => _hand.OnGripButtonStateChange,
-                XRButton.Grip => _hand.OnTriggerTriggerButtonStateChange,
-                _ => null
-            };
-            _activationSubscriber = onInteractButtonPressed.Do(_onActivate).Subscribe();
+            var buttonObservable = GetButtonObservable(currentInteractable.SelectionButton, ButtonMappingType.Activation);
+            _activationSubscriber = buttonObservable?.Do(_onActivate).Subscribe();
         }
 
         /// <summary>
@@ -145,8 +127,8 @@ namespace Shababeek.Interactions
         public void OnDeSelect()
         {
             isInteracting = false;
-            _activationSubscriber?.Dispose();
-            _hoverSubscriber?.Dispose();
+            DisposeActivationSubscription();
+            DisposeHoverSubscription();
             currentInteractable.OnStateChanged(InteractionState.None, this);
             OnHoverStart();
         }
@@ -166,6 +148,73 @@ namespace Shababeek.Interactions
             if (currentInteractable.CurrentState != InteractionState.Selected) return;
     
             currentInteractable.StopUsing(this);
+        }
+
+        private void HandleInteractionStateChanged(VRButtonState state)
+        {
+            if (currentInteractable is null) return;
+            switch (state)
+            {
+                case VRButtonState.Up:
+                    if (currentInteractable.CurrentState == InteractionState.Selected && currentInteractable.CurrentInteractor == this) 
+                        OnDeSelect();
+                    break;
+                case VRButtonState.Down:
+                    if (currentInteractable.CurrentState == InteractionState.Hovering) 
+                        OnSelect();
+                    break;
+            }
+        }
+
+        private void HandleActivation(VRButtonState state)
+        {
+            if (currentInteractable is null) return;
+            switch (state)
+            {
+                case VRButtonState.Down:
+                    OnUse();
+                    break;
+                case VRButtonState.Up:
+                    OnUnused();
+                    break;
+            }
+        }
+
+        private void DisposeHoverSubscription()
+        {
+            _hoverSubscriber?.Dispose();
+            _hoverSubscriber = null;
+        }
+
+        private void DisposeActivationSubscription()
+        {
+            _activationSubscriber?.Dispose();
+            _activationSubscriber = null;
+        }
+
+        private IObservable<VRButtonState> GetButtonObservable(XRButton button, ButtonMappingType mappingType)
+        {
+            return (button, mappingType) switch
+            {
+                (XRButton.Grip, ButtonMappingType.Selection) => _hand.OnGripButtonStateChange,
+                (XRButton.Trigger, ButtonMappingType.Selection) => _hand.OnTriggerTriggerButtonStateChange,
+                (XRButton.Trigger, ButtonMappingType.Activation) => _hand.OnGripButtonStateChange,
+                (XRButton.Grip, ButtonMappingType.Activation) => _hand.OnTriggerTriggerButtonStateChange,
+                _ => null
+            };
+        }
+
+        private enum ButtonMappingType
+        {
+            Selection,
+            Activation
+        }
+
+        private void OnDestroy()
+        {
+            _disposables?.Dispose();
+            DisposeHoverSubscription();
+            DisposeActivationSubscription();
         }
         
     }

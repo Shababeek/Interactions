@@ -23,7 +23,7 @@ namespace Shababeek.Interactions
         {
             if (isInteracting) return;
             var interactable = other.GetComponentInParent<InteractableBase>();
-            if (!interactable || interactable == currentInteractable) return;
+            if (!interactable || interactable == CurrentInteractable) return;
             if (!ShouldChangeInteractable(interactable)) return;
             ChangeInteractable(interactable);
             currentCollider = other;
@@ -31,14 +31,14 @@ namespace Shababeek.Interactions
 
         private void ChangeInteractable(InteractableBase interactable)
         {
-            try { if (currentInteractable) OnHoverEnd(); }
+            try { if (CurrentInteractable) OnHoverEnd(); }
             catch
             {
                 // ignored
             }
 
-            currentInteractable = interactable;
-            try { if (currentInteractable) OnHoverStart(); }
+            CurrentInteractable = interactable;
+            try { if (CurrentInteractable) OnHoverStart(); }
             catch
             {
                 // ignored
@@ -47,7 +47,7 @@ namespace Shababeek.Interactions
 
         private bool ShouldChangeInteractable(InteractableBase interactable)
         {
-            if (currentInteractable == null) return true;
+            if (CurrentInteractable == null) return true;
             
             // Performance optimization: only check distance periodically
             if (Time.time - _lastDistanceCheck < DistanceCheckInterval)
@@ -57,7 +57,7 @@ namespace Shababeek.Interactions
             
             // Use interaction points instead of transform positions to avoid hierarchy issues
             Vector3 newInteractionPoint = GetInteractionPoint(interactable);
-            Vector3 currentInteractionPoint = GetInteractionPoint(currentInteractable);
+            Vector3 currentInteractionPoint = GetInteractionPoint(CurrentInteractable);
             Vector3 interactorPosition = transform.position;
             
             float newDistance = Vector3.SqrMagnitude(interactorPosition - newInteractionPoint);
@@ -94,8 +94,8 @@ namespace Shababeek.Interactions
             }
             var interactable = other.GetComponentInParent<InteractableBase>();
 
-            if (currentInteractable != null && currentInteractable.CurrentState == InteractionState.Selected) return;
-            if (interactable == currentInteractable)
+            if (CurrentInteractable != null && CurrentInteractable.CurrentState == InteractionState.Selected) return;
+            if (interactable == CurrentInteractable)
             {
                 ChangeInteractable(null);
             }

@@ -87,16 +87,16 @@ namespace Shababeek.Interactions
                 }
             }
             
-            if (closestInteractable != currentInteractable)
+            if (closestInteractable != CurrentInteractable)
             {
-                if (currentInteractable != null)
+                if (CurrentInteractable != null)
                 {
                     OnHoverEnd();
                 }
 
-                currentInteractable = closestInteractable;
+                CurrentInteractable = closestInteractable;
                 
-                if (currentInteractable != null)
+                if (CurrentInteractable != null)
                 {
                     OnHoverStart();
                 }
