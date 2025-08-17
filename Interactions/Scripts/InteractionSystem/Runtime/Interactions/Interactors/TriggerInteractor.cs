@@ -12,13 +12,11 @@ namespace Shababeek.Interactions
     /// </summary>
     public class TriggerInteractor : InteractorBase
     {
-        //TODO: rewrite to make it support pairs of colliders/interactables
         [ReadOnly][SerializeField] private Collider currentCollider;
-        
-        // Cache for performance and to avoid hierarchy issues
+
         private Vector3 _lastInteractionPoint;
         private float _lastDistanceCheck;
-        private const float DistanceCheckInterval = 0.08f; 
+        private const float DistanceCheckInterval = 0.08f;
         private void OnTriggerEnter(Collider other)
         {
             if (isInteracting) return;
@@ -31,17 +29,31 @@ namespace Shababeek.Interactions
 
         private void ChangeInteractable(InteractableBase interactable)
         {
-            try { if (CurrentInteractable) OnHoverEnd(); }
-            catch
+            if (CurrentInteractable != null)
             {
-                // ignored
+                try 
+                { 
+                    OnHoverEnd(); 
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogError($"Error ending hover on {CurrentInteractable.name}: {e.Message}", CurrentInteractable);
+                }
             }
 
             CurrentInteractable = interactable;
-            try { if (CurrentInteractable) OnHoverStart(); }
-            catch
+
+            if (!CurrentInteractable) return;
             {
-                // ignored
+                try 
+                { 
+                    OnHoverStart(); 
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogError($"Error starting hover on {CurrentInteractable.name}: {e.Message}", CurrentInteractable);
+                    CurrentInteractable = null;
+                }
             }
         }
 
@@ -49,13 +61,11 @@ namespace Shababeek.Interactions
         {
             if (CurrentInteractable == null) return true;
             
-            // Performance optimization: only check distance periodically
             if (Time.time - _lastDistanceCheck < DistanceCheckInterval)
                 return false;
                 
             _lastDistanceCheck = Time.time;
             
-            // Use interaction points instead of transform positions to avoid hierarchy issues
             Vector3 newInteractionPoint = GetInteractionPoint(interactable);
             Vector3 currentInteractionPoint = GetInteractionPoint(CurrentInteractable);
             Vector3 interactorPosition = transform.position;
@@ -76,12 +86,10 @@ namespace Shababeek.Interactions
                 return interactionPoint.position;
             
             // Fallback: use the closest point on the collider bounds
-            var collider = interactable.GetComponent<Collider>();
-            if (collider != null)
-                return collider.ClosestPoint(transform.position);
-            
-            // Last resort: use transform position
-            return interactable.transform.position;
+            var firstCollider = interactable.GetComponentInChildren<Collider>();
+            return firstCollider != null ? firstCollider.ClosestPoint(transform.position) :
+                // Last resort: use transform position
+                interactable.transform.position;
         }
 
         private void OnTriggerExit(Collider other)
