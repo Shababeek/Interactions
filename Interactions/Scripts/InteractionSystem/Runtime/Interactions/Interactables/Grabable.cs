@@ -84,7 +84,7 @@ namespace Shababeek.Interactions
             if (!tweener)
             {
                 tweener = gameObject.AddComponent<VariableTweener>();
-                tweener.tweenScale = 15;
+                tweener.TweenScale = 15;
             }
             
             Rigidbody body = GetComponent<Rigidbody>();
