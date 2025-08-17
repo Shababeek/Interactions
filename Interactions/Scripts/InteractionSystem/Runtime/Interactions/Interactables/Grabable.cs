@@ -1,5 +1,5 @@
 using System;
-using Shababeek.Core;
+using Shababeek.Utilities;
 using UnityEngine;
 using Shababeek.Interactions.Core;
 
@@ -15,17 +15,17 @@ namespace Shababeek.Interactions
     /// It automatically handles the grab/ungrab process and manages the attachment
     /// of objects to hand attachment points with smooth animations.
     /// </remarks>
-    [CreateAssetMenu(menuName = "Shababeek/Interactions/Interactables/Grabable")]
+    [AddComponentMenu("Shababeek/Interactions/Interactables/Grabable")]
     [RequireComponent(typeof(PoseConstrainter))]
     public class Grabable : InteractableBase
     {
         [Tooltip("Whether to hide the hand model when this object is grabbed.")]
-        [SerializeField] protected bool hideHand;
+        [SerializeField] protected bool hideHand;//TODO: remove and rely on PoseConstrainter instead
         
-        [Tooltip("The tweener component used for smooth grab animations.")]
+        [Tooltip("The tweener component used for smooth grab animations. Auto-added if not present., only add if you want to the same tweener across multiple tweenables")]
         [SerializeField] private VariableTweener tweener;
         
-        private readonly TransformTweenable _transformTweenable= new();
+        private readonly TransformTweenable _transformTweenable = new();
         private GrabStrategy _grabStrategy;
         private PoseConstrainter _poseConstrainter;
         
@@ -53,10 +53,18 @@ namespace Shababeek.Interactions
         /// <returns>The target position and rotation for the left hand.</returns>
         public (Vector3 position, Quaternion rotation) GetLeftHandTarget() => _poseConstrainter.GetTargetHandTransform(HandIdentifier.Left);
 
-        protected override void UseStarted(){}
-        protected override void StartHover(){}
-        protected override void EndHover(){}
 
+        /// <inheritdoc/>
+        protected override void UseStarted() { }
+        
+        /// <inheritdoc/>
+        protected override void StartHover() { }
+        
+        /// <inheritdoc/>
+        protected override void EndHover() { }
+
+        /// <inheritdoc/>
+        /// <returns>False to allow the grab to proceed normally</returns>
         protected override bool Select()
         {
             // Apply pose constraints and visibility control
@@ -68,6 +76,7 @@ namespace Shababeek.Interactions
             return false;
         }
         
+        /// <inheritdoc/>
         protected override void DeSelected()
         {
             // Remove pose constraints and restore hand visibility
@@ -129,7 +138,5 @@ namespace Shababeek.Interactions
             tweener.AddTweenable(_transformTweenable);
             _transformTweenable.OnTweenComplete += callBack;
         }
-        
     }
-
 }

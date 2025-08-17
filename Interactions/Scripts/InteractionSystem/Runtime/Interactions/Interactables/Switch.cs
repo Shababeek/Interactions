@@ -14,6 +14,9 @@ namespace Shababeek.Interactions
         Z
     }
     
+    /// <summary>
+    /// Enum representing the current direction of the switch.
+    /// </summary>
     enum Direction
     {
         Up=1,
@@ -41,6 +44,7 @@ namespace Shababeek.Interactions
     /// It automatically rotates the switch body and raises events based on the interaction direction.
     /// The rotation axis and detection direction can be configured to work with switches oriented in any direction.
     /// </remarks>
+    [AddComponentMenu("Shababeek/Interactions/Interactables/Switch")]
     public class Switch : MonoBehaviour
     {
         [Header("Events")]
@@ -69,10 +73,10 @@ namespace Shababeek.Interactions
         [Tooltip("Rotation angle in degrees for the down position.")]
         [SerializeField] private float downRotation = -20;
         
-        [Tooltip("Speed of the rotation animation.")]
+        [Tooltip("Speed of the rotation animation in degrees per second.")]
         [SerializeField] private float rotateSpeed = 10;
         
-        [Tooltip("Angle threshold for direction detection.")]
+        [Tooltip("Angle threshold in degrees for direction detection.")]
         [SerializeField] private float angleThreshold = 5f;
         
         [Tooltip("When enabled, the switch will stay in its current position instead of returning to neutral when the trigger exits.")]
@@ -86,9 +90,13 @@ namespace Shababeek.Interactions
         [ReadOnly][SerializeField] private Direction direction;
 
         private float t = 0;
-        private float targetRotation=0;
-        private Collider activeCollider ;
+        private float targetRotation = 0;
+        private Collider activeCollider;
 
+        /// <summary>
+        /// Gets or sets the switch body transform that rotates during interaction.
+        /// </summary>
+        /// <value>The transform of the switch body</value>
         public Transform SwitchBody
         {
             get => switchBody;
@@ -98,6 +106,7 @@ namespace Shababeek.Interactions
         /// <summary>
         /// Gets or sets whether the switch should stay in position instead of returning to neutral.
         /// </summary>
+        /// <value>True if the switch should stay in position, false if it should return to neutral</value>
         public bool StayInPosition
         {
             get => stayInPosition;
@@ -107,23 +116,33 @@ namespace Shababeek.Interactions
         /// <summary>
         /// Gets or sets the starting position of the switch.
         /// </summary>
+        /// <value>The starting position (Off, Neutral, or On)</value>
         public StartingPosition StartingPosition
         {
             get => startingPosition;
             set => startingPosition = value;
         }
 
+        /// <summary>
+        /// Updates the switch direction and rotation each frame.
+        /// </summary>
         private void Update()
         {
             ChooseDirection();
             Rotate();
         }
         
+        /// <summary>
+        /// Initializes the switch with the configured starting position.
+        /// </summary>
         private void Start()
         {
             SetStartingPosition();
         }
         
+        /// <summary>
+        /// Sets the switch to its configured starting position.
+        /// </summary>
         private void SetStartingPosition()
         {
             if (switchBody == null) return;
@@ -150,6 +169,9 @@ namespace Shababeek.Interactions
             Rotate();
         }
 
+        /// <summary>
+        /// Determines the switch direction based on the active collider position.
+        /// </summary>
         private void ChooseDirection()
         {
             if(!activeCollider) return;
@@ -208,6 +230,9 @@ namespace Shababeek.Interactions
             };
         }
 
+        /// <summary>
+        /// Rotates the switch body towards the target rotation.
+        /// </summary>
         private void Rotate()
         {
             t += Time.deltaTime * rotateSpeed;
@@ -226,6 +251,7 @@ namespace Shababeek.Interactions
             switchBody.localRotation = Quaternion.Euler(newRotation);
         }
 
+
         private void OnTriggerEnter(Collider other)
         {
             if(other.isTrigger) return;
@@ -234,9 +260,9 @@ namespace Shababeek.Interactions
         }
         private void OnTriggerExit(Collider other)
         {
-            if(other!=activeCollider)return;
+            if(other != activeCollider) return;
             direction = Direction.None;
-            activeCollider =null;
+            activeCollider = null;
             
             // Only reset to neutral position if stayInPosition is false
             if (!stayInPosition)
@@ -446,6 +472,10 @@ namespace Shababeek.Interactions
         /// <summary>
         /// Draws a rotation arc to visualize the switch movement range.
         /// </summary>
+        /// <param name="center">The center point of the arc</param>
+        /// <param name="axis">The rotation axis</param>
+        /// <param name="from">The starting direction</param>
+        /// <param name="angle">The rotation angle in degrees</param>
         private void DrawRotationArc(Vector3 center, Vector3 axis, Vector3 from, float angle)
         {
             var rotation = Quaternion.AngleAxis(angle, axis);
@@ -468,10 +498,7 @@ namespace Shababeek.Interactions
             // Draw end position
             Gizmos.DrawRay(center, to * 0.2f);
         }
-        
-        /// <summary>
-        /// Draws the angle threshold visualization.
-        /// </summary>
+
         private void DrawAngleThreshold(Vector3 center, Vector3 detectionVector, Vector3 rotationAxis, float threshold)
         {
             var thresholdRotation1 = Quaternion.AngleAxis(threshold, rotationAxis);
