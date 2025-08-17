@@ -1,7 +1,6 @@
-using System;
 using UnityEngine;
 
-namespace Shababeek.Core
+namespace Shababeek.Utilities
 {
     [CreateAssetMenu(menuName = "Shababeek/Scriptable System/Variables/BoolVariable")]
     public class BoolVariable : ScriptableVariable<bool>
@@ -48,7 +47,7 @@ namespace Shababeek.Core
         // Logical operators
         public static bool operator &(BoolVariable a, BoolVariable b)
         {
-            return  a.Value && b.Value;
+            return a.Value && b.Value;
         }
 
         public static bool operator &(BoolVariable a, bool b)
@@ -69,7 +68,6 @@ namespace Shababeek.Core
         public static bool operator |(BoolVariable a, bool b)
         {
             return a.Value || b;
-            
         }
 
         public static bool operator |(bool a, BoolVariable b)
@@ -94,13 +92,12 @@ namespace Shababeek.Core
             return Value.GetHashCode();
         }
     }
-    
+
     /// <summary>
     /// A reference that can point to either a BoolVariable or use a constant boolean value.
     /// </summary>
     [System.Serializable]
     public class BoolReference : VariableReference<bool>
     {
-        
     }
-} 
+}

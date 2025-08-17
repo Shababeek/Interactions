@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Shababeek.Core
+namespace Shababeek.Utilities
 {
     [CreateAssetMenu(menuName = "Shababeek/Scriptable System/Variables/TextVariable")]
     public class TextVariable : ScriptableVariable<string>
@@ -42,7 +42,7 @@ namespace Shababeek.Core
         // String concatenation operator
         public static string operator +(TextVariable a, TextVariable b)
         {
-            if (!a  && !b ) return "";
+            if (!a && !b) return "";
             if (!a) return b.Value ?? "";
             if (!b) return a.Value ?? "";
             return (a.Value ?? "") + (b.Value ?? "");
@@ -51,7 +51,7 @@ namespace Shababeek.Core
 
         public static string operator +(TextVariable a, string b)
         {
-            if (!a ) return b ?? "";
+            if (!a) return b ?? "";
             return (a.Value ?? "") + (b ?? "");
         }
 

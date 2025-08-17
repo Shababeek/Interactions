@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Shababeek.Core
+namespace Shababeek.Utilities
 {
     [CreateAssetMenu(menuName = "Shababeek/Scriptable System/Variables/AnimationCurveVariable")]
     public class AnimationCurveVariable : ScriptableVariable<AnimationCurve>
@@ -9,24 +9,25 @@ namespace Shababeek.Core
         [SerializeField] private WrapMode _preWrapMode = WrapMode.Clamp;
         [SerializeField] private WrapMode _postWrapMode = WrapMode.Clamp;
 
-        private  void OnEnable()
+        private void OnEnable()
         {
             if (Value == null)
             {
                 Value = AnimationCurve.Linear(0f, 0f, 1f, 1f);
             }
+
             UpdateWrapModes();
         }
 
         public float Evaluate(float time)
         {
             if (Value == null) return 0f;
-            
+
             if (_loop && Length > 0f)
             {
                 time = Mathf.Repeat(time, Length);
             }
-            
+
             return Value.Evaluate(time);
         }
 

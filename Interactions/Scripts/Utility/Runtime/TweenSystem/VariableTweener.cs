@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace Shababeek.Core
+namespace Shababeek.Utilities
 {
     /// <summary>
     /// Manages multiple tweenable objects and updates them each frame.

@@ -1,6 +1,6 @@
 using System;
 using Shababeek.Interactions.Core;
-using Shababeek.Core;
+using Shababeek.Utilities;
 using UnityEngine;
 
 namespace Shababeek.Sequencing

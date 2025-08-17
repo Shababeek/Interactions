@@ -1,5 +1,5 @@
 ﻿
-namespace Shababeek.Core
+namespace Shababeek.Utilities
 {
     /// <summary>
     /// Interface for objects that can be tweened (animated) over time.

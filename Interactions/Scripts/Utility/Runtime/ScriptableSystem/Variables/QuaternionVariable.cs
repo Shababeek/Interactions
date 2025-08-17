@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Shababeek.Core
+namespace Shababeek.Utilities
 {
     [CreateAssetMenu(menuName = "Shababeek/Scriptable System/Variables/QuaternionVariable")]
     public class QuaternionVariable : ScriptableVariable<Quaternion>

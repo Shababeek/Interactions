@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEditor;
 using System;
 
-namespace Shababeek.Core
+namespace Shababeek.Utilities
 {
     /// <summary>
     /// Custom property drawer for VariableReference<T> that provides a clean inspector interface.

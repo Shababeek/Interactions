@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace Shababeek.Core
+namespace Shababeek.Utilities
 {
     /// Collection of typed Unity events for common data types.
 

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Shababeek.Core
+namespace Shababeek.Utilities
 {
     [CreateAssetMenu(menuName = "Shababeek/Scriptable System/Variables/GradientVariable")]
     public class GradientVariable : ScriptableVariable<Gradient>
@@ -13,11 +13,11 @@ namespace Shababeek.Core
             var colorKeys = new GradientColorKey[2];
             colorKeys[0] = new GradientColorKey(Color.white, 0f);
             colorKeys[1] = new GradientColorKey(Color.black, 1f);
-                
+
             var alphaKeys = new GradientAlphaKey[2];
             alphaKeys[0] = new GradientAlphaKey(1f, 0f);
             alphaKeys[1] = new GradientAlphaKey(1f, 1f);
-                
+
             Value.SetKeys(colorKeys, alphaKeys);
         }
 
@@ -54,15 +54,15 @@ namespace Shababeek.Core
         public void SetSimpleGradient(Color startColor, Color endColor)
         {
             if (Value == null) Value = new Gradient();
-            
+
             var colorKeys = new GradientColorKey[2];
             colorKeys[0] = new GradientColorKey(startColor, 0f);
             colorKeys[1] = new GradientColorKey(endColor, 1f);
-            
+
             var alphaKeys = new GradientAlphaKey[2];
             alphaKeys[0] = new GradientAlphaKey(startColor.a, 0f);
             alphaKeys[1] = new GradientAlphaKey(endColor.a, 1f);
-            
+
             Value.SetKeys(colorKeys, alphaKeys);
         }
 
@@ -74,20 +74,20 @@ namespace Shababeek.Core
         public void SetRainbow()
         {
             if (Value == null) Value = new Gradient();
-            
+
             var colorKeys = new GradientColorKey[7];
             colorKeys[0] = new GradientColorKey(Color.red, 0f);
-            colorKeys[1] = new GradientColorKey(new Color(1f, 0.5f, 0f), 1f/6f); // Orange
-            colorKeys[2] = new GradientColorKey(Color.yellow, 2f/6f);
-            colorKeys[3] = new GradientColorKey(Color.green, 3f/6f);
-            colorKeys[4] = new GradientColorKey(Color.blue, 4f/6f);
-            colorKeys[5] = new GradientColorKey(new Color(0.3f, 0f, 0.5f), 5f/6f); // Indigo
+            colorKeys[1] = new GradientColorKey(new Color(1f, 0.5f, 0f), 1f / 6f); // Orange
+            colorKeys[2] = new GradientColorKey(Color.yellow, 2f / 6f);
+            colorKeys[3] = new GradientColorKey(Color.green, 3f / 6f);
+            colorKeys[4] = new GradientColorKey(Color.blue, 4f / 6f);
+            colorKeys[5] = new GradientColorKey(new Color(0.3f, 0f, 0.5f), 5f / 6f); // Indigo
             colorKeys[6] = new GradientColorKey(new Color(0.5f, 0f, 1f), 1f); // Violet
-            
+
             var alphaKeys = new GradientAlphaKey[2];
             alphaKeys[0] = new GradientAlphaKey(1f, 0f);
             alphaKeys[1] = new GradientAlphaKey(1f, 1f);
-            
+
             Value.SetKeys(colorKeys, alphaKeys);
         }
 

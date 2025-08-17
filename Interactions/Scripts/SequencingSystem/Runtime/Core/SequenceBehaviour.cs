@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Shababeek.Core;
+using Shababeek.Utilities;
 using UniRx;
 using UnityEngine;
 using UnityEngine.Analytics;

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Shababeek.Core
+namespace Shababeek.Utilities
 {
     [CreateAssetMenu(menuName = "Shababeek/Scriptable System/Variables/TransformVariable")]
     public class TransformVariable : ScriptableVariable<Transform>
@@ -12,7 +12,7 @@ namespace Shababeek.Core
                 Value.position = position;
             }
         }
-        
+
         public void SetRotation(Quaternion rotation)
         {
             if (Value != null)
@@ -20,7 +20,7 @@ namespace Shababeek.Core
                 Value.rotation = rotation;
             }
         }
-        
+
         public void SetRotation(Vector3 eulerAngles)
         {
             if (Value != null)
@@ -28,7 +28,7 @@ namespace Shababeek.Core
                 Value.rotation = Quaternion.Euler(eulerAngles);
             }
         }
-        
+
         public void SetScale(Vector3 scale)
         {
             if (Value != null)
@@ -36,7 +36,7 @@ namespace Shababeek.Core
                 Value.localScale = scale;
             }
         }
-        
+
         public void SetLocalPosition(Vector3 localPosition)
         {
             if (Value != null)
@@ -44,7 +44,7 @@ namespace Shababeek.Core
                 Value.localPosition = localPosition;
             }
         }
-        
+
         public void SetLocalRotation(Quaternion localRotation)
         {
             if (Value != null)
@@ -52,7 +52,7 @@ namespace Shababeek.Core
                 Value.localRotation = localRotation;
             }
         }
-        
+
         public void SetLocalScale(Vector3 localScale)
         {
             if (Value != null)
@@ -60,7 +60,7 @@ namespace Shababeek.Core
                 Value.localScale = localScale;
             }
         }
-        
+
         public void LookAt(Vector3 target)
         {
             if (Value != null)
@@ -68,7 +68,7 @@ namespace Shababeek.Core
                 Value.LookAt(target);
             }
         }
-        
+
         public void LookAt(Transform target)
         {
             if (Value != null && target != null)
@@ -76,7 +76,7 @@ namespace Shababeek.Core
                 Value.LookAt(target);
             }
         }
-        
+
         public Vector3 Position => Value != null ? Value.position : Vector3.zero;
         public Quaternion Rotation => Value != null ? Value.rotation : Quaternion.identity;
         public Vector3 Scale => Value != null ? Value.localScale : Vector3.one;
@@ -133,4 +133,4 @@ namespace Shababeek.Core
             return Value?.GetHashCode() ?? 0;
         }
     }
-} 
+}

@@ -4,7 +4,7 @@ using UniRx;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace Shababeek.Core
+namespace Shababeek.Utilities
 {
     /// <summary>
     /// Listens to game events and raises Unity events accordingly.

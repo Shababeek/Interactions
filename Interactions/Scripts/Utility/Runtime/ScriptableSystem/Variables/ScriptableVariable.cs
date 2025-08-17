@@ -2,7 +2,7 @@ using System;
 using UniRx;
 using UnityEngine;
 
-namespace Shababeek.Core
+namespace Shababeek.Utilities
 {
     /// <summary>
     /// Base class for scriptable variables that can be observed and raised as game events.
@@ -28,12 +28,11 @@ namespace Shababeek.Core
     [Serializable]
     public class ScriptableVariable<T> : ScriptableVariable, IObservable<T>
     {
-        [Header("Variable Value")]
-        [Tooltip("The current value stored by this scriptable variable.")]
-        [SerializeField] protected T value;
-        
+        [Header("Variable Value")] [Tooltip("The current value stored by this scriptable variable.")] [SerializeField]
+        protected T value;
+
         private readonly Subject<T> _onValueChanged = new();
-        
+
         /// <summary>
         /// Observable stream for when the variable's value changes.
         /// </summary>
@@ -42,7 +41,7 @@ namespace Shababeek.Core
         /// is set to a new value. This provides reactive programming capabilities.
         /// </remarks>
         public IObservable<T> OnValueChanged => _onValueChanged;
-        
+
         /// <summary>
         /// Gets or sets the current value of this variable.
         /// </summary>
@@ -122,7 +121,8 @@ namespace Shababeek.Core
         /// it's only for prototyping and will be removed in the future
         /// </summary>
         /// <param name="value">The object value to set</param>
-        [Obsolete("This method should not be used, I it only exsist for whan am prototyping and don't want to waste time on a proper archticture")]
+        [Obsolete(
+            "This method should not be used, I it only exsist for whan am prototyping and don't want to waste time on a proper archticture")]
         public override void SetValue(object value)
         {
             if (value is T typedValue)
@@ -135,12 +135,13 @@ namespace Shababeek.Core
             }
         }
 
-         /// <summary>
+        /// <summary>
         /// DON'T USE THIS METHOD
         /// it's only for prototyping and will be removed in the future
         /// </summary>
         /// <returns>The current value as an object</returns>
-        [Obsolete("This method should not be used, I it only exsist for whan am prototyping and don't want to waste time on a proper archticture")]
+        [Obsolete(
+            "This method should not be used, I it only exsist for whan am prototyping and don't want to waste time on a proper archticture")]
         public override object GetValue()
         {
             return Value;

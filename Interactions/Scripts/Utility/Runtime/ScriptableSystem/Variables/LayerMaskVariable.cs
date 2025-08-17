@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Shababeek.Core
+namespace Shababeek.Utilities
 {
     [CreateAssetMenu(menuName = "Shababeek/Scriptable System/Variables/LayerMaskVariable")]
     public class LayerMaskVariable : ScriptableVariable<LayerMask>
@@ -66,6 +66,7 @@ namespace Shababeek.Core
                     count++;
                     mask &= mask - 1; // Remove the lowest set bit
                 }
+
                 return count;
             }
         }

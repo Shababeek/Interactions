@@ -1,8 +1,8 @@
 using UnityEditor;
 using UnityEngine;
-using Shababeek.Core;
+using Shababeek.Utilities;
 
-namespace Shababeek.Core.Editors
+namespace Shababeek.Utilities.Editors
 {
     [CustomPropertyDrawer(typeof(GameEvent))]
     public class GameEventPropertyDrawer : PropertyDrawer

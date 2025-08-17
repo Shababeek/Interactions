@@ -3,7 +3,7 @@ using UniRx;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace Shababeek.Core
+namespace Shababeek.Utilities
 {
     /// <summary>
     /// Base class for game events that can be raised and observed with data.

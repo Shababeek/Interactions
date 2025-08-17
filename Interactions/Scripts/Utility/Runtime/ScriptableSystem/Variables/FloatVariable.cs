@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Shababeek.Core
+namespace Shababeek.Utilities
 {
     /// <summary>
     /// Scriptable variable that stores a float value with full arithmetic operator support.
@@ -26,7 +26,6 @@ namespace Shababeek.Core
     public class FloatVariable : ScriptableVariable<float>
     {
         #region Comparison Operators
-        
 
         public static bool operator ==(FloatVariable a, FloatVariable b)
         {
@@ -164,7 +163,7 @@ namespace Shababeek.Core
 
         #endregion
     }
-    
+
     /// <summary>
     /// A reference that can point to either a FloatVariable or use a constant float value.
     /// Provides type-safe float variable handling with UniRx integration.

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Shababeek.Core
+namespace Shababeek.Utilities
 {
     [CreateAssetMenu(menuName = "Shababeek/Scriptable System/Variables/GameObjectVariable")]
     public class GameObjectVariable : ScriptableVariable<GameObject>
@@ -72,4 +72,4 @@ namespace Shababeek.Core
             return Value?.GetHashCode() ?? 0;
         }
     }
-} 
+}

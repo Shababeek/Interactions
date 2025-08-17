@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Shababeek.Core
+namespace Shababeek.Utilities
 {
     [CreateAssetMenu(menuName = "Shababeek/Scriptable System/Variables/Vector3Variable")]
     public class Vector3Variable : ScriptableVariable<Vector3>
@@ -110,5 +110,8 @@ namespace Shababeek.Core
             return Value.GetHashCode();
         }
     }
-    public class Vector3Reference: VariableReference<Vector3>{}
-} 
+
+    public class Vector3Reference : VariableReference<Vector3>
+    {
+    }
+}

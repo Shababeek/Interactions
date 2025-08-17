@@ -1,24 +1,24 @@
 using System;
 using UnityEngine;
 
-namespace Shababeek.Core
+namespace Shababeek.Utilities
 {
     [CreateAssetMenu(menuName = "Shababeek/Scriptable System/Variables/EnumVariable")]
     public class EnumVariable : ScriptableVariable<int>
     {
         [SerializeField] private string enumTypeName;
         [SerializeField] private string[] enumNames;
-        
+
         public void SetEnumValue<T>(T enumValue) where T : Enum
         {
             Value = Convert.ToInt32(enumValue);
         }
-        
+
         public T GetEnumValue<T>() where T : Enum
         {
             return (T)Enum.ToObject(typeof(T), Value);
         }
-        
+
         public void SetEnumValue(string enumName)
         {
             if (enumNames != null)
@@ -33,27 +33,28 @@ namespace Shababeek.Core
                 }
             }
         }
-        
+
         public string GetEnumName()
         {
             if (enumNames != null && Value >= 0 && Value < enumNames.Length)
             {
                 return enumNames[Value];
             }
+
             return "Unknown";
         }
-        
+
         public string[] GetEnumNames()
         {
             return enumNames;
         }
-        
+
         public void InitializeEnum<T>() where T : Enum
         {
             enumTypeName = typeof(T).Name;
             enumNames = Enum.GetNames(typeof(T));
         }
-        
+
         public string EnumTypeName => enumTypeName;
         public int EnumCount => enumNames?.Length ?? 0;
 
@@ -158,4 +159,4 @@ namespace Shababeek.Core
             return Value.GetHashCode();
         }
     }
-} 
+}

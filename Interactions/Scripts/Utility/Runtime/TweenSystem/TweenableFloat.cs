@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace Shababeek.Core
+namespace Shababeek.Utilities
 {
     /// <summary>
     /// Tweens a float value between two values over time using linear interpolation.

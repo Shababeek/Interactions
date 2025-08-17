@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using Shababeek.Core;
+using Shababeek.Utilities;
 using UnityEditor;
 
 namespace Shababeek.Interactions.Editors

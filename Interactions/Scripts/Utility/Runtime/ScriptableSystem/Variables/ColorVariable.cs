@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Shababeek.Core
+namespace Shababeek.Utilities
 {
     [CreateAssetMenu(menuName = "Shababeek/Scriptable System/Variables/ColorVariable")]
     public class ColorVariable : ScriptableVariable<Color>
@@ -124,4 +124,4 @@ namespace Shababeek.Core
             return Value.GetHashCode();
         }
     }
-} 
+}

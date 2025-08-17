@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Shababeek.Core
+namespace Shababeek.Utilities
 {
     [CreateAssetMenu(menuName = "Shababeek/Scriptable System/Variables/AudioClipVariable")]
     public class AudioClipVariable : ScriptableVariable<AudioClip>
@@ -81,4 +81,4 @@ namespace Shababeek.Core
             return Value?.GetHashCode() ?? 0;
         }
     }
-} 
+}

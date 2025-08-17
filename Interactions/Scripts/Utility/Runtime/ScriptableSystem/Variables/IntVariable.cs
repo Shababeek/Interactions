@@ -1,7 +1,6 @@
-using System;
 using UnityEngine;
 
-namespace Shababeek.Core
+namespace Shababeek.Utilities
 {
     [CreateAssetMenu(menuName = "Shababeek/Scriptable System/Variables/IntVariable")]
     public class IntVariable : ScriptableVariable<int>
@@ -22,7 +21,7 @@ namespace Shababeek.Core
             variable.Value--;
             return variable;
         }
-        
+
         public static bool operator ==(IntVariable a, IntVariable b)
         {
             if (ReferenceEquals(a, b)) return true;
@@ -141,7 +140,7 @@ namespace Shababeek.Core
             return Value.GetHashCode();
         }
     }
-    
+
     /// <summary>
     /// A reference that can point to either an IntVariable or use a constant integer value.
     /// </summary>

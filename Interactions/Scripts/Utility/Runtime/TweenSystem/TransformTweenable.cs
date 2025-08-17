@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Shababeek.Core
+namespace Shababeek.Utilities
 {
     /// <summary>
     /// Tweens the rotation and position of a Transform between two pivot points over time.

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using Shababeek.Core;
+using Shababeek.Utilities;
 using UnityEngine;
 
 [assembly: InternalsVisibleTo("Shababeek.Kuest.Editor")]

@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Shababeek.Core
+namespace Shababeek.Utilities
 {
     /// <summary>
     /// Attribute that makes a serialized field read-only in the Unity Inspector.

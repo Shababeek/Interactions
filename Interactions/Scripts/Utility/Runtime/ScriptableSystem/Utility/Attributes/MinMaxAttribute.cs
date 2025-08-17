@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Shababeek.Core
+namespace Shababeek.Utilities
 {
     /// <summary>
     /// Attribute to define a minimum and maximum range for a float value in the inspector.

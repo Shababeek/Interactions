@@ -3,7 +3,7 @@ using UniRx;
 using UnityEngine;
 using TMPro;
 
-namespace Shababeek.Core
+namespace Shababeek.Utilities
 {
     /// <summary>
     /// Binds a ScriptableVariable to a UI element for live updates.

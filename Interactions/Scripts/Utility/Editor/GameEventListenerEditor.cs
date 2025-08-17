@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
-using Shababeek.Core;
+using Shababeek.Utilities;
 
-namespace Shababeek.Core.Editors
+namespace Shababeek.Utilities.Editors
 {
     [CustomEditor(typeof(GameEventListener))]
     public class GameEventListenerEditor : Editor
