@@ -1,19 +1,34 @@
-﻿using Shababeek.Core;
+﻿using Shababeek.Utilities;
 using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
+
 namespace Shababeek.Interactions.Animations
 {
-
     /// <summary>
-    /// Mixes between two different states of a finger
+    /// Mixes between two different states of a finger (open and closed).
+    /// Provides smooth transitions between finger positions using Unity's Playable system.
     /// </summary>
+    /// <remarks>
+    /// This class creates a layer mixer that blends between open and closed finger animations.
+    /// It uses TweenableFloat for smooth weight transitions and applies avatar masks for
+    /// finger-specific animation control.
+    /// </remarks>
     [System.Serializable]
     internal class FingerAnimationMixer
     {
-        [Range(0, 1)] [SerializeField] private float weight;
+        [Header("Finger Animation")]
+        [Range(0, 1)] [SerializeField] [Tooltip("The current weight between open (0) and closed (1) finger states.")]
+        private float weight;
+        
         private AnimationLayerMixerPlayable _mixer;
         private TweenableFloat _crossFadingWeight;
+        
+        /// <summary>
+        /// Gets or sets the weight between open and closed finger states.
+        /// </summary>
+        /// <value>The weight value (0 = open, 1 = closed)</value>
+        /// <returns>The current weight value</returns>
         public float Weight
         {
             set

@@ -1,5 +1,5 @@
 
-using Shababeek.Core;
+using Shababeek.Utilities;
 using UnityEngine;
 
 namespace Shababeek.Interactions

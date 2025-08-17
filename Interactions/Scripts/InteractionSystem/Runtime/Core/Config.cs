@@ -1,5 +1,5 @@
 using System.Runtime.CompilerServices;
-using Shababeek.Core;
+using Shababeek.Utilities;
 using Shababeek.Interactions.Animations;
 using UnityEngine;
 using UnityEngine.InputSystem;
