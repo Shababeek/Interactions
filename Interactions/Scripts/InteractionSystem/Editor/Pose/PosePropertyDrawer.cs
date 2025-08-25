@@ -23,7 +23,7 @@ namespace Shababeek.Interactions.Editors
             EditorGUI.indentLevel++;
             if (IsStatic(property))
             {
-                EditorGUI.PropertyField(line, property.FindPropertyRelative("open"), new GUIContent("animation clip"));
+                line = DrawPropertyAndIncreaseHeight(property, line, Open);
 
             }
             else
@@ -36,9 +36,17 @@ namespace Shababeek.Interactions.Editors
 
         }
 
-        private static Rect DrawPropertyAndIncreaseHeight(SerializedProperty property, Rect line,string name)
+        private static Rect DrawPropertyAndIncreaseHeight(SerializedProperty property, Rect line,string name,string label="")
         {
-            EditorGUI.PropertyField(line, property.FindPropertyRelative(name));
+            if (string.IsNullOrEmpty(label))
+            {
+                EditorGUI.PropertyField(line, property.FindPropertyRelative(name));
+            }
+            else
+            {
+                EditorGUI.PropertyField(line, property.FindPropertyRelative(name),new GUIContent("animation clip"));
+                
+            }
             line.y += line.height;
             return line;
         }
@@ -47,9 +55,9 @@ namespace Shababeek.Interactions.Editors
         {
             if (IsStatic(property))
             {
-                return EditorGUIUtility.singleLineHeight * 3;
+                return EditorGUIUtility.singleLineHeight * 5;
             }
-            return EditorGUIUtility.singleLineHeight * 4; 
+            return EditorGUIUtility.singleLineHeight * 6; 
         }
 
         private bool IsStatic(SerializedProperty property)
