@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using Shababeek.Interactions.Core;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 
 namespace Shababeek.Interactions.Animations
