@@ -245,37 +245,103 @@ namespace Shababeek.Interactions.Editors
                 return;
             }
 
-            GUILayout.Label($"Step {_step + 1} of {_steps.Count}: {CurrentStep.StepName}", EditorStyles.boldLabel);
+            // Draw progress bar
+            float progress = (float)(_step + 1) / _steps.Count;
+            EditorGUI.ProgressBar(GUILayoutUtility.GetRect(0, 20), progress, $"Step {_step + 1} of {_steps.Count}: {CurrentStep.StepName}");
+            
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField($"Step {_step + 1} of {_steps.Count}: {CurrentStep.StepName}", EditorStyles.boldLabel);
             EditorGUILayout.Space();
 
             // Draw the current step
-            CurrentStep.DrawStep(this);
+            try
+            {
+                CurrentStep.DrawStep(this);
+            }
+            catch (System.Exception e)
+            {
+                EditorGUILayout.HelpBox($"Error in step '{CurrentStep.StepName}': {e.Message}", MessageType.Error);
+                Debug.LogException(e);
+            }
 
             EditorGUILayout.Space();
+            
+            // Step navigation
             EditorGUILayout.BeginHorizontal();
-            if (_step > 0 && GUILayout.Button("Back")) 
+            
+            // Back button
+            if (_step > 0)
             {
-                CurrentStep.OnStepExit(this);
-                _step--;
-                CurrentStep.OnStepEnter(this);
-                if (_step == 0) ResetChoices();
+                if (GUILayout.Button("← Back", GUILayout.Width(80))) 
+                {
+                    try
+                    {
+                        CurrentStep.OnStepExit(this);
+                        _step--;
+                        CurrentStep.OnStepEnter(this);
+                        if (_step == 0) ResetChoices();
+                    }
+                    catch (System.Exception e)
+                    {
+                        Debug.LogError($"Error navigating back: {e.Message}");
+                        EditorUtility.DisplayDialog("Navigation Error", $"Failed to go back: {e.Message}", "OK");
+                    }
+                }
             }
+            else
+            {
+                GUILayout.Space(80); // Maintain layout consistency
+            }
+            
             GUILayout.FlexibleSpace();
-            if (_step < _steps.Count - 1 && GUILayout.Button("Next"))
+            
+            // Next/Close button
+            if (_step < _steps.Count - 1)
             {
-                if (CurrentStep.CanProceed(this))
+                if (GUILayout.Button("Next →", GUILayout.Width(80)))
                 {
-                    CurrentStep.OnStepExit(this);
-                    _step++;
-                    CurrentStep.OnStepEnter(this);
-                }
-                else
-                {
-                    EditorUtility.DisplayDialog("Cannot Proceed", "Please complete the current step before proceeding.", "OK");
+                    try
+                    {
+                        if (CurrentStep.CanProceed(this))
+                        {
+                            CurrentStep.OnStepExit(this);
+                            _step++;
+                            CurrentStep.OnStepEnter(this);
+                        }
+                        else
+                        {
+                            EditorUtility.DisplayDialog("Cannot Proceed", "Please complete the current step before proceeding.", "OK");
+                        }
+                    }
+                    catch (System.Exception e)
+                    {
+                        Debug.LogError($"Error navigating forward: {e.Message}");
+                        EditorUtility.DisplayDialog("Navigation Error", $"Failed to proceed: {e.Message}", "OK");
+                    }
                 }
             }
-            if (_step == _steps.Count - 1 && GUILayout.Button("Close")) CloseWizard();
+            else
+            {
+                if (GUILayout.Button("Finish", GUILayout.Width(80)))
+                {
+                    try
+                    {
+                        CurrentStep.OnStepExit(this);
+                        CloseWizard();
+                    }
+                    catch (System.Exception e)
+                    {
+                        Debug.LogError($"Error finishing setup: {e.Message}");
+                        EditorUtility.DisplayDialog("Finish Error", $"Failed to finish setup: {e.Message}", "OK");
+                    }
+                }
+            }
+            
             EditorGUILayout.EndHorizontal();
+            
+            // Additional navigation info
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField($"Setup Progress: {(_step + 1) * 100 / _steps.Count}% Complete", EditorStyles.miniLabel);
         }
 
         public void ResetChoices()

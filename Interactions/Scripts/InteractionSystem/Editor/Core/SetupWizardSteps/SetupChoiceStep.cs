@@ -52,32 +52,94 @@ namespace Shababeek.Interactions.Editors
         private void ApplyDefaultSettings(ShababeekSetupWizard wizard)
         {
             if (wizard.ConfigAsset == null) return;
-            wizard.useDefaultSettings = true;
-            CreateLayersIfNeeded();
             
-            if (LeftHandLayer >= 0)
-                wizard.ConfigAsset.LeftHandLayer = 1 << LeftHandLayer;
-            if (RightHandLayer >= 0)
-                wizard.ConfigAsset.RightHandLayer = 1 << RightHandLayer;
-            if (InteractableLayer >= 0)
-                wizard.ConfigAsset.InteractableLayer = 1 << InteractableLayer;
-            if (PlayerLayer >= 0)
-                wizard.ConfigAsset.PlayerLayer = 1 << PlayerLayer;
-            
-            var serializedConfig = new SerializedObject(wizard.ConfigAsset);
-            var inputTypeProperty = serializedConfig.FindProperty("inputType");
-            if (inputTypeProperty != null)
-                inputTypeProperty.enumValueIndex = (int)Config.InputManagerType.InputSystem;
-            serializedConfig.ApplyModifiedProperties();
-            
-            ApplyPhysicsSettings();
-            
-            CreateDefaultHandDataIfNeeded(wizard);
-            
-            EditorUtility.SetDirty(wizard.ConfigAsset);
-            AssetDatabase.SaveAssets();
-            
-            Debug.Log("Applied default settings to config asset - setup complete");
+            try
+            {
+                wizard.useDefaultSettings = true;
+                
+                // Show progress dialog
+                EditorUtility.DisplayProgressBar("Applying Default Settings", "Creating layers...", 0.1f);
+                
+                CreateLayersIfNeeded();
+                EditorUtility.DisplayProgressBar("Applying Default Settings", "Configuring layers...", 0.3f);
+                
+                if (LeftHandLayer >= 0)
+                    wizard.ConfigAsset.LeftHandLayer = 1 << LeftHandLayer;
+                if (RightHandLayer >= 0)
+                    wizard.ConfigAsset.RightHandLayer = 1 << RightHandLayer;
+                if (InteractableLayer >= 0)
+                    wizard.ConfigAsset.InteractableLayer = 1 << InteractableLayer;
+                if (PlayerLayer >= 0)
+                    wizard.ConfigAsset.PlayerLayer = 1 << PlayerLayer;
+                
+                EditorUtility.DisplayProgressBar("Applying Default Settings", "Setting input type...", 0.5f);
+                
+                var serializedConfig = new SerializedObject(wizard.ConfigAsset);
+                var inputTypeProperty = serializedConfig.FindProperty("inputType");
+                if (inputTypeProperty != null)
+                    inputTypeProperty.enumValueIndex = (int)Config.InputManagerType.InputSystem;
+                serializedConfig.ApplyModifiedProperties();
+                
+                EditorUtility.DisplayProgressBar("Applying Default Settings", "Applying physics settings...", 0.7f);
+                
+                ApplyPhysicsSettings();
+                
+                EditorUtility.DisplayProgressBar("Applying Default Settings", "Creating hand data...", 0.9f);
+                
+                CreateDefaultHandDataIfNeeded(wizard);
+                
+                EditorUtility.DisplayProgressBar("Applying Default Settings", "Saving configuration...", 1.0f);
+                
+                EditorUtility.SetDirty(wizard.ConfigAsset);
+                AssetDatabase.SaveAssets();
+                
+                Debug.Log("Applied default settings to config asset - setup complete");
+                
+                // Validate that the settings were actually applied
+                if (!ValidateDefaultSettings(wizard))
+                {
+                    throw new System.InvalidOperationException("Default settings were not applied correctly. Please try again or use custom setup.");
+                }
+                
+                // Show completion message and close wizard
+                EditorUtility.DisplayDialog("Setup Complete", "Default settings have been applied successfully!\n\n" +
+                    "✓ Layers created and configured\n" +
+                    "✓ Physics settings applied\n" +
+                    "✓ Input System selected\n" +
+                    "✓ Basic configuration complete\n\n" +
+                    "The wizard will now close.", "OK");
+                
+                wizard.CloseWizard();
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Failed to apply default settings: {e.Message}");
+                
+                // Show error dialog with recovery options
+                int choice = EditorUtility.DisplayDialogComplex("Setup Failed", 
+                    $"Failed to apply default settings:\n{e.Message}\n\nWhat would you like to do?", 
+                    "Try Again", "Use Custom Setup", "Close Wizard");
+                
+                switch (choice)
+                {
+                    case 0: // Try Again
+                        EditorUtility.ClearProgressBar();
+                        ApplyDefaultSettings(wizard);
+                        break;
+                    case 1: // Use Custom Setup
+                        EditorUtility.ClearProgressBar();
+                        wizard.NextStep();
+                        break;
+                    case 2: // Close Wizard
+                        EditorUtility.ClearProgressBar();
+                        wizard.CloseWizard();
+                        break;
+                }
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+            }
         }
 
         private void CreateLayersIfNeeded()
@@ -202,6 +264,53 @@ namespace Shababeek.Interactions.Editors
         {
             // Can proceed once a choice is made
             return true;
+        }
+
+        private bool ValidateDefaultSettings(ShababeekSetupWizard wizard)
+        {
+            try
+            {
+                // Validate that layers were created
+                if (LeftHandLayer < 0 || RightHandLayer < 0 || InteractableLayer < 0 || PlayerLayer < 0)
+                {
+                    Debug.LogError("Layer validation failed: Some layers were not created");
+                    return false;
+                }
+                
+                // Validate that config asset has correct values
+                if (wizard.ConfigAsset == null)
+                {
+                    Debug.LogError("Config validation failed: Config asset is null");
+                    return false;
+                }
+                
+                // Validate that physics settings were applied
+                var leftLayer = LayerMask.NameToLayer(LEFT_INTERACTOR_LAYER_NAME);
+                var rightLayer = LayerMask.NameToLayer(RIGHT_INTERACTOR_LAYER_NAME);
+                var playerLayerIndex = LayerMask.NameToLayer(PLAYER_LAYER_NAME);
+                
+                if (leftLayer == -1 || rightLayer == -1 || playerLayerIndex == -1)
+                {
+                    Debug.LogError("Physics validation failed: Some layers not found in LayerMask");
+                    return false;
+                }
+                
+                // Validate that HandData was created if needed
+                string[] guids = AssetDatabase.FindAssets("t:HandData");
+                if (guids.Length == 0)
+                {
+                    Debug.LogError("HandData validation failed: No HandData assets found");
+                    return false;
+                }
+                
+                Debug.Log("Default settings validation passed successfully");
+                return true;
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Validation error: {e.Message}");
+                return false;
+            }
         }
     }
 }

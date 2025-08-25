@@ -1,5 +1,7 @@
 using UnityEditor;
 using UnityEngine;
+using UnityEditor.PackageManager;
+using UnityEditor.PackageManager.Requests;
 
 namespace Shababeek.Interactions.Editors
 {
@@ -12,6 +14,8 @@ namespace Shababeek.Interactions.Editors
 
         private bool openXRInstalled = false;
         private bool openXRInstalling = false;
+        private AddRequest addRequest;
+        private bool hasAddRequest = false;
 
         public void DrawStep(ShababeekSetupWizard wizard)
         {
@@ -48,6 +52,9 @@ namespace Shababeek.Interactions.Editors
                 {
                     EditorGUILayout.LabelField("Installing OpenXR...", EditorStyles.boldLabel);
                     EditorGUILayout.LabelField("Please wait for the installation to complete.", EditorStyles.miniLabel);
+                    
+                    // Show progress bar
+                    EditorGUI.ProgressBar(GUILayoutUtility.GetRect(0, 20), 0.5f, "Installing OpenXR Package...");
                 }
                 else
                 {
@@ -150,19 +157,58 @@ namespace Shababeek.Interactions.Editors
 
         private void InstallOpenXR()
         {
+            if (hasAddRequest) return; // Prevent multiple requests
+            
             openXRInstalling = true;
+            hasAddRequest = true;
             
-            // TODO: Implement OpenXR installation via Package Manager
+            // Add OpenXR package via Package Manager
+            addRequest = Client.Add("com.unity.xr.openxr");
             
-            Debug.Log("OpenXR installation requested - implementation pending");
+            Debug.Log("Starting OpenXR installation via Package Manager...");
             
-            // For now, simulate installation
-            EditorApplication.delayCall += () =>
+            // Start monitoring the request
+            EditorApplication.update += MonitorAddRequest;
+        }
+
+        private void MonitorAddRequest()
+        {
+            if (addRequest == null) return;
+            
+            if (addRequest.IsCompleted)
             {
-                openXRInstalling = false;
-                openXRInstalled = true;
-                Debug.Log("OpenXR installation completed (simulated)");
-            };
+                if (addRequest.Status == StatusCode.Success)
+                {
+                    Debug.Log("OpenXR package installed successfully!");
+                    openXRInstalled = true;
+                    openXRInstalling = false;
+                    hasAddRequest = false;
+                    
+                    // Refresh the asset database to pick up new packages
+                    AssetDatabase.Refresh();
+                    
+                    // Force a repaint of the window
+                    if (EditorWindow.HasOpenInstances<ShababeekSetupWizard>())
+                    {
+                        EditorWindow.GetWindow<ShababeekSetupWizard>().Repaint();
+                    }
+                }
+                else if (addRequest.Status >= StatusCode.Failure)
+                {
+                    Debug.LogError($"Failed to install OpenXR package: {addRequest.Error?.message}");
+                    openXRInstalling = false;
+                    hasAddRequest = false;
+                    
+                    // Show error dialog
+                    EditorUtility.DisplayDialog("Installation Failed", 
+                        $"Failed to install OpenXR package:\n{addRequest.Error?.message}\n\nYou can continue without OpenXR, but some VR/AR features may not work properly.", 
+                        "OK");
+                }
+                
+                // Clean up
+                addRequest = null;
+                EditorApplication.update -= MonitorAddRequest;
+            }
         }
 
         public void OnStepEnter(ShababeekSetupWizard wizard)
@@ -173,8 +219,52 @@ namespace Shababeek.Interactions.Editors
 
         public void OnStepExit(ShababeekSetupWizard wizard)
         {
-            // Nothing special needed when exiting this step
-            // Dependencies are checked but not automatically installed
+            // Clean up any ongoing requests
+            if (hasAddRequest && addRequest != null)
+            {
+                EditorApplication.update -= MonitorAddRequest;
+                hasAddRequest = false;
+                addRequest = null;
+            }
+            
+            // Validate dependencies if OpenXR was installed
+            if (openXRInstalled)
+            {
+                if (!ValidateOpenXRInstallation())
+                {
+                    Debug.LogWarning("OpenXR installation validation failed - some VR/AR features may not work properly");
+                }
+            }
+        }
+
+        private bool ValidateOpenXRInstallation()
+        {
+            try
+            {
+                // Try to access OpenXR types to verify installation
+                var openXRType = System.Type.GetType("UnityEngine.XR.OpenXR.OpenXRLoader, Unity.XR.OpenXR");
+                if (openXRType == null)
+                {
+                    Debug.LogError("OpenXR validation failed: OpenXRLoader type not found");
+                    return false;
+                }
+                
+                // Check if the package is properly installed
+                var openXRPackage = UnityEditor.PackageManager.PackageInfo.FindForPackageName("Unity.XR.OpenXR");
+                if (openXRPackage == null)
+                {
+                    Debug.LogError("OpenXR validation failed: Package not found in Package Manager");
+                    return false;
+                }
+                
+                Debug.Log("OpenXR installation validation passed successfully");
+                return true;
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"OpenXR validation error: {e.Message}");
+                return false;
+            }
         }
 
         public bool CanProceed(ShababeekSetupWizard wizard)
