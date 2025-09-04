@@ -38,10 +38,12 @@ namespace Shababeek.Interactions.Editors
             EditorGUILayout.Space();
             
             // Option to prevent showing again
-            bool preventShowingAgain = EditorGUILayout.Toggle("Don't show this wizard again automatically", false);
-            if (preventShowingAgain)
+            bool preventShowingAgain = EditorGUILayout.Toggle("Don't show this wizard again automatically", 
+                EditorPrefs.GetBool(ShababeekSetupWizard.SetupWizardShownKey, false));
+            
+            if (preventShowingAgain != EditorPrefs.GetBool(ShababeekSetupWizard.SetupWizardShownKey, false))
             {
-                EditorPrefs.SetBool(ShababeekSetupWizard.SetupWizardShownKey, true);
+                EditorPrefs.SetBool(ShababeekSetupWizard.SetupWizardShownKey, preventShowingAgain);
             }
             
             EditorGUILayout.Space();

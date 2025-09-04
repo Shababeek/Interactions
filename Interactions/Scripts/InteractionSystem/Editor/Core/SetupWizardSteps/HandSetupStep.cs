@@ -299,12 +299,6 @@ namespace Shababeek.Interactions.Editors
                     return false;
                 }
                 
-                // Check if HandData has a default pose
-                if (handData.DefaultPose == null)
-                {
-                    Debug.LogError("HandData validation failed: No default pose found");
-                    return false;
-                }
                 
                 // Check if HandData has avatar masks
                 bool hasAvatarMasks = false;

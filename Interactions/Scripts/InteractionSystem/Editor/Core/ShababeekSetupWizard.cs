@@ -75,14 +75,14 @@ namespace Shababeek.Interactions.Editors
         private List<ISetupWizardStep> _steps;
         private ISetupWizardStep CurrentStep => _steps != null && _step < _steps.Count ? _steps[_step] : null;
 
-        [MenuItem("Tools/Shababeek/Setup Wizard")]
+        [MenuItem("Shababeek/Setup Wizard")]
         public static void ShowWindow()
         {
             var window = GetWindow<ShababeekSetupWizard>(true, "Shababeek Setup Wizard");
             window.minSize = new Vector2(500, 400);
         }
 
-        [MenuItem("Tools/Shababeek/Reset Setup Wizard")]
+        [MenuItem("Shababeek/Reset Setup Wizard")]
         public static void ResetSetupWizard()
         {
             EditorPrefs.DeleteKey(SetupWizardShownKey);

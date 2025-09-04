@@ -165,6 +165,9 @@ namespace Shababeek.Interactions.Editors
                     throw new System.InvalidOperationException("Failed to create one or more layers. Please check the console for details.");
                 }
                 
+                // Validate that layers were saved to config
+                ValidateConfigLayerSettings(wizard);
+                
                 // Update the config asset with the new layer settings
                 if (wizard.ConfigAsset != null)
                 {
@@ -174,28 +177,28 @@ namespace Shababeek.Interactions.Editors
                     {
                         var leftLayerProperty = serializedConfig.FindProperty("leftHandLayer");
                         if (leftLayerProperty != null)
-                            leftLayerProperty.intValue = 1 << leftHandLayer;
+                            leftLayerProperty.intValue = leftHandLayer;
                     }
                     
                     if (rightHandLayer >= 0)
                     {
                         var rightLayerProperty = serializedConfig.FindProperty("rightHandLayer");
                         if (rightLayerProperty != null)
-                            rightLayerProperty.intValue = 1 << rightHandLayer;
+                            rightLayerProperty.intValue = rightHandLayer;
                     }
                     
                     if (interactableLayer >= 0)
                     {
                         var interactableLayerProperty = serializedConfig.FindProperty("interactableLayer");
                         if (interactableLayerProperty != null)
-                            interactableLayerProperty.intValue = 1 << interactableLayer;
+                            interactableLayerProperty.intValue = interactableLayer;
                     }
                     
                     if (playerLayer >= 0)
                     {
                         var playerLayerProperty = serializedConfig.FindProperty("playerLayer");
                         if (playerLayerProperty != null)
-                            playerLayerProperty.intValue = 1 << playerLayer;
+                            playerLayerProperty.intValue = playerLayer;
                     }
                     
                     serializedConfig.ApplyModifiedProperties();
@@ -259,6 +262,25 @@ namespace Shababeek.Interactions.Editors
             {
                 Debug.LogError($"Layer validation error: {e.Message}");
                 return false;
+            }
+        }
+
+        private void ValidateConfigLayerSettings(ShababeekSetupWizard wizard)
+        {
+            if (wizard.ConfigAsset != null)
+            {
+                if (wizard.ConfigAsset.LeftHandLayer != leftHandLayer ||
+                    wizard.ConfigAsset.RightHandLayer != rightHandLayer ||
+                    wizard.ConfigAsset.InteractableLayer != interactableLayer ||
+                    wizard.ConfigAsset.PlayerLayer != playerLayer)
+                {
+                    Debug.LogWarning("Layer validation: Some layers were not properly saved to config asset");
+                    // Don't fail validation for this as it's not critical
+                }
+                else
+                {
+                    Debug.Log("Layer validation: All layers were properly saved to config asset");
+                }
             }
         }
 

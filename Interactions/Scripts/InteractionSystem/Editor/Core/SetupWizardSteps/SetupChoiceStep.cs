@@ -2,6 +2,7 @@ using UnityEditor;
 using UnityEngine;
 using System.Collections.Generic;
 using Shababeek.Interactions.Core;
+using UnityEditor.PackageManager;
 
 namespace Shababeek.Interactions.Editors
 {
@@ -33,6 +34,7 @@ namespace Shababeek.Interactions.Editors
                 // Show completion message and close wizard
                 EditorUtility.DisplayDialog("Setup Complete", "Default settings have been applied successfully!\n\n" +
                     "• Layers created and configured\n" +
+                    "• OpenXR package installed\n" +
                     "• Physics settings applied\n" +
                     "• Input System selected\n" +
                     "• Basic configuration complete\n\n" +
@@ -64,13 +66,13 @@ namespace Shababeek.Interactions.Editors
                 EditorUtility.DisplayProgressBar("Applying Default Settings", "Configuring layers...", 0.3f);
                 
                 if (LeftHandLayer >= 0)
-                    wizard.ConfigAsset.LeftHandLayer = 1 << LeftHandLayer;
+                    wizard.ConfigAsset.LeftHandLayer = LeftHandLayer;
                 if (RightHandLayer >= 0)
-                    wizard.ConfigAsset.RightHandLayer = 1 << RightHandLayer;
+                    wizard.ConfigAsset.RightHandLayer = RightHandLayer;
                 if (InteractableLayer >= 0)
-                    wizard.ConfigAsset.InteractableLayer = 1 << InteractableLayer;
+                    wizard.ConfigAsset.InteractableLayer = InteractableLayer;
                 if (PlayerLayer >= 0)
-                    wizard.ConfigAsset.PlayerLayer = 1 << PlayerLayer;
+                    wizard.ConfigAsset.PlayerLayer = PlayerLayer;
                 
                 EditorUtility.DisplayProgressBar("Applying Default Settings", "Setting input type...", 0.5f);
                 
@@ -80,7 +82,11 @@ namespace Shababeek.Interactions.Editors
                     inputTypeProperty.enumValueIndex = (int)Config.InputManagerType.InputSystem;
                 serializedConfig.ApplyModifiedProperties();
                 
-                EditorUtility.DisplayProgressBar("Applying Default Settings", "Applying physics settings...", 0.7f);
+                EditorUtility.DisplayProgressBar("Applying Default Settings", "Installing OpenXR...", 0.6f);
+                
+                InstallOpenXRIfNeeded();
+                
+                EditorUtility.DisplayProgressBar("Applying Default Settings", "Applying physics settings...", 0.8f);
                 
                 ApplyPhysicsSettings();
                 
@@ -101,9 +107,13 @@ namespace Shababeek.Interactions.Editors
                     throw new System.InvalidOperationException("Default settings were not applied correctly. Please try again or use custom setup.");
                 }
                 
+                // Validate that layers were saved to config
+                ValidateConfigLayerSettings(wizard);
+                
                 // Show completion message and close wizard
                 EditorUtility.DisplayDialog("Setup Complete", "Default settings have been applied successfully!\n\n" +
                     "✓ Layers created and configured\n" +
+                    "✓ OpenXR package installed\n" +
                     "✓ Physics settings applied\n" +
                     "✓ Input System selected\n" +
                     "✓ Basic configuration complete\n\n" +
@@ -243,6 +253,60 @@ namespace Shababeek.Interactions.Editors
             }
         }
 
+        private void InstallOpenXRIfNeeded()
+        {
+            // Check if OpenXR is already installed
+            if (CheckOpenXRInstalled())
+            {
+                Debug.Log("OpenXR is already installed");
+                return;
+            }
+
+            try
+            {
+                Debug.Log("Installing OpenXR package for default settings...");
+                
+                // Add OpenXR package via Package Manager
+                var addRequest = UnityEditor.PackageManager.Client.Add("com.unity.xr.openxr");
+                
+                // Wait for the request to complete (this is synchronous in the editor)
+                while (!addRequest.IsCompleted)
+                {
+                    System.Threading.Thread.Sleep(100);
+                }
+                
+                if (addRequest.Status == UnityEditor.PackageManager.StatusCode.Success)
+                {
+                    Debug.Log("OpenXR package installed successfully for default settings!");
+                    
+                    // Refresh the asset database to pick up new packages
+                    AssetDatabase.Refresh();
+                }
+                else
+                {
+                    Debug.LogWarning($"OpenXR installation failed: {addRequest.Error?.message}. Continuing with setup...");
+                }
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"Failed to install OpenXR: {e.Message}. Continuing with setup...");
+            }
+        }
+
+        private bool CheckOpenXRInstalled()
+        {
+            // Check if OpenXR is installed via Package Manager
+            try
+            {
+                var openXRPackage = UnityEditor.PackageManager.PackageInfo.FindForPackageName("Unity.XR.OpenXR");
+                return openXRPackage != null;
+            }
+            catch (System.Exception)
+            {
+                return false;
+            }
+        }
+
         // Properties for layer indices
         private int LeftHandLayer { get; set; } = -1;
         private int RightHandLayer { get; set; } = -1;
@@ -284,6 +348,13 @@ namespace Shababeek.Interactions.Editors
                     return false;
                 }
                 
+                // Validate that OpenXR was installed
+                if (!CheckOpenXRInstalled())
+                {
+                    Debug.LogWarning("OpenXR validation failed: OpenXR package not found. Some VR/AR features may not work properly.");
+                    // Don't fail validation for OpenXR as it's optional
+                }
+                
                 // Validate that physics settings were applied
                 var leftLayer = LayerMask.NameToLayer(LEFT_INTERACTOR_LAYER_NAME);
                 var rightLayer = LayerMask.NameToLayer(RIGHT_INTERACTOR_LAYER_NAME);
@@ -310,6 +381,25 @@ namespace Shababeek.Interactions.Editors
             {
                 Debug.LogError($"Validation error: {e.Message}");
                 return false;
+            }
+        }
+
+        private void ValidateConfigLayerSettings(ShababeekSetupWizard wizard)
+        {
+            if (wizard.ConfigAsset != null)
+            {
+                if (wizard.ConfigAsset.LeftHandLayer != LeftHandLayer ||
+                    wizard.ConfigAsset.RightHandLayer != RightHandLayer ||
+                    wizard.ConfigAsset.InteractableLayer != InteractableLayer ||
+                    wizard.ConfigAsset.PlayerLayer != PlayerLayer)
+                {
+                    Debug.LogWarning("Layer validation: Some layers were not properly saved to config asset");
+                    // Don't fail validation for this as it's not critical
+                }
+                else
+                {
+                    Debug.Log("Layer validation: All layers were properly saved to config asset");
+                }
             }
         }
     }

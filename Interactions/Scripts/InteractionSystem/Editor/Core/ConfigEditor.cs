@@ -121,15 +121,6 @@ namespace Shababeek.Interactions.Editors
             
             EditorGUILayout.Space();
             
-            if (GUILayout.Button("Create Layers", GUILayout.Height(25)))
-            {
-                CreateLayers();
-                ValidatePhysicsLayerMatrix(); // Re-validate after creating layers
-            }
-            EditorGUILayout.HelpBox("Click 'Create Layers' to automatically create the required layers in Unity's Layer Manager.", MessageType.Info);
-            
-            EditorGUILayout.Space();
-            
             // Input Manager Section
             EditorGUILayout.LabelField("Input Manager Settings", EditorStyles.boldLabel);
             EditorGUILayout.PropertyField(inputTypeProp, new GUIContent("Input Type", "Type of input manager to use for the interaction system"));
@@ -674,86 +665,6 @@ namespace Shababeek.Interactions.Editors
             property.FindPropertyRelative("altPositiveButton").stringValue = axe.altPositiveButton;
         }
         
-        private void CreateLayers()
-        {
-            // Define the layers to create with Shababeek_ prefix
-            string[] layersToCreate = new[]
-            {
-                "Shababeek_LeftInteractor",
-                "Shababeek_RightInteractor", 
-                "Shababeek_Interactable",
-                "Shababeek_PlayerLayer"
-            };
-            
-            var tagManager = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset")[0]);
-            var layers = tagManager.FindProperty("layers");
-            
-            int index = 6; // Start from layer 7 (index 6)
-            int count = 0;
-            
-            // Find available slots and create layers
-            while (index < 32 && count < layersToCreate.Length)
-            {
-                index++;
-                if (layers.GetArrayElementAtIndex(index).stringValue == layersToCreate[count])
-                {
-                    count++;
-                    continue;
-                }
-                if (layers.GetArrayElementAtIndex(index).stringValue?.Length > 0) continue;
-             
-                layers.GetArrayElementAtIndex(index).stringValue = layersToCreate[count];
-                count++;
-            }
-            
-            tagManager.ApplyModifiedProperties();
-            
-            // Update the config file with the new layer indices
-            var configSerializedObject = new SerializedObject(config);
-            var leftHandLayerIndex = LayerMask.NameToLayer("Shababeek_LeftInteractor");
-            var rightHandLayerIndex = LayerMask.NameToLayer("Shababeek_RightInteractor");
-            var interactableLayerIndex = LayerMask.NameToLayer("Shababeek_Interactable");
-            var playerLayerIndex = LayerMask.NameToLayer("Shababeek_PlayerLayer");
-            
-            if (leftHandLayerIndex >= 0)
-                configSerializedObject.FindProperty("leftHandLayer").intValue = leftHandLayerIndex;
-            if (rightHandLayerIndex >= 0)
-                configSerializedObject.FindProperty("rightHandLayer").intValue = rightHandLayerIndex;
-            if (interactableLayerIndex >= 0)
-                configSerializedObject.FindProperty("interactableLayer").intValue = interactableLayerIndex;
-            if (playerLayerIndex >= 0)
-                configSerializedObject.FindProperty("playerLayer").intValue = playerLayerIndex;
-                
-            configSerializedObject.ApplyModifiedProperties();
-            
-            EditorUtility.SetDirty(config);
-            AssetDatabase.SaveAssets();
-            
-            Debug.Log($"Updated Config with layer indices: Left={leftHandLayerIndex}, Right={rightHandLayerIndex}, Interactable={interactableLayerIndex}, Player={playerLayerIndex}");
-            
-            // Set up physics layer collisions
-            SetupPhysicsLayerCollisions();
-            
-            Debug.Log($"Successfully created {count} layers for Shababeek Interaction System");
-        }
-        
-        private void SetupPhysicsLayerCollisions()
-        {
-            var leftLayer = LayerMask.NameToLayer("Shababeek_LeftInteractor");
-            var rightLayer = LayerMask.NameToLayer("Shababeek_RightInteractor");
-            var playerLayer = LayerMask.NameToLayer("Shababeek_PlayerLayer");
-            
-            // Ignore collisions between hands and themselves
-            Physics.IgnoreLayerCollision(leftLayer, leftLayer);
-            Physics.IgnoreLayerCollision(rightLayer, rightLayer);
-            Physics.IgnoreLayerCollision(rightLayer, leftLayer);
-            
-            // Ignore collisions between player and hands
-            Physics.IgnoreLayerCollision(playerLayer, leftLayer);
-            Physics.IgnoreLayerCollision(playerLayer, rightLayer);
-            Physics.IgnoreLayerCollision(playerLayer, playerLayer);
-            
-            Debug.Log("Physics layer collision settings configured");
-        }
+
     }
 } 
