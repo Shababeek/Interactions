@@ -202,14 +202,13 @@ namespace Shababeek.Interactions.Editors
             // Draw camera height indicator
             if (offsetObjectProp.objectReferenceValue != null)
             {
-                Transform offsetTransform = (Transform)offsetObjectProp.objectReferenceValue;
-                Vector3 worldPos = offsetTransform.position;
+                Vector3 worldPos = rig.Offset.position;
                 
                 Handles.color = Color.cyan;
                 Handles.DrawWireCube(worldPos, Vector3.one * 0.1f);
                 
                 // Draw height line
-                Vector3 groundPos = new Vector3(worldPos.x, 0, worldPos.z);
+                Vector3 groundPos = rig.transform.position;
                 Handles.color = Color.yellow;
                 Handles.DrawLine(groundPos, worldPos);
                 

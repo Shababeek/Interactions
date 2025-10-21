@@ -157,6 +157,11 @@ namespace Shababeek.Interactions.Animations
         /// </summary>
         /// <returns>The description text</returns>
         public string Description => description;
+
+        public AvatarMask[] GetAvatarMasks()
+        {
+            return new []{this[0],this[1],this[2],this[3],this[4]};
+        }
     }
 
     /// <summary>

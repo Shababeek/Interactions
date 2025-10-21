@@ -114,6 +114,8 @@ namespace Shababeek.Interactions.Core
         /// This is the central configuration that drives the entire interaction system.
         /// </remarks>
         public Config Config => config;
+        public Transform Offset => offsetObject;
+        public float CameraHeight => cameraHeight;
 
         #endregion
 

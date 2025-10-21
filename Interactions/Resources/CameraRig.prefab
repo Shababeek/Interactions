@@ -44,6 +44,7 @@ GameObject:
   m_Component:
   - component: {fileID: 9019544231409511832}
   - component: {fileID: 1123300367076152135}
+  - component: {fileID: 9161967390556760052}
   m_Layer: 11
   m_Name: CameraRig
   m_TagString: Player
@@ -81,16 +82,45 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   config: {fileID: 11400000, guid: a98f0f16ca30a4ce2a4102435d346e0c, type: 2}
   initializeHands: 1
-  handTrackingMethod: 1
+  trackingMethod: 1
   leftHandPivot: {fileID: 5115332579753405566}
   rightHandPivot: {fileID: 6574254671907455635}
-  initializeLayers: 1
   leftHandInteractorType: 0
   rightHandInteractorType: 0
   offsetObject: {fileID: 116861462935307268}
   xrCamera: {fileID: 616296696631468625}
   cameraHeight: 1
   alignRigForwardOnTracking: 1
+  initializeLayers: 1
+  customLayerAssignments: []
+--- !u!114 &9161967390556760052
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2083433137488240734}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 16e4b4cd8ace4b008562807e343d986e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  optimalMinDistance: 0.3
+  optimalMaxDistance: 0.6
+  extendedMaxDistance: 0.8
+  maximumMaxDistance: 1
+  heightMin: -0.9
+  heightMax: -0.2
+  optimalHeightMin: -0.7
+  optimalHeightMax: -0.3
+  showOptimalZone: 1
+  showExtendedZone: 1
+  showMaximumZone: 1
+  showDeadZone: 1
+  deadZoneRadius: 0.25
+  showLegend: 1
+  arcSegments: 16
+  arcAngle: 65
 --- !u!1 &3221023222551326945
 GameObject:
   m_ObjectHideFlags: 0
@@ -117,7 +147,7 @@ Transform:
   m_GameObject: {fileID: 3221023222551326945}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.5, y: 1, z: 0.3}
+  m_LocalPosition: {x: -0.5, y: 0, z: 0.3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -324,7 +354,7 @@ Camera:
   m_GameObject: {fileID: 5253809974633574797}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 2
+  m_ClearFlags: 1
   m_BackGroundColor: {r: 0.23529413, g: 0.09019608, b: 0.43137258, a: 1}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
@@ -347,7 +377,7 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.01
-  far clip plane: 1000
+  far clip plane: 300
   field of view: 60
   orthographic: 0
   orthographic size: 5
@@ -558,7 +588,7 @@ Transform:
   m_GameObject: {fileID: 5483692151396115709}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.5, y: 1, z: 0}
+  m_LocalPosition: {x: 0.5, y: 0, z: 0.3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
