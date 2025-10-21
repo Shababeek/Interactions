@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f16953eba7fc4575a8da8b63809a9f2d, type: 3}
   m_Name: config
   m_EditorClassIdentifier: 
-  handData: {fileID: 11400000, guid: 6aca1e053bffb4e23be6bcf251ae2a5d, type: 2}
+  handData: {fileID: 11400000, guid: d0eee63a3783a494bb6d652649089e9c, type: 2}
   leftHandLayer: 12
   rightHandLayer: 13
   interactableLayer: 14
