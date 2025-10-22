@@ -8,20 +8,20 @@ namespace Shababeek.Interactions.Core.Editor
     {
         #region Constants
         
-        // Zone colors
-        private static readonly Color optimalZoneColor = new Color(0f, 1f, 0f, 0.6f);
-        private static readonly Color extendedZoneColor = new Color(1f, 1f, 0f, 0.5f);
-        private static readonly Color maximumZoneColor = new Color(1f, 0.5f, 0f, 0.4f);
-        private static readonly Color deadZoneColor = new Color(1f, 0f, 0f, 0.3f);
-        private static readonly Color playAreaColor = new Color(0f, 1f, 1f, 0.1f);
+        // Zone colors (when selected)
+        private static readonly Color optimalZoneColor = new Color(0f, 1f, 0f, 0.7f);
+        private static readonly Color extendedZoneColor = new Color(1f, 1f, 0f, 0.65f);
+        private static readonly Color maximumZoneColor = new Color(1f, 0.5f, 0f, 0.6f);
+        private static readonly Color deadZoneColor = new Color(1f, 0f, 0f, 0.9f);
+        private static readonly Color playAreaColor = new Color(0f, 1f, 1f, 0.15f); 
         private static readonly Color playAreaOutlineColor = Color.cyan;
         private static readonly Color headReferenceColor = Color.cyan;
         private static readonly Color referenceLinesColor = Color.white;
         private static readonly Color playerBodyColor = new Color(0f, 0.5f, 1f, 0.3f);
         private static readonly Color playerBodyOutlineColor = new Color(0f, 0.5f, 1f, 0.8f);
-        private static readonly Color directionArrowColor = new Color(1f, 0.8f, 0f, 0.9f);
+        private static readonly Color directionArrowColor = new Color(1f, 0.8f, 0f, 0.7f);
         
-        // Legend colors (more opaque for inspector)
+        // Legend colors
         private static readonly Color legendOptimalColor = new Color(0f, 1f, 0f, 1f);
         private static readonly Color legendExtendedColor = new Color(1f, 1f, 0f, 1f);
         private static readonly Color legendMaximumColor = new Color(1f, 0.5f, 0f, 1f);
@@ -40,6 +40,9 @@ namespace Shababeek.Interactions.Core.Editor
         private const float directionArrowLength = 0.5f;
         private const float directionArrowHeadSize = 0.15f;
         private const float directionArrowHeadAngle = 25f;
+        
+        // Opacity multiplier for unselected state
+        private const float unselectedOpacityMultiplier = 0.6f;
         
         #endregion
         
@@ -330,50 +333,71 @@ namespace Shababeek.Interactions.Core.Editor
             EditorGUILayout.Space(legendItemSpacing);
         }
         
+        // Draw when selected (full opacity)
         private void OnSceneGUI()
         {
             var visualizer = (VRInteractionZoneVisualizer)target;
             
             if (visualizer.GetCameraRig() == null) return;
             
+            DrawVisualization(visualizer, false);
+        }
+        
+        // Draw when not selected (50% opacity)
+        [DrawGizmo(GizmoType.NonSelected | GizmoType.NotInSelectionHierarchy)]
+        static void DrawGizmosUnselected(VRInteractionZoneVisualizer visualizer, GizmoType gizmoType)
+        {
+            if (visualizer.GetCameraRig() == null) return;
+            
+            DrawVisualization(visualizer, true);
+        }
+        
+        private static void DrawVisualization(VRInteractionZoneVisualizer visualizer, bool dimmed)
+        {
             // Draw player representation first (so it's behind other elements)
             if (visualizer.ShowPlayerRepresentation)
             {
-                DrawPlayerRepresentation(visualizer);
+                DrawPlayerRepresentation(visualizer, dimmed);
             }
             
             if (visualizer.VrMode == VRMode.Seated)
             {
-                DrawSeatedMode(visualizer);
+                DrawSeatedMode(visualizer, dimmed);
             }
             else
             {
-                DrawRoomScaleMode(visualizer);
+                DrawRoomScaleMode(visualizer, dimmed);
             }
+        }
+        
+        private static Color DimColor(Color color, bool dimmed)
+        {
+            if (!dimmed) return color;
+            return new Color(color.r, color.g, color.b, color.a * unselectedOpacityMultiplier);
         }
         
         #region Player Representation
         
-        private void DrawPlayerRepresentation(VRInteractionZoneVisualizer visualizer)
+        private static void DrawPlayerRepresentation(VRInteractionZoneVisualizer visualizer, bool dimmed)
         {
             Vector3 rigPosition = visualizer.transform.position;
-            float playerHeight = visualizer.GetPlayerHeight();
+            float playerHeight = visualizer.GetPlayerHeight()*.8f;
             float playerRadius = visualizer.PlayerRadius;
             Vector3 forward = visualizer.transform.forward;
             
             // Draw cylinder body
-            Handles.color = playerBodyColor;
+            Handles.color = DimColor(playerBodyColor, dimmed);
             DrawCylinder(rigPosition, playerRadius, playerHeight);
             
             // Draw cylinder outline
-            Handles.color = playerBodyOutlineColor;
+            Handles.color = DimColor(playerBodyOutlineColor, dimmed);
             DrawCylinderWireframe(rigPosition, playerRadius, playerHeight);
             
             // Draw direction arrow on the ground
-            DrawDirectionArrow(rigPosition, forward);
+            DrawDirectionArrow(rigPosition, forward, dimmed);
         }
         
-        private void DrawCylinder(Vector3 position, float radius, float height)
+        private static void DrawCylinder(Vector3 position, float radius, float height)
         {
             // Draw filled discs at top and bottom
             Handles.DrawSolidDisc(position, Vector3.up, radius);
@@ -402,11 +426,11 @@ namespace Shababeek.Interactions.Core.Editor
                     topCircle[next],
                     topCircle[i]
                 };
-                Handles.DrawSolidRectangleWithOutline(quad, playerBodyColor, Color.clear);
+                Handles.DrawSolidRectangleWithOutline(quad, Handles.color, Color.clear);
             }
         }
         
-        private void DrawCylinderWireframe(Vector3 position, float radius, float height)
+        private static void DrawCylinderWireframe(Vector3 position, float radius, float height)
         {
             // Draw circles at top and bottom
             Handles.DrawWireDisc(position, Vector3.up, radius);
@@ -421,9 +445,9 @@ namespace Shababeek.Interactions.Core.Editor
             }
         }
         
-        private void DrawDirectionArrow(Vector3 position, Vector3 forward)
+        private static void DrawDirectionArrow(Vector3 position, Vector3 forward, bool dimmed)
         {
-            Handles.color = directionArrowColor;
+            Handles.color = DimColor(directionArrowColor, dimmed);
             
             // Offset slightly above ground
             Vector3 arrowStart = position + Vector3.up * 0.01f;
@@ -449,7 +473,7 @@ namespace Shababeek.Interactions.Core.Editor
         
         #region Seated Mode Visualization
         
-        private void DrawSeatedMode(VRInteractionZoneVisualizer visualizer)
+        private static void DrawSeatedMode(VRInteractionZoneVisualizer visualizer, bool dimmed)
         {
             Vector3 headPosition = visualizer.GetHeadPosition();
             Vector3 forward = visualizer.transform.forward;
@@ -461,13 +485,13 @@ namespace Shababeek.Interactions.Core.Editor
             float optimalHeightMax = visualizer.GetHeightFromPercent(visualizer.OptimalHeightMaxPercent);
             
             // Draw head reference indicator
-            Handles.color = headReferenceColor;
+            Handles.color = DimColor(headReferenceColor, dimmed);
             Handles.SphereHandleCap(0, headPosition, Quaternion.identity, headIndicatorSize, EventType.Repaint);
             
             // Dead Zone
             if (visualizer.ShowDeadZone)
             {
-                Handles.color = deadZoneColor;
+                Handles.color = DimColor(deadZoneColor, dimmed);
                 Handles.DrawWireDisc(headPosition, Vector3.up, visualizer.DeadZoneRadius);
                 Handles.DrawWireDisc(headPosition, Vector3.forward, visualizer.DeadZoneRadius);
                 Handles.DrawWireDisc(headPosition, Vector3.right, visualizer.DeadZoneRadius);
@@ -476,7 +500,7 @@ namespace Shababeek.Interactions.Core.Editor
             // Maximum Reach Zone
             if (visualizer.ShowMaximumZone)
             {
-                Handles.color = maximumZoneColor;
+                Handles.color = DimColor(maximumZoneColor, dimmed);
                 DrawSeatedInteractionZone(visualizer, headPosition, forward, right,
                     visualizer.SeatedExtendedMax, visualizer.SeatedMaximumMax,
                     heightMin, heightMax);
@@ -485,7 +509,7 @@ namespace Shababeek.Interactions.Core.Editor
             // Extended Reach Zone
             if (visualizer.ShowExtendedZone)
             {
-                Handles.color = extendedZoneColor;
+                Handles.color = DimColor(extendedZoneColor, dimmed);
                 DrawSeatedInteractionZone(visualizer, headPosition, forward, right,
                     visualizer.SeatedOptimalMax, visualizer.SeatedExtendedMax,
                     heightMin, heightMax);
@@ -494,23 +518,26 @@ namespace Shababeek.Interactions.Core.Editor
             // Optimal Grab Zone
             if (visualizer.ShowOptimalZone)
             {
-                Handles.color = optimalZoneColor;
+                Handles.color = DimColor(optimalZoneColor, dimmed);
                 DrawSeatedInteractionZone(visualizer, headPosition, forward, right,
                     visualizer.SeatedOptimalMin, visualizer.SeatedOptimalMax,
                     optimalHeightMin, optimalHeightMax);
             }
             
             // Draw reference lines
-            Handles.color = referenceLinesColor;
+            Handles.color = DimColor(referenceLinesColor, dimmed);
             Handles.DrawLine(headPosition, headPosition + forward * visualizer.SeatedMaximumMax);
             Handles.DrawLine(headPosition + Vector3.up * heightMin,
                 headPosition + Vector3.up * heightMax);
             
-            // Draw labels
-            DrawSeatedLabels(visualizer, headPosition, forward);
+            // Only draw labels when selected
+            if (!dimmed)
+            {
+                DrawSeatedLabels(visualizer, headPosition, forward);
+            }
         }
         
-        private void DrawSeatedInteractionZone(VRInteractionZoneVisualizer visualizer, Vector3 origin,
+        private static void DrawSeatedInteractionZone(VRInteractionZoneVisualizer visualizer, Vector3 origin,
             Vector3 forward, Vector3 right, float minDist, float maxDist, float minHeight, float maxHeight)
         {
             float angleStep = (visualizer.SeatedArcAngle * 2f) / visualizer.ArcSegments;
@@ -535,7 +562,7 @@ namespace Shababeek.Interactions.Core.Editor
             }
         }
         
-        private void DrawSeatedLabels(VRInteractionZoneVisualizer visualizer, Vector3 headPosition, Vector3 forward)
+        private static void DrawSeatedLabels(VRInteractionZoneVisualizer visualizer, Vector3 headPosition, Vector3 forward)
         {
             GUIStyle style = new GUIStyle();
             style.normal.textColor = Color.white;
@@ -570,7 +597,7 @@ namespace Shababeek.Interactions.Core.Editor
         
         #region Room-Scale Mode Visualization
         
-        private void DrawRoomScaleMode(VRInteractionZoneVisualizer visualizer)
+        private static void DrawRoomScaleMode(VRInteractionZoneVisualizer visualizer, bool dimmed)
         {
             Vector3 headPosition = visualizer.GetHeadPosition();
             Vector3 rigPosition = visualizer.transform.position;
@@ -584,23 +611,20 @@ namespace Shababeek.Interactions.Core.Editor
             float halfDepth = visualizer.PlayAreaDepth / 2f;
             
             // Draw head reference indicator
-            Handles.color = headReferenceColor;
+            Handles.color = DimColor(headReferenceColor, dimmed);
             Handles.SphereHandleCap(0, headPosition, Quaternion.identity, headIndicatorSize, EventType.Repaint);
             
             // Dead Zone
             if (visualizer.ShowDeadZone)
             {
-                Handles.color = deadZoneColor;
+                Handles.color = DimColor(deadZoneColor, dimmed);
                 Handles.DrawWireDisc(headPosition, Vector3.up, visualizer.DeadZoneRadius);
             }
             
             // Draw play area bounds (from floor)
             if (visualizer.ShowPlayAreaBounds)
             {
-                float playAreaHeightMin = rigPosition.y + heightMin;
-                float playAreaHeightMax = rigPosition.y + heightMax;
-                
-                Handles.color = playAreaOutlineColor;
+                Handles.color = DimColor(playAreaOutlineColor, dimmed);
                 Vector3[] playAreaCorners = new Vector3[]
                 {
                     rigPosition + new Vector3(-halfWidth, heightMin, -halfDepth),
@@ -609,7 +633,7 @@ namespace Shababeek.Interactions.Core.Editor
                     rigPosition + new Vector3(-halfWidth, heightMin, halfDepth)
                 };
                 
-                Handles.DrawSolidRectangleWithOutline(playAreaCorners, playAreaColor, playAreaOutlineColor);
+                Handles.DrawSolidRectangleWithOutline(playAreaCorners, DimColor(playAreaColor, dimmed), DimColor(playAreaOutlineColor, dimmed));
                 
                 // Draw vertical lines at corners
                 for (int i = 0; i < 4; i++)
@@ -627,13 +651,13 @@ namespace Shababeek.Interactions.Core.Editor
                     rigPosition + new Vector3(halfWidth, heightMax, halfDepth),
                     rigPosition + new Vector3(-halfWidth, heightMax, halfDepth)
                 };
-                Handles.DrawSolidRectangleWithOutline(topCorners, new Color(0f, 1f, 1f, 0.05f), playAreaOutlineColor);
+                Handles.DrawSolidRectangleWithOutline(topCorners, DimColor(new Color(0f, 1f, 1f, 0.05f), dimmed), DimColor(playAreaOutlineColor, dimmed));
             }
             
             // Draw reach zones from play area edges (relative to head position, not rig position)
             if (visualizer.ShowMaximumZone)
             {
-                Handles.color = maximumZoneColor;
+                Handles.color = DimColor(maximumZoneColor, dimmed);
                 DrawRoomScaleReachZone(visualizer, rigPosition, headPosition, halfWidth, halfDepth,
                     visualizer.RoomScaleExtendedMax, visualizer.RoomScaleMaximumMax,
                     heightMin, heightMax);
@@ -641,7 +665,7 @@ namespace Shababeek.Interactions.Core.Editor
             
             if (visualizer.ShowExtendedZone)
             {
-                Handles.color = extendedZoneColor;
+                Handles.color = DimColor(extendedZoneColor, dimmed);
                 DrawRoomScaleReachZone(visualizer, rigPosition, headPosition, halfWidth, halfDepth,
                     visualizer.RoomScaleAtEdgeMax, visualizer.RoomScaleExtendedMax,
                     heightMin, heightMax);
@@ -649,17 +673,20 @@ namespace Shababeek.Interactions.Core.Editor
             
             if (visualizer.ShowOptimalZone)
             {
-                Handles.color = optimalZoneColor;
+                Handles.color = DimColor(optimalZoneColor, dimmed);
                 DrawRoomScaleReachZone(visualizer, rigPosition, headPosition, halfWidth, halfDepth,
                     0f, visualizer.RoomScaleAtEdgeMax,
                     optimalHeightMin, optimalHeightMax);
             }
             
-            // Draw labels
-            DrawRoomScaleLabels(visualizer, rigPosition, heightMin);
+            // Only draw labels when selected
+            if (!dimmed)
+            {
+                DrawRoomScaleLabels(visualizer, rigPosition, heightMin);
+            }
         }
         
-        private void DrawRoomScaleReachZone(VRInteractionZoneVisualizer visualizer, Vector3 rigPosition, Vector3 headPosition,
+        private static void DrawRoomScaleReachZone(VRInteractionZoneVisualizer visualizer, Vector3 rigPosition, Vector3 headPosition,
             float halfWidth, float halfDepth, float innerOffset, float outerOffset,
             float minHeightPercent, float maxHeightPercent)
         {
@@ -721,7 +748,7 @@ namespace Shababeek.Interactions.Core.Editor
             }
         }
         
-        private void DrawRoomScaleLabels(VRInteractionZoneVisualizer visualizer, Vector3 rigPosition, float heightMin)
+        private static void DrawRoomScaleLabels(VRInteractionZoneVisualizer visualizer, Vector3 rigPosition, float heightMin)
         {
             GUIStyle style = new GUIStyle();
             style.normal.textColor = Color.white;
@@ -741,7 +768,7 @@ namespace Shababeek.Interactions.Core.Editor
         
         #region Helper Methods
         
-        private void DrawArc(VRInteractionZoneVisualizer visualizer, Vector3 center,
+        private static void DrawArc(VRInteractionZoneVisualizer visualizer, Vector3 center,
             Vector3 forward, float minRadius, float maxRadius, float angleStep, float arcAngle)
         {
             // Inner and outer arcs
