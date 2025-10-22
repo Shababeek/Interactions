@@ -2,268 +2,292 @@ using UnityEngine;
 
 namespace Shababeek.Interactions.Core
 {
-    /// <summary>
-    /// Follows a target transform using physics, with smoothing, deadzone, and anti-jitter features for VR hand tracking.
-    /// </summary>
-    /// <remarks>
-    /// This component provides smooth, physics-based following behavior for VR hands. It uses a combination of
-    /// smoothing, deadzones, and velocity clamping to create natural hand movement while reducing jitter and
-    /// maintaining performance. The component automatically handles teleportation when the target moves too far
-    /// and provides configurable smoothing for both position and rotation.
-    /// </remarks>
-    /// <example>
-    /// <code>
-    /// // Add this component to a hand GameObject with a Rigidbody
-    /// var follower = hand.AddComponent<PhysicsHandFollower>();
-    /// 
-    /// // Set the target transform (usually the hand pivot in the camera rig)
-    /// follower.Target = handPivot;
-    /// </code>
-    /// </example>
     [AddComponentMenu("Shababeek/Interactions/Physics Hand Follower")]
+    [RequireComponent(typeof(Rigidbody))]
     public class PhysicsHandFollower : MonoBehaviour
     {
         [Header("Target Settings")]
-        [Tooltip("The transform the hand should follow. This is typically the hand pivot in the camera rig.")]
+        [Tooltip("The transform the hand should follow (typically the hand pivot in the camera rig).")]
         [SerializeField] private Transform target;
         
-        [Header("Velocity Settings")]
-        [Tooltip("Maximum allowed velocity for the hand in units per second. Higher values allow faster movement but may cause instability.")]
-        [SerializeField] private float maxVelocity = 30f;
+        [Header("Movement Settings")]
+        [Tooltip("Strength multiplier for position following. Higher values = faster response.")]
+        [SerializeField] private float positionStrength = 1000f;
         
-        [Tooltip("Maximum allowed distance before teleporting the hand. If the target moves beyond this distance, the hand will instantly teleport.")]
-        [SerializeField] private float maxDistance = 0.3f;
+        [Tooltip("Strength multiplier for rotation following. Higher values = faster response.")]
+        [SerializeField] private float rotationStrength = 100f;
         
-        [Tooltip("Minimum distance before the hand starts following. Small movements below this threshold are ignored to reduce jitter.")]
-        [SerializeField] private float minDistance = 0.02f;
+        [Tooltip("Maximum velocity magnitude in units per second. Prevents excessive speeds.")]
+        [SerializeField] private float maxVelocity = 10f;
         
-        [Header("Smoothing Settings")]
-        [Tooltip("Smoothing factor for position interpolation. Lower values create smoother but slower movement, higher values create faster but potentially jittery movement.")]
-        [SerializeField] private float positionSmoothing = 0.15f;
+        [Tooltip("Maximum angular velocity magnitude in radians per second. Prevents excessive rotation speeds.")]
+        [SerializeField] private float maxAngularVelocity = 20f;
         
-        [Tooltip("Smoothing factor for rotation interpolation. Lower values create smoother but slower rotation, higher values create faster but potentially jittery rotation.")]
-        [SerializeField] private float rotationSmoothing = 0.15f;
+        [Header("Deadzone Settings")]
+        [Tooltip("Distance threshold below which the hand won't move (reduces micro-jitter).")]
+        [SerializeField] private float positionDeadzone = 0.001f;
         
-        [Tooltip("Damping factor for linear velocity. Higher values (closer to 1) create more responsive movement, lower values create more gradual deceleration.")]
-        [SerializeField] private float velocityDamping = 0.9f;
+        [Tooltip("Angle threshold in degrees below which the hand won't rotate (reduces micro-jitter).")]
+        [SerializeField] private float rotationDeadzone = 0.5f;
         
-        [Tooltip("Damping factor for angular velocity. Higher values (closer to 1) create more responsive rotation, lower values create more gradual deceleration.")]
-        [SerializeField] private float angularVelocityDamping = 0.9f;
+        [Header("Teleport Settings")]
+        [Tooltip("Distance threshold above which the hand will teleport instead of follow.")]
+        [SerializeField] private float teleportDistance = 1f;
         
-        [Header("Advanced Settings")]
-        [Tooltip("Enable deadzone to ignore small movements and reduce jitter. When enabled, very small position and rotation changes are ignored.")]
-        [SerializeField] private bool useDeadzone = true;
+        [Tooltip("If enabled, the hand will teleport when it gets too far from the target.")]
+        [SerializeField] private bool enableTeleport = true;
         
-        [Tooltip("Deadzone threshold for position changes in world units. Movements smaller than this value are ignored.")]
-        [SerializeField] private float positionDeadzone = 0.002f;
+        [Header("Collision Settings")]
+        [Tooltip("If enabled, reduces velocity when blocked by objects to prevent twitching.")]
+        [SerializeField] private bool preventCollisionTwitching = true;
         
-        [Tooltip("Deadzone threshold for rotation changes in degrees. Rotations smaller than this value are ignored.")]
-        [SerializeField] private float rotationDeadzone = 0.2f;
+        [Tooltip("Velocity threshold to detect if the hand is stuck. Lower values = more sensitive.")]
+        [SerializeField] private float stuckVelocityThreshold = 0.1f;
         
-        #region Private Fields
+        [Tooltip("Distance threshold to detect if hand is making progress towards target.")]
+        [SerializeField] private float stuckDistanceThreshold = 0.01f;
+        
+        [Tooltip("If enabled, freezes rotation constraints to prevent unwanted spinning.")]
+        [SerializeField] private bool constrainRotation = false;
+        
+        [Tooltip("Damping factor applied to existing angular velocity (0-1). Lower values = more damping.")]
+        [SerializeField] private float angularVelocityDamping = 0.7f;
 
-        private float _maxVelocitySqrt;
-        private Rigidbody _body;
-        
-        // Smoothing variables
-        private Vector3 _smoothedPosition;
-        private Quaternion _smoothedRotation;
-
-        #endregion
-
-        #region Public Properties
+        private Rigidbody _rigidbody;
+        private bool _isInitialized;
+        private Vector3 _lastPosition;
+        private float _lastDistance;
+        private int _stuckFrameCount;
+        private bool _lastConstrainRotation;
+        private bool _isColliding;
 
         /// <summary>
         /// Gets or sets the target transform that the hand should follow.
         /// </summary>
-        /// <remarks>
-        /// This transform is typically the hand pivot in the camera rig. The hand will
-        /// smoothly follow this target using physics-based movement.
-        /// </remarks>
         public Transform Target
         {
             get => target;
-            set => target = value;
+            set 
+            { 
+                target = value;
+                if (target != null && _isInitialized)
+                {
+                    SyncParentWithTarget();
+                }
+            }
         }
 
-        #endregion
+        private void Awake()
+        {
+            _rigidbody = GetComponent<Rigidbody>();
+            ConfigureRigidbody();
+        }
 
-        #region Unity Lifecycle
-
-        /// <summary>
-        /// Initializes the physics hand follower component.
-        /// </summary>
-        /// <remarks>
-        /// This method validates the target, calculates the squared maximum velocity for performance,
-        /// gets the Rigidbody component, and initializes the smoothing variables. It also performs
-        /// an initial teleport to ensure the hand starts at the correct position.
-        /// </remarks>
         private void Start()
         {
-            if (!target)
+            if (target == null)
             {
-                Debug.LogError("PhysicsHandFollower: Target is not set. Please assign a target transform in the inspector.");
+                Debug.LogError($"[PhysicsHandFollower] Target is not assigned on {gameObject.name}", this);
+                enabled = false;
                 return;
             }
-            
-            _maxVelocitySqrt = maxVelocity * maxVelocity;
-            _body = GetComponent<Rigidbody>();
-            
-            if (_body == null)
-            {
-                Debug.LogError("PhysicsHandFollower: No Rigidbody component found. This component requires a Rigidbody to function.");
-                return;
-            }
-            
-            _smoothedPosition = target.position;
-            _smoothedRotation = target.rotation;
-            
+
+            SyncParentWithTarget();
             Teleport();
+            _lastPosition = transform.position;
+            _lastDistance = Vector3.Distance(transform.position, target.position);
+            _isInitialized = true;
         }
 
-        /// <summary>
-        /// Updates the hand physics every fixed physics frame.
-        /// </summary>
-        /// <remarks>
-        /// This method is called every fixed physics frame to update the hand's position and rotation.
-        /// It updates smoothing, sets linear velocity, and sets angular velocity based on the target.
-        /// </remarks>
         private void FixedUpdate()
         {
-            if (!target) return;
+            if (!_isInitialized || target == null) return;
+
+            // Update rigidbody constraints if setting changed
+            if (_lastConstrainRotation != constrainRotation)
+            {
+                ConfigureRigidbody();
+                _lastConstrainRotation = constrainRotation;
+            }
+
+            float distance = Vector3.Distance(transform.position, target.position);
             
-            UpdateSmoothing();
-            SetVelocity();
-            SetAngularVelocity();
-        }
-
-        #endregion
-
-        #region Smoothing
-
-        /// <summary>
-        /// Updates the smoothed position and rotation values.
-        /// </summary>
-        /// <remarks>
-        /// This method interpolates between the current smoothed values and the target values
-        /// using the configured smoothing factors. This creates the smooth following behavior.
-        /// </remarks>
-        private void UpdateSmoothing()
-        {
-            _smoothedPosition = Vector3.Lerp(_smoothedPosition, target.position, positionSmoothing);
-            _smoothedRotation = Quaternion.Slerp(_smoothedRotation, target.rotation, rotationSmoothing);
-        }
-
-        #endregion
-
-        #region Velocity Control
-
-        /// <summary>
-        /// Sets the linear velocity of the hand based on the smoothed position.
-        /// </summary>
-        /// <remarks>
-        /// This method calculates the appropriate velocity to move the hand toward the smoothed position.
-        /// It includes distance checking, deadzone application, and velocity clamping for smooth movement.
-        /// </remarks>
-        private void SetVelocity()
-        {
-            Vector3 velocityVector = _smoothedPosition - transform.position;
-            
-            // Check distance limits
-            var distance = velocityVector.magnitude;
-            if (distance > maxDistance || distance < minDistance)
+            if (enableTeleport && distance > teleportDistance)
             {
                 Teleport();
+                _lastPosition = transform.position;
+                _lastDistance = distance;
+                _stuckFrameCount = 0;
                 return;
             }
+
+            bool isStuck = CheckIfStuck(distance);
             
-            // Apply deadzone
-            if (useDeadzone && distance < positionDeadzone)
+            if (isStuck && preventCollisionTwitching)
             {
-                _body.linearVelocity *= velocityDamping;
-                return;
+                // Zero both linear and angular velocity to prevent twitching
+                _rigidbody.linearVelocity = Vector3.zero;
+                _rigidbody.angularVelocity = Vector3.zero;
+                
+                // Also reduce any residual velocities
+                _rigidbody.Sleep();
+                _rigidbody.WakeUp();
+            }
+            else
+            {
+                UpdatePosition(distance);
+                
+                // Handle rotation based on constraint setting
+                if (constrainRotation)
+                {
+                    // Manually set rotation to match target when rotation is constrained
+                    transform.rotation = target.rotation;
+                }
+                else
+                {
+                    // Only update rotation if not colliding to prevent fighting with physics engine
+                    if (!_isColliding || !preventCollisionTwitching)
+                    {
+                        UpdateRotation();
+                    }
+                }
             }
             
-            // Calculate smooth velocity
-            var speed = Mathf.Lerp(0f, maxVelocity, distance / maxDistance);
-            var targetVelocity = velocityVector.normalized * speed;
-            
-            // Apply damping and smoothing
-            _body.linearVelocity = Vector3.Lerp(_body.linearVelocity, targetVelocity, 1f - velocityDamping);
-            _body.linearVelocity = Vector3.ClampMagnitude(_body.linearVelocity, maxVelocity);
+            _lastPosition = transform.position;
+            _lastDistance = distance;
         }
 
-        /// <summary>
-        /// Sets the angular velocity of the hand based on the smoothed rotation.
-        /// </summary>
-        /// <remarks>
-        /// This method calculates the appropriate angular velocity to rotate the hand toward the smoothed rotation.
-        /// It includes deadzone application and angular velocity clamping for smooth rotation.
-        /// </remarks>
-        private void SetAngularVelocity()
+        private void ConfigureRigidbody()
         {
-            Quaternion relativeRotation = FindRelativeRotation(_smoothedRotation, transform.rotation);
-            relativeRotation.ToAngleAxis(out float angle, out Vector3 axis);
+            _rigidbody.useGravity = false;
+            _rigidbody.collisionDetectionMode = CollisionDetectionMode.Continuous;
+            _rigidbody.interpolation = RigidbodyInterpolation.Interpolate;
             
-            // Apply deadzone
-            if (useDeadzone && angle < rotationDeadzone)
+            // Apply rotation constraints if enabled to reduce unwanted spinning
+            if (constrainRotation)
             {
-                _body.angularVelocity *= angularVelocityDamping;
+                _rigidbody.constraints = RigidbodyConstraints.FreezeRotation;
+            }
+            else
+            {
+                _rigidbody.constraints = RigidbodyConstraints.None;
+            }
+        }
+
+        private void UpdatePosition(float distance)
+        {
+            if (distance < positionDeadzone)
+            {
+                _rigidbody.linearVelocity = Vector3.zero;
                 return;
             }
+
+            Vector3 direction = (target.position - transform.position).normalized;
+            float velocityMagnitude = Mathf.Min(distance * positionStrength * Time.fixedDeltaTime, maxVelocity);
             
-            // Calculate smooth angular velocity
-            var angularSpeed = Mathf.Lerp(0f, maxVelocity * 0.5f, angle / 45f);
-            Vector3 targetAngularVelocity = axis * (Mathf.Deg2Rad * angularSpeed);
-            
-            // Apply damping and smoothing
-            _body.angularVelocity = Vector3.Lerp(_body.angularVelocity, targetAngularVelocity, 1f - angularVelocityDamping);
+            _rigidbody.linearVelocity = direction * velocityMagnitude;
         }
 
-        #endregion
-
-        #region Utility Methods
-
-        /// <summary>
-        /// Finds the relative rotation between two quaternions.
-        /// </summary>
-        /// <param name="a">The target rotation</param>
-        /// <param name="b">The current rotation</param>
-        /// <returns>The relative rotation from b to a</returns>
-        /// <remarks>
-        /// This method handles the shortest rotation path between two quaternions by ensuring
-        /// the dot product is positive, which prevents the hand from taking the long way around
-        /// when rotating.
-        /// </remarks>
-        private Quaternion FindRelativeRotation(Quaternion a, Quaternion b)
+        private void UpdateRotation()
         {
-            if (Quaternion.Dot(a, b) < 0)
+            Quaternion deltaRotation = target.rotation * Quaternion.Inverse(transform.rotation);
+            deltaRotation.ToAngleAxis(out float angle, out Vector3 axis);
+            
+            if (angle > 180f)
+                angle -= 360f;
+
+            if (Mathf.Abs(angle) < rotationDeadzone)
             {
-                b = new Quaternion(-b.x, -b.y, -b.z, -b.w);
+                _rigidbody.angularVelocity = Vector3.zero;
+                return;
             }
-            return a * Quaternion.Inverse(b);
+
+            // Calculate desired angular velocity
+            Vector3 desiredAngularVelocity = axis * (angle * Mathf.Deg2Rad * rotationStrength * Time.fixedDeltaTime);
+            
+            // Dampen existing angular velocity and add new velocity
+            Vector3 dampedCurrentVelocity = _rigidbody.angularVelocity * angularVelocityDamping;
+            Vector3 newAngularVelocity = dampedCurrentVelocity + desiredAngularVelocity;
+            
+            // Clamp to max magnitude
+            _rigidbody.angularVelocity = Vector3.ClampMagnitude(newAngularVelocity, maxAngularVelocity);
         }
 
-        /// <summary>
-        /// Instantly teleports the hand to the target position and rotation.
-        /// </summary>
-        /// <remarks>
-        /// This method is called when the target moves too far away or when the component starts.
-        /// It resets all velocities and positions to ensure smooth following can resume.
-        /// </remarks>
+        private bool CheckIfStuck(float currentDistance)
+        {
+            if (currentDistance < positionDeadzone)
+            {
+                _stuckFrameCount = 0;
+                return false;
+            }
+
+            float actualMovement = Vector3.Distance(transform.position, _lastPosition);
+            float distanceImprovement = _lastDistance - currentDistance;
+            
+            bool isMovingSlow = actualMovement < stuckVelocityThreshold * Time.fixedDeltaTime;
+            bool notMakingProgress = distanceImprovement < stuckDistanceThreshold * Time.fixedDeltaTime;
+            
+            if (isMovingSlow && notMakingProgress)
+            {
+                _stuckFrameCount++;
+                return _stuckFrameCount > 2;
+            }
+            
+            _stuckFrameCount = 0;
+            return false;
+        }
+
         private void Teleport()
         {
-            if (!target || _body == null) return;
+            if (target == null) return;
+
+            _rigidbody.position = target.position;
+            _rigidbody.rotation = target.rotation;
+            _rigidbody.linearVelocity = Vector3.zero;
+            _rigidbody.angularVelocity = Vector3.zero;
             
-            _body.position = target.position;
-            _body.rotation = target.rotation;
-            _body.linearVelocity = Vector3.zero;
-            _body.angularVelocity = Vector3.zero;
-            
-            _smoothedPosition = target.position;
-            _smoothedRotation = target.rotation;
+            _stuckFrameCount = 0;
         }
 
-        #endregion
+        private void OnCollisionEnter(Collision collision)
+        {
+            _isColliding = true;
+        }
+        
+        private void OnCollisionExit(Collision collision)
+        {
+            _isColliding = false;
+        }
+
+        /// <summary>
+        /// Synchronizes the parent of this GameObject with the target's parent.
+        /// </summary>
+        private void SyncParentWithTarget()
+        {
+            if (target == null) return;
+            
+            Transform targetParent = target.parent;
+            if (transform.parent != targetParent)
+            {
+                transform.SetParent(targetParent, true);
+            }
+        }
+
+        private void OnDrawGizmosSelected()
+        {
+            if (target == null) return;
+
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawLine(transform.position, target.position);
+            
+            Gizmos.color = Color.green;
+            Gizmos.DrawWireSphere(target.position, 0.02f);
+            
+            if (enableTeleport)
+            {
+                Gizmos.color = new Color(1f, 0f, 0f, 0.2f);
+                Gizmos.DrawWireSphere(target.position, teleportDistance);
+            }
+        }
     }
-} 
+}
