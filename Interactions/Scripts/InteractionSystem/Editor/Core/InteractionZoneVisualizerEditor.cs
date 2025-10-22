@@ -1,89 +1,528 @@
 using UnityEngine;
 using UnityEditor;
 
-namespace Shababeek.Interactions.Core.Editors
+namespace Shababeek.Interactions.Core.Editor
 {
     [CustomEditor(typeof(VRInteractionZoneVisualizer))]
-    public class VRInteractionZoneVisualizerEditor : Editor
+    public class VRInteractionZoneVisualizerEditor : UnityEditor.Editor
     {
+        #region Constants
+        
+        // Zone colors
+        private static readonly Color optimalZoneColor = new Color(0f, 1f, 0f, 0.6f);
+        private static readonly Color extendedZoneColor = new Color(1f, 1f, 0f, 0.5f);
+        private static readonly Color maximumZoneColor = new Color(1f, 0.5f, 0f, 0.4f);
+        private static readonly Color deadZoneColor = new Color(1f, 0f, 0f, 0.3f);
+        private static readonly Color playAreaColor = new Color(0f, 1f, 1f, 0.1f);
+        private static readonly Color playAreaOutlineColor = Color.cyan;
+        private static readonly Color headReferenceColor = Color.cyan;
+        private static readonly Color referenceLinesColor = Color.white;
+        private static readonly Color playerBodyColor = new Color(0f, 0.5f, 1f, 0.3f);
+        private static readonly Color playerBodyOutlineColor = new Color(0f, 0.5f, 1f, 0.8f);
+        private static readonly Color directionArrowColor = new Color(1f, 0.8f, 0f, 0.9f);
+        
+        // Legend colors (more opaque for inspector)
+        private static readonly Color legendOptimalColor = new Color(0f, 1f, 0f, 1f);
+        private static readonly Color legendExtendedColor = new Color(1f, 1f, 0f, 1f);
+        private static readonly Color legendMaximumColor = new Color(1f, 0.5f, 0f, 1f);
+        private static readonly Color legendDeadZoneColor = new Color(1f, 0f, 0f, 1f);
+        private static readonly Color legendPlayAreaColor = new Color(0f, 1f, 1f, 1f);
+        
+        // GUI constants
+        private const float colorBoxSize = 16f;
+        private const float legendItemSpacing = 4f;
+        private const float headIndicatorSize = 0.05f;
+        private const float labelOffsetAboveHead = 0.3f;
+        private const float playAreaLabelOffsetAboveFloor = 0.1f;
+        
+        // Player visualization constants
+        private const int cylinderSegments = 20;
+        private const float directionArrowLength = 0.5f;
+        private const float directionArrowHeadSize = 0.15f;
+        private const float directionArrowHeadAngle = 25f;
+        
+        #endregion
+        
+        private SerializedProperty vrModeProp;
+        private SerializedProperty playerRadiusProp;
+        private SerializedProperty playAreaWidthProp;
+        private SerializedProperty playAreaDepthProp;
+        private SerializedProperty seatedOptimalMinProp;
+        private SerializedProperty seatedOptimalMaxProp;
+        private SerializedProperty seatedExtendedMaxProp;
+        private SerializedProperty seatedMaximumMaxProp;
+        private SerializedProperty roomScaleAtEdgeMaxProp;
+        private SerializedProperty roomScaleExtendedMaxProp;
+        private SerializedProperty roomScaleMaximumMaxProp;
+        private SerializedProperty heightMinPercentProp;
+        private SerializedProperty heightMaxPercentProp;
+        private SerializedProperty optimalHeightMinPercentProp;
+        private SerializedProperty optimalHeightMaxPercentProp;
+        private SerializedProperty showOptimalZoneProp;
+        private SerializedProperty showExtendedZoneProp;
+        private SerializedProperty showMaximumZoneProp;
+        private SerializedProperty showDeadZoneProp;
+        private SerializedProperty deadZoneRadiusProp;
+        private SerializedProperty showPlayAreaBoundsProp;
+        private SerializedProperty showPlayerRepresentationProp;
+        private SerializedProperty arcSegmentsProp;
+        private SerializedProperty seatedArcAngleProp;
+        
+        private void OnEnable()
+        {
+            vrModeProp = serializedObject.FindProperty("vrMode");
+            playerRadiusProp = serializedObject.FindProperty("playerRadius");
+            playAreaWidthProp = serializedObject.FindProperty("playAreaWidth");
+            playAreaDepthProp = serializedObject.FindProperty("playAreaDepth");
+            seatedOptimalMinProp = serializedObject.FindProperty("seatedOptimalMin");
+            seatedOptimalMaxProp = serializedObject.FindProperty("seatedOptimalMax");
+            seatedExtendedMaxProp = serializedObject.FindProperty("seatedExtendedMax");
+            seatedMaximumMaxProp = serializedObject.FindProperty("seatedMaximumMax");
+            roomScaleAtEdgeMaxProp = serializedObject.FindProperty("roomScaleAtEdgeMax");
+            roomScaleExtendedMaxProp = serializedObject.FindProperty("roomScaleExtendedMax");
+            roomScaleMaximumMaxProp = serializedObject.FindProperty("roomScaleMaximumMax");
+            heightMinPercentProp = serializedObject.FindProperty("heightMinPercent");
+            heightMaxPercentProp = serializedObject.FindProperty("heightMaxPercent");
+            optimalHeightMinPercentProp = serializedObject.FindProperty("optimalHeightMinPercent");
+            optimalHeightMaxPercentProp = serializedObject.FindProperty("optimalHeightMaxPercent");
+            showOptimalZoneProp = serializedObject.FindProperty("showOptimalZone");
+            showExtendedZoneProp = serializedObject.FindProperty("showExtendedZone");
+            showMaximumZoneProp = serializedObject.FindProperty("showMaximumZone");
+            showDeadZoneProp = serializedObject.FindProperty("showDeadZone");
+            deadZoneRadiusProp = serializedObject.FindProperty("deadZoneRadius");
+            showPlayAreaBoundsProp = serializedObject.FindProperty("showPlayAreaBounds");
+            showPlayerRepresentationProp = serializedObject.FindProperty("showPlayerRepresentation");
+            arcSegmentsProp = serializedObject.FindProperty("arcSegments");
+            seatedArcAngleProp = serializedObject.FindProperty("seatedArcAngle");
+        }
+        
+        public override void OnInspectorGUI()
+        {
+            serializedObject.Update();
+            
+            var visualizer = (VRInteractionZoneVisualizer)target;
+            var previousMode = (VRMode)vrModeProp.enumValueIndex;
+            
+            // VR Mode
+            EditorGUILayout.LabelField("VR Mode", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(vrModeProp);
+            
+            EditorGUILayout.Space();
+            
+            // Player Representation
+            EditorGUILayout.LabelField("Player Representation", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(playerRadiusProp);
+            
+            EditorGUILayout.Space();
+            
+            // Mode-specific fields
+            if ((VRMode)vrModeProp.enumValueIndex == VRMode.RoomScale)
+            {
+                DrawRoomScaleFields();
+            }
+            else
+            {
+                DrawSeatedFields();
+            }
+            
+            // Height Ranges (common to both modes)
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Height Ranges (% of player height)", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(heightMinPercentProp);
+            EditorGUILayout.PropertyField(heightMaxPercentProp);
+            
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Optimal Height Range (% of player height)", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(optimalHeightMinPercentProp);
+            EditorGUILayout.PropertyField(optimalHeightMaxPercentProp);
+            
+            // Visualization Settings
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Visualization Settings", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(showOptimalZoneProp);
+            EditorGUILayout.PropertyField(showExtendedZoneProp);
+            EditorGUILayout.PropertyField(showMaximumZoneProp);
+            EditorGUILayout.PropertyField(showDeadZoneProp);
+            EditorGUILayout.PropertyField(deadZoneRadiusProp);
+            
+            if ((VRMode)vrModeProp.enumValueIndex == VRMode.RoomScale)
+            {
+                EditorGUILayout.PropertyField(showPlayAreaBoundsProp);
+            }
+            
+            EditorGUILayout.PropertyField(showPlayerRepresentationProp);
+            
+            // Arc Settings
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Arc Settings", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(arcSegmentsProp);
+            
+            if ((VRMode)vrModeProp.enumValueIndex == VRMode.Seated)
+            {
+                EditorGUILayout.PropertyField(seatedArcAngleProp);
+            }
+            
+            serializedObject.ApplyModifiedProperties();
+            
+            // Add helpful info box
+            EditorGUILayout.Space();
+            string helpText = (VRMode)vrModeProp.enumValueIndex == VRMode.RoomScale
+                ? "Room-scale: Player can walk within the play area. Objects can be placed inside the bounds or at various reach distances from the edges."
+                : "Seated: Player is stationary. Objects should be placed within comfortable forward reach distance.";
+            
+            EditorGUILayout.HelpBox(helpText, MessageType.Info);
+            
+            // Show calculated heights
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Calculated Heights", EditorStyles.boldLabel);
+            float playerHeight = visualizer.GetPlayerHeight();
+            EditorGUILayout.LabelField($"Player Height: {playerHeight:F2}m");
+            EditorGUILayout.LabelField($"Player Radius: {visualizer.PlayerRadius:F2}m");
+            EditorGUILayout.LabelField($"Height Min: {visualizer.GetHeightFromPercent(visualizer.HeightMinPercent):F2}m ({visualizer.HeightMinPercent:F0}%)");
+            EditorGUILayout.LabelField($"Height Max: {visualizer.GetHeightFromPercent(visualizer.HeightMaxPercent):F2}m ({visualizer.HeightMaxPercent:F0}%)");
+            EditorGUILayout.LabelField($"Optimal Min: {visualizer.GetHeightFromPercent(visualizer.OptimalHeightMinPercent):F2}m ({visualizer.OptimalHeightMinPercent:F0}%)");
+            EditorGUILayout.LabelField($"Optimal Max: {visualizer.GetHeightFromPercent(visualizer.OptimalHeightMaxPercent):F2}m ({visualizer.OptimalHeightMaxPercent:F0}%)");
+            
+            // Draw legend
+            EditorGUILayout.Space();
+            DrawInspectorLegend(visualizer);
+            
+            // Add button to apply preset
+            EditorGUILayout.Space();
+            if (GUILayout.Button("Apply VR Mode Preset", GUILayout.Height(30)))
+            {
+                Undo.RecordObject(visualizer, "Apply VR Mode Preset");
+                visualizer.ApplyVRModePreset();
+                EditorUtility.SetDirty(visualizer);
+            }
+            
+            // Auto-apply preset when mode changes
+            var currentMode = (VRMode)vrModeProp.enumValueIndex;
+            if (previousMode != currentMode)
+            {
+                if (EditorUtility.DisplayDialog(
+                    "Apply VR Mode Preset?",
+                    $"Do you want to apply the default preset values for {currentMode} mode?",
+                    "Yes", "No"))
+                {
+                    Undo.RecordObject(visualizer, "Apply VR Mode Preset");
+                    visualizer.ApplyVRModePreset();
+                    EditorUtility.SetDirty(visualizer);
+                }
+            }
+        }
+        
+        private void DrawRoomScaleFields()
+        {
+            EditorGUILayout.LabelField("Room-Scale Play Area", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(playAreaWidthProp, new GUIContent("Play Area Width"));
+            EditorGUILayout.PropertyField(playAreaDepthProp, new GUIContent("Play Area Depth"));
+            
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Distance Zones - Room-Scale (from play area edge)", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(roomScaleAtEdgeMaxProp, new GUIContent("At Edge Max"));
+            EditorGUILayout.PropertyField(roomScaleExtendedMaxProp, new GUIContent("Extended Max"));
+            EditorGUILayout.PropertyField(roomScaleMaximumMaxProp, new GUIContent("Maximum Max"));
+        }
+        
+        private void DrawSeatedFields()
+        {
+            EditorGUILayout.LabelField("Distance Zones - Seated (forward from head)", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(seatedOptimalMinProp, new GUIContent("Optimal Min"));
+            EditorGUILayout.PropertyField(seatedOptimalMaxProp, new GUIContent("Optimal Max"));
+            EditorGUILayout.PropertyField(seatedExtendedMaxProp, new GUIContent("Extended Max"));
+            EditorGUILayout.PropertyField(seatedMaximumMaxProp, new GUIContent("Maximum Max"));
+        }
+        
+        private void DrawInspectorLegend(VRInteractionZoneVisualizer visualizer)
+        {
+            EditorGUILayout.LabelField("Interaction Zones Legend", EditorStyles.boldLabel);
+            
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            
+            if (visualizer.VrMode == VRMode.Seated)
+            {
+                DrawSeatedLegend(visualizer);
+            }
+            else
+            {
+                DrawRoomScaleLegend(visualizer);
+            }
+            
+            EditorGUILayout.EndVertical();
+        }
+        
+        private void DrawSeatedLegend(VRInteractionZoneVisualizer visualizer)
+        {
+            if (visualizer.ShowOptimalZone)
+            {
+                DrawLegendItem(legendOptimalColor, "Optimal Zone", 
+                    $"{visualizer.SeatedOptimalMin:F1}m - {visualizer.SeatedOptimalMax:F1}m");
+            }
+            
+            if (visualizer.ShowExtendedZone)
+            {
+                DrawLegendItem(legendExtendedColor, "Extended Reach", 
+                    $"{visualizer.SeatedOptimalMax:F1}m - {visualizer.SeatedExtendedMax:F1}m");
+            }
+            
+            if (visualizer.ShowMaximumZone)
+            {
+                DrawLegendItem(legendMaximumColor, "Maximum Reach", 
+                    $"{visualizer.SeatedExtendedMax:F1}m - {visualizer.SeatedMaximumMax:F1}m");
+            }
+            
+            if (visualizer.ShowDeadZone)
+            {
+                DrawLegendItem(legendDeadZoneColor, "Dead Zone", 
+                    $"< {visualizer.DeadZoneRadius:F2}m (too close)");
+            }
+        }
+        
+        private void DrawRoomScaleLegend(VRInteractionZoneVisualizer visualizer)
+        {
+            if (visualizer.ShowPlayAreaBounds)
+            {
+                DrawLegendItem(legendPlayAreaColor, "Play Area (Walkable)", 
+                    $"{visualizer.PlayAreaWidth:F1}m × {visualizer.PlayAreaDepth:F1}m");
+            }
+            
+            if (visualizer.ShowOptimalZone)
+            {
+                DrawLegendItem(legendOptimalColor, "At Edge", 
+                    $"0m - {visualizer.RoomScaleAtEdgeMax:F1}m from play area edge");
+            }
+            
+            if (visualizer.ShowExtendedZone)
+            {
+                DrawLegendItem(legendExtendedColor, "Extended Reach", 
+                    $"{visualizer.RoomScaleAtEdgeMax:F1}m - {visualizer.RoomScaleExtendedMax:F1}m from edge");
+            }
+            
+            if (visualizer.ShowMaximumZone)
+            {
+                DrawLegendItem(legendMaximumColor, "Maximum Reach", 
+                    $"{visualizer.RoomScaleExtendedMax:F1}m - {visualizer.RoomScaleMaximumMax:F1}m from edge");
+            }
+            
+            if (visualizer.ShowDeadZone)
+            {
+                DrawLegendItem(legendDeadZoneColor, "Dead Zone", 
+                    $"< {visualizer.DeadZoneRadius:F2}m around head");
+            }
+        }
+        
+        private void DrawLegendItem(Color color, string label, string description)
+        {
+            EditorGUILayout.BeginHorizontal();
+            
+            // Color box
+            Rect colorRect = GUILayoutUtility.GetRect(colorBoxSize, colorBoxSize, GUILayout.Width(colorBoxSize), GUILayout.Height(colorBoxSize));
+            EditorGUI.DrawRect(colorRect, color);
+            
+            // Label and description
+            EditorGUILayout.BeginVertical();
+            EditorGUILayout.LabelField(label, EditorStyles.boldLabel);
+            EditorGUILayout.LabelField(description, EditorStyles.miniLabel);
+            EditorGUILayout.EndVertical();
+            
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space(legendItemSpacing);
+        }
+        
         private void OnSceneGUI()
         {
             var visualizer = (VRInteractionZoneVisualizer)target;
             
             if (visualizer.GetCameraRig() == null) return;
             
-            // Get head position
+            // Draw player representation first (so it's behind other elements)
+            if (visualizer.ShowPlayerRepresentation)
+            {
+                DrawPlayerRepresentation(visualizer);
+            }
+            
+            if (visualizer.VrMode == VRMode.Seated)
+            {
+                DrawSeatedMode(visualizer);
+            }
+            else
+            {
+                DrawRoomScaleMode(visualizer);
+            }
+        }
+        
+        #region Player Representation
+        
+        private void DrawPlayerRepresentation(VRInteractionZoneVisualizer visualizer)
+        {
+            Vector3 rigPosition = visualizer.transform.position;
+            float playerHeight = visualizer.GetPlayerHeight();
+            float playerRadius = visualizer.PlayerRadius;
+            Vector3 forward = visualizer.transform.forward;
+            
+            // Draw cylinder body
+            Handles.color = playerBodyColor;
+            DrawCylinder(rigPosition, playerRadius, playerHeight);
+            
+            // Draw cylinder outline
+            Handles.color = playerBodyOutlineColor;
+            DrawCylinderWireframe(rigPosition, playerRadius, playerHeight);
+            
+            // Draw direction arrow on the ground
+            DrawDirectionArrow(rigPosition, forward);
+        }
+        
+        private void DrawCylinder(Vector3 position, float radius, float height)
+        {
+            // Draw filled discs at top and bottom
+            Handles.DrawSolidDisc(position, Vector3.up, radius);
+            Handles.DrawSolidDisc(position + Vector3.up * height, Vector3.up, radius);
+            
+            // Draw side faces (approximated with quads)
+            Vector3[] bottomCircle = new Vector3[cylinderSegments];
+            Vector3[] topCircle = new Vector3[cylinderSegments];
+            
+            for (int i = 0; i < cylinderSegments; i++)
+            {
+                float angle = (float)i / cylinderSegments * Mathf.PI * 2f;
+                Vector3 offset = new Vector3(Mathf.Cos(angle) * radius, 0, Mathf.Sin(angle) * radius);
+                bottomCircle[i] = position + offset;
+                topCircle[i] = position + offset + Vector3.up * height;
+            }
+            
+            // Draw quad strips
+            for (int i = 0; i < cylinderSegments; i++)
+            {
+                int next = (i + 1) % cylinderSegments;
+                Vector3[] quad = new Vector3[]
+                {
+                    bottomCircle[i],
+                    bottomCircle[next],
+                    topCircle[next],
+                    topCircle[i]
+                };
+                Handles.DrawSolidRectangleWithOutline(quad, playerBodyColor, Color.clear);
+            }
+        }
+        
+        private void DrawCylinderWireframe(Vector3 position, float radius, float height)
+        {
+            // Draw circles at top and bottom
+            Handles.DrawWireDisc(position, Vector3.up, radius);
+            Handles.DrawWireDisc(position + Vector3.up * height, Vector3.up, radius);
+            
+            // Draw vertical lines
+            for (int i = 0; i < 8; i++)
+            {
+                float angle = (float)i / 8f * Mathf.PI * 2f;
+                Vector3 offset = new Vector3(Mathf.Cos(angle) * radius, 0, Mathf.Sin(angle) * radius);
+                Handles.DrawLine(position + offset, position + offset + Vector3.up * height);
+            }
+        }
+        
+        private void DrawDirectionArrow(Vector3 position, Vector3 forward)
+        {
+            Handles.color = directionArrowColor;
+            
+            // Offset slightly above ground
+            Vector3 arrowStart = position + Vector3.up * 0.01f;
+            Vector3 arrowEnd = arrowStart + forward * directionArrowLength;
+            
+            // Draw main arrow line
+            Handles.DrawLine(arrowStart, arrowEnd, 3f);
+            
+            // Draw arrow head
+            Vector3 right = Vector3.Cross(Vector3.up, forward).normalized;
+            Vector3 arrowLeft = arrowEnd - forward * directionArrowHeadSize + right * directionArrowHeadSize * Mathf.Tan(directionArrowHeadAngle * Mathf.Deg2Rad);
+            Vector3 arrowRight = arrowEnd - forward * directionArrowHeadSize - right * directionArrowHeadSize * Mathf.Tan(directionArrowHeadAngle * Mathf.Deg2Rad);
+            
+            Handles.DrawLine(arrowEnd, arrowLeft, 3f);
+            Handles.DrawLine(arrowEnd, arrowRight, 3f);
+            
+            // Draw filled triangle for arrow head
+            Vector3[] arrowTriangle = new Vector3[] { arrowEnd, arrowLeft, arrowRight };
+            Handles.DrawAAConvexPolygon(arrowTriangle);
+        }
+        
+        #endregion
+        
+        #region Seated Mode Visualization
+        
+        private void DrawSeatedMode(VRInteractionZoneVisualizer visualizer)
+        {
             Vector3 headPosition = visualizer.GetHeadPosition();
             Vector3 forward = visualizer.transform.forward;
             Vector3 right = visualizer.transform.right;
             
-            Handles.color = Color.cyan;
-            Handles.SphereHandleCap(0, headPosition, Quaternion.identity, 0.05f, EventType.Repaint);
+            float heightMin = visualizer.GetHeightFromPercent(visualizer.HeightMinPercent);
+            float heightMax = visualizer.GetHeightFromPercent(visualizer.HeightMaxPercent);
+            float optimalHeightMin = visualizer.GetHeightFromPercent(visualizer.OptimalHeightMinPercent);
+            float optimalHeightMax = visualizer.GetHeightFromPercent(visualizer.OptimalHeightMaxPercent);
             
+            // Draw head reference indicator
+            Handles.color = headReferenceColor;
+            Handles.SphereHandleCap(0, headPosition, Quaternion.identity, headIndicatorSize, EventType.Repaint);
+            
+            // Dead Zone
             if (visualizer.ShowDeadZone)
             {
-                Handles.color = new Color(1f, 0f, 0f, 0.7f);
+                Handles.color = deadZoneColor;
                 Handles.DrawWireDisc(headPosition, Vector3.up, visualizer.DeadZoneRadius);
                 Handles.DrawWireDisc(headPosition, Vector3.forward, visualizer.DeadZoneRadius);
                 Handles.DrawWireDisc(headPosition, Vector3.right, visualizer.DeadZoneRadius);
             }
             
-            // Maximum Reach Zone (outermost)
+            // Maximum Reach Zone
             if (visualizer.ShowMaximumZone)
             {
-                Handles.color = new Color(1f, 0.5f, 0f, 0.4f); // Orange
-                DrawInteractionZone(visualizer, headPosition, forward, right, 
-                    visualizer.ExtendedMaxDistance, visualizer.MaximumMaxDistance, 
-                    visualizer.HeightMin, visualizer.HeightMax);
+                Handles.color = maximumZoneColor;
+                DrawSeatedInteractionZone(visualizer, headPosition, forward, right,
+                    visualizer.SeatedExtendedMax, visualizer.SeatedMaximumMax,
+                    heightMin, heightMax);
             }
             
             // Extended Reach Zone
             if (visualizer.ShowExtendedZone)
             {
-                Handles.color = new Color(1f, 1f, 0f, 0.5f); // Yellow
-                DrawInteractionZone(visualizer, headPosition, forward, right, 
-                    visualizer.OptimalMaxDistance, visualizer.ExtendedMaxDistance, 
-                    visualizer.HeightMin, visualizer.HeightMax);
+                Handles.color = extendedZoneColor;
+                DrawSeatedInteractionZone(visualizer, headPosition, forward, right,
+                    visualizer.SeatedOptimalMax, visualizer.SeatedExtendedMax,
+                    heightMin, heightMax);
             }
             
             // Optimal Grab Zone
             if (visualizer.ShowOptimalZone)
             {
-                Handles.color = new Color(0f, 1f, 0f, 0.6f); // Green
-                DrawInteractionZone(visualizer, headPosition, forward, right, 
-                    visualizer.OptimalMinDistance, visualizer.OptimalMaxDistance, 
-                    visualizer.OptimalHeightMin, visualizer.OptimalHeightMax);
+                Handles.color = optimalZoneColor;
+                DrawSeatedInteractionZone(visualizer, headPosition, forward, right,
+                    visualizer.SeatedOptimalMin, visualizer.SeatedOptimalMax,
+                    optimalHeightMin, optimalHeightMax);
             }
             
             // Draw reference lines
-            Handles.color = Color.white;
-            Handles.DrawLine(headPosition, headPosition + forward * visualizer.MaximumMaxDistance);
-            Handles.DrawLine(headPosition + Vector3.up * visualizer.HeightMin, 
-                headPosition + Vector3.up * visualizer.HeightMax);
+            Handles.color = referenceLinesColor;
+            Handles.DrawLine(headPosition, headPosition + forward * visualizer.SeatedMaximumMax);
+            Handles.DrawLine(headPosition + Vector3.up * heightMin,
+                headPosition + Vector3.up * heightMax);
             
             // Draw labels
-            DrawLabels(visualizer, headPosition, forward);
-            
-            // Draw legend
-            if (visualizer.ShowLegend)
-            {
-                DrawLegend(visualizer, headPosition);
-            }
+            DrawSeatedLabels(visualizer, headPosition, forward);
         }
         
-        private void DrawInteractionZone(VRInteractionZoneVisualizer visualizer, Vector3 origin, 
+        private void DrawSeatedInteractionZone(VRInteractionZoneVisualizer visualizer, Vector3 origin,
             Vector3 forward, Vector3 right, float minDist, float maxDist, float minHeight, float maxHeight)
         {
-            float angleStep = (visualizer.ArcAngle * 2f) / visualizer.ArcSegments;
+            float angleStep = (visualizer.SeatedArcAngle * 2f) / visualizer.ArcSegments;
             
             // Draw arcs at min and max height
-            DrawArc(visualizer, origin + Vector3.up * minHeight, forward, minDist, maxDist, angleStep);
-            DrawArc(visualizer, origin + Vector3.up * maxHeight, forward, minDist, maxDist, angleStep);
+            DrawArc(visualizer, origin + Vector3.up * minHeight, forward, minDist, maxDist, angleStep, visualizer.SeatedArcAngle);
+            DrawArc(visualizer, origin + Vector3.up * maxHeight, forward, minDist, maxDist, angleStep, visualizer.SeatedArcAngle);
             
-            // Draw vertical connecting lines at regular intervals
+            // Draw vertical connecting lines
             for (int i = 0; i <= visualizer.ArcSegments; i++)
             {
-                float angle = -visualizer.ArcAngle + (angleStep * i);
+                float angle = -visualizer.SeatedArcAngle + (angleStep * i);
                 Vector3 direction = Quaternion.AngleAxis(angle, Vector3.up) * forward;
                 
                 Vector3 innerBottom = origin + Vector3.up * minHeight + direction * minDist;
@@ -96,14 +535,220 @@ namespace Shababeek.Interactions.Core.Editors
             }
         }
         
-        private void DrawArc(VRInteractionZoneVisualizer visualizer, Vector3 center, 
-            Vector3 forward, float minRadius, float maxRadius, float angleStep)
+        private void DrawSeatedLabels(VRInteractionZoneVisualizer visualizer, Vector3 headPosition, Vector3 forward)
+        {
+            GUIStyle style = new GUIStyle();
+            style.normal.textColor = Color.white;
+            style.fontSize = 10;
+            style.fontStyle = FontStyle.Bold;
+            
+            Handles.Label(headPosition + Vector3.up * labelOffsetAboveHead, "[Seated Mode]", style);
+            style.fontStyle = FontStyle.Normal;
+            
+            if (visualizer.ShowOptimalZone)
+            {
+                Vector3 optimalPos = headPosition + forward * ((visualizer.SeatedOptimalMin + visualizer.SeatedOptimalMax) / 2f);
+                Handles.Label(optimalPos, "OPTIMAL", style);
+            }
+            
+            if (visualizer.ShowExtendedZone)
+            {
+                Vector3 extendedPos = headPosition + forward * ((visualizer.SeatedOptimalMax + visualizer.SeatedExtendedMax) / 2f);
+                style.normal.textColor = Color.yellow;
+                Handles.Label(extendedPos, "EXTENDED", style);
+            }
+            
+            if (visualizer.ShowMaximumZone)
+            {
+                Vector3 maxPos = headPosition + forward * ((visualizer.SeatedExtendedMax + visualizer.SeatedMaximumMax) / 2f);
+                style.normal.textColor = new Color(1f, 0.5f, 0f);
+                Handles.Label(maxPos, "MAXIMUM", style);
+            }
+        }
+        
+        #endregion
+        
+        #region Room-Scale Mode Visualization
+        
+        private void DrawRoomScaleMode(VRInteractionZoneVisualizer visualizer)
+        {
+            Vector3 headPosition = visualizer.GetHeadPosition();
+            Vector3 rigPosition = visualizer.transform.position;
+            
+            float heightMin = visualizer.GetHeightFromPercent(visualizer.HeightMinPercent);
+            float heightMax = visualizer.GetHeightFromPercent(visualizer.HeightMaxPercent);
+            float optimalHeightMin = visualizer.GetHeightFromPercent(visualizer.OptimalHeightMinPercent);
+            float optimalHeightMax = visualizer.GetHeightFromPercent(visualizer.OptimalHeightMaxPercent);
+            
+            float halfWidth = visualizer.PlayAreaWidth / 2f;
+            float halfDepth = visualizer.PlayAreaDepth / 2f;
+            
+            // Draw head reference indicator
+            Handles.color = headReferenceColor;
+            Handles.SphereHandleCap(0, headPosition, Quaternion.identity, headIndicatorSize, EventType.Repaint);
+            
+            // Dead Zone
+            if (visualizer.ShowDeadZone)
+            {
+                Handles.color = deadZoneColor;
+                Handles.DrawWireDisc(headPosition, Vector3.up, visualizer.DeadZoneRadius);
+            }
+            
+            // Draw play area bounds (from floor)
+            if (visualizer.ShowPlayAreaBounds)
+            {
+                float playAreaHeightMin = rigPosition.y + heightMin;
+                float playAreaHeightMax = rigPosition.y + heightMax;
+                
+                Handles.color = playAreaOutlineColor;
+                Vector3[] playAreaCorners = new Vector3[]
+                {
+                    rigPosition + new Vector3(-halfWidth, heightMin, -halfDepth),
+                    rigPosition + new Vector3(halfWidth, heightMin, -halfDepth),
+                    rigPosition + new Vector3(halfWidth, heightMin, halfDepth),
+                    rigPosition + new Vector3(-halfWidth, heightMin, halfDepth)
+                };
+                
+                Handles.DrawSolidRectangleWithOutline(playAreaCorners, playAreaColor, playAreaOutlineColor);
+                
+                // Draw vertical lines at corners
+                for (int i = 0; i < 4; i++)
+                {
+                    Vector3 bottom = playAreaCorners[i];
+                    Vector3 top = bottom + Vector3.up * (heightMax - heightMin);
+                    Handles.DrawLine(bottom, top);
+                }
+                
+                // Draw top rectangle
+                Vector3[] topCorners = new Vector3[]
+                {
+                    rigPosition + new Vector3(-halfWidth, heightMax, -halfDepth),
+                    rigPosition + new Vector3(halfWidth, heightMax, -halfDepth),
+                    rigPosition + new Vector3(halfWidth, heightMax, halfDepth),
+                    rigPosition + new Vector3(-halfWidth, heightMax, halfDepth)
+                };
+                Handles.DrawSolidRectangleWithOutline(topCorners, new Color(0f, 1f, 1f, 0.05f), playAreaOutlineColor);
+            }
+            
+            // Draw reach zones from play area edges (relative to head position, not rig position)
+            if (visualizer.ShowMaximumZone)
+            {
+                Handles.color = maximumZoneColor;
+                DrawRoomScaleReachZone(visualizer, rigPosition, headPosition, halfWidth, halfDepth,
+                    visualizer.RoomScaleExtendedMax, visualizer.RoomScaleMaximumMax,
+                    heightMin, heightMax);
+            }
+            
+            if (visualizer.ShowExtendedZone)
+            {
+                Handles.color = extendedZoneColor;
+                DrawRoomScaleReachZone(visualizer, rigPosition, headPosition, halfWidth, halfDepth,
+                    visualizer.RoomScaleAtEdgeMax, visualizer.RoomScaleExtendedMax,
+                    heightMin, heightMax);
+            }
+            
+            if (visualizer.ShowOptimalZone)
+            {
+                Handles.color = optimalZoneColor;
+                DrawRoomScaleReachZone(visualizer, rigPosition, headPosition, halfWidth, halfDepth,
+                    0f, visualizer.RoomScaleAtEdgeMax,
+                    optimalHeightMin, optimalHeightMax);
+            }
+            
+            // Draw labels
+            DrawRoomScaleLabels(visualizer, rigPosition, heightMin);
+        }
+        
+        private void DrawRoomScaleReachZone(VRInteractionZoneVisualizer visualizer, Vector3 rigPosition, Vector3 headPosition,
+            float halfWidth, float halfDepth, float innerOffset, float outerOffset,
+            float minHeightPercent, float maxHeightPercent)
+        {
+            // Heights are relative to head position (0% = head level)
+            float minHeight = headPosition.y + minHeightPercent;
+            float maxHeight = headPosition.y + maxHeightPercent;
+            
+            // Bottom rectangles
+            Vector3[] bottomInner = new Vector3[]
+            {
+                rigPosition + new Vector3(-halfWidth - innerOffset, minHeight - rigPosition.y, -halfDepth - innerOffset),
+                rigPosition + new Vector3(halfWidth + innerOffset, minHeight - rigPosition.y, -halfDepth - innerOffset),
+                rigPosition + new Vector3(halfWidth + innerOffset, minHeight - rigPosition.y, halfDepth + innerOffset),
+                rigPosition + new Vector3(-halfWidth - innerOffset, minHeight - rigPosition.y, halfDepth + innerOffset)
+            };
+            
+            Vector3[] bottomOuter = new Vector3[]
+            {
+                rigPosition + new Vector3(-halfWidth - outerOffset, minHeight - rigPosition.y, -halfDepth - outerOffset),
+                rigPosition + new Vector3(halfWidth + outerOffset, minHeight - rigPosition.y, -halfDepth - outerOffset),
+                rigPosition + new Vector3(halfWidth + outerOffset, minHeight - rigPosition.y, halfDepth + outerOffset),
+                rigPosition + new Vector3(-halfWidth - outerOffset, minHeight - rigPosition.y, halfDepth + outerOffset)
+            };
+            
+            // Top rectangles
+            Vector3[] topInner = new Vector3[]
+            {
+                rigPosition + new Vector3(-halfWidth - innerOffset, maxHeight - rigPosition.y, -halfDepth - innerOffset),
+                rigPosition + new Vector3(halfWidth + innerOffset, maxHeight - rigPosition.y, -halfDepth - innerOffset),
+                rigPosition + new Vector3(halfWidth + innerOffset, maxHeight - rigPosition.y, halfDepth + innerOffset),
+                rigPosition + new Vector3(-halfWidth - innerOffset, maxHeight - rigPosition.y, halfDepth + innerOffset)
+            };
+            
+            Vector3[] topOuter = new Vector3[]
+            {
+                rigPosition + new Vector3(-halfWidth - outerOffset, maxHeight - rigPosition.y, -halfDepth - outerOffset),
+                rigPosition + new Vector3(halfWidth + outerOffset, maxHeight - rigPosition.y, -halfDepth - outerOffset),
+                rigPosition + new Vector3(halfWidth + outerOffset, maxHeight - rigPosition.y, halfDepth + outerOffset),
+                rigPosition + new Vector3(-halfWidth - outerOffset, maxHeight - rigPosition.y, halfDepth + outerOffset)
+            };
+            
+            // Draw bottom rectangles
+            Handles.DrawPolyLine(bottomOuter[0], bottomOuter[1], bottomOuter[2], bottomOuter[3], bottomOuter[0]);
+            Handles.DrawPolyLine(bottomInner[0], bottomInner[1], bottomInner[2], bottomInner[3], bottomInner[0]);
+            
+            // Draw top rectangles
+            Handles.DrawPolyLine(topOuter[0], topOuter[1], topOuter[2], topOuter[3], topOuter[0]);
+            Handles.DrawPolyLine(topInner[0], topInner[1], topInner[2], topInner[3], topInner[0]);
+            
+            // Connect corners with vertical lines
+            for (int i = 0; i < 4; i++)
+            {
+                Handles.DrawLine(bottomInner[i], topInner[i]);
+                Handles.DrawLine(bottomOuter[i], topOuter[i]);
+                
+                // Connect inner to outer at bottom and top
+                Handles.DrawLine(bottomInner[i], bottomOuter[i]);
+                Handles.DrawLine(topInner[i], topOuter[i]);
+            }
+        }
+        
+        private void DrawRoomScaleLabels(VRInteractionZoneVisualizer visualizer, Vector3 rigPosition, float heightMin)
+        {
+            GUIStyle style = new GUIStyle();
+            style.normal.textColor = Color.white;
+            style.fontSize = 10;
+            style.fontStyle = FontStyle.Bold;
+            
+            Vector3 labelPos = rigPosition + new Vector3(0, visualizer.GetPlayerHeight() + labelOffsetAboveHead, 0);
+            Handles.Label(labelPos, "[Room-Scale Mode]", style);
+            
+            style.fontStyle = FontStyle.Normal;
+            style.normal.textColor = Color.cyan;
+            Vector3 playAreaLabel = rigPosition + new Vector3(0, heightMin + playAreaLabelOffsetAboveFloor, 0);
+            Handles.Label(playAreaLabel, "PLAY AREA", style);
+        }
+        
+        #endregion
+        
+        #region Helper Methods
+        
+        private void DrawArc(VRInteractionZoneVisualizer visualizer, Vector3 center,
+            Vector3 forward, float minRadius, float maxRadius, float angleStep, float arcAngle)
         {
             // Inner and outer arcs
             for (int i = 0; i < visualizer.ArcSegments; i++)
             {
-                float angle1 = -visualizer.ArcAngle + (angleStep * i);
-                float angle2 = -visualizer.ArcAngle + (angleStep * (i + 1));
+                float angle1 = -arcAngle + (angleStep * i);
+                float angle2 = -arcAngle + (angleStep * (i + 1));
                 
                 Vector3 dir1 = Quaternion.AngleAxis(angle1, Vector3.up) * forward;
                 Vector3 dir2 = Quaternion.AngleAxis(angle2, Vector3.up) * forward;
@@ -112,148 +757,15 @@ namespace Shababeek.Interactions.Core.Editors
                 Handles.DrawLine(center + dir1 * maxRadius, center + dir2 * maxRadius);
             }
             
-            // Radial lines connecting inner and outer arcs
+            // Radial lines
             for (int i = 0; i <= visualizer.ArcSegments; i += Mathf.Max(1, visualizer.ArcSegments / 4))
             {
-                float angle = -visualizer.ArcAngle + (angleStep * i);
+                float angle = -arcAngle + (angleStep * i);
                 Vector3 direction = Quaternion.AngleAxis(angle, Vector3.up) * forward;
                 Handles.DrawLine(center + direction * minRadius, center + direction * maxRadius);
             }
         }
         
-        private void DrawLabels(VRInteractionZoneVisualizer visualizer, Vector3 headPosition, Vector3 forward)
-        {
-            GUIStyle style = new GUIStyle();
-            style.normal.textColor = Color.green;
-            style.fontSize = 10;
-            
-            // Label the zones
-            if (visualizer.ShowOptimalZone)
-            {
-                Vector3 optimalPos = headPosition + forward * ((visualizer.OptimalMinDistance + visualizer.OptimalMaxDistance) / 2f);
-                Handles.Label(optimalPos, "OPTIMAL", style);
-            }
-            
-            if (visualizer.ShowExtendedZone)
-            {
-                Vector3 extendedPos = headPosition + forward * ((visualizer.OptimalMaxDistance + visualizer.ExtendedMaxDistance) / 2f);
-                style.normal.textColor = Color.yellow;
-                Handles.Label(extendedPos, "EXTENDED", style);
-            }
-            
-            if (visualizer.ShowMaximumZone)
-            {
-                Vector3 maxPos = headPosition + forward * ((visualizer.ExtendedMaxDistance + visualizer.MaximumMaxDistance) / 2f);
-                style.normal.textColor = new Color(1f, 0.5f, 0f);
-                Handles.Label(maxPos, "MAXIMUM", style);
-            }
-        }
-        
-        private void DrawLegend(VRInteractionZoneVisualizer visualizer, Vector3 headPosition)
-        {
-            // Position legend to the right and above the head position
-            Vector3 legendPosition = headPosition + Vector3.right * 1.5f + Vector3.up * 0.5f;
-            
-            Handles.BeginGUI();
-            
-            // Convert 3D position to screen space
-            Vector3 screenPos = HandleUtility.WorldToGUIPoint(legendPosition);
-            
-            // Create legend box
-            float boxWidth = 180f;
-            float boxHeight = 120f;
-            float lineHeight = 25f;
-            float padding = 10f;
-            
-            Rect boxRect = new Rect(screenPos.x, screenPos.y, boxWidth, boxHeight);
-            
-            // Draw background
-            GUIStyle boxStyle = new GUIStyle(GUI.skin.box);
-            boxStyle.normal.background = MakeTex(2, 2, new Color(0.2f, 0.2f, 0.2f, 0.9f));
-            GUI.Box(boxRect, "", boxStyle);
-            
-            // Draw title
-            GUIStyle titleStyle = new GUIStyle();
-            titleStyle.normal.textColor = Color.white;
-            titleStyle.fontSize = 12;
-            titleStyle.fontStyle = FontStyle.Bold;
-            titleStyle.alignment = TextAnchor.MiddleLeft;
-            
-            Rect titleRect = new Rect(screenPos.x + padding, screenPos.y + padding, boxWidth - padding * 2, 20f);
-            GUI.Label(titleRect, "VR Interaction Zones", titleStyle);
-            
-            // Draw legend items
-            float yOffset = screenPos.y + padding + 25f;
-            
-            if (visualizer.ShowOptimalZone)
-            {
-                DrawLegendItem(screenPos.x + padding, yOffset, "Optimal Zone", new Color(0f, 1f, 0f, 0.6f), 
-                    $"{visualizer.OptimalMinDistance:F1}m - {visualizer.OptimalMaxDistance:F1}m");
-                yOffset += lineHeight;
-            }
-            
-            if (visualizer.ShowExtendedZone)
-            {
-                DrawLegendItem(screenPos.x + padding, yOffset, "Extended Reach", new Color(1f, 1f, 0f, 0.5f), 
-                    $"{visualizer.OptimalMaxDistance:F1}m - {visualizer.ExtendedMaxDistance:F1}m");
-                yOffset += lineHeight;
-            }
-            
-            if (visualizer.ShowMaximumZone)
-            {
-                DrawLegendItem(screenPos.x + padding, yOffset, "Maximum Reach", new Color(1f, 0.5f, 0f, 0.4f), 
-                    $"{visualizer.ExtendedMaxDistance:F1}m - {visualizer.MaximumMaxDistance:F1}m");
-                yOffset += lineHeight;
-            }
-            
-            if (visualizer.ShowDeadZone)
-            {
-                DrawLegendItem(screenPos.x + padding, yOffset, "Dead Zone", new Color(1f, 0f, 0f, 0.3f), 
-                    $"< {visualizer.DeadZoneRadius:F2}m");
-            }
-            
-            Handles.EndGUI();
-        }
-        
-        private void DrawLegendItem(float x, float y, string label, Color color, string distance)
-        {
-            // Draw color box
-            float boxSize = 15f;
-            Rect colorRect = new Rect(x, y, boxSize, boxSize);
-            GUIStyle colorStyle = new GUIStyle();
-            colorStyle.normal.background = MakeTex(2, 2, color);
-            GUI.Box(colorRect, "", colorStyle);
-            
-            // Draw label
-            GUIStyle labelStyle = new GUIStyle();
-            labelStyle.normal.textColor = Color.white;
-            labelStyle.fontSize = 10;
-            labelStyle.alignment = TextAnchor.MiddleLeft;
-            
-            Rect labelRect = new Rect(x + boxSize + 5f, y, 100f, boxSize);
-            GUI.Label(labelRect, label, labelStyle);
-            
-            // Draw distance
-            GUIStyle distanceStyle = new GUIStyle();
-            distanceStyle.normal.textColor = new Color(0.7f, 0.7f, 0.7f);
-            distanceStyle.fontSize = 9;
-            distanceStyle.alignment = TextAnchor.MiddleLeft;
-            
-            Rect distanceRect = new Rect(x + boxSize + 5f, y + 12f, 100f, boxSize);
-            GUI.Label(distanceRect, distance, distanceStyle);
-        }
-        
-        private Texture2D MakeTex(int width, int height, Color col)
-        {
-            Color[] pix = new Color[width * height];
-            for (int i = 0; i < pix.Length; i++)
-                pix[i] = col;
-            
-            Texture2D result = new Texture2D(width, height);
-            result.SetPixels(pix);
-            result.Apply();
-            
-            return result;
-        }
+        #endregion
     }
 }
