@@ -7,6 +7,7 @@ namespace Shababeek.Interactions
     [RequireComponent(typeof(PoseConstrainter))]
     public abstract class ConstrainedInteractableBase : InteractableBase
     {
+        [Tooltip("Transform representing the object that will be manipulated during interaction.")]
         [SerializeField] protected Transform interactableObject;
         [SerializeField] private float _snapDistance = .5f;
 
@@ -21,6 +22,9 @@ namespace Shababeek.Interactions
         private Quaternion _targetRotation;
         private bool _isTransitioning = false;
 
+        /// <summary>
+        /// Transform representing the object being manipulated during interaction.
+        /// </summary>
         public Transform InteractableObject
         {
             get => interactableObject;
@@ -53,7 +57,7 @@ namespace Shababeek.Interactions
         {
             CurrentInteractor.ToggleHandModel(true);
 
-            if (_currentFakeHand != null)
+            if (_currentFakeHand)
             {
                 _currentFakeHand.gameObject.SetActive(false);
                 _currentFakeHand = null;
@@ -66,7 +70,7 @@ namespace Shababeek.Interactions
         {
             var cachedHand = handIdentifier == HandIdentifier.Left ? _leftFakeHand : _rightFakeHand;
 
-            if (cachedHand != null)
+            if (cachedHand)
             {
                 cachedHand.gameObject.SetActive(true);
                 return cachedHand;
@@ -127,7 +131,7 @@ namespace Shababeek.Interactions
 
         private void Update()
         {
-            if (_isTransitioning && _currentFakeHand != null)
+            if (_isTransitioning && _currentFakeHand)
             {
                 _transitionProgress += Time.deltaTime * _poseConstrainter.TransitionSpeed;
                 var t = Mathf.Clamp01(_transitionProgress);
@@ -150,12 +154,12 @@ namespace Shababeek.Interactions
         {
             DestroyFakeHands();
             Initialize();
-            CompnstateScale();
+            CompensateScale();
         }
 
-        private void CompnstateScale()
+        private void CompensateScale()
         {
-            if(!interactableObject.parent)return;
+            if (!interactableObject.parent) return;
             var scaleCompensator = new GameObject("ScaleCompensator").transform;
             scaleCompensator.parent = interactableObject.parent;
             scaleCompensator.position = interactableObject.position;
@@ -168,6 +172,9 @@ namespace Shababeek.Interactions
             interactableObject = scaleCompensator;
         }
 
+        /// <summary>
+        /// Initializes the interactable object transform if not already set.
+        /// </summary>
         public void Initialize()
         {
             if (interactableObject != null) return;
@@ -191,12 +198,12 @@ namespace Shababeek.Interactions
 
         private void DestroyFakeHands()
         {
-            if (_leftFakeHand != null)
+            if (_leftFakeHand)
             {
                 DestroyImmediate(_leftFakeHand.gameObject);
             }
 
-            if (_rightFakeHand != null)
+            if (_rightFakeHand)
             {
                 DestroyImmediate(_rightFakeHand.gameObject);
             }
