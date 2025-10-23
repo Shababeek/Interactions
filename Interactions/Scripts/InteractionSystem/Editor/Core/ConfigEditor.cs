@@ -26,6 +26,8 @@ namespace Shababeek.Interactions.Editors
         private SerializedProperty handMassProp;
         private SerializedProperty linearDampingProp;
         private SerializedProperty angularDampingProp;
+        private SerializedProperty followerPresetProp;
+        private SerializedProperty customFollowerSettingsProp;
 
         // Physics validation
         private bool physicsLayersValid = true;
@@ -50,6 +52,8 @@ namespace Shababeek.Interactions.Editors
             handMassProp = serializedObject.FindProperty("handMass");
             linearDampingProp = serializedObject.FindProperty("linearDamping");
             angularDampingProp = serializedObject.FindProperty("angularDamping");
+            followerPresetProp = serializedObject.FindProperty("followerPreset");
+            customFollowerSettingsProp = serializedObject.FindProperty("customFollowerSettings");
             
             // Validate physics layer matrix
             ValidatePhysicsLayerMatrix();
@@ -166,6 +170,11 @@ namespace Shababeek.Interactions.Editors
             EditorGUILayout.PropertyField(handMassProp, new GUIContent("Hand Mass", "Mass of the hand for physics calculations"));
             EditorGUILayout.PropertyField(linearDampingProp, new GUIContent("Linear Damping", "Linear damping for hand physics"));
             EditorGUILayout.PropertyField(angularDampingProp, new GUIContent("Angular Damping", "Angular damping for hand physics"));
+            
+            EditorGUILayout.Space();
+            
+            // Hand Following Settings Section
+            DrawHandFollowingSection();
             
             EditorGUILayout.Space();
             
@@ -652,6 +661,44 @@ namespace Shababeek.Interactions.Editors
             Debug.Log($"Successfully created {axesToCreate.Count} input axes for Shababeek Interaction System");
         }
         
+        private void DrawHandFollowingSection()
+        {
+            EditorGUILayout.LabelField("Hand Following Settings", EditorStyles.boldLabel);
+            
+            EditorGUILayout.PropertyField(followerPresetProp, new GUIContent("Follower Preset", "Preset configuration for physics hand following behavior"));
+            
+            PhysicsFollowerPreset preset = (PhysicsFollowerPreset)followerPresetProp.enumValueIndex;
+            
+            if (preset == PhysicsFollowerPreset.Custom)
+            {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(customFollowerSettingsProp, new GUIContent("Custom Settings", "Custom physics follower settings"));
+                EditorGUI.indentLevel--;
+                EditorGUILayout.HelpBox("Custom settings active. Adjust values to tune hand following behavior.", MessageType.Info);
+            }
+            else
+            {
+                EditorGUILayout.HelpBox(GetPresetDescription(preset), MessageType.Info);
+            }
+        }
+        
+        private string GetPresetDescription(PhysicsFollowerPreset preset)
+        {
+            switch (preset)
+            {
+                case PhysicsFollowerPreset.Standard:
+                    return "Standard: Balanced settings for general VR use. Good starting point for most applications.";
+                case PhysicsFollowerPreset.Responsive:
+                    return "Responsive: Snappy, fast response for precise interactions. Best for games requiring quick hand movements.";
+                case PhysicsFollowerPreset.Smooth:
+                    return "Smooth: Floaty, gradual movement for comfortable experience. Best for relaxed exploration.";
+                case PhysicsFollowerPreset.Precise:
+                    return "Precise: Slower, very controlled for delicate manipulation. Best for puzzle games or intricate tasks.";
+                default:
+                    return "";
+            }
+        }
+        
         private static void SetAxis(SerializedProperty property, (string name, string descriptiveName, float dead, int axis, int type, string positiveButton, float gravity, float sensitivity, string altPositiveButton) axe)
         {
             property.FindPropertyRelative("m_Name").stringValue = axe.name;
@@ -664,7 +711,6 @@ namespace Shababeek.Interactions.Editors
             property.FindPropertyRelative("axis").intValue = axe.axis - 1;
             property.FindPropertyRelative("altPositiveButton").stringValue = axe.altPositiveButton;
         }
-        
 
     }
-} 
+}

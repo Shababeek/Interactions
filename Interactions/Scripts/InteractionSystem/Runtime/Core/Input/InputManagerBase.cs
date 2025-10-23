@@ -21,9 +21,6 @@ namespace Shababeek.Interactions.Core
             }
         }
 
-        /// <summary>
-        /// Interface for hand input managers, providing access to hand input data and events.
-        /// </summary>
         public interface IHandInputManager
         {
             public IObservable<VRButtonState> TriggerObservable { get; }

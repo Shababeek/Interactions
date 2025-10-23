@@ -193,7 +193,7 @@ namespace Shababeek.Interactions.Core
         }
         
         /// <summary>
-        /// Apply preset values based on VR mode
+        /// Applies preset values based on VR mode.
         /// </summary>
         public void ApplyVRModePreset()
         {

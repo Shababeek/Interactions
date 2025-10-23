@@ -9,13 +9,8 @@ using UnityEngine.UIElements;
 namespace Shababeek.Interactions.Core
 {
     /// <summary>
-    /// Settings for the old input manager, containing axis names and button IDs.
+    /// Settings for the old input manager containing axis names and button IDs.
     /// </summary>
-    /// <remarks>
-    /// This struct contains all the input mappings needed for the legacy Unity Input Manager.
-    /// It provides both axis-based inputs (for triggers and grips) and button-based inputs
-    /// (for primary/secondary buttons and debug keys).
-    /// </remarks>
     [System.Serializable]
     public struct OldInputManagerSettings
     {
@@ -64,13 +59,8 @@ namespace Shababeek.Interactions.Core
         public string rightThumbDebugKey;
         
         /// <summary>
-        /// Creates default settings with Shababeek input names.
+        /// Default settings with Shababeek input names.
         /// </summary>
-        /// <remarks>
-        /// These default values provide a complete set of input mappings that work with
-        /// the Shababeek input system. You can modify these in the inspector or create
-        /// custom mappings as needed.
-        /// </remarks>
         public static OldInputManagerSettings Default => new OldInputManagerSettings
         {
             // Left Hand
@@ -94,14 +84,8 @@ namespace Shababeek.Interactions.Core
     }
 
     /// <summary>
-    /// ScriptableObject that holds all configuration settings for the interaction system, including hand data, input, and layers.
+    /// Configuration settings for the interaction system including hand data, input, and layers.
     /// </summary>
-    /// <remarks>
-    /// This is the central configuration asset for the Shababeek interaction system. It contains
-    /// all the settings needed for hands, input, physics, and layers. Create this asset through
-    /// the Create Asset Menu and configure it according to your project's needs.
-    /// </remarks>
-
     [CreateAssetMenu(menuName = "Shababeek/Interactions/Config")]
     public class Config : ScriptableObject
     {
@@ -150,6 +134,13 @@ namespace Shababeek.Interactions.Core
         [Tooltip("Angular damping for hand physics. Higher values reduce hand rotation more quickly.")]
         [SerializeField] private float angularDamping = 1f;
         
+        [Header("Hand Following Settings")]
+        [Tooltip("Preset configuration for physics hand following behavior.")]
+        [SerializeField] private PhysicsFollowerPreset followerPreset = PhysicsFollowerPreset.Standard;
+        
+        [Tooltip("Custom settings for physics hand following. Only used when preset is set to Custom.")]
+        [SerializeField] private PhysicsFollowerSettings customFollowerSettings = PhysicsFollowerSettings.Standard;
+        
         [Header("System References")]
         [Tooltip("GameObject that manages the input system. Created automatically when needed.")]
         [ReadOnly, SerializeField] private GameObject gameManager;
@@ -160,12 +151,8 @@ namespace Shababeek.Interactions.Core
         #region Public Properties
 
         /// <summary>
-        /// Gets or sets the layer index for the left hand.
+        /// Layer index for the left hand.
         /// </summary>
-        /// <remarks>
-        /// This layer is used for physics interactions and prevents the hand from
-        /// colliding with itself or other hands.
-        /// </remarks>
         public int LeftHandLayer
         {
             get => leftHandLayer;
@@ -173,12 +160,8 @@ namespace Shababeek.Interactions.Core
         }
 
         /// <summary>
-        /// Gets or sets the layer index for the right hand.
+        /// Layer index for the right hand.
         /// </summary>
-        /// <remarks>
-        /// This layer is used for physics interactions and prevents the hand from
-        /// colliding with itself or other hands.
-        /// </remarks>
         public int RightHandLayer
         {
             get => rightHandLayer;
@@ -186,12 +169,8 @@ namespace Shababeek.Interactions.Core
         }
 
         /// <summary>
-        /// Gets or sets the layer index for interactable objects.
+        /// Layer index for interactable objects.
         /// </summary>
-        /// <remarks>
-        /// Objects on this layer can be grabbed and manipulated by hands.
-        /// This should be different from hand layers to enable interactions.
-        /// </remarks>
         public int InteractableLayer
         {
             get => interactableLayer;
@@ -199,12 +178,8 @@ namespace Shababeek.Interactions.Core
         }
 
         /// <summary>
-        /// Gets or sets the layer index for the player/character.
+        /// Layer index for the player/character.
         /// </summary>
-        /// <remarks>
-        /// This layer is used for physics collision settings to prevent hands
-        /// from colliding with the player character.
-        /// </remarks>
         public int PlayerLayer
         {
             get => playerLayer;
@@ -212,22 +187,13 @@ namespace Shababeek.Interactions.Core
         }
 
         /// <summary>
-        /// Gets the HandData asset containing hand poses and prefabs.
+        /// HandData asset containing hand poses and prefabs.
         /// </summary>
-        /// <remarks>
-        /// This asset contains all the information needed for hand visualization,
-        /// including poses, avatar masks, and prefab references.
-        /// </remarks>
         public HandData HandData => handData;
 
         /// <summary>
-        /// Gets the current input manager instance.
+        /// Current input manager instance. Automatically creates the appropriate manager based on input type.
         /// </summary>
-        /// <remarks>
-        /// This property automatically creates the appropriate input manager based on
-        /// the selected input type. The manager is created as a child of a persistent
-        /// GameObject to ensure it survives scene changes.
-        /// </remarks>
         public InputManagerBase InputManager
         {
             get
@@ -241,48 +207,42 @@ namespace Shababeek.Interactions.Core
         }
 
         /// <summary>
-        /// Gets the mass value for hand physics objects.
+        /// Mass value for hand physics objects.
         /// </summary>
-        /// <remarks>
-        /// Higher mass values make hands more stable but less responsive to input.
-        /// Lower values make hands more responsive but potentially unstable.
-        /// </remarks>
         public float HandMass => handMass;
         
         /// <summary>
-        /// Gets the linear damping value for hand physics.
+        /// Linear damping value for hand physics.
         /// </summary>
-        /// <remarks>
-        /// Linear damping affects how quickly hand movement is reduced.
-        /// Higher values create more "heavy" feeling hands.
-        /// </remarks>
         public float HandLinearDamping => linearDamping;
         
         /// <summary>
-        /// Gets the angular damping value for hand physics.
+        /// Angular damping value for hand physics.
         /// </summary>
-        /// <remarks>
-        /// Angular damping affects how quickly hand rotation is reduced.
-        /// Higher values create more stable hand orientation.
-        /// </remarks>
         public float HandAngularDamping => angularDamping;
         
         /// <summary>
-        /// Gets the StyleSheet for the feedback system UI.
+        /// Physics follower settings based on the selected preset.
         /// </summary>
-        /// <remarks>
-        /// This StyleSheet is used to style the feedback system UI elements
-        /// in the Unity editor.
-        /// </remarks>
+        public PhysicsFollowerSettings FollowerSettings
+        {
+            get
+            {
+                if (followerPreset == PhysicsFollowerPreset.Custom)
+                    return customFollowerSettings;
+                
+                return PhysicsFollowerSettings.GetPreset(followerPreset);
+            }
+        }
+        
+        /// <summary>
+        /// StyleSheet for the feedback system UI.
+        /// </summary>
         public StyleSheet FeedbackSystemStyleSheet => feedbackSystemStyleSheet;
         
         /// <summary>
-        /// Gets or sets the old input manager settings.
+        /// Old input manager settings.
         /// </summary>
-        /// <remarks>
-        /// These settings are used when the input type is set to InputManager.
-        /// They contain axis names and button mappings for the legacy input system.
-        /// </remarks>
         public OldInputManagerSettings OldInputSettings
         {
             get => oldInputSettings;
@@ -290,26 +250,14 @@ namespace Shababeek.Interactions.Core
         }
 
         /// <summary>
-        /// Gets the currently selected input manager type.
+        /// Currently selected input manager type.
         /// </summary>
-        /// <remarks>
-        /// This determines which input system is used for hand input.
-        /// InputSystem is recommended for modern projects.
-        /// </remarks>
         public InputManagerType InputType => inputType;
 
         #endregion
 
         #region Private Methods
 
-        /// <summary>
-        /// Creates and initializes the appropriate input manager based on the selected input type.
-        /// </summary>
-        /// <returns>The created or existing input manager instance</returns>
-        /// <remarks>
-        /// This method automatically creates the correct input manager type and initializes it
-        /// with the appropriate settings. It also handles cleanup of old managers.
-        /// </remarks>
         private InputManagerBase CreateInputManager()
         {
             switch (inputType)
@@ -338,20 +286,8 @@ namespace Shababeek.Interactions.Core
         #region Nested Types
 
         /// <summary>
-        /// Struct containing input action references for hand input using the new Input System.
+        /// Input action references for hand input using the new Input System.
         /// </summary>
-        /// <remarks>
-        /// This struct holds references to InputAction assets for each finger on a hand.
-        /// These actions should be configured in your Input Action Asset to map to
-        /// the appropriate controller inputs.
-        /// </remarks>
-        /// <example>
-        /// <code>
-        /// // Configure input actions in the inspector
-        /// leftHandActions.thumbAction = thumbActionAsset;
-        /// leftHandActions.indexAction = indexActionAsset;
-        /// </code>
-        /// </example>
         [System.Serializable]
         public struct HandInputActions
         {
@@ -372,38 +308,34 @@ namespace Shababeek.Interactions.Core
             [SerializeField] private InputActionReference pinkyAction;
 
             /// <summary>
-            /// Gets the InputAction for the thumb finger.
+            /// InputAction for the thumb finger.
             /// </summary>
             public InputAction ThumbAction => thumbAction?.action;
             
             /// <summary>
-            /// Gets the InputAction for the index finger.
+            /// InputAction for the index finger.
             /// </summary>
             public InputAction IndexAction => indexAction?.action;
             
             /// <summary>
-            /// Gets the InputAction for the middle finger.
+            /// InputAction for the middle finger.
             /// </summary>
             public InputAction MiddleAction => middleAction?.action;
             
             /// <summary>
-            /// Gets the InputAction for the ring finger.
+            /// InputAction for the ring finger.
             /// </summary>
             public InputAction RingAction => ringAction?.action;
             
             /// <summary>
-            /// Gets the InputAction for the pinky finger.
+            /// InputAction for the pinky finger.
             /// </summary>
             public InputAction PinkyAction => pinkyAction?.action;
         }
 
         /// <summary>
-        /// Enum defining the available input manager types.
+        /// Available input manager types.
         /// </summary>
-        /// <remarks>
-        /// Choose between the legacy Unity Input Manager (Axis-based) and the modern
-        /// Input System. The Input System is recommended for new projects.
-        /// </remarks>
         public enum InputManagerType
         {
             //TODO: Move to the input System Based Input Manager
@@ -420,4 +352,127 @@ namespace Shababeek.Interactions.Core
 
         #endregion
     }
+    
+    #region Physics Follower Presets
+    
+    public enum PhysicsFollowerPreset
+    {
+        Standard,
+        Responsive,
+        Smooth,
+        Precise,
+        Custom
+    }
+    
+    [System.Serializable]
+    public struct PhysicsFollowerSettings
+    {
+        [Tooltip("Strength multiplier for position following. Higher values = faster response.")]
+        public float positionStrength;
+        
+        [Tooltip("Strength multiplier for rotation following. Higher values = faster response.")]
+        public float rotationStrength;
+        
+        [Tooltip("Maximum velocity magnitude in units per second.")]
+        public float maxVelocity;
+        
+        [Tooltip("Maximum angular velocity magnitude in radians per second.")]
+        public float maxAngularVelocity;
+        
+        [Tooltip("Distance threshold below which the hand won't move (reduces micro-jitter).")]
+        public float positionDeadzone;
+        
+        [Tooltip("Angle threshold in degrees below which the hand won't rotate (reduces micro-jitter).")]
+        public float rotationDeadzone;
+        
+        [Tooltip("Distance threshold above which the hand will teleport instead of follow.")]
+        public float teleportDistance;
+        
+        [Tooltip("If enabled, stops applying forces when in contact with objects.")]
+        public bool respectCollisions;
+        
+        /// <summary>
+        /// Standard preset balanced for general VR use.
+        /// </summary>
+        public static PhysicsFollowerSettings Standard => new PhysicsFollowerSettings
+        {
+            positionStrength = 1000f,
+            rotationStrength = 100f,
+            maxVelocity = 10f,
+            maxAngularVelocity = 20f,
+            positionDeadzone = 0.001f,
+            rotationDeadzone = 0.5f,
+            teleportDistance = 1f,
+            respectCollisions = true
+        };
+        
+        /// <summary>
+        /// Responsive preset with snappy, fast response for precise interactions.
+        /// </summary>
+        public static PhysicsFollowerSettings Responsive => new PhysicsFollowerSettings
+        {
+            positionStrength = 2000f,
+            rotationStrength = 200f,
+            maxVelocity = 15f,
+            maxAngularVelocity = 30f,
+            positionDeadzone = 0.002f,
+            rotationDeadzone = 1f,
+            teleportDistance = 1f,
+            respectCollisions = true
+        };
+        
+        /// <summary>
+        /// Smooth preset with floaty, gradual movement for comfortable experience.
+        /// </summary>
+        public static PhysicsFollowerSettings Smooth => new PhysicsFollowerSettings
+        {
+            positionStrength = 500f,
+            rotationStrength = 50f,
+            maxVelocity = 5f,
+            maxAngularVelocity = 10f,
+            positionDeadzone = 0.0005f,
+            rotationDeadzone = 0.2f,
+            teleportDistance = 1f,
+            respectCollisions = true
+        };
+        
+        /// <summary>
+        /// Precise preset with slower, controlled movement for delicate manipulation.
+        /// </summary>
+        public static PhysicsFollowerSettings Precise => new PhysicsFollowerSettings
+        {
+            positionStrength = 800f,
+            rotationStrength = 80f,
+            maxVelocity = 7f,
+            maxAngularVelocity = 15f,
+            positionDeadzone = 0.0005f,
+            rotationDeadzone = 0.3f,
+            teleportDistance = 0.5f,
+            respectCollisions = true
+        };
+        
+        /// <summary>
+        /// Preset settings for a given preset type.
+        /// </summary>
+        public static PhysicsFollowerSettings GetPreset(PhysicsFollowerPreset preset)
+        {
+            switch (preset)
+            {
+                case PhysicsFollowerPreset.Standard:
+                    return Standard;
+                case PhysicsFollowerPreset.Responsive:
+                    return Responsive;
+                case PhysicsFollowerPreset.Smooth:
+                    return Smooth;
+                case PhysicsFollowerPreset.Precise:
+                    return Precise;
+                case PhysicsFollowerPreset.Custom:
+                    return Standard;
+                default:
+                    return Standard;
+            }
+        }
+    }
+    
+    #endregion
 }

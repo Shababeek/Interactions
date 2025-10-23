@@ -1,10 +1,10 @@
 using UnityEngine;
 using UnityEditor;
 
-namespace Shababeek.Interactions.Core.Editor
+namespace Shababeek.Interactions.Core.Editors
 {
     [CustomEditor(typeof(VRInteractionZoneVisualizer))]
-    public class VRInteractionZoneVisualizerEditor : UnityEditor.Editor
+    public class VRInteractionZoneVisualizerEditor : Editor
     {
         #region Constants
         

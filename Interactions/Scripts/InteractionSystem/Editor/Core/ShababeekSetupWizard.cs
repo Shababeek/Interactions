@@ -5,7 +5,6 @@ using Shababeek.Interactions.Animations;
 using Shababeek.Interactions.Core;
 using System.IO;
 using UnityEditor.Callbacks;
-using UnityEngine.Serialization;
 
 namespace Shababeek.Interactions.Editors
 {

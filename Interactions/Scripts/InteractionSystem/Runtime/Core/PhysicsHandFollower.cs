@@ -38,28 +38,12 @@ namespace Shababeek.Interactions.Core
         [SerializeField] private bool enableTeleport = true;
         
         [Header("Collision Settings")]
-        [Tooltip("If enabled, reduces velocity when blocked by objects to prevent twitching.")]
-        [SerializeField] private bool preventCollisionTwitching = true;
-        
-        [Tooltip("Velocity threshold to detect if the hand is stuck. Lower values = more sensitive.")]
-        [SerializeField] private float stuckVelocityThreshold = 0.1f;
-        
-        [Tooltip("Distance threshold to detect if hand is making progress towards target.")]
-        [SerializeField] private float stuckDistanceThreshold = 0.01f;
-        
-        [Tooltip("If enabled, freezes rotation constraints to prevent unwanted spinning.")]
-        [SerializeField] private bool constrainRotation = false;
-        
-        [Tooltip("Damping factor applied to existing angular velocity (0-1). Lower values = more damping.")]
-        [SerializeField] private float angularVelocityDamping = 0.7f;
+        [Tooltip("If enabled, stops applying forces when in contact with objects to prevent fighting physics.")]
+        [SerializeField] private bool respectCollisions = true;
 
         private Rigidbody _rigidbody;
         private bool _isInitialized;
-        private Vector3 _lastPosition;
-        private float _lastDistance;
-        private int _stuckFrameCount;
-        private bool _lastConstrainRotation;
-        private bool _isColliding;
+        private bool _hasCollision;
 
         /// <summary>
         /// Gets or sets the target transform that the hand should follow.
@@ -67,14 +51,22 @@ namespace Shababeek.Interactions.Core
         public Transform Target
         {
             get => target;
-            set 
-            { 
-                target = value;
-                if (target != null && _isInitialized)
-                {
-                    SyncParentWithTarget();
-                }
-            }
+            set => target = value;
+        }
+
+        /// <summary>
+        /// Applies settings to the follower from a configuration preset.
+        /// </summary>
+        public void ApplySettings(PhysicsFollowerSettings settings)
+        {
+            positionStrength = settings.positionStrength;
+            rotationStrength = settings.rotationStrength;
+            maxVelocity = settings.maxVelocity;
+            maxAngularVelocity = settings.maxAngularVelocity;
+            positionDeadzone = settings.positionDeadzone;
+            rotationDeadzone = settings.rotationDeadzone;
+            teleportDistance = settings.teleportDistance;
+            respectCollisions = settings.respectCollisions;
         }
 
         private void Awake()
@@ -92,10 +84,7 @@ namespace Shababeek.Interactions.Core
                 return;
             }
 
-            SyncParentWithTarget();
             Teleport();
-            _lastPosition = transform.position;
-            _lastDistance = Vector3.Distance(transform.position, target.position);
             _isInitialized = true;
         }
 
@@ -103,58 +92,21 @@ namespace Shababeek.Interactions.Core
         {
             if (!_isInitialized || target == null) return;
 
-            // Update rigidbody constraints if setting changed
-            if (_lastConstrainRotation != constrainRotation)
-            {
-                ConfigureRigidbody();
-                _lastConstrainRotation = constrainRotation;
-            }
-
             float distance = Vector3.Distance(transform.position, target.position);
             
             if (enableTeleport && distance > teleportDistance)
             {
                 Teleport();
-                _lastPosition = transform.position;
-                _lastDistance = distance;
-                _stuckFrameCount = 0;
                 return;
             }
 
-            bool isStuck = CheckIfStuck(distance);
-            
-            if (isStuck && preventCollisionTwitching)
+            if (respectCollisions && _hasCollision)
             {
-                // Zero both linear and angular velocity to prevent twitching
-                _rigidbody.linearVelocity = Vector3.zero;
-                _rigidbody.angularVelocity = Vector3.zero;
-                
-                // Also reduce any residual velocities
-                _rigidbody.Sleep();
-                _rigidbody.WakeUp();
+                return;
             }
-            else
-            {
-                UpdatePosition(distance);
-                
-                // Handle rotation based on constraint setting
-                if (constrainRotation)
-                {
-                    // Manually set rotation to match target when rotation is constrained
-                    transform.rotation = target.rotation;
-                }
-                else
-                {
-                    // Only update rotation if not colliding to prevent fighting with physics engine
-                    if (!_isColliding || !preventCollisionTwitching)
-                    {
-                        UpdateRotation();
-                    }
-                }
-            }
-            
-            _lastPosition = transform.position;
-            _lastDistance = distance;
+
+            UpdatePosition(distance);
+            UpdateRotation();
         }
 
         private void ConfigureRigidbody()
@@ -162,16 +114,6 @@ namespace Shababeek.Interactions.Core
             _rigidbody.useGravity = false;
             _rigidbody.collisionDetectionMode = CollisionDetectionMode.Continuous;
             _rigidbody.interpolation = RigidbodyInterpolation.Interpolate;
-            
-            // Apply rotation constraints if enabled to reduce unwanted spinning
-            if (constrainRotation)
-            {
-                _rigidbody.constraints = RigidbodyConstraints.FreezeRotation;
-            }
-            else
-            {
-                _rigidbody.constraints = RigidbodyConstraints.None;
-            }
         }
 
         private void UpdatePosition(float distance)
@@ -202,39 +144,18 @@ namespace Shababeek.Interactions.Core
                 return;
             }
 
-            // Calculate desired angular velocity
-            Vector3 desiredAngularVelocity = axis * (angle * Mathf.Deg2Rad * rotationStrength * Time.fixedDeltaTime);
-            
-            // Dampen existing angular velocity and add new velocity
-            Vector3 dampedCurrentVelocity = _rigidbody.angularVelocity * angularVelocityDamping;
-            Vector3 newAngularVelocity = dampedCurrentVelocity + desiredAngularVelocity;
-            
-            // Clamp to max magnitude
-            _rigidbody.angularVelocity = Vector3.ClampMagnitude(newAngularVelocity, maxAngularVelocity);
+            Vector3 angularVelocity = axis * (angle * Mathf.Deg2Rad * rotationStrength * Time.fixedDeltaTime);
+            _rigidbody.angularVelocity = Vector3.ClampMagnitude(angularVelocity, maxAngularVelocity);
         }
 
-        private bool CheckIfStuck(float currentDistance)
+        private void OnCollisionEnter(Collision collision)
         {
-            if (currentDistance < positionDeadzone)
-            {
-                _stuckFrameCount = 0;
-                return false;
-            }
+            _hasCollision = true;
+        }
 
-            float actualMovement = Vector3.Distance(transform.position, _lastPosition);
-            float distanceImprovement = _lastDistance - currentDistance;
-            
-            bool isMovingSlow = actualMovement < stuckVelocityThreshold * Time.fixedDeltaTime;
-            bool notMakingProgress = distanceImprovement < stuckDistanceThreshold * Time.fixedDeltaTime;
-            
-            if (isMovingSlow && notMakingProgress)
-            {
-                _stuckFrameCount++;
-                return _stuckFrameCount > 2;
-            }
-            
-            _stuckFrameCount = 0;
-            return false;
+        private void OnCollisionExit(Collision collision)
+        {
+            _hasCollision = false;
         }
 
         private void Teleport()
@@ -245,34 +166,9 @@ namespace Shababeek.Interactions.Core
             _rigidbody.rotation = target.rotation;
             _rigidbody.linearVelocity = Vector3.zero;
             _rigidbody.angularVelocity = Vector3.zero;
-            
-            _stuckFrameCount = 0;
         }
 
-        private void OnCollisionEnter(Collision collision)
-        {
-            _isColliding = true;
-        }
-        
-        private void OnCollisionExit(Collision collision)
-        {
-            _isColliding = false;
-        }
-
-        /// <summary>
-        /// Synchronizes the parent of this GameObject with the target's parent.
-        /// </summary>
-        private void SyncParentWithTarget()
-        {
-            if (target == null) return;
-            
-            Transform targetParent = target.parent;
-            if (transform.parent != targetParent)
-            {
-                transform.SetParent(targetParent, true);
-            }
-        }
-
+#if UNITY_EDITOR
         private void OnDrawGizmosSelected()
         {
             if (target == null) return;
@@ -289,5 +185,6 @@ namespace Shababeek.Interactions.Core
                 Gizmos.DrawWireSphere(target.position, teleportDistance);
             }
         }
+#endif
     }
 }

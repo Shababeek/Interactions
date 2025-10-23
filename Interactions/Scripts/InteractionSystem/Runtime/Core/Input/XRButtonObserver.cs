@@ -3,7 +3,7 @@ using System;
 namespace Shababeek.Interactions.Core
 {
     /// <summary>
-    /// Observes XR button state changes and provides callbacks for button events.
+    /// Observes XR button state changes.
     /// </summary>
     public class XRButtonObserver : IObserver<VRButtonState>
     {
