@@ -76,7 +76,25 @@ namespace Shababeek.Interactions.Animations
         /// <value>The index of the pose to activate.</value>
         public int Pose
         {
-            set => currentPoseIndex = value;
+            set
+            {
+                if (handData == null || handData.Poses == null || handData.Poses.Length == 0)
+                {
+                    Debug.LogWarning($"[HandPoseController] Cannot set pose on {gameObject.name}: HandData or Poses is null/empty", this);
+                    currentPoseIndex = 0;
+                    return;
+                }
+
+                if (value < 0 || value >= handData.Poses.Length)
+                {
+                    Debug.LogWarning($"[HandPoseController] Pose index {value} is out of bounds on {gameObject.name}. Valid range: 0-{handData.Poses.Length - 1}. Defaulting to 0.", this);
+                    currentPoseIndex = 0;
+                }
+                else
+                {
+                    currentPoseIndex = value;
+                }
+            }
         }
         
         /// <summary>
@@ -244,6 +262,8 @@ namespace Shababeek.Interactions.Animations
         {
             if (!_graph.IsValid())
             {
+                Debug.LogWarning($"[HandPoseController] Graph became invalid on {gameObject.name}, reinitializing...", this);
+                DisposeGraph();
                 InitializeGraph();
             }
 
@@ -267,9 +287,15 @@ namespace Shababeek.Interactions.Animations
         /// </remarks>
         private void UpdateFingersFromHand()
         {
+            if (_hand == null)
+            {
+                return;
+            }
+
             var pose = _constrains[0].pose;
             if (pose < 0 || pose >= handData.Poses.Length)
             {
+                Debug.LogWarning($"[HandPoseController] Constraint references invalid pose index {pose} on {gameObject.name}. Valid range: 0-{handData.Poses.Length - 1}. Using pose 0.", this);
                 pose = 0;
             }
 
@@ -278,6 +304,19 @@ namespace Shababeek.Interactions.Animations
             {
                 this[i] = _constrains[i].constraints.GetConstrainedValue(_hand[i]);
             }
+        }
+
+        private void DisposeGraph()
+        {
+            if (_graph.IsValid())
+            {
+                _graph.Destroy();
+            }
+        }
+
+        private void OnDestroy()
+        {
+            DisposeGraph();
         }
     }
 }
