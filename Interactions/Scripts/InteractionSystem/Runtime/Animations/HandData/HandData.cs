@@ -142,14 +142,66 @@ namespace Shababeek.Interactions.Animations
         {
             get
             {
-                //if (posesArray != null && posesArray.Length == poses.Count + 1) return posesArray;
-                posesArray = new PoseData[poses.Count + 1];
-                posesArray[0] = defaultPose;
-                defaultPose.Name = "Default";
-                defaultPose.SetType(PoseData.PoseType.Dynamic);
-                for (var i = 0; i < poses.Count; i++) posesArray[i + 1] = poses[i];
+                if (posesArray != null && posesArray.Length > 0) 
+                    return posesArray;
+                
+                var validPoses = new List<PoseData>();
+                
+                // Validate and add default pose
+                if (ValidatePose(defaultPose, "Default"))
+                {
+                    defaultPose.Name = "Default";
+                    defaultPose.SetType(PoseData.PoseType.Dynamic);
+                    validPoses.Add(defaultPose);
+                }
+                else
+                {
+                    Debug.LogError($"[HandData] Default pose is invalid in {name}. This will cause issues!", this);
+                }
+                
+                // Validate and add custom poses
+                for (var i = 0; i < poses.Count; i++)
+                {
+                    if (ValidatePose(poses[i], $"Pose {i}"))
+                    {
+                        validPoses.Add(poses[i]);
+                    }
+                }
+                
+                posesArray = validPoses.ToArray();
                 return posesArray;
             }
+        }
+
+        private bool ValidatePose(PoseData pose, string poseName)
+        {
+            bool isValid = true;
+            
+            // Static poses only need the open clip
+            if (pose.Type == PoseData.PoseType.Static)
+            {
+                if (pose.OpenAnimationClip == null)
+                {
+                    Debug.LogWarning($"[HandData] {poseName} in {name} is missing OpenAnimationClip. This pose will be skipped.", this);
+                    isValid = false;
+                }
+            }
+            // Dynamic poses need both clips
+            else if (pose.Type == PoseData.PoseType.Dynamic)
+            {
+                if (pose.OpenAnimationClip == null)
+                {
+                    Debug.LogWarning($"[HandData] {poseName} in {name} is missing OpenAnimationClip. This pose will be skipped.", this);
+                    isValid = false;
+                }
+                if (pose.ClosedAnimationClip == null)
+                {
+                    Debug.LogWarning($"[HandData] {poseName} in {name} is missing ClosedAnimationClip. This pose will be skipped.", this);
+                    isValid = false;
+                }
+            }
+            
+            return isValid;
         }
 
         /// <summary>
@@ -157,6 +209,20 @@ namespace Shababeek.Interactions.Animations
         /// </summary>
         /// <returns>The description text</returns>
         public string Description => description;
+
+        /// <summary>
+        /// Invalidates the cached poses array, forcing it to be rebuilt on next access.
+        /// Call this when poses are modified in the editor.
+        /// </summary>
+        public void InvalidatePoseCache()
+        {
+            posesArray = null;
+        }
+
+        private void OnValidate()
+        {
+            InvalidatePoseCache();
+        }
 
         public AvatarMask[] GetAvatarMasks()
         {
