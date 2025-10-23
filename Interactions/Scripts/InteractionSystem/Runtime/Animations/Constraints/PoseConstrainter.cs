@@ -68,6 +68,8 @@ namespace Shababeek.Interactions
         [Header("Runtime State")]
         [SerializeField, ReadOnly] [Tooltip("The parent transform for this constraint system.")]
         private Transform parent;
+        
+        private InteractableBase _interactableBase;
 
         /// <summary>
         /// Parent transform for this constraint system.
@@ -76,6 +78,19 @@ namespace Shababeek.Interactions
         {
             get => parent == null ? transform : parent;
             set => parent = value;
+        }
+        
+        /// <summary>
+        /// Transform used for pose calculations. References the scale compensator if available.
+        /// </summary>
+        public Transform ConstraintTransform
+        {
+            get
+            {
+                if (!_interactableBase)
+                    _interactableBase = GetComponent<InteractableBase>();
+                return _interactableBase ? _interactableBase.ConstraintTransform : transform;
+            }
         }
 
         /// <summary>
@@ -87,20 +102,6 @@ namespace Shababeek.Interactions
         /// Pose constraints for the right hand.
         /// </summary>
         public PoseConstrains RightPoseConstrains => rightPoseConstraints;
-        
-        public Transform LeftHandTransform
-        {
-            get => null;
-            set => throw new System.NotImplementedException();
-        }
-
-        public Transform RightHandTransform
-        {
-            get => null;
-            set => throw new System.NotImplementedException();
-        }
-
-        public Transform PivotParent => null;
         
         /// <summary>
         /// Whether this transform has changed since the last frame.
@@ -178,10 +179,10 @@ namespace Shababeek.Interactions
         public (Vector3 position, Quaternion rotation) GetRelativeTargetHandTransform(Transform parent, HandIdentifier handIdentifier)
         {
             var transfom = GetTargetHandTransform(handIdentifier);
-            Vector3 worldPosition = transform.TransformPoint(transfom.position);
-            Quaternion worldRotation = transform.rotation * transfom.rotation;
+            Vector3 worldPosition = ConstraintTransform.TransformPoint(transfom.position);
+            Quaternion worldRotation = ConstraintTransform.rotation * transfom.rotation;
             
-            //  convert from world space to interactableObject's local space
+            //  convert from world space to parent's local space
             transfom.position = parent.InverseTransformPoint(worldPosition);
             transfom.rotation = Quaternion.Inverse(parent.rotation) * worldRotation;
             return transfom;
@@ -205,4 +206,4 @@ namespace Shababeek.Interactions
             UpdatePivots();
         }
     }
-} 
+}

@@ -31,6 +31,70 @@ namespace Shababeek.Interactions
             set => interactableObject = value;
         }
 
+        /// <summary>
+        /// Gets the transform that should be used for manipulation.
+        /// Uses the interactableObject for constrained interactions.
+        /// </summary>
+        protected Transform ManipulationTarget => interactableObject ? interactableObject : ConstraintTransform;
+        
+        /// <summary>
+        /// Validates that interactableObject exists as a child of ScaleCompensator.
+        /// Ensures the serialized reference is maintained.
+        /// </summary>
+        protected override void ValidateInteractableObject()
+        {
+            if (!_scaleCompensator) return;
+            
+            // If we already have a valid reference, just validate its location
+            if (interactableObject != null)
+            {
+                if (interactableObject.parent == _scaleCompensator)
+                {
+                    return; // Already valid
+                }
+                else
+                {
+                    // Reference exists but in wrong location - move it
+                    Debug.Log($"Moving interactableObject into ScaleCompensator for {gameObject.name}", this);
+                    interactableObject.SetParent(_scaleCompensator, true);
+                    return;
+                }
+            }
+            
+            // No reference - check if object exists in correct location
+            var existing = _scaleCompensator.Find("interactableObject");
+            if (existing != null)
+            {
+                interactableObject = existing;
+                return;
+            }
+            
+            // Check if it exists elsewhere (wrong location)
+            var wrongLocation = transform.Find("interactableObject");
+            if (wrongLocation != null)
+            {
+                Debug.Log($"Moving interactableObject into ScaleCompensator for {gameObject.name}", this);
+                wrongLocation.SetParent(_scaleCompensator, true);
+                interactableObject = wrongLocation;
+                return;
+            }
+            
+            // Create new interactableObject
+            CreateInteractableObject();
+        }
+        
+        /// <summary>
+        /// Creates the interactableObject as a child of ScaleCompensator and assigns reference.
+        /// </summary>
+        protected override void CreateInteractableObject()
+        {
+            interactableObject = new GameObject("interactableObject").transform;
+            interactableObject.SetParent(_scaleCompensator, false);
+            interactableObject.localPosition = Vector3.zero;
+            interactableObject.localRotation = Quaternion.identity;
+            interactableObject.localScale = Vector3.one;
+        }
+
 
         protected override bool Select()
         {
@@ -100,7 +164,7 @@ namespace Shababeek.Interactions
             var fakeHandTransform = fakeHand.transform;
             fakeHandTransform.position = CurrentInteractor.transform.position;
             fakeHandTransform.rotation = CurrentInteractor.transform.rotation;
-            fakeHandTransform.parent = interactableObject.transform;
+            fakeHandTransform.SetParent(ManipulationTarget, false);
             fakeHand.name = $"FakeHand_{handData.name}_{handIdentifier}";
             return fakeHand;
         }
@@ -110,11 +174,11 @@ namespace Shababeek.Interactions
         {
             if (!fakeHand || !_poseConstrainter) return;
 
-            var positioning = _poseConstrainter.GetRelativeTargetHandTransform(interactableObject, handIdentifier);
+            var positioning = _poseConstrainter.GetRelativeTargetHandTransform(ManipulationTarget, handIdentifier);
             if (_poseConstrainter.UseSmoothTransitions)
             {
-                _startPosition = interactableObject.InverseTransformPoint(CurrentInteractor.transform.position);
-                _startRotation = Quaternion.Inverse(interactableObject.rotation) * CurrentInteractor.transform.rotation;
+                _startPosition = ManipulationTarget.InverseTransformPoint(CurrentInteractor.transform.position);
+                _startRotation = Quaternion.Inverse(ManipulationTarget.rotation) * CurrentInteractor.transform.rotation;
                 _targetPosition = positioning.position;
                 _targetRotation = positioning.rotation;
                 _transitionProgress = 0f;
@@ -150,49 +214,16 @@ namespace Shababeek.Interactions
             }
         }
 
-        private void Awake()
+        public override void InitializeInteractable()
         {
+            base.InitializeInteractable();
             DestroyFakeHands();
-            Initialize();
-            CompensateScale();
-        }
-
-        private void CompensateScale()
-        {
-            if (!interactableObject.parent) return;
-            var scaleCompensator = new GameObject("ScaleCompensator").transform;
-            scaleCompensator.parent = interactableObject.parent;
-            scaleCompensator.position = interactableObject.position;
-            scaleCompensator.rotation = interactableObject.rotation;
-            var x = 1 / interactableObject.parent.lossyScale.x;
-            var y = 1 / interactableObject.parent.lossyScale.y;
-            var z = 1 / interactableObject.parent.lossyScale.z;
-            scaleCompensator.localScale =  new Vector3(x, y, z);
-            interactableObject.parent = scaleCompensator;
-            interactableObject = scaleCompensator;
-        }
-
-        /// <summary>
-        /// Initializes the interactable object transform if not already set.
-        /// </summary>
-        public void Initialize()
-        {
-            if (interactableObject != null) return;
-
-            var existingChild = transform.Find("interactableObject");
-            if (existingChild != null)
-            {
-                interactableObject = existingChild;
-
-                return;
-            }
-            interactableObject = new GameObject("interactableObject").transform;
-            interactableObject.localPosition = Vector3.zero;
         }
 
 
-        private void OnDestroy()
+        protected override void OnDestroy()
         {
+            base.OnDestroy();
             DestroyFakeHands();
         }
 

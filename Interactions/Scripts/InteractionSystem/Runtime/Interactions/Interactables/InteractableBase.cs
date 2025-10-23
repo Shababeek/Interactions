@@ -68,6 +68,9 @@ namespace Shababeek.Interactions
         [Tooltip("Indicates whether this interactable is currently being used (secondary button pressed).")]
         [SerializeField][ReadOnly] private bool isUsing;
         
+        // Scale compensation - prevents shearing during editor pose setup and runtime manipulation
+        protected Transform _scaleCompensator;
+        
         /// <summary>
         /// The interaction point transform for this interactable.
         /// </summary>
@@ -76,6 +79,25 @@ namespace Shababeek.Interactions
         /// </Todo>
         /// <value>The transform representing the interaction point, or null if not specified.</value>
         public virtual Transform InteractionPoint => null;
+        
+        /// <summary>
+        /// Transform used for pose constraints and hand positioning.
+        /// Returns the scale compensator if it exists, otherwise returns this transform.
+        /// </summary>
+        public Transform ConstraintTransform => _scaleCompensator ? _scaleCompensator : transform;
+        
+        /// <summary>
+        /// Gets the interactableObject child transform if it exists.
+        /// This is the standard location for models/visuals in all interactables.
+        /// </summary>
+        public Transform InteractableObject
+        {
+            get
+            {
+                if (!_scaleCompensator) return null;
+                return _scaleCompensator.Find("interactableObject");
+            }
+        }
         
         /// <summary>
         /// Indicates whether this interactable is currently selected by an interactor.
@@ -298,6 +320,193 @@ namespace Shababeek.Interactions
                 isUsing = false;
                 onUseEnded.Invoke(currentInteractor);
                 UseEnded();
+            }
+        }
+        
+        /// <summary>
+        /// Called when component is first added or reset in editor.
+        /// Creates the scale compensator and interactable object structure.
+        /// </summary>
+        protected virtual void Reset()
+        {
+            ValidateAndCreateHierarchy();
+        }
+        
+        /// <summary>
+        /// Called when values change in the inspector.
+        /// Ensures the hierarchy is always correct.
+        /// </summary>
+        protected virtual void OnValidate()
+        {
+            ValidateAndCreateHierarchy();
+        }
+        
+        /// <summary>
+        /// Initializes the scale compensator to prevent shearing during pose editing and manipulation.
+        /// Called automatically - override InitializeInteractable() in derived classes for custom initialization.
+        /// </summary>
+        protected virtual void Awake()
+        {
+            ValidateAndCreateHierarchy();
+            InitializeInteractable();
+        }
+        
+        /// <summary>
+        /// Override this method in derived classes for custom initialization logic.
+        /// </summary>
+        public virtual void InitializeInteractable()
+        {
+            // Override in derived classes
+        }
+        
+        /// <summary>
+        /// Validates and creates the proper hierarchy: ScaleCompensator with interactableObject child.
+        /// This ensures the structure exists in edit mode and runtime.
+        /// Public to allow editor scripts to refresh the hierarchy when needed.
+        /// </summary>
+        public void ValidateAndCreateHierarchy()
+        {
+            // Step 1: Validate/create ScaleCompensator
+            ValidateScaleCompensator();
+            
+            // Step 2: Validate/create interactableObject as child of ScaleCompensator
+            ValidateInteractableObject();
+        }
+        
+        /// <summary>
+        /// Validates that the scale compensator exists and is correctly configured.
+        /// Creates it if missing or recreates if incorrectly structured.
+        /// </summary>
+        protected void ValidateScaleCompensator()
+        {
+            // Check if we already have a valid reference
+            if (_scaleCompensator != null && _scaleCompensator.parent == transform)
+            {
+                return; // Already valid
+            }
+            
+            // Try to find existing ScaleCompensator
+            var existing = transform.Find("ScaleCompensator");
+            
+            if (existing != null)
+            {
+                // Found existing - validate it's set up correctly
+                if (existing.parent == transform)
+                {
+                    _scaleCompensator = existing;
+                    UpdateScaleCompensatorScale();
+                    return;
+                }
+            }
+            
+            // Need to create new ScaleCompensator
+            CreateScaleCompensator();
+        }
+        
+        /// <summary>
+        /// Creates the scale compensator transform.
+        /// </summary>
+        protected void CreateScaleCompensator()
+        {
+            _scaleCompensator = new GameObject("ScaleCompensator").transform;
+            _scaleCompensator.SetParent(transform, false);
+            _scaleCompensator.localPosition = Vector3.zero;
+            _scaleCompensator.localRotation = Quaternion.identity;
+            
+            UpdateScaleCompensatorScale();
+        }
+        
+        /// <summary>
+        /// Updates the scale compensator's scale based on parent scale.
+        /// </summary>
+        protected void UpdateScaleCompensatorScale()
+        {
+            if (!_scaleCompensator) return;
+            
+            // Apply scale compensation if parent exists and has non-uniform scale
+            if (transform.parent)
+            {
+                var parentScale = transform.parent.lossyScale;
+                
+                // Check for zero or near-zero scale to prevent division by zero
+                if (Mathf.Approximately(parentScale.x, 0f) || 
+                    Mathf.Approximately(parentScale.y, 0f) || 
+                    Mathf.Approximately(parentScale.z, 0f))
+                {
+                    Debug.LogWarning($"Parent of {gameObject.name} has zero scale. Scale compensator created but not compensating.", this);
+                    _scaleCompensator.localScale = Vector3.one;
+                    return;
+                }
+                
+                // Set inverse scale to compensate for parent's scale
+                _scaleCompensator.localScale = new Vector3(
+                    1f / parentScale.x,
+                    1f / parentScale.y,
+                    1f / parentScale.z
+                );
+            }
+            else
+            {
+                // No parent, no need to compensate
+                _scaleCompensator.localScale = Vector3.one;
+            }
+        }
+        
+        /// <summary>
+        /// Validates that interactableObject exists as a child of ScaleCompensator.
+        /// Creates it if missing. Override this for custom interactableObject setup.
+        /// </summary>
+        protected virtual void ValidateInteractableObject()
+        {
+            if (!_scaleCompensator) return;
+            
+            // Check if interactableObject exists and is in the right place
+            var existing = _scaleCompensator.Find("interactableObject");
+            
+            if (existing != null)
+            {
+                return; // Already exists in correct location
+            }
+            
+            // Check if it exists elsewhere (wrong location)
+            var wrongLocation = transform.Find("interactableObject");
+            if (wrongLocation != null)
+            {
+                // Move it to correct location
+                Debug.Log($"Moving interactableObject into ScaleCompensator for {gameObject.name}", this);
+                wrongLocation.SetParent(_scaleCompensator, true);
+                return;
+            }
+            
+            // Create new interactableObject
+            CreateInteractableObject();
+        }
+        
+        /// <summary>
+        /// Creates the interactableObject as a child of ScaleCompensator.
+        /// Override this in derived classes for custom setup.
+        /// </summary>
+        protected virtual void CreateInteractableObject()
+        {
+            var interactableObject = new GameObject("interactableObject").transform;
+            interactableObject.SetParent(_scaleCompensator, false);
+            interactableObject.localPosition = Vector3.zero;
+            interactableObject.localRotation = Quaternion.identity;
+            interactableObject.localScale = Vector3.one;
+        }
+        
+        /// <summary>
+        /// Cleans up the scale compensator when the object is destroyed.
+        /// </summary>
+        protected virtual void OnDestroy()
+        {
+            if (_scaleCompensator)
+            {
+                // Only destroy if we're not in the middle of a scene unload
+                if (_scaleCompensator.gameObject)
+                {
+                    DestroyImmediate(_scaleCompensator.gameObject);
+                }
             }
         }
     }

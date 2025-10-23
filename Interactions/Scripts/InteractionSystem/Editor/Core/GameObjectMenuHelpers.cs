@@ -453,7 +453,7 @@ namespace Shababeek.Interactions.Editors
                 if (constrainedInteractable.InteractableObject )
                     DestroyImmediate(constrainedInteractable.InteractableObject.gameObject);
                 constrainedInteractable.InteractableObject = interactableObject;
-                constrainedInteractable.Initialize();
+                constrainedInteractable.ValidateAndCreateHierarchy();
                 return constrainedInteractable;
             }
             catch (System.Exception e)

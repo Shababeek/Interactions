@@ -19,7 +19,7 @@ namespace Shababeek.Interactions.Editors
         private SerializedProperty _rightHandPositioningProperty;
 
         private Config _config;
-        private HandData _handdata;
+        private HandData _handData;
         private HandPoseController _currentHand;
         private HandPoseController _leftHandPrefab, _rightHandPrefab;
         private HandIdentifier _selectedHand = HandIdentifier.None;
@@ -267,8 +267,8 @@ namespace Shababeek.Interactions.Editors
                 ? _constrainter.LeftPoseConstrains
                 : _constrainter.RightPoseConstrains;
             var targetPoseIndex = constraint.targetPoseIndex;
-            if (targetPoseIndex <= 0 || targetPoseIndex >= _handdata.Poses.Length) return false;
-            var selectedPose = _handdata.Poses[targetPoseIndex];
+            if (targetPoseIndex <= 0 || targetPoseIndex >= _handData.Poses.Length) return false;
+            var selectedPose = _handData.Poses[targetPoseIndex];
             return (selectedPose.Type == PoseData.PoseType.Static);
         }
 
@@ -297,9 +297,9 @@ namespace Shababeek.Interactions.Editors
 
             if (_config?.HandData != null)
             {
-                _handdata=_config.HandData;
-                _leftHandPrefab = _handdata.LeftHandPrefab;
-                _rightHandPrefab = _handdata.RightHandPrefab;
+                _handData=_config.HandData;
+                _leftHandPrefab = _handData.LeftHandPrefab;
+                _rightHandPrefab = _handData.RightHandPrefab;
             }
             else
             {
@@ -332,9 +332,19 @@ namespace Shababeek.Interactions.Editors
 
             if (_selectedHand != HandIdentifier.None)
             {
-                // Create the hand as a child of the constraint system object
+                // Ensure scale compensator is up-to-date before spawning hand
+                // This handles cases where parent scale changed after component initialization
+                var interactableBase = _constrainter.GetComponent<InteractableBase>();
+                if (interactableBase != null)
+                {
+                    // Trigger validation which will update scale compensation
+                    interactableBase.ValidateAndCreateHierarchy();
+                }
+                
+                // Create the hand as a child of the ConstraintTransform (ScaleCompensator)
+                // This ensures the hand is in scale-compensated space, preventing shearing
                 var handPrefab = _selectedHand == HandIdentifier.Left ? _leftHandPrefab : _rightHandPrefab;
-                _currentHand = CreateHandInPivot(_constrainter.transform, handPrefab);
+                _currentHand = CreateHandInPivot(_constrainter.ConstraintTransform, handPrefab);
 
                 // Set the hand's local position and rotation based on the vector values
                 UpdateHandTransformFromVectors();
@@ -546,17 +556,10 @@ namespace Shababeek.Interactions.Editors
             }
             Tools.hidden = true;
             
-            // Use local coordinates for the transform handle since the hand is parented
-            var localPosition = _currentHand.transform.localPosition;
-            var localRotation = _currentHand.transform.localEulerAngles;
-            
-            // Convert to world space for the handle
             var worldPosition = _currentHand.transform.position;
             var worldRotation = _currentHand.transform.rotation;
-            
             Handles.TransformHandle(ref worldPosition, ref worldRotation);
             
-            // Convert back to local space and update
             _currentHand.transform.position = worldPosition;
             _currentHand.transform.rotation = worldRotation;
             

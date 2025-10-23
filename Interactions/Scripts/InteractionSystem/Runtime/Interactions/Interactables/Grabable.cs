@@ -28,18 +28,9 @@ namespace Shababeek.Interactions
         private readonly TransformTweenable _transformTweenable = new();
         private GrabStrategy _grabStrategy;
         private PoseConstrainter _poseConstrainter;
+        private Action _tweenCompleteCallback;
         
-        /// <summary>
-        /// Gets the transform for the right hand's relative position during grabbing.
-        /// </summary>
-        /// <value>The transform representing the right hand's grab position.</value>
-        public Transform RightHandRelativePosition => _poseConstrainter.RightHandTransform;
-        
-        /// <summary>
-        /// Gets the transform for the left hand's relative position during grabbing.
-        /// </summary>
-        /// <value>The transform representing the left hand's grab position.</value>
-        public Transform LeftHandRelativePosition => _poseConstrainter.LeftHandTransform;
+   
         
         /// <summary>
         /// Gets the target position and rotation for the right hand during grabbing.
@@ -82,12 +73,17 @@ namespace Shababeek.Interactions
             // Remove pose constraints and restore hand visibility
             _poseConstrainter.RemoveConstraints(CurrentInteractor.Hand);
             
+            // Clean up tween subscription before removing tweenable
+            UnsubscribeTweenComplete();
+            
             tweener.RemoveTweenable(_transformTweenable);
             _grabStrategy.UnGrab(this, CurrentInteractor);
         }
         
-        protected virtual void Awake()
+        public override void InitializeInteractable()
         {
+            base.InitializeInteractable();
+            
             _poseConstrainter ??= GetComponent<PoseConstrainter>();
             tweener ??= GetComponent<VariableTweener>();
             if (!tweener)
@@ -113,9 +109,10 @@ namespace Shababeek.Interactions
             var (localPosition, localRotation) = CurrentInteractor.Hand.HandIdentifier == HandIdentifier.Left ? 
                 GetLeftHandTarget() : GetRightHandTarget();
             
-            // Convert local coordinates to world coordinates
-            var worldPosition = _poseConstrainter.transform.TransformPoint(localPosition);
-            var worldRotation = _poseConstrainter.transform.rotation * localRotation;
+            // Convert local coordinates to world coordinates using ConstraintTransform
+            // This ensures consistent behavior whether using ScaleCompensator or not
+            var worldPosition = ConstraintTransform.TransformPoint(localPosition);
+            var worldRotation = ConstraintTransform.rotation * localRotation;
             
             // Calculate the attachment point offset using pure math
             // The attachment point needs to represent where the object currently is
@@ -130,9 +127,30 @@ namespace Shababeek.Interactions
 
         private void MoveObjectToPosition(Action callBack)
         {
+            // Unsubscribe from any previous callback to prevent memory leaks
+            UnsubscribeTweenComplete();
+            
             _transformTweenable.Initialize(transform, CurrentInteractor.AttachmentPoint);
             tweener.AddTweenable(_transformTweenable);
-            _transformTweenable.OnTweenComplete += callBack;
+            
+            // Store callback reference so we can unsubscribe later
+            _tweenCompleteCallback = callBack;
+            _transformTweenable.OnTweenComplete += _tweenCompleteCallback;
+        }
+
+        private void UnsubscribeTweenComplete()
+        {
+            if (_tweenCompleteCallback != null)
+            {
+                _transformTweenable.OnTweenComplete -= _tweenCompleteCallback;
+                _tweenCompleteCallback = null;
+            }
+        }
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            UnsubscribeTweenComplete();
         }
     }
 }

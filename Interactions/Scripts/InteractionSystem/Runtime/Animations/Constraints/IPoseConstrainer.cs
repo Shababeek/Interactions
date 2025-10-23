@@ -11,9 +11,6 @@ namespace Shababeek.Interactions.Animations.Constraints
     {
         PoseConstrains LeftPoseConstrains { get; }
         PoseConstrains RightPoseConstrains { get; }
-        Transform LeftHandTransform { get; set; }
-        Transform RightHandTransform { get; set; }
-        Transform PivotParent { get; }
         bool HasChanged { get; }
         
         /// <summary>
