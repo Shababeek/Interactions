@@ -96,7 +96,7 @@ namespace Shababeek.Interactions
 
         protected void OnHoverStart()
         {
-            if (currentInteractable == null || currentInteractable.IsSelected) return;
+            if (!currentInteractable || currentInteractable.IsSelected) return;
             if (!currentInteractable.IsValidHand(Hand)) return;
 
             currentInteractable.OnStateChanged(InteractionState.Hovering, this);
@@ -118,7 +118,7 @@ namespace Shababeek.Interactions
         /// </summary>
         public void Select()
         {
-            if (currentInteractable == null || currentInteractable.IsSelected) return;
+            if (!currentInteractable || currentInteractable.IsSelected) return;
             isInteracting = true;
             currentInteractable.OnStateChanged(InteractionState.Selected, this);
 
@@ -159,7 +159,7 @@ namespace Shababeek.Interactions
 
         private void HandleInteractionStateChanged(VRButtonState state)
         {
-            if (currentInteractable is null) return;
+            if (currentInteractable == null) return;
             switch (state)
             {
                 case VRButtonState.Up:
@@ -176,7 +176,7 @@ namespace Shababeek.Interactions
 
         private void HandleActivation(VRButtonState state)
         {
-            if (currentInteractable is null) return;
+            if (currentInteractable == null) return;
             switch (state)
             {
                 case VRButtonState.Down:

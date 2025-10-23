@@ -50,17 +50,17 @@ namespace Shababeek.Interactions
         private void Start()
         {
             InitializeLineRenderer();
-            if (raycastOrigin == null)
+            if (!raycastOrigin)
                 raycastOrigin = transform;
         }
         
 
         private void InitializeLineRenderer()
         {
-            if (lineRenderer == null)
+            if (!lineRenderer)
                 lineRenderer = GetComponent<LineRenderer>();
                 
-            if (lineRenderer == null)
+            if (!lineRenderer)
                 lineRenderer = gameObject.AddComponent<LineRenderer>();
                 
             lineRenderer.material = lineMaterial;
@@ -96,7 +96,7 @@ namespace Shababeek.Interactions
                 var hit = raycastHits[i];
                 var interactable = hit.collider.GetComponentInParent<InteractableBase>();
                 
-                if (interactable != null && hit.distance < closestDistance)
+                if (interactable && hit.distance < closestDistance)
                 {
                     closestInteractable = interactable;
                     closestDistance = hit.distance;
@@ -107,14 +107,14 @@ namespace Shababeek.Interactions
             
             if (closestInteractable != CurrentInteractable)
             {
-                if (CurrentInteractable != null)
+                if (CurrentInteractable)
                 {
                     OnHoverEnd();
                 }
 
                 CurrentInteractable = closestInteractable;
                 
-                if (CurrentInteractable != null)
+                if (CurrentInteractable)
                 {
                     OnHoverStart();
                 }
@@ -124,7 +124,7 @@ namespace Shababeek.Interactions
 
         private void UpdateLineRenderer()
         {
-            if (!showLineRenderer || lineRenderer == null)
+            if (!showLineRenderer || !lineRenderer)
                 return;
                 
             Vector3 origin = raycastOrigin.position;
@@ -153,7 +153,7 @@ namespace Shababeek.Interactions
         public void SetLineRendererVisibility(bool visible)
         {
             showLineRenderer = visible;
-            if (lineRenderer != null)
+            if (lineRenderer)
                 lineRenderer.enabled = visible;
         }
         
@@ -163,7 +163,7 @@ namespace Shababeek.Interactions
         public void SetLineColor(Color color)
         {
             lineColor = color;
-            if (lineRenderer != null)
+            if (lineRenderer)
             {
                 lineRenderer.startColor = color;
                 lineRenderer.endColor = color;
@@ -189,7 +189,7 @@ namespace Shababeek.Interactions
 
         private void OnDrawGizmosSelected()
         {
-            if (raycastOrigin == null) return;
+            if (!raycastOrigin) return;
             
             Vector3 origin = raycastOrigin.position;
             Vector3 direction = raycastOrigin.forward;
@@ -204,4 +204,4 @@ namespace Shababeek.Interactions
             }
         }
     }
-} 
+}

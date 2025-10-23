@@ -31,7 +31,7 @@ namespace Shababeek.Interactions
 
         private void ChangeInteractable(InteractableBase interactable)
         {
-            if (CurrentInteractable != null)
+            if (CurrentInteractable)
             {
                 try 
                 { 
@@ -80,16 +80,16 @@ namespace Shababeek.Interactions
         
         private Vector3 GetInteractionPoint(InteractableBase interactable)
         {
-            if (interactable == null) return Vector3.zero;
+            if (!interactable) return Vector3.zero;
             
             // Try to find a dedicated interaction point first
             var interactionPoint = interactable.InteractionPoint;
-            if (interactionPoint != null)
+            if (interactionPoint)
                 return interactionPoint.position;
             
             // Fallback: use the closest point on the collider bounds
             var firstCollider = interactable.GetComponentInChildren<Collider>();
-            return firstCollider != null ? firstCollider.ClosestPoint(transform.position) :
+            return firstCollider ? firstCollider.ClosestPoint(transform.position) :
                 // Last resort: use transform position
                 interactable.transform.position;
         }
