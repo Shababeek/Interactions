@@ -42,25 +42,15 @@ namespace Shababeek.Interactions.Animations
         {
             get
             {
-                var mask = thumb;
-                switch (i)
+                var mask = i switch
                 {
-                    case 0:
-                        mask = thumb;
-                        break;
-                    case 1:
-                        mask = index;
-                        break;
-                    case 2:
-                        mask = middle;
-                        break;
-                    case 3:
-                        mask = ring;
-                        break;
-                    case 4:
-                        mask = pinky;
-                        break;
-                }
+                    0 => thumb,
+                    1 => index,
+                    2 => middle,
+                    3 => ring,
+                    4 => pinky,
+                    _ => thumb
+                };
 
                 return mask;
             }
