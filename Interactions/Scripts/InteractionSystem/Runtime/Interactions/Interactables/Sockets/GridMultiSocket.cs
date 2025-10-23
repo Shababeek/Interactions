@@ -11,13 +11,19 @@ namespace Shababeek.Interactions
     public class GridMultiSocket : AbstractSocket
     {
         [Header("Grid Settings")]
+        [Tooltip("Number of columns (X) and rows (Y) in the grid.")]
         [SerializeField] private Vector2Int gridSize = new Vector2Int(3, 3);
+        [Tooltip("Spacing between grid slots in X and Y directions.")]
         [SerializeField] private Vector2 spacing = new Vector2(1f, 1f);
+        [Tooltip("The plane orientation for the grid layout.")]
         [SerializeField] private LocalDirection gridPlane = LocalDirection.Forward;
         [Header("Positioning")]
+        [Tooltip("Local space offset for the grid center.")]
         [SerializeField] private Vector3 localOffset = Vector3.zero;
+        [Tooltip("Whether to center the grid at the offset position.")]
         [SerializeField] private bool centerGrid = true;
         [Header("Pivot Settings")]
+        [Tooltip("Rotation offset applied to all grid pivots.")]
         [SerializeField] private Vector3 pivotRotationOffset = Vector3.zero;
 
         private readonly List<Transform> _gridPivots = new();

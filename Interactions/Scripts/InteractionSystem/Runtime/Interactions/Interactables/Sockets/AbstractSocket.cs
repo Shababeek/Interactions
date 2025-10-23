@@ -5,39 +5,64 @@ using UnityEngine.Events;
 
 namespace Shababeek.Interactions
 {
+    /// <summary>
+    /// Base class for socket components that can receive socketable objects.
+    /// Handles socket connection, disconnection, and hover events.
+    /// </summary>
     public abstract class AbstractSocket : MonoBehaviour
     {
+        [Tooltip("Event raised when a socketable object is inserted into this socket.")]
         [SerializeField] private UnityEvent<Socketable> onSocketConnected;
+        [Tooltip("Event raised when a socketable object is removed from this socket.")]
         [SerializeField] private UnityEvent<Socketable> onSocketDisconnected;
+        [Tooltip("Event raised when a socketable object starts hovering near this socket.")]
         [SerializeField] private UnityEvent<Socketable> onHoverStart;
+        [Tooltip("Event raised when a socketable object stops hovering near this socket.")]
         [SerializeField] private UnityEvent<Socketable> onHoverEnd;
 
+        /// <summary>
+        /// The pivot transform where socketable objects will be positioned.
+        /// </summary>
         public virtual Transform Pivot => transform;
 
+        /// <summary>
+        /// Observable that fires when a socketable object is connected to this socket.
+        /// </summary>
         public IObservable<Socketable> OnSocketConnected => onSocketConnected.AsObservable();
+        
+        /// <summary>
+        /// Observable that fires when a socketable object is disconnected from this socket.
+        /// </summary>
         public IObservable<Socketable> OnSocketDisconnected => onSocketDisconnected.AsObservable();
+        
+        /// <summary>
+        /// Observable that fires when a socketable object starts hovering near this socket.
+        /// </summary>
         public IObservable<Socketable> OnHoverStart => onHoverStart.AsObservable();
+        
+        /// <summary>
+        /// Observable that fires when a socketable object stops hovering near this socket.
+        /// </summary>
         public IObservable<Socketable> OnHoverEnd => onHoverEnd.AsObservable();
 
         /// <summary>
-        /// called when an object gets near the socket
+        /// Called when a socketable object gets near the socket.
         /// </summary>
         public virtual void StartHovering(Socketable socketable)
         {
             onHoverStart.Invoke(socketable);
         }
+        
         /// <summary>
-        /// Gets the pivot transform for a specific socketable. 
-        /// Default implementation returns the main Pivot, but can be overridden for dynamic positioning.
+        /// Gets the pivot position and rotation for a specific socketable.
         /// </summary>
-        /// <param name="socketable">The socketable to get the pivot for</param>
-        /// <returns>Transform representing where the socketable should be positioned</returns>
         public virtual (Vector3 position, Quaternion rotation) GetPivotForSocketable(Socketable socketable)
         {
             return (Pivot.position, Pivot.rotation);
         }
+        
         /// <summary>
-        /// Called when the object is no longer near the object
+        /// Called when a socketable object is no longer near the socket.
         /// </summary>
         public virtual void EndHovering(Socketable socketable)
         {
@@ -45,23 +70,25 @@ namespace Shababeek.Interactions
         }
 
         /// <summary>
-        /// is called when the socketable is Deselected when in Range of the Socketable
+        /// Called when a socketable object is inserted into the socket.
         /// </summary>
-        /// <param name="socketable"></param>
-        /// <returns></returns>
         public virtual Transform Insert(Socketable socketable)
         {
             onSocketConnected.Invoke(socketable);
             return Pivot;
         }
 
-        /// is called when the socketable is Selected after being socketed
+        /// <summary>
+        /// Called when a socketable object is removed from the socket.
+        /// </summary>
         public virtual void Remove(Socketable socketable)
         {
             onSocketDisconnected.Invoke(socketable);
-
         }
 
+        /// <summary>
+        /// Checks if the socket can accept a new socketable object.
+        /// </summary>
         public abstract bool CanSocket();
     }
 

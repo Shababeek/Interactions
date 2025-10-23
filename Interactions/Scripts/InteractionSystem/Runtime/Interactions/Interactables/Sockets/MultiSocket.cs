@@ -9,6 +9,9 @@ namespace Shababeek.Interactions
 
     namespace Shababeek.Interactions
     {
+        /// <summary>
+        /// Defines local direction axes for projection and alignment.
+        /// </summary>
         public enum LocalDirection
         {
             Forward = 0,
@@ -19,16 +22,24 @@ namespace Shababeek.Interactions
             Down = 5
         }
 
+        /// <summary>
+        /// Multi-socket that projects socketable objects onto a plane and creates pivot points dynamically.
+        /// Allows multiple objects to be socketed simultaneously with automatic spacing.
+        /// </summary>
         public class MultiSocket : AbstractSocket
         {
-            [Header("Positioning")] [SerializeField]
-            private Vector3 localOffset = Vector3.zero;
+            [Header("Positioning")]
+            [Tooltip("Local space offset for the projection plane center.")]
+            [SerializeField] private Vector3 localOffset = Vector3.zero;
 
+            [Tooltip("Direction of the projection plane normal.")]
             [SerializeField] private LocalDirection projectionDirection = LocalDirection.Forward;
 
-            [Header("Pivot Settings")] [SerializeField]
-            private Vector3 pivotRotationOffset = Vector3.zero;
+            [Header("Pivot Settings")]
+            [Tooltip("Rotation offset applied to all created pivots.")]
+            [SerializeField] private Vector3 pivotRotationOffset = Vector3.zero;
 
+            [Tooltip("Number of pivots to pre-create at start. More pivots are created automatically as needed.")]
             [SerializeField] private int initialPivotCount = 10;
 
             private readonly List<Transform> _availablePivots = new();

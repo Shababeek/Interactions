@@ -3,6 +3,10 @@ using Shababeek.Interactions.Core;
 
 namespace Shababeek.Interactions
 {
+    /// <summary>
+    /// Debug interactable that logs interaction events to the console.
+    /// Useful for testing and debugging interaction systems.
+    /// </summary>
     public class DebugInteractable : InteractableBase
     {
         protected override void UseStarted()

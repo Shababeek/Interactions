@@ -11,16 +11,23 @@ namespace Shababeek.Interactions
     public class TransformArrayMultiSocket : AbstractSocket
     {
         [Header("Socket Points")]
+        [Tooltip("Array of transforms that define socket positions. Objects will snap to the closest available socket point.")]
         [SerializeField] private Transform[] socketPoints = new Transform[0];
         
         [Header("Settings")]
+        [Tooltip("Whether to automatically select the closest available socket.")]
         [SerializeField] private bool useClosestSocket = true;
+        [Tooltip("Maximum distance for socketable objects to snap to a socket point.")]
         [SerializeField] private float maxSocketDistance = 2f;
         
         [Header("Visual Feedback")]
+        [Tooltip("Whether to show socket gizmos in the scene view.")]
         [SerializeField] private bool showSocketGizmos = true;
+        [Tooltip("Color for available (empty) socket points.")]
         [SerializeField] private Color availableSocketColor = Color.green;
+        [Tooltip("Color for occupied socket points.")]
         [SerializeField] private Color occupiedSocketColor = Color.red;
+        [Tooltip("Color for the socket point currently being hovered.")]
         [SerializeField] private Color hoverSocketColor = Color.yellow;
 
         private readonly HashSet<Transform> _occupiedSockets = new();

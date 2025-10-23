@@ -12,27 +12,43 @@ namespace Shababeek.Interactions.Feedback
     public class SFXFeedback : MonoBehaviour
     {
         [Header("Hover Sound Effects")]
+        [Tooltip("Whether to play sound effects when hovering over the interactable.")]
         [SerializeField] private bool playHoverSFX = true;
+        [Tooltip("Audio clip to play when hover starts.")]
         [SerializeField] private AudioClip hoverEnterClip;
+        [Tooltip("Audio clip to play when hover ends.")]
         [SerializeField] private AudioClip hoverExitClip;
+        [Tooltip("Volume for hover sound effects (0-1).")]
         [SerializeField] [Range(0f, 1f)] private float hoverVolume = 0.5f;
         
         [Header("Selection Sound Effects")]
+        [Tooltip("Whether to play sound effects when selecting the interactable.")]
         [SerializeField] private bool playSelectionSFX = true;
+        [Tooltip("Audio clip to play when the object is selected.")]
         [SerializeField] private AudioClip selectClip;
+        [Tooltip("Audio clip to play when the object is deselected.")]
         [SerializeField] private AudioClip deselectClip;
+        [Tooltip("Volume for selection sound effects (0-1).")]
         [SerializeField] [Range(0f, 1f)] private float selectionVolume = 0.7f;
         
         [Header("Activation Sound Effects")]
+        [Tooltip("Whether to play sound effects when activating the interactable.")]
         [SerializeField] private bool playActivationSFX = true;
+        [Tooltip("Audio clip to play when the object is activated (use button pressed).")]
         [SerializeField] private AudioClip activateClip;
+        [Tooltip("Volume for activation sound effects (0-1).")]
         [SerializeField] [Range(0f, 1f)] private float activationVolume = 1f;
         
         [Header("Audio Settings")]
+        [Tooltip("Whether to use 3D spatial audio (false for 2D audio).")]
         [SerializeField] private bool useSpatialAudio = true;
+        [Tooltip("Minimum distance for spatial audio falloff.")]
         [SerializeField] [Range(0f, 5f)] private float minDistance = 1f;
+        [Tooltip("Maximum distance for spatial audio falloff.")]
         [SerializeField] [Range(0f, 25f)] private float maxDistance = 10f;
+        [Tooltip("Whether to randomize the pitch of sound effects.")]
         [SerializeField] private bool randomizePitch = false;
+        [Tooltip("Amount of pitch randomization to apply (±this value).")]
         [SerializeField] [Range(0.8f, 1.2f)] private float pitchVariation = 0.1f;
         
         private AudioSource _audioSource;

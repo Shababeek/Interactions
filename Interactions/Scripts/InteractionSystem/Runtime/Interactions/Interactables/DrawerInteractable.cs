@@ -7,35 +7,57 @@ using UniRx;
 
 namespace Shababeek.Interactions
 {
+    /// <summary>
+    /// Drawer/slider interactable that moves linearly between two points.
+    /// Provides smooth movement along a defined path with optional return-to-start behavior.
+    /// </summary>
     [CreateAssetMenu(menuName = "Shababeek/Interactions/Interactables/DrawerInteractable")]
     public class DrawerInteractable : ConstrainedInteractableBase
     {
-        [Header("Drawer/Slider Settings")] [SerializeField]
-        private Vector3 _localStart = Vector3.zero;
+        [Header("Drawer/Slider Settings")]
+        [Tooltip("Local space position where the drawer movement starts.")]
+        [SerializeField] private Vector3 _localStart = Vector3.zero;
 
+        [Tooltip("Local space position where the drawer movement ends.")]
         [SerializeField] private Vector3 _localEnd = Vector3.forward;
+        [Tooltip("Whether the drawer should return to its starting position when deselected.")]
         [SerializeField] private bool returnToOriginal = false;
+        [Tooltip("Speed at which the drawer returns to its starting position.")]
         [SerializeField] private float returnSpeed = 5f;
 
-        [Header("Events")] [SerializeField] private UnityEvent onMoved;
+        [Header("Events")]
+        [Tooltip("Event raised when the drawer is moved.")]
+        [SerializeField] private UnityEvent onMoved;
+        [Tooltip("Event raised when the drawer reaches either start or end limit.")]
         [SerializeField] private UnityEvent onLimitReached;
+        [Tooltip("Event raised when the drawer's normalized position changes (0-1 range).")]
         [SerializeField] private FloatUnityEvent onValueChanged;
 
-        [Header("Debug")] [ReadOnly] [SerializeField]
-        private float currentValue = 0f;
+        [Header("Debug")]
+        [Tooltip("Current normalized position of the drawer (0-1 range) (read-only).")]
+        [ReadOnly] [SerializeField] private float currentValue = 0f;
 
+        /// <summary>
+        /// Gets or sets the local space starting position of the drawer.
+        /// </summary>
         public Vector3 LocalStart
         {
             get => _localStart;
             set => _localStart = value;
         }
 
+        /// <summary>
+        /// Gets or sets the local space ending position of the drawer.
+        /// </summary>
         public Vector3 LocalEnd
         {
             get => _localEnd;
             set => _localEnd = value;
         }
 
+        /// <summary>
+        /// Observable that fires when the drawer's normalized position changes.
+        /// </summary>
         public IObservable<float> OnValueChanged => onValueChanged.AsObservable();
 
         // Private fields

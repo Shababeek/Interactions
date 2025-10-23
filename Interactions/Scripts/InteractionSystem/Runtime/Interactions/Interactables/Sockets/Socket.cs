@@ -4,9 +4,14 @@ using UnityEngine;
 
 namespace Shababeek.Interactions
 {
+    /// <summary>
+    /// Simple socket implementation that can hold one socketable object at a time.
+    /// </summary>
     public class Socket : AbstractSocket
     {
+        [Tooltip("The currently socketed object (read-only).")]
         [ReadOnly] [SerializeField] private Socketable current;
+        
         public override Transform Insert(Socketable socketable)
         {
             current = socketable;

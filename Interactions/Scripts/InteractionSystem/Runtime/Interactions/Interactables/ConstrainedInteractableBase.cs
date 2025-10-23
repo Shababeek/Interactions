@@ -4,11 +4,16 @@ using Shababeek.Interactions.Animations.Constraints;
 
 namespace Shababeek.Interactions
 {
+    /// <summary>
+    /// Base class for interactables that use constrained hand poses during interaction.
+    /// Manages fake hand creation, pose constraints, and smooth transitions.
+    /// </summary>
     [RequireComponent(typeof(PoseConstrainter))]
     public abstract class ConstrainedInteractableBase : InteractableBase
     {
         [Tooltip("Transform representing the object that will be manipulated during interaction.")]
         [SerializeField] protected Transform interactableObject;
+        [Tooltip("Distance threshold for snapping the fake hand to the target position.")]
         [SerializeField] private float _snapDistance = .5f;
 
         private Hand _leftFakeHand;
@@ -37,10 +42,6 @@ namespace Shababeek.Interactions
         /// </summary>
         protected Transform ManipulationTarget => interactableObject ? interactableObject : ConstraintTransform;
         
-        /// <summary>
-        /// Validates that interactableObject exists as a child of ScaleCompensator.
-        /// Ensures the serialized reference is maintained.
-        /// </summary>
         protected override void ValidateInteractableObject()
         {
             if (!_scaleCompensator) return;
@@ -83,9 +84,6 @@ namespace Shababeek.Interactions
             CreateInteractableObject();
         }
         
-        /// <summary>
-        /// Creates the interactableObject as a child of ScaleCompensator and assigns reference.
-        /// </summary>
         protected override void CreateInteractableObject()
         {
             interactableObject = new GameObject("interactableObject").transform;
@@ -169,7 +167,6 @@ namespace Shababeek.Interactions
             return fakeHand;
         }
 
-
         private void PositionFakeHand(Transform fakeHand, HandIdentifier handIdentifier)
         {
             if (!fakeHand || !_poseConstrainter) return;
@@ -191,7 +188,6 @@ namespace Shababeek.Interactions
                 _isTransitioning = false;
             }
         }
-
 
         private void Update()
         {
@@ -220,7 +216,6 @@ namespace Shababeek.Interactions
             DestroyFakeHands();
         }
 
-
         protected override void OnDestroy()
         {
             base.OnDestroy();
@@ -240,7 +235,14 @@ namespace Shababeek.Interactions
             }
         }
 
+        /// <summary>
+        /// Called each frame while the interactable is selected to handle manipulation.
+        /// </summary>
         protected abstract void HandleObjectMovement();
+        
+        /// <summary>
+        /// Called when the interactable is deselected to handle cleanup.
+        /// </summary>
         protected abstract void HandleObjectDeselection();
     }
 }

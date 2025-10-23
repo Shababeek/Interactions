@@ -57,6 +57,9 @@ namespace Shababeek.Interactions
         private TransformTweenable _returnTweenable;
         private bool _isReturning = false;
 
+        /// <summary>
+        /// Gets whether the object is currently socketed.
+        /// </summary>
         public bool IsSocketed
         {
             get => isSocketed;
@@ -252,6 +255,9 @@ namespace Shababeek.Interactions
             socket = null;
         }
 
+        /// <summary>
+        /// Shows the indicator at the specified position and rotation.
+        /// </summary>
         public void Indicate(Vector3 position, Quaternion rotation)
         {
             indicator.gameObject.SetActive(!isSocketed);
@@ -259,13 +265,16 @@ namespace Shababeek.Interactions
             indicator.transform.rotation = rotation;
         }
 
+        /// <summary>
+        /// Hides the socket indicator.
+        /// </summary>
         public void StopIndication()
         {
             indicator.gameObject.SetActive(false);
         }
 
         /// <summary>
-        /// For use with editor only please ignore
+        /// Forces the object to return to its original position immediately without animation.
         /// </summary>
         public void ForceReturn()
         {
@@ -284,7 +293,6 @@ namespace Shababeek.Interactions
 
         /// <summary>
         /// Forces the object to return to its original position with smooth animation.
-        /// mainly for use with editor 
         /// </summary>
         public void ForceReturnWithTween()
         {
