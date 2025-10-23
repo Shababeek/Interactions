@@ -116,7 +116,7 @@ namespace Shababeek.Interactions
         /// <summary>
         /// Selects an interactable object.
         /// </summary>
-        public void OnSelect()
+        public void Select()
         {
             if (currentInteractable == null || currentInteractable.IsSelected) return;
             isInteracting = true;
@@ -130,7 +130,7 @@ namespace Shababeek.Interactions
         /// <summary>
         /// Deselects an interactable object.
         /// </summary>
-        public void OnDeSelect()
+        public void DeSelect()
         {
             isInteracting = false;
             DisposeActivationSubscription();
@@ -140,7 +140,7 @@ namespace Shababeek.Interactions
         }
 
 
-        private void OnUse()
+        private void Use()
         {
             if (!currentInteractable) return;
             if (currentInteractable.CurrentState != InteractionState.Selected) return;
@@ -149,7 +149,7 @@ namespace Shababeek.Interactions
             currentInteractable.StartUsing(this);
         }
 
-        private void OnUnused()
+        private void UnUse()
         {
             if (!currentInteractable) return;
             if (currentInteractable.CurrentState != InteractionState.Selected) return;
@@ -165,11 +165,11 @@ namespace Shababeek.Interactions
                 case VRButtonState.Up:
                     if (currentInteractable.CurrentState == InteractionState.Selected &&
                         currentInteractable.CurrentInteractor == this)
-                        OnDeSelect();
+                        DeSelect();
                     break;
                 case VRButtonState.Down:
                     if (currentInteractable.CurrentState == InteractionState.Hovering)
-                        OnSelect();
+                        Select();
                     break;
             }
         }
@@ -180,10 +180,10 @@ namespace Shababeek.Interactions
             switch (state)
             {
                 case VRButtonState.Down:
-                    OnUse();
+                    Use();
                     break;
                 case VRButtonState.Up:
-                    OnUnused();
+                    UnUse();
                     break;
             }
         }
@@ -228,7 +228,5 @@ namespace Shababeek.Interactions
         
     }
     [System.Serializable]
-    public class InteractorUnityEvent : UnityEvent<InteractorBase>
-    {
-    }
+    public class InteractorUnityEvent : UnityEvent<InteractorBase> { }
 }

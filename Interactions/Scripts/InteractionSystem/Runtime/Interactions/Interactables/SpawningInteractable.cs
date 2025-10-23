@@ -16,9 +16,9 @@ namespace Shababeek.Interactions
                 var grabable = Instantiate(prefab);
                 grabable.transform.position = this.transform.position;
                 var interactor = CurrentInteractor;
-                interactor.OnDeSelect();
+                interactor.DeSelect();
                 interactor.CurrentInteractable = grabable;
-                interactor.OnSelect();
+                interactor.Select();
                 return true;
 
 
