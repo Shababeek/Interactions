@@ -3,10 +3,7 @@ using System.Collections.Generic;
 using Shababeek.Interactions;
 using Shababeek.Interactions.Core;
 using UniRx;
-using UnityEditor;
-using UnityEditor.UIElements;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 namespace Shababeek.Interactions.Feedback
 {
@@ -207,63 +204,109 @@ namespace Shababeek.Interactions.Feedback
     }
 
     /// <summary>
-    /// Base class for all feedback types
+    /// Base class for all feedback types.
     /// </summary>
     [Serializable]
-    public class FeedbackData
+    public abstract class FeedbackData
     {
+        [Tooltip("Display name for this feedback component.")]
         [SerializeField] protected string feedbackName = "Feedback";
-        [SerializeField] private bool enabled = true;
+        
+        [Tooltip("Whether this feedback is active.")]
+        [SerializeField] protected bool enabled = true;
+        
         protected FeedbackSystem feedbackSystem;
 
+        /// <summary>
+        /// Gets or sets the display name for this feedback.
+        /// </summary>
+        public string FeedbackName
+        {
+            get => feedbackName;
+            set => feedbackName = value;
+        }
+
+        /// <summary>
+        /// Gets or sets whether this feedback is enabled.
+        /// </summary>
+        public bool Enabled
+        {
+            get => enabled;
+            set => enabled = value;
+        }
+
+        /// <summary>
+        /// Initializes this feedback with the parent feedback system.
+        /// </summary>
         public virtual void Initialize(FeedbackSystem system)
         {
             feedbackSystem = system;
         }
 
-        public virtual bool IsValid() => true;
+        /// <summary>
+        /// Validates that this feedback is properly configured.
+        /// </summary>
+        public virtual bool IsValid() => enabled;
 
+        /// <summary>
+        /// Called when an interactor starts hovering.
+        /// </summary>
         public virtual void OnHoverStarted(InteractorBase interactor)
         {
         }
 
+        /// <summary>
+        /// Called when an interactor stops hovering.
+        /// </summary>
         public virtual void OnHoverEnded(InteractorBase interactor)
         {
         }
 
+        /// <summary>
+        /// Called when the interactable is selected.
+        /// </summary>
         public virtual void OnSelected(InteractorBase interactor)
         {
         }
 
+        /// <summary>
+        /// Called when the interactable is deselected.
+        /// </summary>
         public virtual void OnDeselected(InteractorBase interactor)
         {
         }
 
+        /// <summary>
+        /// Called when the interactable is activated (use button pressed).
+        /// </summary>
         public virtual void OnActivated(InteractorBase interactor)
         {
-        }
-
-        public virtual VisualElement CreateVisualElement(Action onValueChanged)
-        {
-            var root = new VisualElement();
-            root.Add(new Label("Nothing Done"));
-            return root;
         }
     }
 
     /// <summary>
-    /// Material feedback for changing colors/properties
+    /// Material feedback for changing colors/properties.
     /// </summary>
     [Serializable]
     public class MaterialFeedback : FeedbackData
     {
-        [Header("Material Settings")] [SerializeField]
-        public Renderer[] renderers;
+        [Header("Material Settings")]
+        [Tooltip("Renderers whose materials will be modified.")]
+        [SerializeField] public Renderer[] renderers;
 
+        [Tooltip("Name of the shader property to modify (e.g., '_Color', '_BaseColor').")]
         [SerializeField] public string colorPropertyName = "_Color";
+        
+        [Tooltip("Color to apply on hover.")]
         [SerializeField] public Color hoverColor = Color.yellow;
+        
+        [Tooltip("Color to apply on selection.")]
         [SerializeField] public Color selectColor = Color.green;
+        
+        [Tooltip("Color to apply on activation.")]
         [SerializeField] public Color activateColor = Color.red;
+        
+        [Tooltip("Multiplier for the hover color effect.")]
         [SerializeField] public float colorMultiplier = 0.3f;
 
         private Color[] _originalColors;
@@ -300,12 +343,12 @@ namespace Shababeek.Interactions.Feedback
 
         public override bool IsValid()
         {
-            return renderers != null && renderers.Length > 0 && _isInitialized;
+            return base.IsValid() && renderers != null && renderers.Length > 0 && _isInitialized;
         }
 
         public override void OnHoverStarted(InteractorBase interactor)
         {
-            if (!IsValid()) return;
+            if (!IsValid() || !enabled) return;
 
             for (int i = 0; i < renderers.Length; i++)
             {
@@ -318,7 +361,7 @@ namespace Shababeek.Interactions.Feedback
 
         public override void OnHoverEnded(InteractorBase interactor)
         {
-            if (!IsValid()) return;
+            if (!IsValid() || !enabled) return;
 
             for (int i = 0; i < renderers.Length; i++)
             {
@@ -331,7 +374,7 @@ namespace Shababeek.Interactions.Feedback
 
         public override void OnSelected(InteractorBase interactor)
         {
-            if (!IsValid()) return;
+            if (!IsValid() || !enabled) return;
 
             foreach (var renderer in renderers)
             {
@@ -344,7 +387,7 @@ namespace Shababeek.Interactions.Feedback
 
         public override void OnDeselected(InteractorBase interactor)
         {
-            if (!IsValid()) return;
+            if (!IsValid() || !enabled) return;
 
             for (int i = 0; i < renderers.Length; i++)
             {
@@ -357,7 +400,7 @@ namespace Shababeek.Interactions.Feedback
 
         public override void OnActivated(InteractorBase interactor)
         {
-            if (!IsValid()) return;
+            if (!IsValid() || !enabled) return;
 
             foreach (var renderer in renderers)
             {
@@ -367,46 +410,34 @@ namespace Shababeek.Interactions.Feedback
                 }
             }
         }
-
-        public override VisualElement CreateVisualElement(Action onValueChanged)
-        {
-            var container = new VisualElement();
-            var nameField = new TextField("Name") { value = feedbackName };
-            nameField.RegisterValueChangedCallback(evt => { feedbackName = evt.newValue; onValueChanged?.Invoke(); });
-            container.Add(nameField);
-            var colorPropertyField = new TextField("Color Property") { value = colorPropertyName };
-            colorPropertyField.RegisterValueChangedCallback(evt => { colorPropertyName = evt.newValue; onValueChanged?.Invoke(); });
-            container.Add(colorPropertyField);
-            var hoverColorField = new ColorField("Hover Color") { value = hoverColor };
-            hoverColorField.RegisterValueChangedCallback(evt => { hoverColor = evt.newValue; onValueChanged?.Invoke(); });
-            container.Add(hoverColorField);
-            var selectColorField = new ColorField("Select Color") { value = selectColor };
-            selectColorField.RegisterValueChangedCallback(evt => { selectColor = evt.newValue; onValueChanged?.Invoke(); });
-            container.Add(selectColorField);
-            var activateColorField = new ColorField("Activate Color") { value = activateColor };
-            activateColorField.RegisterValueChangedCallback(evt => { activateColor = evt.newValue; onValueChanged?.Invoke(); });
-            container.Add(activateColorField);
-            var multiplierField = new FloatField("Color Multiplier") { value = colorMultiplier };
-            multiplierField.RegisterValueChangedCallback(evt => { colorMultiplier = evt.newValue; onValueChanged?.Invoke(); });
-            container.Add(multiplierField);
-            return container;
-        }
     }
 
     /// <summary>
-    /// Animation feedback for triggering animator parameters
+    /// Animation feedback for triggering animator parameters.
     /// </summary>
     [Serializable]
     public class AnimationFeedback : FeedbackData
     {
+        [Tooltip("The animator component to control.")]
         [SerializeField] public Animator animator;
-        [Header("Animation ParameterNames")] 
+        
+        [Header("Animation Parameter Names")] 
+        [Tooltip("Bool parameter name for hover state.")]
         [SerializeField] public string hoverBoolName = "Hovered";
 
+        [Tooltip("Trigger parameter name for selection.")]
         [SerializeField] public string selectTriggerName = "Selected";
+        
+        [Tooltip("Trigger parameter name for deselection.")]
         [SerializeField] public string deselectTriggerName = "Deselected";
+        
+        [Tooltip("Trigger parameter name for activation.")]
         [SerializeField] public string activatedTriggerName = "Activated";
 
+        public AnimationFeedback()
+        {
+            feedbackName = "Animation Feedback";
+        }
 
         public override void Initialize(FeedbackSystem system)
         {
@@ -419,101 +450,85 @@ namespace Shababeek.Interactions.Feedback
 
         public override bool IsValid()
         {
-            return animator != null;
+            return base.IsValid() && animator != null;
         }
 
         public override void OnHoverStarted(InteractorBase interactor)
         {
-            if (!IsValid()) return;
+            if (!IsValid() || !enabled) return;
             animator.SetBool(hoverBoolName, true);
         }
 
         public override void OnHoverEnded(InteractorBase interactor)
         {
-            if (!IsValid()) return;
+            if (!IsValid() || !enabled) return;
             animator.SetBool(hoverBoolName, false);
         }
 
         public override void OnSelected(InteractorBase interactor)
         {
-            if (!IsValid()) return;
+            if (!IsValid() || !enabled) return;
             animator.SetTrigger(selectTriggerName);
         }
 
         public override void OnDeselected(InteractorBase interactor)
         {
-            if (!IsValid()) return;
+            if (!IsValid() || !enabled) return;
             animator.SetTrigger(deselectTriggerName);
         }
 
         public override void OnActivated(InteractorBase interactor)
         {
-            if (!IsValid()) return;
+            if (!IsValid() || !enabled) return;
             animator.SetTrigger(activatedTriggerName);
-        }
-
-        public override VisualElement CreateVisualElement(Action onValueChanged)
-        {
-            var container = new VisualElement();
-            var nameField = new TextField("Name") { value = feedbackName };
-            nameField.RegisterValueChangedCallback(evt => { feedbackName = evt.newValue; onValueChanged?.Invoke(); });
-            container.Add(nameField);
-            var animatorField = new UnityEditor.UIElements.ObjectField("Animator") { objectType = typeof(Animator), value = animator };
-            animatorField.RegisterValueChangedCallback(evt => { animator = (Animator)evt.newValue; onValueChanged?.Invoke(); });
-            container.Add(animatorField);
-            var hoverBoolField = new TextField("Hover Bool") { value = hoverBoolName };
-            hoverBoolField.RegisterValueChangedCallback(evt => { hoverBoolName = evt.newValue; onValueChanged?.Invoke(); });
-            container.Add(hoverBoolField);
-            var selectTriggerField = new TextField("Select Trigger") { value = selectTriggerName };
-            selectTriggerField.RegisterValueChangedCallback(evt => { selectTriggerName = evt.newValue; onValueChanged?.Invoke(); });
-            container.Add(selectTriggerField);
-            var deselectTriggerField = new TextField("Deselect Trigger") { value = deselectTriggerName };
-            deselectTriggerField.RegisterValueChangedCallback(evt => { deselectTriggerName = evt.newValue; onValueChanged?.Invoke(); });
-            container.Add(deselectTriggerField);
-            var activatedTriggerField = new TextField("Activated Trigger") { value = activatedTriggerName };
-            activatedTriggerField.RegisterValueChangedCallback(evt => { activatedTriggerName = evt.newValue; onValueChanged?.Invoke(); });
-            container.Add(activatedTriggerField);
-            return container;
         }
     }
 
     /// <summary>
-    /// Haptic feedback for controller vibration
+    /// Haptic feedback for controller vibration.
     /// </summary>
     [Serializable]
     public class HapticFeedback : FeedbackData
     {
-        [Header("Haptic Settings")] [SerializeField]
-        public float hoverAmplitude = 0.3f;
+        [Header("Haptic Settings")]
+        [Tooltip("Vibration amplitude for hover (0-1).")]
+        [SerializeField] public float hoverAmplitude = 0.3f;
 
+        [Tooltip("Vibration duration for hover in seconds.")]
         [SerializeField] public float hoverDuration = 0.1f;
+        
+        [Tooltip("Vibration amplitude for selection (0-1).")]
         [SerializeField] public float selectAmplitude = 0.5f;
+        
+        [Tooltip("Vibration duration for selection in seconds.")]
         [SerializeField] public float selectDuration = 0.2f;
+        
+        [Tooltip("Vibration amplitude for activation (0-1).")]
         [SerializeField] public float activateAmplitude = 1f;
+        
+        [Tooltip("Vibration duration for activation in seconds.")]
         [SerializeField] public float activateDuration = 0.3f;
 
-
-
-        public override bool IsValid()
+        public HapticFeedback()
         {
-            return true; // Always valid for haptics
+            feedbackName = "Haptic Feedback";
         }
 
         public override void OnHoverStarted(InteractorBase interactor)
         {
-            if (!IsValid()) return;
+            if (!enabled) return;
             ExecuteHaptic(interactor.HandIdentifier, hoverAmplitude, hoverDuration);
         }
 
         public override void OnSelected(InteractorBase interactor)
         {
-            if (!IsValid()) return;
+            if (!enabled) return;
             ExecuteHaptic(interactor.HandIdentifier, selectAmplitude, selectDuration);
         }
 
         public override void OnActivated(InteractorBase interactor)
         {
-            if (!IsValid()) return;
+            if (!enabled) return;
             ExecuteHaptic(interactor.HandIdentifier, activateAmplitude, activateDuration);
         }
 
@@ -525,49 +540,55 @@ namespace Shababeek.Interactions.Feedback
             var inputDevice = UnityEngine.XR.InputDevices.GetDeviceAtXRNode(hand);
             inputDevice.SendHapticImpulse(0, amplitude, duration);
         }
-
-        public override VisualElement CreateVisualElement(Action onValueChanged)
-        {
-            var container = new VisualElement();
-            var nameField = new TextField("Name") { value = feedbackName };
-            nameField.RegisterValueChangedCallback(evt => { feedbackName = evt.newValue; onValueChanged?.Invoke(); });
-            container.Add(nameField);
-            var hoverIntensityField = new FloatField("Hover Intensity") { value = hoverAmplitude };
-            hoverIntensityField.RegisterValueChangedCallback(evt => { hoverAmplitude = evt.newValue; onValueChanged?.Invoke(); });
-            container.Add(hoverIntensityField);
-            var selectIntensityField = new FloatField("Select Intensity") { value = selectAmplitude };
-            selectIntensityField.RegisterValueChangedCallback(evt => { selectAmplitude = evt.newValue; onValueChanged?.Invoke(); });
-            container.Add(selectIntensityField);
-            var activateIntensityField = new FloatField("Activate Intensity") { value = activateAmplitude };
-            activateIntensityField.RegisterValueChangedCallback(evt => { activateAmplitude = evt.newValue; onValueChanged?.Invoke(); });
-            container.Add(activateIntensityField);
-            var durationField = new FloatField("Duration") { value = activateDuration };
-            durationField.RegisterValueChangedCallback(evt => { activateDuration = evt.newValue; onValueChanged?.Invoke(); });
-            container.Add(durationField);
-            return container;
-        }
     }
 
     /// <summary>
-    /// Audio feedback for sound effects
+    /// Audio feedback for sound effects.
     /// </summary>
     [Serializable]
     public class AudioFeedback : FeedbackData
     {
-        [Header("Audio Settings")] [SerializeField]
-        public AudioSource audioSource;
+        [Header("Audio Settings")]
+        [Tooltip("Audio source component for playing sounds.")]
+        [SerializeField] public AudioSource audioSource;
 
-        [SerializeField] public AudioClip hoverCLip;
+        [Tooltip("Audio clip to play on hover start.")]
+        [SerializeField] public AudioClip hoverClip;
+        
+        [Tooltip("Audio clip to play on hover end.")]
         [SerializeField] public AudioClip hoverExitClip;
+        
+        [Tooltip("Audio clip to play on selection.")]
         [SerializeField] public AudioClip selectClip;
+        
+        [Tooltip("Audio clip to play on deselection.")]
         [SerializeField] public AudioClip deselectClip;
+        
+        [Tooltip("Audio clip to play on activation.")]
         [SerializeField] public AudioClip activateClip;
+        
+        [Tooltip("Volume for hover sounds (0-1).")]
         [SerializeField] public float hoverVolume = 0.5f;
+        
+        [Tooltip("Volume for selection sounds (0-1).")]
         [SerializeField] public float selectVolume = 0.7f;
+        
+        [Tooltip("Volume for activation sounds (0-1).")]
         [SerializeField] public float activateVolume = 1f;
+        
+        [Tooltip("Whether to use 3D spatial audio.")]
         [SerializeField] public bool useSpatialAudio = true;
-        [SerializeField] public bool randomizePitch = false; 
+        
+        [Tooltip("Whether to randomize pitch for variety.")]
+        [SerializeField] public bool randomizePitch = false;
+        
+        [Tooltip("Amount of pitch randomization (±this value).")]
         [SerializeField] public float pitchRandomization = 0.1f;
+
+        public AudioFeedback()
+        {
+            feedbackName = "Audio Feedback";
+        }
 
         public override void Initialize(FeedbackSystem system)
         {
@@ -590,36 +611,36 @@ namespace Shababeek.Interactions.Feedback
         }
         public override bool IsValid()
         {
-            return audioSource != null;
+            return base.IsValid() && audioSource != null;
         }
 
         public override void OnHoverStarted(InteractorBase interactor)
         {
-            if (!IsValid() || hoverCLip == null) return;
-            PlaySound(hoverCLip, hoverVolume);
+            if (!IsValid() || !enabled || hoverClip == null) return;
+            PlaySound(hoverClip, hoverVolume);
         }
 
         public override void OnHoverEnded(InteractorBase interactor)
         {
-            if (!IsValid() || hoverExitClip == null) return;
+            if (!IsValid() || !enabled || hoverExitClip == null) return;
             PlaySound(hoverExitClip, hoverVolume);
         }
 
         public override void OnSelected(InteractorBase interactor)
         {
-            if (!IsValid() || selectClip == null) return;
+            if (!IsValid() || !enabled || selectClip == null) return;
             PlaySound(selectClip, selectVolume);
         }
 
         public override void OnDeselected(InteractorBase interactor)
         {
-            if (!IsValid() || deselectClip == null) return;
+            if (!IsValid() || !enabled || deselectClip == null) return;
             PlaySound(deselectClip, selectVolume);
         }
 
         public override void OnActivated(InteractorBase interactor)
         {
-            if (!IsValid() || activateClip == null) return;
+            if (!IsValid() || !enabled || activateClip == null) return;
             PlaySound(activateClip, activateVolume);
         }
 
@@ -641,36 +662,6 @@ namespace Shababeek.Interactions.Feedback
             }
 
             audioSource.Play();
-        }
-
-        public override VisualElement CreateVisualElement(Action onValueChanged)
-        {
-            var container = new VisualElement();
-            var nameField = new TextField("Name") { value = feedbackName };
-            nameField.RegisterValueChangedCallback(evt => { feedbackName = evt.newValue; onValueChanged?.Invoke(); });
-            container.Add(nameField);
-            var audioSourceField = new UnityEditor.UIElements.ObjectField("Audio Source") { objectType = typeof(AudioSource), value = audioSource };
-            audioSourceField.RegisterValueChangedCallback(evt => { audioSource = (AudioSource)evt.newValue; onValueChanged?.Invoke(); });
-            container.Add(audioSourceField);
-            var hoverClipField = new UnityEditor.UIElements.ObjectField("Hover Clip") { objectType = typeof(AudioClip), value = hoverCLip };
-            hoverClipField.RegisterValueChangedCallback(evt => { hoverCLip = (AudioClip)evt.newValue; onValueChanged?.Invoke(); });
-            container.Add(hoverClipField);
-            var selectClipField = new UnityEditor.UIElements.ObjectField("Select Clip") { objectType = typeof(AudioClip), value = selectClip };
-            selectClipField.RegisterValueChangedCallback(evt => { selectClip = (AudioClip)evt.newValue; onValueChanged?.Invoke(); });
-            container.Add(selectClipField);
-            var activateClipField = new UnityEditor.UIElements.ObjectField("Activate Clip") { objectType = typeof(AudioClip), value = activateClip };
-            activateClipField.RegisterValueChangedCallback(evt => { activateClip = (AudioClip)evt.newValue; onValueChanged?.Invoke(); });
-            container.Add(activateClipField);
-            var volumeField = new FloatField("Volume") { value = hoverVolume };
-            volumeField.RegisterValueChangedCallback(evt => { hoverVolume = evt.newValue; onValueChanged?.Invoke(); });
-            container.Add(volumeField);
-            var spatialAudioField = new Toggle("Spatial Audio") { value = useSpatialAudio };
-            spatialAudioField.RegisterValueChangedCallback(evt => { useSpatialAudio = evt.newValue; onValueChanged?.Invoke(); });
-            container.Add(spatialAudioField);
-            var pitchRandomizationField = new Toggle("Pitch Randomization") { value = randomizePitch };
-            pitchRandomizationField.RegisterValueChangedCallback(evt => { randomizePitch = evt.newValue; onValueChanged?.Invoke(); });
-            container.Add(pitchRandomizationField);
-            return container;
         }
     }
 }

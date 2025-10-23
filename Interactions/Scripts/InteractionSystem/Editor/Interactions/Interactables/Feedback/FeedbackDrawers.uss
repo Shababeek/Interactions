@@ -1,89 +1,344 @@
-/* Feedback System Root */
+/* ========================================
+   Feedback System Stylesheet
+   Modern, clean design for feedback UI
+   ======================================== */
+
+/* Root Container */
 .feedback-system-root {
-    padding: 10px;
+    padding: 12px;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 6px;
+    margin: 4px 0;
 }
 
-/* Feedback Drawers Styling */
+/* Headers */
 .feedback-header {
     font-size: 14px;
-    font-weight: bold;
-    margin-bottom: 8px;
-    padding: 4px 0;
-    
-}
-
-.description-text {
+    -unity-font-style: bold;
+    color: rgb(220, 220, 220);
     margin-bottom: 10px;
-    color: rgb(179, 179, 179);
-    font-size: 11px;
-    line-height: 1.4;
-}
-
-.feedback-section {
-    margin: 8px 0;
-    padding: 8px;
-    border-radius: 4px;
+    padding: 6px 8px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-left: 3px solid rgb(70, 120, 200);
+    border-radius: 3px;
 }
 
 .section-header {
     font-size: 12px;
-    font-weight: bold;
+    -unity-font-style: bold;
+    color: rgb(200, 200, 200);
+    margin-top: 8px;
     margin-bottom: 6px;
-    padding: 2px 0;
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Description Text */
+.description-text {
+    margin-bottom: 12px;
+    color: rgb(170, 170, 170);
+    font-size: 11px;
+    line-height: 16px;
+    padding: 8px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    border-left: 2px solid rgb(100, 150, 220);
+}
+
+/* Feedback Section */
+.feedback-section {
+    margin: 8px 0;
+    padding: 12px;
+    background-color: rgba(0, 0, 0, 0.15);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.feedback-section:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Property Fields */
+.feedback-section PropertyField {
+    margin: 6px 0;
+    padding: 2px;
+}
+
+.feedback-section PropertyField > Label {
+    min-width: 140px;
+    font-size: 11px;
+    color: rgb(190, 190, 190);
+}
+
+/* Color Field Grid */
+.color-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin: 4px -4px;
+}
+
+.color-grid PropertyField {
+    flex: 1 1 150px;
+    margin: 4px;
+    min-width: 150px;
+}
+
+/* Toggle Fields */
+Toggle {
+    margin: 4px 0;
+}
+
+Toggle > Label {
+    font-size: 11px;
+    color: rgb(190, 190, 190);
+}
+
+/* Slider Fields */
+Slider {
+    margin: 6px 0;
+}
+
+Slider > Label {
+    font-size: 11px;
+    color: rgb(190, 190, 190);
+    min-width: 140px;
+}
+
+/* Object Fields */
+ObjectField {
+    margin: 6px 0;
+}
+
+ObjectField > Label {
+    font-size: 11px;
+    color: rgb(190, 190, 190);
+    min-width: 140px;
 }
 
 /* List Container */
 .list-container {
-    margin-top: 10px;
+    margin-top: 12px;
+    padding: 8px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
 }
 
 .list-container PropertyField {
-    margin-top: 5px;
+    margin-top: 6px;
 }
 
 /* Button Container */
 .button-container {
     flex-direction: row;
     justify-content: space-between;
-    margin-top: 10px;
+    margin-top: 12px;
+    padding: 8px 0;
 }
 
+.button-container Button {
+    flex: 1;
+    margin: 0 4px;
+    height: 26px;
+    border-radius: 4px;
+    background-color: rgba(70, 120, 200, 0.15);
+    border-color: rgba(70, 120, 200, 0.3);
+}
 
+.button-container Button:hover {
+    background-color: rgba(70, 120, 200, 0.25);
+    border-color: rgba(70, 120, 200, 0.5);
+}
+
+.button-container Button:active {
+    background-color: rgba(70, 120, 200, 0.35);
+}
+
+/* Add Button */
+.add-button {
+    background-color: rgba(60, 180, 75, 0.2);
+    border-color: rgba(60, 180, 75, 0.4);
+    color: rgb(140, 255, 140);
+}
+
+.add-button:hover {
+    background-color: rgba(60, 180, 75, 0.3);
+    border-color: rgba(60, 180, 75, 0.6);
+}
+
+/* Clear Button */
+.clear-button {
+    background-color: rgba(220, 50, 50, 0.2);
+    border-color: rgba(220, 50, 50, 0.4);
+    color: rgb(255, 140, 140);
+}
+
+.clear-button:hover {
+    background-color: rgba(220, 50, 50, 0.3);
+    border-color: rgba(220, 50, 50, 0.6);
+}
+
+/* Status Section */
+.status-section {
+    margin-top: 12px;
+    padding: 10px;
+    background-color: rgba(0, 0, 0, 0.15);
+    border-radius: 6px;
+    border-left: 3px solid rgb(100, 150, 220);
+}
 
 .status-text {
-    margin-top: 5px;
-    color: rgb(204, 204, 204);
+    margin-top: 6px;
+    color: rgb(180, 180, 180);
+    font-size: 11px;
+    line-height: 16px;
+}
+
+/* Feedback Item */
+.feedback-item {
+    margin: 6px 0;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.03);
+    border-radius: 5px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.2s;
+}
+
+.feedback-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.feedback-item-header {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.feedback-item-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+}
+
+.feedback-item-name {
+    flex: 1;
+    font-size: 12px;
+    -unity-font-style: bold;
+    color: rgb(210, 210, 210);
+}
+
+.feedback-item-type {
+    font-size: 10px;
+    color: rgb(150, 150, 150);
+    margin-left: 8px;
+}
+
+.feedback-item-enabled {
+    margin-right: 8px;
+}
+
+/* Validation Status */
+.validation-status {
+    flex-direction: row;
+    align-items: center;
+    padding: 6px 8px;
+    margin: 8px 0;
+    border-radius: 4px;
     font-size: 11px;
 }
 
-/* Property Fields */
-.feedback-section PropertyField {
+.validation-status.valid {
+    background-color: rgba(60, 180, 75, 0.15);
+    border-left: 3px solid rgb(60, 180, 75);
+    color: rgb(140, 255, 140);
+}
+
+.validation-status.invalid {
+    background-color: rgba(220, 50, 50, 0.15);
+    border-left: 3px solid rgb(220, 50, 50);
+    color: rgb(255, 140, 140);
+}
+
+.validation-status.warning {
+    background-color: rgba(255, 180, 0, 0.15);
+    border-left: 3px solid rgb(255, 180, 0);
+    color: rgb(255, 220, 140);
+}
+
+/* Help Box */
+HelpBox {
+    margin: 8px 0;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+/* Divider */
+.divider {
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.1);
+    margin: 12px 0;
+}
+
+/* Animations */
+.fade-in {
+    transition: opacity 0.3s;
+}
+
+/* Responsive Layout */
+@media (max-width: 400px) {
+    .feedback-header {
+        font-size: 12px;
+    }
+    
+    .color-grid PropertyField {
+        flex: 1 1 100%;
+    }
+}
+
+/* Dark Theme Overrides */
+.unity-theme-dark .feedback-header {
+    color: rgb(230, 230, 230);
+}
+
+.unity-theme-dark .description-text {
+    color: rgb(180, 180, 180);
+}
+
+/* Scrollable Container */
+ScrollView {
+    max-height: 600px;
+}
+
+ScrollView > #unity-content-container {
+    padding: 4px;
+}
+
+/* Foldout Customization */
+Foldout {
     margin: 4px 0;
 }
 
-.feedback-section PropertyField > Label {
-    min-width: 120px;
+Foldout > Toggle {
+    -unity-font-style: bold;
     font-size: 11px;
 }
 
-/* Color Fields */
-.feedback-section PropertyField[label="Hover Color"],
-.feedback-section PropertyField[label="Select Color"],
-.feedback-section PropertyField[label="Activate Color"] {
-    flex: 1;
-    margin: 2px 4px;
+Foldout > Toggle > Label {
+    color: rgb(200, 200, 200);
 }
 
-/* Trigger Fields */
-.feedback-section PropertyField[label="Hover"],
-.feedback-section PropertyField[label="Select"],
-.feedback-section PropertyField[label="Activate"] {
-    flex: 1;
-    margin: 2px 4px;
+/* Visual Polish */
+* {
+    transition-duration: 0.15s;
+    transition-timing-function: ease-out;
 }
 
-/* Container Layouts */
-.feedback-section > VisualElement {
-    margin: 4px 0;
+/* Disabled State */
+:disabled {
+    opacity: 0.4;
 }
 
+:disabled > Label {
+    color: rgb(120, 120, 120);
+}

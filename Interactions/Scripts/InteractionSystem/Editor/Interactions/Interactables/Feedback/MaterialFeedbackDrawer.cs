@@ -5,43 +5,41 @@ using UnityEditor.UIElements;
 
 namespace Shababeek.Interactions.Editors
 {
+    /// <summary>
+    /// Property drawer for MaterialFeedback.
+    /// Note: The FeedbackSystemEditor handles drawing inline, this is a fallback.
+    /// </summary>
     [CustomPropertyDrawer(typeof(MaterialFeedback))]
-    public class MaterialFeedbackDrawer : PropertyDrawer
+    public class MaterialFeedbackDrawer : FeedbackDrawerBase
     {
-        static string cssPath = "Assets/Kandooz/Kinteractions-VR/InteractionSystem/Editor/Interactions/Interactables/Feedback/FeedbackDrawers.uss";
-
-        public static VisualElement GetVisualElement(SerializedProperty property)
-        {
-            var container = new VisualElement();
-            var styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(cssPath);
-            container.styleSheets.Add(styleSheet);
-            var name = property.FindPropertyRelative("feedbackName").stringValue;
-            var header = new Label($"Material {name} Settings");
-            header.AddToClassList("feedback-header");
-            container.Add(header);
-            var dataContainer = new VisualElement();
-            dataContainer.AddToClassList("feedback-section");
-            dataContainer.AddToClassList("data");
-
-            var renderersField = new PropertyField(property.FindPropertyRelative("renderers"), "Renderers");
-            var colorPropertyField = new PropertyField(property.FindPropertyRelative("colorPropertyName"), "Color Property");
-            var hoverColorField = new PropertyField(property.FindPropertyRelative("hoverColor"), "Hover Color");
-            var selectColorField = new PropertyField(property.FindPropertyRelative("selectColor"), "Select Color");
-            var activateColorField = new PropertyField(property.FindPropertyRelative("activateColor"), "Activate Color");
-            var multiplierField = new PropertyField(property.FindPropertyRelative("colorMultiplier"), "Color Multiplier");
-
-            dataContainer.Add(renderersField);
-            dataContainer.Add(colorPropertyField);
-            dataContainer.Add(hoverColorField);
-            dataContainer.Add(selectColorField);
-            dataContainer.Add(activateColorField);
-            dataContainer.Add(multiplierField);
-            container.Add(dataContainer);
-            return container;
-        }
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
-            return GetVisualElement(property);
+            var container = new VisualElement();
+            var styleSheet = GetFeedbackStyleSheet();
+            if (styleSheet != null)
+            {
+                container.styleSheets.Add(styleSheet);
+            }
+
+            container.AddToClassList("feedback-section");
+
+            // Header
+            var nameProp = property.FindPropertyRelative("feedbackName");
+            var header = new Label(string.IsNullOrEmpty(nameProp.stringValue) ? "Material Feedback" : nameProp.stringValue);
+            header.AddToClassList("feedback-header");
+            container.Add(header);
+
+            // Properties
+            container.Add(new PropertyField(property.FindPropertyRelative("enabled")));
+            container.Add(new PropertyField(property.FindPropertyRelative("feedbackName")));
+            container.Add(new PropertyField(property.FindPropertyRelative("renderers")));
+            container.Add(new PropertyField(property.FindPropertyRelative("colorPropertyName")));
+            container.Add(new PropertyField(property.FindPropertyRelative("hoverColor")));
+            container.Add(new PropertyField(property.FindPropertyRelative("selectColor")));
+            container.Add(new PropertyField(property.FindPropertyRelative("activateColor")));
+            container.Add(new PropertyField(property.FindPropertyRelative("colorMultiplier")));
+
+            return container;
         }
     }
-} 
+}
