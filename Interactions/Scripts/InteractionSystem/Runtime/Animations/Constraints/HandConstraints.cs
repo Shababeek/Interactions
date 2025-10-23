@@ -5,7 +5,7 @@ using UnityEngine.Serialization;
 namespace Shababeek.Interactions.Core
 {
     /// <summary>
-    /// Represents constraints for hand poses in the interaction system.
+    /// Constraints for hand poses.
     /// </summary>
     [System.Serializable]
     public struct HandConstraints

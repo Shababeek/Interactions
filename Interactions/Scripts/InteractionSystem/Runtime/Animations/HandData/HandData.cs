@@ -7,13 +7,8 @@ namespace Shababeek.Interactions.Animations
 {
     
     /// <summary>
-    /// Container for avatar masks for each finger of a hand.
-    /// Provides indexer access to individual finger masks.
+    /// Container for avatar masks for each finger.
     /// </summary>
-    /// <remarks>
-    /// This class holds AvatarMask references for each finger (thumb, index, middle, ring, pinky)
-    /// and provides convenient access through indexers using either numeric indices or FingerName enums.
-    /// </remarks>
     [System.Serializable]
     public class HandAvatarMaskContainer
     {
@@ -34,10 +29,8 @@ namespace Shababeek.Interactions.Animations
         [SerializeField] private AvatarMask pinky;
 
         /// <summary>
-        /// Indexer that provides access to avatar masks by numeric index.
+        /// Avatar mask by numeric index (0=Thumb, 1=Index, 2=Middle, 3=Ring, 4=Pinky).
         /// </summary>
-        /// <param name="i">The finger index (0=Thumb, 1=Index, 2=Middle, 3=Ring, 4=Pinky)</param>
-        /// <returns>The avatar mask for the specified finger</returns>
         public AvatarMask this[int i]
         {
             get
@@ -58,17 +51,8 @@ namespace Shababeek.Interactions.Animations
     }
 
     /// <summary>
-    /// ScriptableObject that contains all hand pose data, avatar masks, and prefab references for a hand.
+    /// Hand pose data, avatar masks, and prefab references.
     /// </summary>
-    /// <remarks>
-    /// This scriptable object holds the default pose, custom poses, and references to the hand prefabs for both left and right hands.
-    /// It also provides an indexer to access avatar masks by index or finger name.
-    /// </remarks>
-    /// <seealso cref="PoseData"/>
-    /// <seealso cref="HandAvatarMaskContainer"/>
-    /// <seealso cref="IAvatarMaskIndexer"/>
-    /// <seealso cref="HandPoseController"/>
-    /// <seealso cref="FingerName"/>
     [CreateAssetMenu(menuName = "Shababeek/Interaction System/Hand Data")]
     public class HandData : ScriptableObject, IAvatarMaskIndexer
     {
@@ -107,27 +91,23 @@ namespace Shababeek.Interactions.Animations
         public AvatarMask this[FingerName i] => handAvatarMaskContainer[(int)i];
         
         /// <summary>
-        /// Gets the default pose for this hand.
+        /// Default pose for this hand.
         /// </summary>
-        /// <returns>The default pose data</returns>
         public PoseData DefaultPose => defaultPose;
         
         /// <summary>
-        /// Gets the left hand prefab with HandPoseController component.
+        /// Left hand prefab with HandPoseController component.
         /// </summary>
-        /// <returns>The left hand prefab</returns>
         public HandPoseController LeftHandPrefab => leftHandPrefab;
         
         /// <summary>
-        /// Gets the right hand prefab with HandPoseController component.
+        /// Right hand prefab with HandPoseController component.
         /// </summary>
-        /// <returns>The right hand prefab</returns>
         public HandPoseController RightHandPrefab => rightHandPrefab;
 
         /// <summary>
-        /// Returns an array of all poses, including the default pose at index 0.
+        /// Array of all poses (default pose at index 0, followed by custom poses).
         /// </summary>
-        /// <returns>Array containing default pose at index 0, followed by custom poses</returns>
         public PoseData[] Poses
         {
             get
@@ -195,14 +175,12 @@ namespace Shababeek.Interactions.Animations
         }
 
         /// <summary>
-        /// Gets the description of this hand data asset.
+        /// Description of this hand data asset.
         /// </summary>
-        /// <returns>The description text</returns>
         public string Description => description;
 
         /// <summary>
-        /// Invalidates the cached poses array, forcing it to be rebuilt on next access.
-        /// Call this when poses are modified in the editor.
+        /// Invalidates the cached poses array.
         /// </summary>
         public void InvalidatePoseCache()
         {
@@ -226,17 +204,13 @@ namespace Shababeek.Interactions.Animations
     public interface IAvatarMaskIndexer
     {
         /// <summary>
-        /// Gets the avatar mask for a finger by numeric index.
+        /// Avatar mask by numeric index.
         /// </summary>
-        /// <param name="i">The finger index</param>
-        /// <returns>The avatar mask for the specified finger</returns>
         public AvatarMask this[int i] { get; }
 
         /// <summary>
-        /// Gets the avatar mask for a finger by finger name.
+        /// Avatar mask by finger name.
         /// </summary>
-        /// <param name="i">The finger name</param>
-        /// <returns>The avatar mask for the specified finger</returns>
         public AvatarMask this[FingerName i] { get; }
     }
 }
