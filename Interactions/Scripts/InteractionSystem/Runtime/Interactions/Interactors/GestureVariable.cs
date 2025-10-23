@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Shababeek.Interactions
 {
     /// <summary>
-    /// ScriptableObject that stores a Gesture value for use in gesture-based interactions.
+    /// ScriptableObject storing a Gesture value.
     /// </summary>
     [CreateAssetMenu(menuName = "Shababeek/Interaction System/Gesture")]
     public class GestureVariable : ScriptableObject

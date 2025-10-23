@@ -96,12 +96,12 @@ namespace Shababeek.Interactions.Animations
         public PoseData DefaultPose => defaultPose;
         
         /// <summary>
-        /// Left hand prefab with HandPoseController component.
+        /// Left hand prefab.
         /// </summary>
         public HandPoseController LeftHandPrefab => leftHandPrefab;
         
         /// <summary>
-        /// Right hand prefab with HandPoseController component.
+        /// Right hand prefab.
         /// </summary>
         public HandPoseController RightHandPrefab => rightHandPrefab;
 

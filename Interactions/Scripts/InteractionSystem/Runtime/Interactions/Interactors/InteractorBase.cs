@@ -8,14 +8,8 @@ using UnityEngine.Events;
 namespace Shababeek.Interactions
 {
     /// <summary>
-    /// Base class for interactors in the interaction system.
-    /// This class provides common functionality for interactors, such as handling interaction states,
-    /// managing the current interactable, and providing an attachment point for held objects.
+    /// Base class for interactors providing common interaction functionality.
     /// </summary>
-    /// <remarks>
-    /// Interactors are responsible for detecting and managing interactions with interactable objects.
-    /// They handle hover states, selection, and activation through button inputs from the VR hand.
-    /// </remarks>
     [RequireComponent(typeof(Hand))]
     public abstract class InteractorBase : MonoBehaviour
     {
@@ -33,33 +27,28 @@ namespace Shababeek.Interactions
         private IDisposable _hoverSubscriber, _activationSubscriber;
 
         /// <summary>
-        /// The attachment point transform for objects held by this interactor.
+        /// Attachment point transform for held objects.
         /// </summary>
-        /// <value>The transform where grabbed objects are attached</value>
         public Transform AttachmentPoint => _attachmentPoint;
 
         /// <summary>
-        /// The hand identifier (left or right) for this interactor.
+        /// Hand identifier (left or right).
         /// </summary>
-        /// <value>The hand identifier (Left or Right)</value>
         public HandIdentifier HandIdentifier => _hand.HandIdentifier;
 
         /// <summary>
-        /// The Hand component associated with this interactor.
+        /// Hand component associated with this interactor.
         /// </summary>
-        /// <value>The Hand component that provides input and pose information</value>
         public Hand Hand => _hand;
 
         /// <summary>
-        /// Gets whether this interactor is currently interacting with an object.
+        /// Whether currently interacting with an object.
         /// </summary>
-        /// <value>True if currently interacting, false otherwise</value>
         protected bool IsInteracting => isInteracting;
 
         /// <summary>
-        /// Gets or sets the currently hovered or selected interactable object.
+        /// Currently hovered or selected interactable object.
         /// </summary>
-        /// <value>The current interactable, or null if none</value>
         public InteractableBase CurrentInteractable
         {
             get => currentInteractable;
@@ -105,9 +94,6 @@ namespace Shababeek.Interactions
             _attachmentPoint.localRotation = Quaternion.identity;
         }
 
-        /// <summary>
-        /// Handles the start of hovering over an interactable object.
-        /// </summary>
         protected void OnHoverStart()
         {
             if (currentInteractable == null || currentInteractable.IsSelected) return;
@@ -119,9 +105,6 @@ namespace Shababeek.Interactions
             _hoverSubscriber = buttonObservable?.Do(_onInteractionStateChanged).Subscribe();
         }
 
-        /// <summary>
-        /// Handles the end of hovering over an interactable object.
-        /// </summary>
         protected virtual void OnHoverEnd()
         {
             if (currentInteractable && currentInteractable.CurrentState != InteractionState.Hovering) return;
@@ -131,7 +114,7 @@ namespace Shababeek.Interactions
         }
 
         /// <summary>
-        /// Called when the interactor selects an interactable object.
+        /// Selects an interactable object.
         /// </summary>
         public void OnSelect()
         {
@@ -145,7 +128,7 @@ namespace Shababeek.Interactions
         }
 
         /// <summary>
-        /// Called when the interactor deselects an interactable object.
+        /// Deselects an interactable object.
         /// </summary>
         public void OnDeSelect()
         {

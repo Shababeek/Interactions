@@ -5,15 +5,8 @@ using UnityEngine;
 namespace Shababeek.Interactions
 {
     /// <summary>
-    /// Sets a Gesture scriptable object based on the pose the player is making.
-    /// Automatically detects hand gestures by monitoring finger positions and updates
-    /// the assigned GestureVariable in real-time.
+    /// Detects hand gestures and updates a GestureVariable.
     /// </summary>
-    /// <remarks>
-    /// This component reads finger positions from the Hand component and maps them
-    /// to predefined gestures. It's useful for gesture-based interactions and
-    /// can be used to trigger different behaviors based on hand poses.
-    /// </remarks>
     [RequireComponent(typeof(Hand))]
     [AddComponentMenu("Shababeek/Interactions/Interactors/Gesture Setter")]
     public class GestureSetter : MonoBehaviour
@@ -38,19 +31,6 @@ namespace Shababeek.Interactions
             SetGesture();
         }
 
-        /// <summary>
-        /// Determines and sets the current gesture based on finger positions.
-        /// </summary>
-        /// <remarks>
-        /// Gesture detection logic:
-        /// - Thumb + Grip + Index = Fist
-        /// - Thumb + Grip + No Index = Pointing
-        /// - Thumb + No Grip + No Index = Three
-        /// - No Thumb + Grip + Index = ThumbsUp
-        /// - No Thumb + Grip + No Index = Pointing
-        /// - No Thumb + No Grip + Index = None
-        /// - No Thumb + No Grip + No Index = Relaxed
-        /// </remarks>
         private void SetGesture()
         {
             if (_thumb)
@@ -74,13 +54,6 @@ namespace Shababeek.Interactions
             }
         }
 
-        /// <summary>
-        /// Reads the current status of the thumb, index, and middle fingers from the Hand component.
-        /// </summary>
-        /// <remarks>
-        /// Fingers are considered "active" when their value is greater than 0.5.
-        /// This threshold can be adjusted by modifying the comparison value.
-        /// </remarks>
         private void ReadFingerStatus()
         {
             _thumb = _hand[FingerName.Thumb] > .5f;

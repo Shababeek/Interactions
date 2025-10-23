@@ -6,14 +6,8 @@ using UnityEngine;
 namespace Shababeek.Interactions
 {
     /// <summary>
-    /// This class is used to handle raycast-based interaction for interactables.
-    /// Uses raycasting instead of trigger colliders and includes a LineRenderer for visualization.
+    /// Interactor using raycasting to detect interactions at a distance.
     /// </summary>
-    /// <remarks>
-    /// This interactor is ideal for interactions at a distance, such as pointing at objects
-    /// or interacting with UI elements. It provides visual feedback through a line renderer
-    /// and can be configured with custom layer masks and distances.
-    /// </remarks>
     [AddComponentMenu("Shababeek/Interactions/Interactors/Raycast Interactor")]
     public class RaycastInteractor : InteractorBase
     {
@@ -154,9 +148,8 @@ namespace Shababeek.Interactions
         }
         
         /// <summary>
-        /// Sets the visibility of the line renderer used for raycast visualization.
+        /// Sets the visibility of the line renderer.
         /// </summary>
-        /// <param name="visible">Whether the line renderer should be visible.</param>
         public void SetLineRendererVisibility(bool visible)
         {
             showLineRenderer = visible;
@@ -165,9 +158,8 @@ namespace Shababeek.Interactions
         }
         
         /// <summary>
-        /// Sets the color of the line renderer used for raycast visualization.
+        /// Sets the color of the line renderer.
         /// </summary>
-        /// <param name="color">The color to set for the line renderer.</param>
         public void SetLineColor(Color color)
         {
             lineColor = color;
@@ -181,7 +173,6 @@ namespace Shababeek.Interactions
         /// <summary>
         /// Sets the maximum distance for the raycast.
         /// </summary>
-        /// <param name="distance">The maximum distance the raycast can reach.</param>
         public void SetMaxDistance(float distance)
         {
             maxRaycastDistance = distance;
@@ -190,7 +181,6 @@ namespace Shababeek.Interactions
         /// <summary>
         /// Sets the layer mask used for raycasting.
         /// </summary>
-        /// <param name="layerMask">The layer mask to use for raycasting.</param>
         public void SetRaycastLayerMask(LayerMask layerMask)
         {
             raycastLayerMask = layerMask;

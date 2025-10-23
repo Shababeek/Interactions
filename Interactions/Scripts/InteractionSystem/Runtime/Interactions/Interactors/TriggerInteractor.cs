@@ -6,15 +6,8 @@ using UnityEngine;
 namespace Shababeek.Interactions
 {
     /// <summary>
-    /// TriggerInteractor is a type of Interactor that uses Unity's trigger collider system to detect interactions with interactable objects.
-    /// It allows for hover and selection interactions based on trigger events.
-    /// This interactor is designed to work with colliders and does not require direct input from the user.
+    /// Interactor using trigger colliders to detect interactions.
     /// </summary>
-    /// <remarks>
-    /// This interactor automatically detects when it enters or exits trigger colliders of interactable objects.
-    /// It uses distance-based prioritization to determine which interactable to focus on when multiple are available.
-    /// Perfect for hand-based interactions where you want direct collision detection.
-    /// </remarks>
     [AddComponentMenu("Shababeek/Interactions/Interactors/Trigger Interactor")]
     public class TriggerInteractor : InteractorBase
     {
@@ -26,11 +19,6 @@ namespace Shababeek.Interactions
         private float _lastDistanceCheck;
         private const float DistanceCheckInterval = 0.08f;
         
-        /// <summary>
-        /// Called when a collider enters the trigger area.
-        /// Determines if the collider belongs to an interactable and initiates hover if appropriate.
-        /// </summary>
-        /// <param name="other">The collider that entered the trigger</param>
         private void OnTriggerEnter(Collider other)
         {
             if (isInteracting) return;
@@ -41,10 +29,6 @@ namespace Shababeek.Interactions
             currentCollider = other;
         }
 
-        /// <summary>
-        /// Changes the current interactable and manages the transition between hover states.
-        /// </summary>
-        /// <param name="interactable">The new interactable to focus on, or null to clear focus</param>
         private void ChangeInteractable(InteractableBase interactable)
         {
             if (CurrentInteractable != null)
@@ -75,15 +59,6 @@ namespace Shababeek.Interactions
             }
         }
 
-        /// <summary>
-        /// Determines whether the interactor should switch to a new interactable based on distance.
-        /// </summary>
-        /// <param name="interactable">The potential new interactable</param>
-        /// <returns>True if the interactor should switch to the new interactable</returns>
-        /// <remarks>
-        /// This method uses distance-based prioritization to ensure the closest interactable
-        /// is always focused on. Distance checks are throttled to improve performance.
-        /// </remarks>
         private bool ShouldChangeInteractable(InteractableBase interactable)
         {
             if (CurrentInteractable == null) return true;
