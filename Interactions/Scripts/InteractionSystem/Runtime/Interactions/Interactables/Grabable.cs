@@ -117,19 +117,15 @@ namespace Shababeek.Interactions
             var worldPosition = _poseConstrainter.transform.TransformPoint(localPosition);
             var worldRotation = _poseConstrainter.transform.rotation * localRotation;
             
-            // Create a temporary transform to calculate the attachment point
-            var tempTransform = new GameObject("TempAttachment").transform;
-            tempTransform.position = worldPosition;
-            tempTransform.rotation = worldRotation;
+            // Calculate the attachment point offset using pure math
+            // The attachment point needs to represent where the object currently is
+            // relative to where the hand target is
+            Quaternion inverseTargetRotation = Quaternion.Inverse(worldRotation);
+            Vector3 localPositionOffset = inverseTargetRotation * (transform.position - worldPosition);
+            Quaternion localRotationOffset = inverseTargetRotation * transform.rotation;
             
-            // Calculate the attachment point relative to the target
-            transform.parent = tempTransform;
-            CurrentInteractor.AttachmentPoint.localPosition = transform.localPosition;
-            CurrentInteractor.AttachmentPoint.localRotation = transform.localRotation;
-            transform.parent = null;
-            
-            // Clean up temporary transform
-            DestroyImmediate(tempTransform.gameObject);
+            CurrentInteractor.AttachmentPoint.localPosition = localPositionOffset;
+            CurrentInteractor.AttachmentPoint.localRotation = localRotationOffset;
         }
 
         private void MoveObjectToPosition(Action callBack)
