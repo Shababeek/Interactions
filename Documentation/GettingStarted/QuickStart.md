@@ -95,7 +95,7 @@ Time to create something you can pick up!
 ### Create a Simple Cube
 1. **GameObject > 3D Object > Cube**
 2. Name it "Grabbable Cube"
-3. Position it in front of the player (use Scene view)
+3. Position it in the green or orange area in-front of the player
 
 
 ### Make It Grabbable
