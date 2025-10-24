@@ -6,19 +6,33 @@ using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Shababeek.Interactions.Editors
-{    public static class Extensions
+{
+    /// <summary>
+    /// Extension methods for type information.
+    /// </summary>
+    public static class Extensions
     {
+        /// <summary>
+        /// Gets the declared type of an object.
+        /// </summary>
         public static Type GetDeclaredType<T>(this T obj )
         {
             return typeof( T );
         }
     }
+    
+    /// <summary>
+    /// Custom property drawer for ScriptableVariable that adds a "Find Asset" button.
+    /// </summary>
     [CustomPropertyDrawer(typeof(ScriptableVariable<>), true)]
     public class VariableDrawer : PropertyDrawer
     {
         private const float ButtonWidth = 80f;
         private const float Spacing = 5f;
         
+        /// <summary>
+        /// Renders the property field with an optional Find Asset button.
+        /// </summary>
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             EditorGUI.BeginProperty(position, label, property);
@@ -49,14 +63,18 @@ namespace Shababeek.Interactions.Editors
             
             EditorGUI.EndProperty();
         }
-        
 
-        
+        /// <summary>
+        /// Gets the height of the property field.
+        /// </summary>
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             return EditorGUIUtility.singleLineHeight;
         }
         
+        /// <summary>
+        /// Creates the UI Toolkit property GUI.
+        /// </summary>
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             Debug.Log(property.objectReferenceValue);

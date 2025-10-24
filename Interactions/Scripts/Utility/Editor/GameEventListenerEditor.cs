@@ -6,6 +6,9 @@ using Shababeek.Utilities;
 
 namespace Shababeek.Utilities.Editors
 {
+    /// <summary>
+    /// Custom editor for GameEventListener that provides a reorderable list interface.
+    /// </summary>
     [CustomEditor(typeof(GameEventListener))]
     public class GameEventListenerEditor : Editor
     {
@@ -27,8 +30,6 @@ namespace Shababeek.Utilities.Editors
             gameEventsList.onRemoveCallback = OnRemoveCallback;
             gameEventsList.onSelectCallback = OnSelectCallback;
         }
-        
-
 
         private void DrawHeaderCallback(Rect rect)
         {
@@ -78,6 +79,9 @@ namespace Shababeek.Utilities.Editors
             }
         }
 
+        /// <summary>
+        /// Renders the custom inspector GUI with reorderable list.
+        /// </summary>
         public override void OnInspectorGUI()
         {
             EditorGUILayout.HelpBox(

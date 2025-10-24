@@ -2,29 +2,47 @@ using UnityEngine;
 
 namespace Shababeek.Utilities
 {
+    /// <summary>
+    /// Scriptable variable that stores a LayerMask with layer manipulation methods.
+    /// </summary>
     [CreateAssetMenu(menuName = "Shababeek/Scriptable System/Variables/LayerMaskVariable")]
     public class LayerMaskVariable : ScriptableVariable<LayerMask>
     {
+        /// <summary>
+        /// Adds a layer to the mask by layer index.
+        /// </summary>
         public void AddLayer(int layer)
         {
             Value |= (1 << layer);
         }
 
+        /// <summary>
+        /// Removes a layer from the mask by layer index.
+        /// </summary>
         public void RemoveLayer(int layer)
         {
             Value &= ~(1 << layer);
         }
 
+        /// <summary>
+        /// Toggles a layer in the mask by layer index.
+        /// </summary>
         public void ToggleLayer(int layer)
         {
             Value ^= (1 << layer);
         }
 
+        /// <summary>
+        /// Checks if the mask contains a specific layer by layer index.
+        /// </summary>
         public bool ContainsLayer(int layer)
         {
             return (Value & (1 << layer)) != 0;
         }
 
+        /// <summary>
+        /// Adds a layer to the mask by layer name.
+        /// </summary>
         public void AddLayer(string layerName)
         {
             int layer = LayerMask.NameToLayer(layerName);
@@ -32,6 +50,9 @@ namespace Shababeek.Utilities
                 AddLayer(layer);
         }
 
+        /// <summary>
+        /// Removes a layer from the mask by layer name.
+        /// </summary>
         public void RemoveLayer(string layerName)
         {
             int layer = LayerMask.NameToLayer(layerName);
@@ -39,22 +60,34 @@ namespace Shababeek.Utilities
                 RemoveLayer(layer);
         }
 
+        /// <summary>
+        /// Checks if the mask contains a specific layer by layer name.
+        /// </summary>
         public bool ContainsLayer(string layerName)
         {
             int layer = LayerMask.NameToLayer(layerName);
             return layer != -1 && ContainsLayer(layer);
         }
 
+        /// <summary>
+        /// Clears all layers from the mask.
+        /// </summary>
         public void Clear()
         {
             Value = 0;
         }
 
+        /// <summary>
+        /// Sets all layers in the mask.
+        /// </summary>
         public void SetAll()
         {
             Value = -1;
         }
 
+        /// <summary>
+        /// Gets the number of layers in the mask.
+        /// </summary>
         public int LayerCount
         {
             get

@@ -2,32 +2,62 @@ using UnityEngine;
 
 namespace Shababeek.Utilities
 {
+    /// <summary>
+    /// Scriptable variable that stores a Quaternion value with rotation manipulation methods.
+    /// </summary>
     [CreateAssetMenu(menuName = "Shababeek/Scriptable System/Variables/QuaternionVariable")]
     public class QuaternionVariable : ScriptableVariable<Quaternion>
     {
+        /// <summary>
+        /// Sets the rotation using euler angles.
+        /// </summary>
         public void SetRotation(Vector3 eulerAngles)
         {
             Value = Quaternion.Euler(eulerAngles);
         }
 
+        /// <summary>
+        /// Sets the rotation using individual euler angle components.
+        /// </summary>
         public void SetRotation(float x, float y, float z)
         {
             Value = Quaternion.Euler(x, y, z);
         }
 
+        /// <summary>
+        /// Rotates around an axis by the specified angle.
+        /// </summary>
         public void Rotate(Vector3 axis, float angle)
         {
             Value *= Quaternion.AngleAxis(angle, axis);
         }
 
+        /// <summary>
+        /// Sets the rotation to look in the specified direction.
+        /// </summary>
         public void LookAt(Vector3 direction)
         {
             Value = Quaternion.LookRotation(direction);
         }
 
+        /// <summary>
+        /// Gets the euler angle representation of the rotation.
+        /// </summary>
         public Vector3 EulerAngles => Value.eulerAngles;
+        
+        /// <summary>
+        /// Gets the forward direction based on this rotation.
+        /// </summary>
         public Vector3 Forward => Value * Vector3.forward;
+        
+        /// <summary>
+        /// Gets the right direction based on this rotation.
+        /// </summary>
         public Vector3 Right => Value * Vector3.right;
+        
+        /// <summary>
+        /// Gets the up direction based on this rotation.
+        /// </summary>
         public Vector3 Up => Value * Vector3.up;
 
         // Equality operators

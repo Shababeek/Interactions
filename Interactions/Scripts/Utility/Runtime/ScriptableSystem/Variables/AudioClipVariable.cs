@@ -2,9 +2,15 @@ using UnityEngine;
 
 namespace Shababeek.Utilities
 {
+    /// <summary>
+    /// Scriptable variable that stores an AudioClip with playback helper methods.
+    /// </summary>
     [CreateAssetMenu(menuName = "Shababeek/Scriptable System/Variables/AudioClipVariable")]
     public class AudioClipVariable : ScriptableVariable<AudioClip>
     {
+        /// <summary>
+        /// Plays the audio clip on the specified AudioSource.
+        /// </summary>
         public void Play(AudioSource audioSource)
         {
             if (Value != null && audioSource != null)
@@ -14,6 +20,9 @@ namespace Shababeek.Utilities
             }
         }
 
+        /// <summary>
+        /// Plays the audio clip once on the specified AudioSource.
+        /// </summary>
         public void PlayOneShot(AudioSource audioSource)
         {
             if (Value != null && audioSource != null)
@@ -22,6 +31,9 @@ namespace Shababeek.Utilities
             }
         }
 
+        /// <summary>
+        /// Plays the audio clip once with a volume scale on the specified AudioSource.
+        /// </summary>
         public void PlayOneShot(AudioSource audioSource, float volumeScale)
         {
             if (Value != null && audioSource != null)
@@ -30,9 +42,24 @@ namespace Shababeek.Utilities
             }
         }
 
+        /// <summary>
+        /// Gets the length of the audio clip in seconds.
+        /// </summary>
         public float Length => Value != null ? Value.length : 0f;
+        
+        /// <summary>
+        /// Gets the sample frequency of the audio clip.
+        /// </summary>
         public int Frequency => Value != null ? Value.frequency : 0;
+        
+        /// <summary>
+        /// Gets the number of audio channels in the clip.
+        /// </summary>
         public int Channels => Value != null ? Value.channels : 0;
+        
+        /// <summary>
+        /// Gets whether the audio clip is valid (not null).
+        /// </summary>
         public bool IsValid => Value != null;
 
         // Equality operators

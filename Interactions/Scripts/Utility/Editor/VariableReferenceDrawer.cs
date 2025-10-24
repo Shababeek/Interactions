@@ -11,6 +11,9 @@ namespace Shababeek.Utilities
     [CustomPropertyDrawer(typeof(VariableReference<>), true)]
     public class VariableReferenceDrawer : PropertyDrawer
     {
+        /// <summary>
+        /// Renders the property field with use constant toggle and appropriate value field.
+        /// </summary>
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             EditorGUI.BeginProperty(position, label, property);
@@ -58,6 +61,9 @@ namespace Shababeek.Utilities
             EditorGUI.EndProperty();
         }
 
+        /// <summary>
+        /// Gets the height of the property field (two lines plus spacing).
+        /// </summary>
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             // Height for the toggle + spacing + height for the content field

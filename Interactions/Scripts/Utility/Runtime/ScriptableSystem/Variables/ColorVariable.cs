@@ -2,27 +2,54 @@ using UnityEngine;
 
 namespace Shababeek.Utilities
 {
+    /// <summary>
+    /// Scriptable variable that stores a Color value with color manipulation methods.
+    /// </summary>
     [CreateAssetMenu(menuName = "Shababeek/Scriptable System/Variables/ColorVariable")]
     public class ColorVariable : ScriptableVariable<Color>
     {
+        /// <summary>
+        /// Sets the RGB components while preserving the alpha channel.
+        /// </summary>
         public void SetRGB(float r, float g, float b)
         {
             Value = new Color(r, g, b, Value.a);
         }
 
+        /// <summary>
+        /// Sets all RGBA components of the color.
+        /// </summary>
         public void SetRGBA(float r, float g, float b, float a)
         {
             Value = new Color(r, g, b, a);
         }
 
+        /// <summary>
+        /// Sets the alpha channel while preserving RGB components.
+        /// </summary>
         public void SetAlpha(float alpha)
         {
             Value = new Color(Value.r, Value.g, Value.b, alpha);
         }
 
+        /// <summary>
+        /// Gets the red component of the color.
+        /// </summary>
         public float R => Value.r;
+        
+        /// <summary>
+        /// Gets the green component of the color.
+        /// </summary>
         public float G => Value.g;
+        
+        /// <summary>
+        /// Gets the blue component of the color.
+        /// </summary>
         public float B => Value.b;
+        
+        /// <summary>
+        /// Gets the alpha component of the color.
+        /// </summary>
         public float A => Value.a;
 
         // Equality operators

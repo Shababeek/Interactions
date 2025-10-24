@@ -2,6 +2,9 @@ using UnityEngine;
 
 namespace Shababeek.Utilities
 {
+    /// <summary>
+    /// Scriptable variable that stores a string value with string operator support.
+    /// </summary>
     [CreateAssetMenu(menuName = "Shababeek/Scriptable System/Variables/TextVariable")]
     public class TextVariable : ScriptableVariable<string>
     {

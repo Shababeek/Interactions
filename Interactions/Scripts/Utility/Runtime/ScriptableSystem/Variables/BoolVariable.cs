@@ -2,9 +2,15 @@ using UnityEngine;
 
 namespace Shababeek.Utilities
 {
+    /// <summary>
+    /// Scriptable variable that stores a boolean value with logical operator support.
+    /// </summary>
     [CreateAssetMenu(menuName = "Shababeek/Scriptable System/Variables/BoolVariable")]
     public class BoolVariable : ScriptableVariable<bool>
     {
+        /// <summary>
+        /// Toggles the boolean value (true becomes false, false becomes true).
+        /// </summary>
         public void Toggle()
         {
             Value = !Value;

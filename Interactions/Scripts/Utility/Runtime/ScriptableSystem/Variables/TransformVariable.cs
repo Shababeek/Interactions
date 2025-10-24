@@ -2,9 +2,15 @@ using UnityEngine;
 
 namespace Shababeek.Utilities
 {
+    /// <summary>
+    /// Scriptable variable that stores a Transform reference with transform manipulation methods.
+    /// </summary>
     [CreateAssetMenu(menuName = "Shababeek/Scriptable System/Variables/TransformVariable")]
     public class TransformVariable : ScriptableVariable<Transform>
     {
+        /// <summary>
+        /// Sets the world position of the transform.
+        /// </summary>
         public void SetPosition(Vector3 position)
         {
             if (Value != null)
@@ -13,6 +19,9 @@ namespace Shababeek.Utilities
             }
         }
 
+        /// <summary>
+        /// Sets the world rotation of the transform.
+        /// </summary>
         public void SetRotation(Quaternion rotation)
         {
             if (Value != null)
@@ -21,6 +30,9 @@ namespace Shababeek.Utilities
             }
         }
 
+        /// <summary>
+        /// Sets the world rotation using euler angles.
+        /// </summary>
         public void SetRotation(Vector3 eulerAngles)
         {
             if (Value != null)
@@ -29,6 +41,9 @@ namespace Shababeek.Utilities
             }
         }
 
+        /// <summary>
+        /// Sets the local scale of the transform.
+        /// </summary>
         public void SetScale(Vector3 scale)
         {
             if (Value != null)
@@ -37,6 +52,9 @@ namespace Shababeek.Utilities
             }
         }
 
+        /// <summary>
+        /// Sets the local position of the transform.
+        /// </summary>
         public void SetLocalPosition(Vector3 localPosition)
         {
             if (Value != null)
@@ -45,6 +63,9 @@ namespace Shababeek.Utilities
             }
         }
 
+        /// <summary>
+        /// Sets the local rotation of the transform.
+        /// </summary>
         public void SetLocalRotation(Quaternion localRotation)
         {
             if (Value != null)
@@ -53,6 +74,9 @@ namespace Shababeek.Utilities
             }
         }
 
+        /// <summary>
+        /// Sets the local scale of the transform.
+        /// </summary>
         public void SetLocalScale(Vector3 localScale)
         {
             if (Value != null)
@@ -61,6 +85,9 @@ namespace Shababeek.Utilities
             }
         }
 
+        /// <summary>
+        /// Rotates the transform to look at a target position.
+        /// </summary>
         public void LookAt(Vector3 target)
         {
             if (Value != null)
@@ -69,6 +96,9 @@ namespace Shababeek.Utilities
             }
         }
 
+        /// <summary>
+        /// Rotates the transform to look at a target transform.
+        /// </summary>
         public void LookAt(Transform target)
         {
             if (Value != null && target != null)
@@ -77,14 +107,49 @@ namespace Shababeek.Utilities
             }
         }
 
+        /// <summary>
+        /// Gets the world position of the transform.
+        /// </summary>
         public Vector3 Position => Value != null ? Value.position : Vector3.zero;
+        
+        /// <summary>
+        /// Gets the world rotation of the transform.
+        /// </summary>
         public Quaternion Rotation => Value != null ? Value.rotation : Quaternion.identity;
+        
+        /// <summary>
+        /// Gets the local scale of the transform.
+        /// </summary>
         public Vector3 Scale => Value != null ? Value.localScale : Vector3.one;
+        
+        /// <summary>
+        /// Gets the local position of the transform.
+        /// </summary>
         public Vector3 LocalPosition => Value != null ? Value.localPosition : Vector3.zero;
+        
+        /// <summary>
+        /// Gets the local rotation of the transform.
+        /// </summary>
         public Quaternion LocalRotation => Value != null ? Value.localRotation : Quaternion.identity;
+        
+        /// <summary>
+        /// Gets the local scale of the transform.
+        /// </summary>
         public Vector3 LocalScale => Value != null ? Value.localScale : Vector3.one;
+        
+        /// <summary>
+        /// Gets the forward direction vector of the transform.
+        /// </summary>
         public Vector3 Forward => Value != null ? Value.forward : Vector3.forward;
+        
+        /// <summary>
+        /// Gets the right direction vector of the transform.
+        /// </summary>
         public Vector3 Right => Value != null ? Value.right : Vector3.right;
+        
+        /// <summary>
+        /// Gets the up direction vector of the transform.
+        /// </summary>
         public Vector3 Up => Value != null ? Value.up : Vector3.up;
 
         // Equality operators

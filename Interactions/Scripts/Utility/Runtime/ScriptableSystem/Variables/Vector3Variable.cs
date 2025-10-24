@@ -2,6 +2,9 @@ using UnityEngine;
 
 namespace Shababeek.Utilities
 {
+    /// <summary>
+    /// Scriptable variable that stores a Vector3 value with full arithmetic operator support.
+    /// </summary>
     [CreateAssetMenu(menuName = "Shababeek/Scriptable System/Variables/Vector3Variable")]
     public class Vector3Variable : ScriptableVariable<Vector3>
     {
@@ -111,6 +114,9 @@ namespace Shababeek.Utilities
         }
     }
 
+    /// <summary>
+    /// A reference that can point to either a Vector3Variable or use a constant Vector3 value.
+    /// </summary>
     public class Vector3Reference : VariableReference<Vector3>
     {
     }

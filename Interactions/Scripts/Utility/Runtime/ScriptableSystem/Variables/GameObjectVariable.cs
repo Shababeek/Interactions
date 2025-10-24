@@ -2,9 +2,15 @@ using UnityEngine;
 
 namespace Shababeek.Utilities
 {
+    /// <summary>
+    /// Scriptable variable that stores a GameObject reference with helper methods.
+    /// </summary>
     [CreateAssetMenu(menuName = "Shababeek/Scriptable System/Variables/GameObjectVariable")]
     public class GameObjectVariable : ScriptableVariable<GameObject>
     {
+        /// <summary>
+        /// Sets the active state of the GameObject.
+        /// </summary>
         public void SetActive(bool active)
         {
             if (Value != null)
@@ -13,17 +19,30 @@ namespace Shababeek.Utilities
             }
         }
 
+        /// <summary>
+        /// Gets a component of the specified type from the GameObject.
+        /// </summary>
         public T GetComponent<T>() where T : Component
         {
             return Value != null ? Value.GetComponent<T>() : null;
         }
 
+        /// <summary>
+        /// Checks if the GameObject has a component of the specified type.
+        /// </summary>
         public bool HasComponent<T>() where T : Component
         {
             return Value != null && Value.GetComponent<T>() != null;
         }
 
+        /// <summary>
+        /// Gets the Transform component of the GameObject.
+        /// </summary>
         public Transform Transform => Value != null ? Value.transform : null;
+        
+        /// <summary>
+        /// Gets whether the GameObject is active in the hierarchy.
+        /// </summary>
         public bool IsActive => Value != null && Value.activeInHierarchy;
 
         // Equality operators

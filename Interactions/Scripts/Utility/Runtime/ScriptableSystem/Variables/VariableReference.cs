@@ -18,6 +18,9 @@ namespace Shababeek.Utilities
         private IDisposable _subscription;
         private readonly Subject<T> _onValueChangedSubject = new();
 
+        /// <summary>
+        /// Gets or sets the name of the reference (either the constant name or variable name).
+        /// </summary>
         public string Name
         {
             get => useConstant ? name : variable.name;
@@ -29,7 +32,7 @@ namespace Shababeek.Utilities
         }
 
         /// <summary>
-        /// Gets the current value (either from the variable or constant).
+        /// Gets or sets the current value (either from the variable or constant).
         /// </summary>
         public T Value
         {
@@ -49,7 +52,7 @@ namespace Shababeek.Utilities
         }
 
         /// <summary>
-        /// Observable that fires when the value changes.
+        /// Gets an observable that emits when the value changes.
         /// </summary>
         public IObservable<T> OnValueChanged =>
             useConstant ? _onValueChangedSubject.AsObservable() : variable.OnValueChanged;

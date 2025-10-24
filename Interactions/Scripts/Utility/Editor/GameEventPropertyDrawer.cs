@@ -4,9 +4,15 @@ using Shababeek.Utilities;
 
 namespace Shababeek.Utilities.Editors
 {
+    /// <summary>
+    /// Custom property drawer for GameEvent that adds a "Create Event" button.
+    /// </summary>
     [CustomPropertyDrawer(typeof(GameEvent))]
     public class GameEventPropertyDrawer : PropertyDrawer
     {
+        /// <summary>
+        /// Renders the property field with an optional Create Event button.
+        /// </summary>
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             EditorGUI.BeginProperty(position, label, property);
@@ -36,6 +42,9 @@ namespace Shababeek.Utilities.Editors
             EditorGUI.EndProperty();
         }
         
+        /// <summary>
+        /// Gets the height of the property field.
+        /// </summary>
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             return EditorGUIUtility.singleLineHeight;
