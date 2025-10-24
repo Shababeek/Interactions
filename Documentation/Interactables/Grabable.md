@@ -70,8 +70,7 @@ Your object is now grabbable with default settings! Press Play and try grabbing 
 
 ## Inspector Reference
 
-[PLACEHOLDER_SCREENSHOT: Full Grabable Inspector with numbered callouts]
-
+![GrabableNumbered.png](../Images/GrabableNumbered.png)
 ### 🎯 Interaction Settings
 
 #### 1. Interaction Hand
@@ -106,7 +105,7 @@ Your object is now grabbable with default settings! Press Play and try grabbing 
 
 Events let you trigger actions when the object is grabbed, released, or used.
 ![GrabEvents.png](../Images/GrabEvents.png)
-##### On Selected
+##### a. On Selected
 - **When it fires:** The moment the player grabs the object
 - **Common uses:**
   - Play a "grab" sound effect
@@ -121,7 +120,7 @@ Events let you trigger actions when the object is grabbed, released, or used.
 3. Drag your **AudioSource** (or other component) to the Object field
 4. Select **AudioSource > Play()**
 
-##### On Deselected
+##### b. On Deselected
 - **When it fires:** When the player releases the object
 - **Common uses:**
   - Play a "drop" sound
@@ -129,20 +128,20 @@ Events let you trigger actions when the object is grabbed, released, or used.
   - Hide UI hints
   - Reset object color
 
-##### On Hover Start
+##### c. On Hover Start
 - **When it fires:** When the hand gets close enough to grab (before grabbing)
 - **Common uses:**
   - Outline/highlight the object
   - Show "Press Grip to grab" hint
   - Play subtle hover sound
 
-##### On Hover End
+##### d. On Hover End
 - **When it fires:** When the hand moves away without grabbing
 - **Common uses:**
   - Remove outline/highlight
   - Hide grab hint
 
-##### On Use Started / On Use Ended
+##### e. On Use Started / On Use Ended
 - **When it fires:** When the **Trigger** button is pressed/released while holding
 - **Common uses:**
   - Fire a weapon
@@ -157,15 +156,15 @@ Events let you trigger actions when the object is grabbed, released, or used.
 
 These fields show the object's state while in Play mode. You can't edit them.
 
-##### Is Selected
+##### a. Is Selected
 - **Shows:** Whether the object is currently being held (true/false)
 - **Useful for:** Checking if grab is working correctly
 
-##### Current Interactor
+##### b. Current Interactor
 - **Shows:** Which hand/interactor is holding the object
 - **Useful for:** Debugging multi-hand scenarios
 
-##### Current State
+##### c. Current State
 - **Shows:** None, Hovering, Selected, or Activating
 - **Useful for:** Understanding the interaction flow
 
