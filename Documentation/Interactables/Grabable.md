@@ -18,7 +18,7 @@ Perfect for creating tools, weapons, toys, or any object your player needs to pi
 - ✅ Throwable objects (balls, grenades, rocks) _but needs to also add [Throwable](Throwable.md)_
 - ✅ Weapons that need to be held (sword, gun, bow)
 - ✅ Interactive props (phone, book, remote control)
-   **Don't use for**:
+  **Don't use for**:
 - ❌ Buttons, switches, or objects that shouldn't move (use Switch or VRButton instead)
 - ❌ Object that move with a constraint (Drawer, Lever, Joystick, Wheels, ...)
 ---
@@ -43,8 +43,8 @@ This example shows a basic grabbable Object. The player can pick it up, move it 
 
 ![Grabable.png](../Images/Grabable.png)
 
-> 💡 **Note:** 
-> - Without a Collider, the hand can't detect the object. 
+> 💡 **Note:**
+> - Without a Collider, the hand can't detect the object.
 > - Without a Rigidbody, the object will float mid-air when you leave it.
 > - Without a Throwable The object will not follow the trajectory of the hand when thrown
 
@@ -56,7 +56,7 @@ This example shows a basic grabbable Object. The player can pick it up, move it 
 #### By Using the Make into Option
 1. Right-click on the Object in the hierarchy
 2. Select `Shababeek -> Make into -> Grabable`
-![MakeGrababel.png](../Images/MakeGrababel.png)
+   ![MakeGrababel.png](../Images/MakeGrababel.png)
 
 ### Step 3: Automatic Setup
 When you add Grabable, Unity automatically:
@@ -78,44 +78,42 @@ Your object is now grabbable with default settings! Press Play and try grabbing 
 - **What it does:** Controls which hand(s) can grab this object
 - **Default:** Both
 - **Options:**
-    - **Both:** Either hand can grab it
-    - **Left:** Only left hand
-    - **Right:** Only right hand
-    - **None:** If you want to cancel Interactions for this Object
+  - **Both:** Either hand can grab it
+  - **Left:** Only left hand
+  - **Right:** Only right hand
+  - **None:** If you want to cancel Interactions for this Object
 - **When to change:**
-    - Use **Both** for most objects (recommended)
-    - Set to **Left** for left-handed tools (if your game has handedness)
-    - Set to **Right** for right-handed tools
+  - Use **Both** for most objects (recommended)
+  - Set to **Left** for left-handed tools (if your game has handedness)
+  - Set to **Right** for right-handed tools
 
 #### 2. Selection Button
 - **What it does:** The controller button that grabs/releases the object
 - **Default:** Grip
 - **Options:**
-    - **Grip:** Side grip button (recommended for grab interactions)
-    - **Trigger:** Index finger trigger
+  - **Grip:** Side grip button (recommended for grab interactions)
+  - **Trigger:** Index finger trigger
 - **When to change:**
-    - Use **Grip** for picking up objects (feels natural)
-    - Use **Trigger** if grip is used for small objects(pins, pebbles, ...) or for other mechanics like dragging a slingshot string
+  - Use **Grip** for picking up objects (feels natural)
+  - Use **Trigger** if grip is used for small objects(pins, pebbles, ...) or for other mechanics like dragging a slingshot string
 
 
 > 💡 **Best Practice:** Keep Grab on **Grip** unless the object real-life counterpart is usually held with indexFinger/Thumb.
 
 ---
 
-
-
-### 📢 Events
+#### 3. Events 📢
 
 Events let you trigger actions when the object is grabbed, released, or used.
 ![GrabEvents.png](../Images/GrabEvents.png)
-#### On Selected
+##### On Selected
 - **When it fires:** The moment the player grabs the object
 - **Common uses:**
-    - Play a "grab" sound effect
-    - Change the object's material (highlight)
-    - Haptic feedback (vibrate controller)
-    - Show UI hints ("Press Trigger to use")
-    - trigger a trap when the player Grabs the treasure
+  - Play a "grab" sound effect
+  - Change the object's material (highlight)
+  - Haptic feedback (vibrate controller)
+  - Show UI hints ("Press Trigger to use")
+  - trigger a trap when the player Grabs the treasure
 
 **Example Setup:**
 1. Expand the **On Selected** event
@@ -123,51 +121,51 @@ Events let you trigger actions when the object is grabbed, released, or used.
 3. Drag your **AudioSource** (or other component) to the Object field
 4. Select **AudioSource > Play()**
 
-#### On Deselected
+##### On Deselected
 - **When it fires:** When the player releases the object
 - **Common uses:**
-    - Play a "drop" sound
-    - Remove highlighting
-    - Hide UI hints
-    - Reset object color
+  - Play a "drop" sound
+  - Remove highlighting
+  - Hide UI hints
+  - Reset object color
 
-#### On Hover Start
+##### On Hover Start
 - **When it fires:** When the hand gets close enough to grab (before grabbing)
 - **Common uses:**
-    - Outline/highlight the object
-    - Show "Press Grip to grab" hint
-    - Play subtle hover sound
+  - Outline/highlight the object
+  - Show "Press Grip to grab" hint
+  - Play subtle hover sound
 
-#### On Hover End
+##### On Hover End
 - **When it fires:** When the hand moves away without grabbing
 - **Common uses:**
-    - Remove outline/highlight
-    - Hide grab hint
+  - Remove outline/highlight
+  - Hide grab hint
 
-#### On Use Started / On Use Ended
+##### On Use Started / On Use Ended
 - **When it fires:** When the **Trigger** button is pressed/released while holding
 - **Common uses:**
-    - Fire a weapon
-    - Turn on a flashlight
-    - Activate a tool's function
-    - Open a phone screen
+  - Fire a weapon
+  - Turn on a flashlight
+  - Activate a tool's function
+  - Open a phone screen
 
 
 ---
 
-### 🐛 Debug Information (Runtime Only)
+#### 4.  Debug Information 🐛 (Runtime Only)
 
 These fields show the object's state while in Play mode. You can't edit them.
 
-#### Is Selected
+##### Is Selected
 - **Shows:** Whether the object is currently being held (true/false)
 - **Useful for:** Checking if grab is working correctly
 
-#### Current Interactor
+##### Current Interactor
 - **Shows:** Which hand/interactor is holding the object
 - **Useful for:** Debugging multi-hand scenarios
 
-#### Current State
+##### Current State
 - **Shows:** None, Hovering, Selected, or Activating
 - **Useful for:** Understanding the interaction flow
 
@@ -465,9 +463,9 @@ When you grab an object:
 ### Compatibility
 - **Unity Version:** 2021.3 or newer (Unity 6 recommended)
 - **Dependencies:**
-    - Unity Input System/ or Input Manager (see config.md)
-    - PoseConstrainer (added automatically)
-    - InteractableBase (inherited)
+  - Unity Input System/ or Input Manager (see config.md)
+  - PoseConstrainer (added automatically)
+  - InteractableBase (inherited)
 - **Platforms:** All platforms (PC VR, Quest, PSVR, etc.)
 
 
@@ -480,7 +478,7 @@ When you grab an object:
 - [PoseConstrainer](../PoseSystem/PoseConstrainer.md) - Hand pose configuration
 - [Socket](../SocketSystem/Readme.md) - Object placement and snapping
 - [Getting Started Guide](../GettingStarted/QuickStart.md) - Your first grabbable object
-- [Video: Creating Grabbable Objects](link-to-video) 
+- [Video: Creating Grabbable Objects](link-to-video)
 
 ---
 
