@@ -15,21 +15,35 @@ namespace Shababeek.Sequencing
     [Serializable]
     public class Step : SequenceNode
     {
-        [Tooltip("The audio source to play the audio clip from.")]
+        [Tooltip("The audio clip to play when this step starts.")]
         [SerializeField] private AudioClip audioClip;
-        [Tooltip("set to true if you want to give the user the ability to finish the step before it is started")]
+        
+        [Tooltip("Enable to allow the step to be completed before it starts.")]
         [SerializeField] private bool canBeFinshedBeforeStarted;
-        [Tooltip("set true if the step will complete when the audio clip is finished playing")]
+        
+        [Tooltip("When enabled, the step automatically completes when the audio finishes playing.")]
         [SerializeField] private bool audioOnly;
+        
+        [Tooltip("Delay in seconds before starting the audio playback.")]
         [SerializeField] private float audioDelay = .1f;
+        
+        [Tooltip("Unity event raised when the step starts.")]
         [SerializeField] private UnityEvent onStarted;
+        
+        [Tooltip("Unity event raised when the step completes.")]
         [SerializeField] private UnityEvent onCompleted;
+        
+        [Tooltip("When enabled, overrides the sequence's default pitch with a custom value.")]
         [SerializeField] private bool overridePitch = false;
+        
+        [Tooltip("Custom pitch for this step's audio (0.1 to 2.0).")]
         [SerializeField] [Range(0.1f, 2)] private float pitch;
         private Sequence _parentSequence;
         private bool _finished = false;
 
-
+        /// <summary>
+        /// Gets or sets the current status of the step.
+        /// </summary>
         public SequenceStatus StepStatus
         {
             get => status;
@@ -41,6 +55,9 @@ namespace Shababeek.Sequencing
             }
         }
 
+        /// <summary>
+        /// Begins the step execution by starting audio and raising events.
+        /// </summary>
         public override void Begin()
         {
             if (overridePitch) audioObject.pitch = pitch;
@@ -50,6 +67,9 @@ namespace Shababeek.Sequencing
             if (_finished) CompleteStep();
         }
 
+        /// <summary>
+        /// Completes the step and moves to the next step in the sequence.
+        /// </summary>
         public void CompleteStep()
         {
             if (status == SequenceStatus.Started)
@@ -64,6 +84,9 @@ namespace Shababeek.Sequencing
             }
         }
 
+        /// <summary>
+        /// Initializes the step with its parent sequence.
+        /// </summary>
         public void Initialize(Sequence sequence)
         {
             _finished = false;

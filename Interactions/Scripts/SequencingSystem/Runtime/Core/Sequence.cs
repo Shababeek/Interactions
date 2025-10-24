@@ -8,10 +8,16 @@ using UnityEngine;
 
 namespace Shababeek.Sequencing
 {
+    /// <summary>
+    /// Represents a sequence of steps that can be executed in order.
+    /// </summary>
     [CreateAssetMenu(menuName = "Shababeek/Sequencing/Sequence")]
     public class Sequence : SequenceNode
     {
+        [Tooltip("Audio pitch multiplier for the sequence (0.1 to 2.0).")]
         [SerializeField, Range(0.1f, 2)] internal float pitch = 1;
+        
+        [Tooltip("Audio volume level for the sequence (0 to 1).")]
         [SerializeField, Range(0, 1)] private float volume = .5f;
 
         [HideInInspector] [SerializeField] private List<Step> steps;
@@ -19,8 +25,19 @@ namespace Shababeek.Sequencing
         [SerializeField, ReadOnly] private int currentStepIndex;
         private bool initialized;
 
+        /// <summary>
+        /// Gets whether the sequence has been started.
+        /// </summary>
         public bool Started => status == SequenceStatus.Started;
+        
+        /// <summary>
+        /// Gets the current step being executed in the sequence.
+        /// </summary>
         public Step CurrentStep => currentStepIndex < steps.Count ? steps[currentStepIndex] : null;
+        
+        /// <summary>
+        /// Gets the list of all steps in the sequence.
+        /// </summary>
         public List<Step> Steps => steps;
 
         private void Awake()
@@ -33,6 +50,9 @@ namespace Shababeek.Sequencing
             Awake();
         }
 
+        /// <summary>
+        /// Begins the sequence execution by starting the first step.
+        /// </summary>
         public override void Begin()
         {
             Debug.Log($"starting sequence{name}");
@@ -73,6 +93,9 @@ namespace Shababeek.Sequencing
             Raise(SequenceStatus.Completed);
         }
 
+        /// <summary>
+        /// Plays an audio clip using the sequence's audio source.
+        /// </summary>
         public void PlayClip(AudioClip clip)
         {
             audioObject.Stop();
@@ -80,6 +103,9 @@ namespace Shababeek.Sequencing
             audioObject.Play();
         }
 
+        /// <summary>
+        /// Initializes the sequence by creating an empty steps list.
+        /// </summary>
         public void Init() => steps = new List<Step>();
     }
 }

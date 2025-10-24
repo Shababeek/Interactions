@@ -5,6 +5,9 @@ using UniRx;
 
 namespace Shababeek.Sequencing
 {
+    /// <summary>
+    /// Types of interactions that can trigger step completion.
+    /// </summary>
     public enum InteractionType
     {
         Selection = 0,
@@ -14,10 +17,16 @@ namespace Shababeek.Sequencing
         HoverEnd = 4,
     }
 
+    /// <summary>
+    /// Completes a step when a specific interaction occurs with an interactable object.
+    /// </summary>
     [CreateAssetMenu(menuName = "Shababeek/Sequencing/Actions/InteractionAction")]
     public class InteractionAction : AbstractSequenceAction
     {
+        [Tooltip("The interactable object to monitor for interactions.")]
         [SerializeField] private InteractableBase interactableObject;
+        
+        [Tooltip("The type of interaction that will complete the step.")]
         [SerializeField] private InteractionType interactionType;
 
         private CompositeDisposable _disposable;

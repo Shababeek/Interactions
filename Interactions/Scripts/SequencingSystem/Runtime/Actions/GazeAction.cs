@@ -3,6 +3,9 @@ using UnityEngine;
 
 namespace Shababeek.Sequencing
 {
+    /// <summary>
+    /// Completes a step when the player gazes at a collider.
+    /// </summary>
     [CreateAssetMenu(menuName = "Shababeek/Sequencing/Actions/GazeAction")]
     public class GazeAction : AbstractSequenceAction
     {

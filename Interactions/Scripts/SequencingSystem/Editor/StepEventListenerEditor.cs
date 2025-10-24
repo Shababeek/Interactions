@@ -6,6 +6,9 @@ using Shababeek.Sequencing;
 
 namespace Shababeek.Sequencing.Editors
 {
+    /// <summary>
+    /// Custom editor for StepEventListener with reorderable step list and event configuration.
+    /// </summary>
     [CustomEditor(typeof(StepEventListener))]
     public class StepEventListenerEditor : Editor
     {

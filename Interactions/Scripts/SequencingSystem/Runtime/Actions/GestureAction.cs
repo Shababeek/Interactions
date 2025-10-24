@@ -5,12 +5,21 @@ using Shababeek.Interactions.Core;
 
 namespace Shababeek.Sequencing
 {
+    /// <summary>
+    /// Completes a step when specific hand gestures are detected.
+    /// </summary>
     [AddComponentMenu(menuName :"Shababeek/Sequencing/Actions/GestureAction")]
     public class GestureAction : AbstractSequenceAction
     {
+        /// <summary>
+        /// Defines a hand gesture for detection.
+        /// </summary>
         [System.Serializable]
         public class GestureDefinition
         {
+            /// <summary>
+            /// Types of hand gestures that can be detected.
+            /// </summary>
             public enum GestureType
             {
                 Fist,
@@ -22,17 +31,35 @@ namespace Shababeek.Sequencing
                 Custom
             }
 
+            [Tooltip("The type of gesture to detect.")]
             public GestureType gestureType;
+            
+            [Tooltip("Which hand to check for the gesture.")]
             public HandIdentifier targetHand = HandIdentifier.Right;
+            
+            [Tooltip("Duration the gesture must be held (in seconds).")]
             public float holdDuration = 0.5f;
+            
+            [Tooltip("Whether the gesture must be held for the specified duration.")]
             public bool requireHold = false;
+            
+            [Tooltip("Name of the custom gesture (only used for Custom gesture type).")]
             public string customGestureName;
+            
+            [Tooltip("Tolerance for gesture detection (0-1).")]
             public float tolerance = 0.1f;
         }
 
+        [Tooltip("List of gestures to detect for this step.")]
         [SerializeField] private List<GestureDefinition> gestures = new List<GestureDefinition>();
+        
+        [Tooltip("When enabled, all gestures must be detected. Otherwise, any one gesture will complete the step.")]
         [SerializeField] private bool requireAllGestures = false;
+        
+        [Tooltip("How often to check for gestures (in seconds).")]
         [SerializeField] private float checkInterval = 0.1f;
+        
+        [Tooltip("When enabled, continuously checks for gestures until detected.")]
         [SerializeField] private bool continuousCheck = true;
 
         private StepEventListener listener;
@@ -246,12 +273,17 @@ namespace Shababeek.Sequencing
             );
         }
 
-        // Public methods for external control
+        /// <summary>
+        /// Adds a gesture to the detection list.
+        /// </summary>
         public void AddGesture(GestureDefinition gesture)
         {
             gestures.Add(gesture);
         }
 
+        /// <summary>
+        /// Removes a gesture from the detection list by index.
+        /// </summary>
         public void RemoveGesture(int index)
         {
             if (index >= 0 && index < gestures.Count)
@@ -260,11 +292,17 @@ namespace Shababeek.Sequencing
             }
         }
 
+        /// <summary>
+        /// Clears all gestures from the detection list.
+        /// </summary>
         public void ClearGestures()
         {
             gestures.Clear();
         }
 
+        /// <summary>
+        /// Manually triggers a custom gesture by name.
+        /// </summary>
         public void TriggerCustomGesture(string gestureName)
         {
             // External method to trigger custom gestures
@@ -279,7 +317,9 @@ namespace Shababeek.Sequencing
             }
         }
 
-        // Helper methods to create gestures
+        /// <summary>
+        /// Creates a fist gesture definition.
+        /// </summary>
         public static GestureDefinition CreateFistGesture(HandIdentifier hand = HandIdentifier.Right, float holdDuration = 0.5f)
         {
             return new GestureDefinition
@@ -291,6 +331,9 @@ namespace Shababeek.Sequencing
             };
         }
 
+        /// <summary>
+        /// Creates a pointing gesture definition.
+        /// </summary>
         public static GestureDefinition CreatePointingGesture(HandIdentifier hand = HandIdentifier.Right, float holdDuration = 0.5f)
         {
             return new GestureDefinition
@@ -302,6 +345,9 @@ namespace Shababeek.Sequencing
             };
         }
 
+        /// <summary>
+        /// Creates a custom gesture definition.
+        /// </summary>
         public static GestureDefinition CreateCustomGesture(string gestureName, HandIdentifier hand = HandIdentifier.Right)
         {
             return new GestureDefinition

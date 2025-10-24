@@ -5,9 +5,13 @@ using UnityEngine;
 
 namespace Shababeek.Sequencing
 {
+    /// <summary>
+    /// Snaps an interactable object to a target position when released inside a trigger.
+    /// </summary>
     [AddComponentMenu(menuName : "Shababeek/Sequencing/Actions/InsertionAction")]
     public class InsertionAction : AbstractSequenceAction
     {
+        [Tooltip("The interactable object to snap into position.")]
         [SerializeField] private InteractableBase interactable;
         private GameObject interactableObject;
         private bool insideTrigger = false;

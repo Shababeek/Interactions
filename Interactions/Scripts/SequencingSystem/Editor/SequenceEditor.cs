@@ -4,6 +4,9 @@ using UnityEngine;
 
 namespace Shababeek.Sequencing.Editors
 {
+    /// <summary>
+    /// Custom editor for Sequence that provides a reorderable list of steps.
+    /// </summary>
     [CustomEditor(typeof(Sequence))]
     public class SequenceEditor : Editor
     {

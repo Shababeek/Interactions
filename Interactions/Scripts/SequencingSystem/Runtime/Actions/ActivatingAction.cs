@@ -4,6 +4,9 @@ using UnityEngine;
 
 namespace Shababeek.Sequencing
 {
+    /// <summary>
+    /// Represents the type of action in the sequencing system.
+    /// </summary>
     public enum ActionType {
         ActivationAction,
         AnimationAction,
@@ -16,10 +19,17 @@ namespace Shababeek.Sequencing
         VoiceOverAction,
         ComplexAction
     }
+    
+    /// <summary>
+    /// Completes a step when an interactable object is used.
+    /// </summary>
     [AddComponentMenu("Shababeek/SequenceSystem/Actions/ActivationAction")]
     public class ActivatingAction : AbstractSequenceAction
     {
+        [Tooltip("The type of action being performed.")]
         [SerializeField] private ActionType action;
+        
+        [Tooltip("The interactable object to monitor for use events.")]
         [SerializeField] private InteractableBase interactableObject;
         private CompositeDisposable _disposable = new CompositeDisposable();
         
