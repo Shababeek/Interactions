@@ -1,12 +1,12 @@
 # Shababeek Interaction System
 
-![Unity Version](https://img.shields.io/badge/Unity-6.0%2B-blue)
-![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-1.0.0-orange)
-
 A comprehensive Unity package for building advanced VR/AR and 3D interactions with a focus on hand presence, pose constraints, and reactive programming.
 
-## 🎯 Why Choose Shababeek Interactions?
+[![Unity Version](https://img.shields.io/badge/Unity-6.0%2B-blue.svg)](https://unity.com/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
+---
+## **Why Choose Shababeek Interactions?**
 
 ### **Hand-First Design**
 - Built around natural hand presence and interactions
@@ -14,18 +14,13 @@ A comprehensive Unity package for building advanced VR/AR and 3D interactions wi
 - Support for different kinds of interaction scenarios
 - Interaction can be configured on a per-hand basis
 
-### **Performance Optimized**
-- Vector-based positioning (no Transform dependencies)
-- Cached fake hand creation and reuse
-- Configurable smooth transitions
-- Optimized for VR applications
 
 ### **Developer Friendly**
 - ScriptableObject-driven architecture
 - Comprehensive editor tools with real-time preview
 - UniRx integration for reactive programming
 - Clear separation of concerns
-- Hand Poses are totally independed of VR SDKs allowing for on non XR games
+- Hand Poses are totally independed of VR SDKs allowing for on non-XR games
 
 ### **Designer Friendly**
 - Visual editor tools with interactive scene view
@@ -33,187 +28,261 @@ A comprehensive Unity package for building advanced VR/AR and 3D interactions wi
 - Real-time feedback system configuration
 - No coding required for basic experience design
 
-## ✨ Key Features
+## ✨ Features
 
-### **🎮 Complete Interaction System**
-- **10+ Interactable Types**: Grabable, Throwable, Lever, Drawer, Button, Switch, Joystick, Wheel, Turret, Spawning
-- **Multiple Interaction Methods**: Trigger (near objects) and Raycast (far objects)
-- **Extensible Architecture**: Easy to create custom interactables
-
-### **🤲 Advanced Hand System**
-- **6 Hand Models(Asset store only)**: Biker, Cartoon, Robot, Sci-fi, Viking, Realistic Woman, more are being added regularly
-- **Dynamic Pose System**: Real-time hand pose blending and animation
-- **Pose Constraints**: Hide, Free, or Constrained hand behavior
-- **Smooth Transitions**: Configurable lerp-based positioning
-
-### **🔄 Reactive Programming**
-- **UniRx Integration**: Observable patterns throughout the system
-- **Scriptable Variables**: Sharing variables across different component made easy
-- **Event System**: Decoupled event-driven architecture
-- **UI Binding**: Live UI updates with variable changes
-
-### **🎵 Comprehensive Feedback System**
-- **Multi-Modal Feedback**: Haptic, Audio, Visual, Animation
-- **Event-Driven**: Automatic triggering based on interactions
-- **Configurable**: Per-interaction type settings (hover, select, activate)
-- **Performance Optimized**: Efficient feedback management
-
-### **📋 Sequencing System**
-- **Linear Sequences**: Step-by-step processes with audio support
-- **Branching Sequences**: Complex conditional flows with visual editor
-- **12+ Action Types**: Variable, Timer, Gesture, Gaze, and more
-- **Event Listeners**: Monitor and respond to sequence events
-
-## 🚀 Quick Start
-
-### **1. Installation**
-1. Import the Shababeek Interaction System package
-2. Go to `Shababeek > Initialize Scene` to set up VR camera rig
-3. Configure which hand to use in `Assets/Shababeek/Interactions/Data/config.asset`
-
-### **2. Create Your First Interaction**
-1. Right-click in Hierarchy → `Create > Shababeek > Interactables > Grabable`
-2. Configure the interaction settings in the Inspector
-3. Test in VR!
-
-### **3. Add Feedback**
-1. Find the **FeedbackSystem** component on your interactable
-2. Add **HapticFeedback**, **AudioFeedback**, or **MaterialFeedback**
-3. Configure settings for different interaction types
-
-## 📖 Documentation
-
-### **Getting Started**
-- [Quick Start Guide](Documentation/QuickStartGuide.md) — Get up and running in minutes
-- [System Overview](Documentation/SystemOverview.md) — Complete architecture breakdown
-
-### **Component Guides**
-- [Interactables Manual](Documentation/Interactables.md) — All interactable types and usage
-- [Hand Posing & Constraints](Documentation/HandPosingAndConstraints.md) — Advanced hand management
-- [Feedback System](Documentation/FeedbackSystem.md) — Multi-modal feedback setup
-- [Sequence System](Documentation/SequenceSystem.md) — Step-by-step interaction flows
-- [Scriptable System](Documentation/ScriptableSystem.md) — Variables and events
-
-### **API Reference**
-- [Component Reference](Documentation/ComponentReference.md) — Complete API documentation
-- [Scripting Reference](Documentation/ScriptingReference.md) — Code examples and patterns
-
-## 🎯 Perfect For
-
-### **VR/AR Applications**
-- Immersive training simulations
-- Educational experiences
-- Interactive museums and exhibits
-- Virtual laboratories
-
-### **Gaming & Entertainment**
-- VR puzzle games
-- Interactive storytelling
-- Simulation games
-- Educational games
-
-### **Professional Applications**
-- Industrial training
-- Medical simulations
-- Architectural visualization
-- Product demonstrations
-
-## 🛠️ Requirements
-
-- **Unity**: 2022.3 LTS or newer
-- **Packages**: OpenXR, XR Interaction Toolkit
-- **Platform**: PC, Android, iOS (VR/AR capable)
-- **VR Headsets**: Oculus Quest 2/3, HTC Vive, Valve Index, and more
-
-## 📦 What's Included
-
-### **Core Systems**
-- Complete interaction framework
-- Hand pose management system
-- Reactive programming utilities
-- Comprehensive feedback system
-- Sequencing and workflow tools
-
-### **Assets & Models**
-- 6 different hand models with animations
-- Pre-configured interactable prefabs
-- Example materials and textures
-- Demo scenes and examples
-
-### **Documentation**
-- Complete user manual
-- API reference documentation
-- Video tutorials and examples
-- Best practices guide
-
-## 🔄 How It's Different
-
-### **vs XR Interaction Toolkit**
-- **Scriptable System Core**: Built around ScriptableObjects for modularity
-- **Hand Pose Constraints**: Advanced pose management not available in XRITK
-- **Reactive Programming**: UniRx integration for complex behaviors
-- **Designer-Friendly**: Visual tools for non-programmers
-
-### **vs SteamVR Interaction System**
-- **Platform Agnostic**: Not tied to Steam VR
-- **Modern Architecture**: Built for Unity 2022.3+
-- **Comprehensive Documentation**: Complete guides and examples
-- **Extensible Design**: Easy to customize and extend
-
-## 🎬 Example Use Cases
-
-## 🏆 Success Stories
-
-*"The Shababeek Interaction System transformed our VR training application. The hand pose constraints make interactions feel natural, and the sequencing system made it easy to create complex training scenarios."*
-— VR Training Company
-
-*"As a designer with limited coding experience, I was able to create rich interactive experiences using just the visual tools. The documentation is excellent!"*
-— Experience Designer
-
-## 📞 Support
-
-### **Documentation & Guides**
-- Comprehensive documentation included
-- Video tutorials and examples
-- Best practices and troubleshooting guides
-
-### **Community Support**
-- Active community forum
-- Regular updates and improvements
-- Responsive developer support
-
-### **Professional Support**
-- Priority email support for commercial licenses
-- Custom development consultation available
-- Training and workshops for teams
-
-## 📋 Changelog
-
-### **Version 1.0.0** (Current)
-- Complete interaction system with 10+ interactable types
-- Advanced hand pose constraint system
-- Reactive programming with UniRx integration ( will migrate to R3 soon)
-- Comprehensive feedback system
-- Sequencing system 
-- Scriptable variable system
-- 6 different hand models(Asset store exclusive)
-- Complete documentation and examples
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
-
-## 👨‍💻 Author
-
-**Ahmad Abobakr**  
-*Founder, Shababeek*
-
-- Website: [shababeek.com](https://shababeek-labs.com)
-- Email: support@shababeek.com
-- LinkedIn: [Ahmad Abobakr](https://linkedin.com/in/ahmadabobakr)
+- 🎯 **Complete Interaction System** - Grab, throw, press, switch, rotate, and more
+- ✋ **Hand Presence** - Realistic hand models with dynamic pose blending
+- 🎮 **Multiple Interactor Types** - Trigger-based, raycast, and direct hand interaction
+- 📦 **Pre-built Components** - Buttons, switches, levers, joysticks, drawers, and more
+- 🎨 **Feedback System** - Haptic, audio, and visual feedback out of the box
+- 🔧 **Designer-Friendly** - Inspector-focused workflow with tooltips and validation
+- 📊 **Data Flow System** - Scriptable variables and events for decoupled architecture
+- 🎬 **Sequencing System** - Built-in tutorial and quest system
+- 🔌 **Socket System** - Object placement and snapping
 
 ---
 
-⭐ **If you find this asset useful, please consider leaving a review on the Asset Store! and starring this repo**
 
-*Made with ❤️ for the Unity VR/AR community*
+## 🚀 Quick Start
+
+### Installation
+
+#### Via Package Manager (Recommended)
+```
+1. Open Package Manager (Window > Package Manager)
+2. Click + > Add package from git URL
+3. Enter: https://github.com/Shababeek/Interactions.git
+```
+
+#### Manual Installation
+```
+1. Download the latest release
+2. Extract to your project's Assets folder
+3. Install dependencies (Unity Input System)
+```
+
+### Your First interactable Object
+
+```csharp
+1. Create a GameObject (e.g., Cube)
+2. Right click in the hirarchy -> Shababeek-> Covert To Grabbable
+3. Ensure it has a Collider
+4. Press Play and grab it with your VR controllers!
+```
+
+**📚 Full guide:** [10-Minute Quick Start](Documentation/GettingStarted/QuickStart.md)
+
+---
+
+## 📖 Documentation
+
+### 🎓 Getting Started
+- **[Quick Start Guide](Documentation/GettingStarted/QuickStart.md)** - 10-minute guide from install to first interaction
+- **[Component Overview](Documentation/ComponentOverview.md)** - Catalog of all components
+- **[Core Concepts](Documentation/UserManual.md)** - System architecture and design principles
+
+### 📘 Component Manuals
+- **[Grabable](Documentation/Components/Grabable.md)** - Pick up and throw objects
+- **[Switch](Documentation/Interactables.md#switch)** - Toggle switches and buttons
+- **[Hand System](Documentation/Hand.md)** - Hand models and pose configuration
+- **[Feedback System](Documentation/FeedbackSystem.md)** - Haptics, audio, and visuals
+- **[More components...](Documentation/ComponentReference.md)**
+
+### 🛠️ Advanced Topics
+- **[Custom Interactables](Documentation/UserManual.md#customization--extensibility)** - Create your own components
+- **[Scriptable System](Documentation/ScriptableVariable.md)** - Variables and events
+- **[Sequencing](Documentation/UserManual.md)** - Tutorials and quests
+- **[Hand Poses](Documentation/HandDataAndPoses.md)** - Import and configure hands
+
+### 💻 For Developers
+- **[Scripting Reference](Documentation/ScriptingReference.md)** - Complete API documentation
+- **[Component Reference](Documentation/ComponentReference.md)** - All components indexed
+
+---
+
+## 🎯 Core Components
+
+### Interactables
+Make objects interactive in your VR scene:
+
+| Component | Description | Use Case |
+|-----------|-------------|----------|
+| **Grabable** | Pick up and throw objects | Tools, weapons, props |
+| **Switch** | Toggle between states | Light switches, levers |
+| **VRButton** | Pressable button | Control panels, keypads |
+| **Joystick** | Virtual joystick control | Vehicle controls |
+| **Lever** | Pull/push interaction | Gear shifts, throttles |
+| **Wheel** | Rotatable wheel | Valves, steering wheels |
+| **Drawer** | Sliding compartment | Desks, toolboxes |
+
+### Interactors
+Detect and manage interactions:
+
+| Component | Description | Use Case |
+|-----------|-------------|----------|
+| **Hand** | Full VR hand with poses | Main player hand |
+| **TriggerInteractor** | Proximity detection | Close-range grabbing |
+| **RaycastInteractor** | Ray-based selection | Distant object selection |
+
+### Systems
+Additional functionality:
+
+| System | Description |
+|--------|-------------|
+| **Feedback System** | Haptic, audio, and visual feedback |
+| **Scriptable Variables** | Observable shared data |
+| **Game Events** | Decoupled event communication |
+| **Sequences** | Tutorial and quest system |
+| **Sockets** | Object placement and snapping |
+
+---
+
+## 💡 Examples
+
+### Basic Grabbable Object
+```csharp
+// 1. Create a Cube
+// 2. Add Grabable component
+// 3. It automatically adds:
+//    - PoseConstrainer (hand positioning)
+//    - Detects Rigidbody (for physics)
+// 4. Done! Grab it in VR
+```
+
+### Button with Sound
+```csharp
+// 1. Add VRButton component
+// 2. Add AudioSource component
+// 3. Wire OnButtonDown event to AudioSource.Play()
+// 4. Press button in VR to hear sound
+```
+
+### Flashlight Tool
+```csharp
+// 1. Create flashlight model with Light component
+// 2. Add Grabable component
+// 3. Wire OnUseStarted event to Light.enabled toggle
+// 4. Grab flashlight and press Trigger to turn on/off
+```
+
+**📚 More examples:** [Component Manuals](Documentation/ComponentReference.md)
+
+---
+
+## 🎨 Features Showcase
+
+### Hand Presence
+- Multiple hand models (available in asset store only)
+- Dynamic pose blending based on object type
+- Custom pose creation system
+- Finger-level control
+
+### Physics Integration
+- Realistic grabbing with Rigidbody
+- Throw mechanics with velocity calculation
+- Collision-based interaction detection
+- Socket snapping with constraints
+
+### Event System
+- UnityEvent integration for designer workflows
+- UniRx observables for reactive programming
+- Scriptable events for decoupled architecture
+- Built-in lifecycle events (hover, select, activate)
+
+---
+
+## 🔧 System Requirements
+
+- **Unity Version:** 6.0 or newer (2021.3 LTS+ supported)
+- **Dependencies:**
+    - Unity Input System (1.0.0+)
+    - UniRx (included)
+- **Platforms:** PC VR, Quest, PSVR, and all Unity-supported VR platforms
+- **XR Plugin:** OpenXR recommended, Oculus works but not fully tested
+
+---
+
+## 📦 Package Structure
+
+```
+Shababeek Interactions/
+├── Scripts/
+│   ├── InteractionSystem/      # Core interaction components
+│   ├── SequencingSystem/        # Tutorial/quest system
+│   ├── Core/                    # Scriptable variables & events
+│   └── Utility/                 # Helper utilities
+├── Documentation/               # Complete documentation
+│   ├── GettingStarted/
+│   ├── Components/
+│   ├── Templates/
+│   └── Screenshots/
+├── Examples/                    # Sample scenes
+└── Prefabs/                     # Ready-to-use prefabs
+```
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Here's how you can help:
+
+1. **Documentation** - Improve guides and add screenshots
+2. **Bug Reports** - [Open an issue](https://github.com/Shababeek/Interactions/issues)
+3. **Feature Requests** - Share your ideas
+4. **Pull Requests** - Submit improvements
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 📞 Support
+
+- **Documentation:** [Full Documentation](Documentation/README.md)
+- **Issues:** [GitHub Issues](https://github.com/Shababeek/Interactions/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/Shababeek/Interactions/discussions)
+- **Email:** Ahmadabobakr@gmail.com
+- **Website:** [ahmadabobakr.github.io](https://ahmadabobakr.github.io)
+
+---
+
+## 🙏 Acknowledgments
+
+Created by **Ahmad Abo Bakr** at **Shababeek**
+
+Special thanks to all contributors and the Unity VR community.
+
+---
+
+## 🗺️ Roadmap
+
+- [ ] Video tutorial series
+- [ ] More example scenes
+- [ ] Enhanced physics interactions
+- [ ] Multiplayer support
+- [ ] Migrate from UniRX to R3
+- [ ] Additional hand models
+
+
+---
+
+**Ready to get started?** → [Quick Start Guide](Documentation/GettingStarted/QuickStart.md)
+
+**Need help?** → [Documentation](Documentation/README.md)
+
+**Want to contribute?** → [Contributing Guidelines](CONTRIBUTING.md)
+
+---
+
+<div align="center">
+
+Made with ❤️ by the Shababeek team
+
+[⭐ Star us on GitHub](https://github.com/Shababeek/Interactions) | [📖 Read the Docs](Documentation/README.md) | [💬 Join Discussion](https://github.com/Shababeek/Interactions/discussions)
+
+</div>
