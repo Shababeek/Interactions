@@ -1,0 +1,388 @@
+{
+    "version": 1,
+    "name": "HandTrackingInputActions",
+    "maps": [
+        {
+            "name": "LeftHand",
+            "id": "480c1c59-f151-45b5-b03d-ddb842db95ff",
+            "actions": [
+                {
+                    "name": "Thumb",
+                    "type": "Value",
+                    "id": "5ff05ca5-c38c-4473-bd51-8f34604f672a",
+                    "expectedControlType": "Axis",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Index",
+                    "type": "Value",
+                    "id": "a3a06ab2-c05e-484a-b1ca-e37a3b79b7a5",
+                    "expectedControlType": "Axis",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Middle",
+                    "type": "Value",
+                    "id": "80f9393c-54eb-486a-94e2-cc8ed7f95bd1",
+                    "expectedControlType": "Axis",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Ring",
+                    "type": "Value",
+                    "id": "b9f32c62-7d44-40e7-b572-9f807a3145be",
+                    "expectedControlType": "Axis",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Pinky",
+                    "type": "Value",
+                    "id": "c47576a6-37b0-46ee-ae7f-6f2f608be3ab",
+                    "expectedControlType": "Axis",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "cb586726-2a5c-44c7-a2d4-cb64e4803aff",
+                    "path": "<XRController>{LeftHand}/primaryButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Thumb",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "a9671d08-7b57-478c-ac94-94596a8b8e0b",
+                    "path": "<XRController>{LeftHand}/secondaryButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Thumb",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "f0d27103-fc8f-4976-8e50-eb6065b70b2b",
+                    "path": "<XRController>{LeftHand}/thumbstickTouched",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Thumb",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "944eeef3-3033-4e76-ad7e-19a69899a438",
+                    "path": "<XRHand>{LeftHand}/thumbProximal/flexPosition",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Thumb",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "f928803f-e43e-4ee7-9916-4fee1d4dd415",
+                    "path": "<XRController>{LeftHand}/trigger",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Index",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "c93a8b06-d0c4-49dd-8135-f992dbf7963f",
+                    "path": "<XRHand>{LeftHand}/indexProximal/flexPosition",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Index",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "26ffc99c-8503-49fb-ac74-aa49462f9bf1",
+                    "path": "<XRController>{LeftHand}/grip",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Middle",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "931cdc60-39ce-4616-9e60-5d99ab4686bb",
+                    "path": "<XRHand>{LeftHand}/middleProximal/flexPosition",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Middle",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "f3d8daac-a1dd-4363-a201-998b0d204be2",
+                    "path": "<PalmPose>{LeftHand}/{Grip}",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Middle",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "ca89226c-1389-4068-90fc-1db1cbbfe013",
+                    "path": "<XRController>{LeftHand}/grip",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Ring",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "aa326776-180c-41e5-bce2-a2dacde2d926",
+                    "path": "<XRHand>{LeftHand}/ringProximal/flexPosition",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Ring",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "cc3c6af1-a593-4640-b3d8-32cefcf620b9",
+                    "path": "<XRController>{LeftHand}/grip",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Pinky",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "a995b279-acb1-4016-b5d1-5d7e5e4f2ed4",
+                    "path": "<XRHand>{LeftHand}/littleProximal/flexPosition",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Pinky",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        },
+        {
+            "name": "RightHand",
+            "id": "d5d6ce34-4509-40a5-86e3-3b5f59a6c5d9",
+            "actions": [
+                {
+                    "name": "Thumb",
+                    "type": "Value",
+                    "id": "a9f72653-3295-4d59-adba-c2f5457a4c78",
+                    "expectedControlType": "Axis",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Index",
+                    "type": "Value",
+                    "id": "3b520034-5651-4589-8bb2-9f25e695e7d3",
+                    "expectedControlType": "Axis",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Middle",
+                    "type": "Value",
+                    "id": "42009acf-3a27-465d-82fd-b8a5d5f6bda8",
+                    "expectedControlType": "Axis",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Ring",
+                    "type": "Value",
+                    "id": "49135ced-5002-4eeb-a05e-c0ea5bcd5e9c",
+                    "expectedControlType": "Axis",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Pinky",
+                    "type": "Value",
+                    "id": "6b8823f5-f0db-4ce4-8240-1a35ff50e4e1",
+                    "expectedControlType": "Axis",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "b355c5d8-1aba-4a09-aa5b-6c9568a81211",
+                    "path": "<XRController>{RightHand}/primaryButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Thumb",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "aef3d711-050b-4fac-ab85-183e942a090a",
+                    "path": "<XRController>{RightHand}/secondaryButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Thumb",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "d44c7de5-cc3d-40a9-bd28-189ad864b118",
+                    "path": "<XRController>{RightHand}/thumbstickTouched",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Thumb",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "28eec7fb-4b11-4985-9087-d9c89f29f4a3",
+                    "path": "<XRHand>{RightHand}/thumbProximal/flexPosition",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Thumb",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "2e6393b1-6d20-43e7-9196-b151f92f6cbf",
+                    "path": "<XRController>{RightHand}/trigger",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Index",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "7d3b0520-3378-4761-8893-a54f3af161c0",
+                    "path": "<XRHand>{RightHand}/indexProximal/flexPosition",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Index",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "0e7ec6d4-b72f-40b5-897e-7d1b9e04ce17",
+                    "path": "<XRController>{RightHand}/grip",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Middle",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "757da094-46a4-47ab-a8cc-7a91ddd91ab0",
+                    "path": "<XRHand>{RightHand}/middleProximal/flexPosition",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Middle",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "537a7a42-99ae-48f3-a451-5f4f5fd19462",
+                    "path": "<XRController>{RightHand}/grip",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Ring",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "ae64677e-3415-4266-a805-0a0f06efc081",
+                    "path": "<XRHand>{RightHand}/ringProximal/flexPosition",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Ring",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "218a41b0-0fea-455d-a4b0-f4842d260066",
+                    "path": "<XRController>{RightHand}/grip",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Pinky",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "eeb18379-8cd7-46fc-9345-02c9934e1cb0",
+                    "path": "<XRHand>{RightHand}/littleProximal/flexPosition",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Pinky",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

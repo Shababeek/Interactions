@@ -1,3 +1,5 @@
-.DS_Store
-Documentation/Ignore
-Documentation/Ignore.meta
+*.DS_Store
+/Ignore
+*.unityPackage
+*.zip
+*.7z

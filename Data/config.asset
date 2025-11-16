@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f16953eba7fc4575a8da8b63809a9f2d, type: 3}
+  m_Name: config
+  m_EditorClassIdentifier: 
+  handData: {fileID: 11400000, guid: d0eee63a3783a494bb6d652649089e9c, type: 2}
+  leftHandLayer: 12
+  rightHandLayer: 13
+  interactableLayer: 14
+  playerLayer: 15
+  inputType: -1
+  leftHandActions:
+    thumbAction: {fileID: -2340996174322847054, guid: 40998561fb58d43d3bd6304af9a7868e, type: 3}
+    indexAction: {fileID: -5584061613127055169, guid: 40998561fb58d43d3bd6304af9a7868e, type: 3}
+    middleAction: {fileID: -5530056983000821337, guid: 40998561fb58d43d3bd6304af9a7868e, type: 3}
+    ringAction: {fileID: -827827624979881611, guid: 40998561fb58d43d3bd6304af9a7868e, type: 3}
+    pinkyAction: {fileID: 1574761201288198049, guid: 40998561fb58d43d3bd6304af9a7868e, type: 3}
+  rightHandActions:
+    thumbAction: {fileID: 2412590077946390391, guid: 40998561fb58d43d3bd6304af9a7868e, type: 3}
+    indexAction: {fileID: -1412702599562675357, guid: 40998561fb58d43d3bd6304af9a7868e, type: 3}
+    middleAction: {fileID: 5896030430525601180, guid: 40998561fb58d43d3bd6304af9a7868e, type: 3}
+    ringAction: {fileID: -6773375996486891541, guid: 40998561fb58d43d3bd6304af9a7868e, type: 3}
+    pinkyAction: {fileID: -7802397244816999579, guid: 40998561fb58d43d3bd6304af9a7868e, type: 3}
+  feedbackSystemStyleSheet: {fileID: 7433441132597879392, guid: 3c91606246cd44966a770e730c1ecd9f, type: 3}
+  handMass: 30
+  linearDamping: 5
+  angularDamping: 1
+  followerPreset: 0
+  customFollowerSettings:
+    positionStrength: 1000
+    rotationStrength: 100
+    maxVelocity: 10
+    maxAngularVelocity: 20
+    positionDeadzone: 0.001
+    rotationDeadzone: 0.5
+    teleportDistance: 1
+    respectCollisions: 1
+  leftHandInputProvider: {fileID: 0}
+  rightHandInputProvider: {fileID: 0}
