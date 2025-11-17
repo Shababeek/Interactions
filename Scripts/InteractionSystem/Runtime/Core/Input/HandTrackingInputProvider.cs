@@ -16,11 +16,17 @@ namespace Shababeek.Interactions.Core
         [Tooltip("Automatically create HandTrackingReader if not assigned.")]
         [SerializeField] private bool autoCreateReader = true;
         
-        /// <summary>
-        /// Checks if hand tracking is active and providing data.
-        /// </summary>
-        public override bool IsActive => handTrackingReader != null && handTrackingReader.IsTracked;
-        
+
+        // Cached position/rotation for efficiency
+        [SerializeField] private Vector3 _position = Vector3.zero;
+        [SerializeField] private Quaternion _rotation = Quaternion.identity;
+        [SerializeField] private uint _trackingState = 0;
+    
+        private void Awake()
+        {
+            EnsureDefaultPriority();
+        }
+
         protected override void OnEnable()
         {
             base.OnEnable();
@@ -29,6 +35,13 @@ namespace Shababeek.Interactions.Core
             if (handTrackingReader == null && autoCreateReader)
             {
                 handTrackingReader = gameObject.AddComponent<HandTrackingReader>();
+                // Set handedness to match this provider
+                handTrackingReader.Handedness = handedness;
+            }
+            else if (handTrackingReader != null)
+            {
+                // Ensure handedness matches
+                handTrackingReader.Handedness = handedness;
             }
         }
         
@@ -38,6 +51,9 @@ namespace Shababeek.Interactions.Core
             {
                 // Set all to zero when not tracked
                 SetFingerValues(0f, 0f, 0f, 0f, 0f);
+                _position = Vector3.zero;
+                _rotation = Quaternion.identity;
+                _trackingState = 0;
                 return;
             }
             
@@ -47,6 +63,55 @@ namespace Shababeek.Interactions.Core
             this[FingerName.Middle] = handTrackingReader.GetFingerCurl(FingerName.Middle);
             this[FingerName.Ring] = handTrackingReader.GetFingerCurl(FingerName.Ring);
             this[FingerName.Pinky] = handTrackingReader.GetFingerCurl(FingerName.Pinky);
+            
+            // Update position, rotation, and tracking state
+            if (handTrackingReader.TryGetHandPosition(out Vector3 pos))
+            {
+                _position = pos;
+            }
+            else
+            {
+                _position = Vector3.zero;
+            }
+            
+            if (handTrackingReader.TryGetHandRotation(out Quaternion rot))
+            {
+                _rotation = rot;
+            }
+            else
+            {
+                _rotation = Quaternion.identity;
+            }
+            
+            _trackingState = handTrackingReader.GetTrackingState();
         }
+
+        private void EnsureDefaultPriority()
+        {
+            if (priority <= 0 || priority >= 20)
+                priority = 10;
+        }
+
+        /// <summary>
+        /// Current position of the hand in world space.
+        /// </summary>
+        public override Vector3 Position => _position;
+
+        /// <summary>
+        /// Current rotation of the hand in world space.
+        /// </summary>
+        public override Quaternion Rotation => _rotation;
+
+        /// <summary>
+        /// Current tracking state of the hand (flags: Position = 1, Rotation = 2, Both = 3).
+        /// </summary>
+        public override uint TrackingState => _trackingState;
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            EnsureDefaultPriority();
+        }
+#endif
     }
 }

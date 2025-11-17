@@ -197,23 +197,32 @@ namespace Shababeek.Interactions.Core
         private IHandInputProvider SetupHandProviders(Transform handPivot, HandIdentifier hand)
         {
             var inputActions = hand == HandIdentifier.Left ? config.LeftHandActions : config.RightHandActions;
-            // Create composite provider
-            var composite = handPivot.gameObject.AddComponent<CompositeHandInputProvider>();
-    
-            // Create hand tracking provider (higher priority)
-            var handTracking = handPivot.gameObject.AddComponent<HandTrackingInputProvider>();
-            handTracking.Handedness = hand;
-            handTracking.Priority = 10;
-            composite.AddProvider(handTracking);
-    
-            // Create controller provider (lower priority, fallback)
-            var controller = handPivot.gameObject.AddComponent<ControllerInputProvider>();
-            controller.Handedness = hand;
-            controller.Priority = 5;
-            controller.Initialize(inputActions);
-            composite.AddProvider(controller);
-    
-            return composite;
+            var trackingType = config.InputType;
+            
+            // Create provider based on tracking type
+            switch (trackingType)
+            {
+
+                case Config.TrackingType.ControllerTracking:
+                    // Create only controller provider
+                    var controllerOnly = handPivot.gameObject.AddComponent<ControllerInputProvider>();
+                    controllerOnly.Handedness = hand;
+                    controllerOnly.Initialize(inputActions);
+                    return controllerOnly;
+                    
+                case Config.TrackingType.HandTracking:
+                    // Create only hand tracking provider
+                    var handTrackingOnly = handPivot.gameObject.AddComponent<HandTrackingInputProvider>();
+                    handTrackingOnly.Handedness = hand;
+                    return handTrackingOnly;
+                    
+                default:
+                    // Fallback to controller if unknown
+                    var fallbackController = handPivot.gameObject.AddComponent<ControllerInputProvider>();
+                    fallbackController.Handedness = hand;
+                    fallbackController.Initialize(inputActions);
+                    return fallbackController;
+            }
         }
 
         #endregion

@@ -39,6 +39,26 @@ namespace Shababeek.Interactions.Core
         /// </summary>
         public bool IsTracked => _hand.isTracked;
         
+        /// <summary>
+        /// Gets or sets which hand this reader is tracking.
+        /// </summary>
+        public HandIdentifier Handedness
+        {
+            get => handedness;
+            set
+            {
+                if (handedness != value)
+                {
+                    handedness = value;
+                    // Reinitialize if already initialized
+                    if (handSubsystem != null)
+                    {
+                        InitializeHandTracking();
+                    }
+                }
+            }
+        }
+        
         void OnEnable()
         {
             InitializeHandTracking();
@@ -51,6 +71,7 @@ namespace Shababeek.Interactions.Core
         
         void Update()
         {
+            Debug.Log(handSubsystem);
             if (handSubsystem != null && _hand.isTracked)
             {
                 UpdateFingerCurls();
@@ -243,6 +264,72 @@ namespace Shababeek.Interactions.Core
         public float GetFingerCurl(FingerName fingerName)
         {
             return GetFingerCurl((int)fingerName);
+        }
+        
+        /// <summary>
+        /// Gets the hand's root position (from wrist joint).
+        /// </summary>
+        public bool TryGetHandPosition(out Vector3 position)
+        {
+            if (_hand.isTracked && TryGetJointPose(XRHandJointID.Wrist, out Pose wristPose))
+            {
+                position = wristPose.position;
+                return true;
+            }
+            
+            position = Vector3.zero;
+            return false;
+        }
+        
+        /// <summary>
+        /// Gets the hand's root rotation (from wrist joint).
+        /// </summary>
+        public bool TryGetHandRotation(out Quaternion rotation)
+        {
+            if (_hand.isTracked && TryGetJointPose(XRHandJointID.Wrist, out Pose wristPose))
+            {
+                rotation = wristPose.rotation;
+                return true;
+            }
+            
+            rotation = Quaternion.identity;
+            return false;
+        }
+        
+        /// <summary>
+        /// Gets the hand's tracking state (position and rotation flags).
+        /// </summary>
+        public uint GetTrackingState()
+        {
+            if (!_hand.isTracked)
+                return 0;
+            
+            var wristJoint = _hand.GetJoint(XRHandJointID.Wrist);
+            if (wristJoint.id == XRHandJointID.Invalid)
+                return 0;
+            
+            uint state = 0;
+            var trackingState = wristJoint.trackingState;
+            
+            // XRHandJointTrackingState.Pose indicates both position and rotation are tracked
+            if ((trackingState & XRHandJointTrackingState.Pose) != 0)
+            {
+                state |= 3; // Both position (1) and rotation (2) flags
+            }
+            else
+            {
+                // If Pose is not available, check if we can at least get position/rotation from the pose
+                if (TryGetJointPose(XRHandJointID.Wrist, out Pose wristPose))
+                {
+                    // If pose is valid (not zero/identity), assume both are tracked
+                    if (wristPose.position != Vector3.zero)
+                        state |= 1; // Position flag
+                    if (wristPose.rotation != Quaternion.identity)
+                        state |= 2; // Rotation flag
+                }
+            }
+            
+            return state;
         }
     }
 }

@@ -1,5 +1,7 @@
 using System;
 using UniRx;
+using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Shababeek.Interactions.Core
 {
@@ -46,14 +48,25 @@ namespace Shababeek.Interactions.Core
         /// <param name="finger">Finger name.</param>
         float this[FingerName finger] { get; }
         
-        /// <summary>
-        /// Checks if this input provider is currently active and providing data.
-        /// </summary>
-        bool IsActive { get; }
         
         /// <summary>
         /// Priority of this input provider (higher priority providers are used first).
         /// </summary>
         int Priority { get; }
+        
+        /// <summary>
+        /// Current position of the controller/hand in world space.
+        /// </summary>
+        Vector3 Position { get; }
+        
+        /// <summary>
+        /// Current rotation of the controller/hand in world space.
+        /// </summary>
+        Quaternion Rotation { get; }
+        
+        /// <summary>
+        /// Current tracking state of the controller/hand (flags: Position = 1, Rotation = 2, Both = 3).
+        /// </summary>
+        uint TrackingState { get; }
     }
 }

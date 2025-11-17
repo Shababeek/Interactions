@@ -274,7 +274,6 @@ public void SetHandProvider(HandIdentifier hand, IHandInputProvider provider)
         /// <summary>
         /// Available input manager types.
         /// </summary>
-        [Flags]
         public enum TrackingType
         {
      
