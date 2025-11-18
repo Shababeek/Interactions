@@ -311,6 +311,28 @@ namespace Shababeek.Interactions.Core
             config.SetHandProvider(HandIdentifier.Right, rightProvider);
             _leftPoseController = InitializeHand(LeftHandPrefab, leftHandPivot, HandIdentifier.Left, leftHandInteractorType);
             _rightPoseController = InitializeHand(RightHandPrefab, rightHandPivot, HandIdentifier.Right, rightHandInteractorType);
+            
+            // Initialize hand pivot updater
+            InitializeHandPivotUpdater();
+        }
+        
+        /// <summary>
+        /// Initializes the HandPivotUpdater component to update hand pivots from input providers.
+        /// </summary>
+        private void InitializeHandPivotUpdater()
+        {
+            if (config == null || leftHandPivot == null || rightHandPivot == null)
+                return;
+            
+            // Get or create HandPivotUpdater component
+            var updater = GetComponent<HandPivotUpdater>();
+            if (updater == null)
+            {
+                updater = gameObject.AddComponent<HandPivotUpdater>();
+            }
+            
+            // Initialize with references
+            updater.Initialize(config, leftHandPivot, rightHandPivot);
         }
 
         private void InitializeKinematicRigidbody(GameObject hand)
