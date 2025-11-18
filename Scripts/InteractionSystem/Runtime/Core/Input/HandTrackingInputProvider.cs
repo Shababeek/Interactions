@@ -1,3 +1,4 @@
+#if XR_HANDS_AVAILABLE
 using UnityEngine;
 using UnityEngine.XR.Hands;
 using System.Collections.Generic;
@@ -380,3 +381,4 @@ namespace Shababeek.Interactions.Core
 #endif
     }
 }
+#endif

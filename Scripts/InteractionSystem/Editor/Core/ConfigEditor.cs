@@ -113,6 +113,11 @@ namespace Shababeek.Interactions.Editors
             EditorGUILayout.PropertyField(_inputTypeProp,
                 new GUIContent("Input Type", "Type of input manager to use for the interaction system"));
 
+#if !XR_HANDS_AVAILABLE
+            EditorGUILayout.HelpBox(
+                "To enable Hand Tracking, install the Unity XR Hands package and add 'XR_HANDS_AVAILABLE' to your Scripting Define Symbols (Edit > Project Settings > Player > Other Settings > Scripting Define Symbols).",
+                MessageType.Info);
+#endif
 
             EditorGUI.indentLevel++;
             EditorGUILayout.PropertyField(_leftHandActionsProp,

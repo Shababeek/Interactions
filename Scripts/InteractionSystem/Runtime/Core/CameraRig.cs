@@ -210,11 +210,13 @@ namespace Shababeek.Interactions.Core
                     controllerOnly.Initialize(inputActions);
                     return controllerOnly;
                     
+#if XR_HANDS_AVAILABLE
                 case Config.TrackingType.HandTracking:
                     // Create only hand tracking provider
                     var handTrackingOnly = handPivot.gameObject.AddComponent<HandTrackingInputProvider>();
                     handTrackingOnly.Handedness = hand;
                     return handTrackingOnly;
+#endif
                     
                 default:
                     // Fallback to controller if unknown

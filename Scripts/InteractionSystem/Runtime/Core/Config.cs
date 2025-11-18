@@ -276,11 +276,12 @@ public void SetHandProvider(HandIdentifier hand, IHandInputProvider provider)
         /// </summary>
         public enum TrackingType
         {
-     
             ControllerTracking = 1,
+#if XR_HANDS_AVAILABLE
             HandTracking = 2,
             Both = 3
-       }
+#endif
+        }
 
         #endregion
     }
