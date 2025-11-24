@@ -1,3 +1,4 @@
+using System;
 using Shababeek.Utilities;
 using UniRx;
 using UnityEngine;
@@ -37,7 +38,7 @@ namespace Shababeek.Interactions
         private Transform indicator;
 
         [Tooltip("Event raised when the object is successfully socketed.")] [SerializeField]
-        private UnityEvent onSocketed;
+        private SocketEvent onSocketed;
 
         [Tooltip("The currently detected socket.")] [ReadOnly] [SerializeField]
         private AbstractSocket socket;
@@ -52,7 +53,6 @@ namespace Shababeek.Interactions
         private InteractableBase _interactable;
         private Collider _triggerCollider;
 
-        // Tweening system for smooth return
         private VariableTweener _tweener;
         private TransformTweenable _returnTweenable;
         private bool _isReturning = false;
@@ -83,6 +83,7 @@ namespace Shababeek.Interactions
         /// Gets whether the object is currently returning to its original position.
         /// </summary>
         public bool IsReturning => _isReturning;
+        public IObservable<AbstractSocket> OnSocketedAsObservable => onSocketed.AsObservable();
 
         private void Awake()
         {
@@ -105,7 +106,7 @@ namespace Shababeek.Interactions
             _interactable.OnDeselected
                 .Where(_ => !IsSocketed && socket != null && socket.CanSocket())
                 .Do(_ => IsSocketed = true)
-                .Do(_ => onSocketed.Invoke())
+                .Do(_ => onSocketed.Invoke(socket))
                 .Select(_ => socket.Insert(this))
                 .Do(LerpToPosition)
                 .Subscribe().AddTo(this);
@@ -310,4 +311,6 @@ namespace Shababeek.Interactions
             ReturnWithTween();
         }
     }
+    [System.Serializable]public class SocketEvent : UnityEvent<AbstractSocket>
+{}
 }
