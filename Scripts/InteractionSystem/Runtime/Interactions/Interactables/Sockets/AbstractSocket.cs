@@ -9,6 +9,7 @@ namespace Shababeek.Interactions
     /// Base class for socket components that can receive socketable objects.
     /// Handles socket connection, disconnection, and hover events.
     /// </summary>
+    [Serializable]
     public abstract class AbstractSocket : MonoBehaviour
     {
         [Tooltip("Event raised when a socketable object is inserted into this socket.")]
