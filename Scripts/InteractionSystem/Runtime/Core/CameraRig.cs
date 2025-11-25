@@ -18,15 +18,10 @@ namespace Shababeek.Interactions.Core
     [AddComponentMenu("Shababeek/Interactions/Camera Rig")]
     public class CameraRig : MonoBehaviour
     {
-        [Header("Core Configuration")]
-        [Tooltip("Configuration asset containing hand data, layer settings, and input configuration.")]
         [SerializeField] private Config config;
-        
         [Tooltip("Whether to automatically initialize hands when the rig starts. Disable for manual control.")]
         [SerializeField][HideInInspector] private bool initializeHands = true;
 
-        [Header("Tracking Configuration")]
-        [Tooltip("The tracking method used for hand interactions. Physics-based provides more realistic physics, Transform-based is more performant.")]
         [SerializeField][HideInInspector] private InteractionSystemType trackingMethod = InteractionSystemType.PhysicsBased;
 
         [Header("Hand Pivots")]
@@ -37,20 +32,15 @@ namespace Shababeek.Interactions.Core
         [SerializeField][HideInInspector] private Transform rightHandPivot;
         
         [Header("Interactor Configuration")]
-        [Tooltip("Type of interactor to use for the left hand. Trigger provides direct collision detection, Ray provides distance-based interaction.")]
         [SerializeField] private HandInteractorType leftHandInteractorType = HandInteractorType.Trigger;
         
-        [Tooltip("Type of interactor to use for the right hand. Trigger provides direct collision detection, Ray provides distance-based interaction.")]
         [SerializeField] private HandInteractorType rightHandInteractorType = HandInteractorType.Trigger;
         
         [Header("Camera Configuration")]
-        [Tooltip("Transform used to offset the camera position and height. Usually a child of the main camera.")]
         [SerializeField] private Transform offsetObject;
 
-        [Tooltip("The XR camera component for the camera rig. Automatically found if not assigned.")]
         [SerializeField] private Camera xrCamera;
         
-        [Tooltip("Height offset for the camera rig in world units. Default is 1 unit (typical standing height).")]
         [SerializeField] private float cameraHeight = 1f;
         
         [Tooltip("Whether to align the rig's forward direction with the tracking origin on initialization.")]
@@ -180,9 +170,9 @@ namespace Shababeek.Interactions.Core
 
         private void OnTrackingOriginUpdated(XRInputSubsystem subsystem)
         {
-            if (_trackingInitialized || !alignRigForwardOnTracking) return;
+            if (xrCamera == null) return;
             
-            if (xrCamera != null)
+            if (!_trackingInitialized && alignRigForwardOnTracking)
             {
                 Vector3 cameraForward = xrCamera.transform.forward;
                 cameraForward.y = 0;
@@ -192,6 +182,20 @@ namespace Shababeek.Interactions.Core
                     _trackingInitialized = true;
                 }
             }
+
+            RecenterCameraOffset();
+        }
+        
+        private void RecenterCameraOffset()
+        {
+            if (offsetObject == null || xrCamera == null) return;
+            
+            var cameraLocal = xrCamera.transform.localPosition;
+            offsetObject.localPosition = new Vector3(
+                -cameraLocal.x,
+                cameraHeight - cameraLocal.y,
+                -cameraLocal.z);
+            offsetObject.localRotation = Quaternion.identity;
         }
         
         private IHandInputProvider SetupHandProviders(Transform handPivot, HandIdentifier hand)
@@ -204,7 +208,6 @@ namespace Shababeek.Interactions.Core
             {
 
                 case Config.TrackingType.ControllerTracking:
-                    // Create only controller provider
                     var controllerOnly = handPivot.gameObject.AddComponent<ControllerInputProvider>();
                     controllerOnly.Handedness = hand;
                     controllerOnly.Initialize(inputActions);
@@ -212,14 +215,12 @@ namespace Shababeek.Interactions.Core
                     
 #if XR_HANDS_AVAILABLE
                 case Config.TrackingType.HandTracking:
-                    // Create only hand tracking provider
                     var handTrackingOnly = handPivot.gameObject.AddComponent<HandTrackingInputProvider>();
                     handTrackingOnly.Handedness = hand;
                     return handTrackingOnly;
 #endif
                     
                 default:
-                    // Fallback to controller if unknown
                     var fallbackController = handPivot.gameObject.AddComponent<ControllerInputProvider>();
                     fallbackController.Handedness = hand;
                     fallbackController.Initialize(inputActions);
