@@ -310,6 +310,28 @@ namespace Shababeek.Interactions
 
             ReturnWithTween();
         }
+        public void ReturToOriginalState()
+        {
+            if (isSocketed && socket != null)
+            {
+                socket.Remove(this);
+            }
+
+            if (socket != null)
+            {
+                socket.EndHovering(this);
+            }
+
+            isSocketed = false;
+            socket = null;
+
+            if (indicator != null)
+            {
+                indicator.gameObject.SetActive(false);
+            }
+
+            ForceReturn();
+        }
     }
     [System.Serializable]public class SocketEvent : UnityEvent<AbstractSocket>
 {}
