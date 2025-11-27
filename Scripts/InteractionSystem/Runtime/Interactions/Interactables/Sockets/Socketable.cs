@@ -111,7 +111,7 @@ namespace Shababeek.Interactions
                 .Do(LerpToPosition)
                 .Subscribe().AddTo(this);
             _interactable.OnDeselected
-                .Where(_ => shouldReturnToParent && !IsSocketed && socket == null)
+                .Where(_ => shouldReturnToParent && !IsSocketed && (socket == null || !socket.CanSocket()))
                 .Do(_ => Return()).Subscribe().AddTo(this);
 
             _interactable.OnSelected
