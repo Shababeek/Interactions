@@ -286,11 +286,12 @@ namespace Shababeek.Interactions
         /// </summary>
         /// <param name="hand">The hand identifier to check</param>
         /// <returns>True if the hand can interact with this object, false otherwise</returns>
-        public bool IsValidHand(HandIdentifier hand)
+        public bool CanInteract(HandIdentifier hand)
         {
             var handID = (int)hand;
             var valid = (int)interactionHand;
-            return (valid & handID) != 0;
+            var useableHand= (valid & handID ) != 0;
+            return useableHand && enabled;
         }
 
         /// <summary>

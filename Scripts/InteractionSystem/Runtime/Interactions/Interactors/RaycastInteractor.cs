@@ -109,14 +109,14 @@ namespace Shababeek.Interactions
             {
                 if (CurrentInteractable)
                 {
-                    OnHoverEnd();
+                    EndHover();
                 }
 
                 CurrentInteractable = closestInteractable;
                 
                 if (CurrentInteractable)
                 {
-                    OnHoverStart();
+                    StartHover();
                 }
             }
         }

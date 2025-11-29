@@ -35,7 +35,7 @@ namespace Shababeek.Interactions
             {
                 try 
                 { 
-                    OnHoverEnd(); 
+                    EndHover(); 
                 }
                 catch (System.Exception e)
                 {
@@ -49,7 +49,7 @@ namespace Shababeek.Interactions
             {
                 try 
                 { 
-                    OnHoverStart(); 
+                    StartHover(); 
                 }
                 catch (System.Exception e)
                 {
@@ -112,9 +112,9 @@ namespace Shababeek.Interactions
         }
         
         /// <inheritdoc/>
-        protected override void OnHoverEnd()
+        protected override void EndHover()
         {
-            base.OnHoverEnd();
+            base.EndHover();
             currentCollider = null;
         }
     }

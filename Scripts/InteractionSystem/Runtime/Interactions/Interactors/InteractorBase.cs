@@ -94,21 +94,36 @@ namespace Shababeek.Interactions
             _attachmentPoint.localRotation = Quaternion.identity;
         }
 
-        protected void OnHoverStart()
+        protected void StartHover()
         {
-            if (!currentInteractable || currentInteractable.IsSelected) return;
-            if (!currentInteractable.IsValidHand(Hand)) return;
-
-            currentInteractable.OnStateChanged(InteractionState.Hovering, this);
+            if (!currentInteractable || currentInteractable.IsSelected ) return;
+            if (!currentInteractable.CanInteract(Hand)) return;
+            try
+            {
+                currentInteractable.OnStateChanged(InteractionState.Hovering, this);                
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Error during hover start on {currentInteractable.name}: {e.Message}", currentInteractable);
+                currentInteractable = null;
+                return;
+            }
             var buttonObservable =
                 GetButtonObservable(currentInteractable.SelectionButton, ButtonMappingType.Selection);
             _hoverSubscriber = buttonObservable?.Do(_onInteractionStateChanged).Subscribe();
         }
 
-        protected virtual void OnHoverEnd()
+        protected virtual void EndHover()
         {
             if (currentInteractable && currentInteractable.CurrentState != InteractionState.Hovering) return;
-            currentInteractable.OnStateChanged(InteractionState.None, this);
+            try
+            {
+                currentInteractable.OnStateChanged(InteractionState.None, this);                
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Error during hover end on {currentInteractable.name}: {e.Message}", currentInteractable);
+            }
             DisposeHoverSubscription();
             currentInteractable = null;
         }
@@ -118,9 +133,20 @@ namespace Shababeek.Interactions
         /// </summary>
         public void Select()
         {
-            if (!currentInteractable || currentInteractable.IsSelected) return;
+            if (!currentInteractable || currentInteractable.IsSelected ) return;
+            if(!currentInteractable.CanInteract(Hand)) return;
+            
+            try{
+                currentInteractable.OnStateChanged(InteractionState.Selected, this);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Error during selection on {currentInteractable.name}: {e.Message}", currentInteractable);
+                currentInteractable = null;
+                return;
+            }
             isInteracting = true;
-            currentInteractable.OnStateChanged(InteractionState.Selected, this);
+            
 
             var buttonObservable =
                 GetButtonObservable(currentInteractable.SelectionButton, ButtonMappingType.Activation);
@@ -136,7 +162,7 @@ namespace Shababeek.Interactions
             DisposeActivationSubscription();
             DisposeHoverSubscription();
             currentInteractable.OnStateChanged(InteractionState.None, this);
-            OnHoverStart();
+            StartHover();
         }
 
 
