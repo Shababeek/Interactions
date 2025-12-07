@@ -11,11 +11,13 @@ namespace Shababeek.Interactions.Editors
         private SerializedProperty useSmoothReturnProp;
         private SerializedProperty returnDurationProp;
 
-        private SerializedProperty rotationWhenSocketedProp;
         private SerializedProperty indicatorProp;
 
         private SerializedProperty onSocketedProp;
         private SerializedProperty debugKeyProp;
+        private SerializedProperty detectionRadiusProp;
+        private SerializedProperty detectionOffsetProp;
+        private SerializedProperty socketLayerMaskProp;
 
         private SerializedProperty socketProp;
         private SerializedProperty isSocketedProp;
@@ -29,11 +31,13 @@ namespace Shababeek.Interactions.Editors
             shouldReturnToParentProp = serializedObject.FindProperty("shouldReturnToParent");
             useSmoothReturnProp = serializedObject.FindProperty("useSmoothReturn");
             returnDurationProp = serializedObject.FindProperty("returnDuration");
-            rotationWhenSocketedProp = serializedObject.FindProperty("rotationWhenSocketed");
             indicatorProp = serializedObject.FindProperty("indicator");
 
             onSocketedProp = serializedObject.FindProperty("onSocketed");
             debugKeyProp = serializedObject.FindProperty("debugKey");
+            detectionRadiusProp = serializedObject.FindProperty("detectionRadius");
+            detectionOffsetProp = serializedObject.FindProperty("detectionOffset");
+            socketLayerMaskProp = serializedObject.FindProperty("socketLayerMask");
 
             socketProp = serializedObject.FindProperty("socket");
             isSocketedProp = serializedObject.FindProperty("isSocketed");
@@ -69,10 +73,17 @@ namespace Shababeek.Interactions.Editors
             }
             
             EditorGUILayout.LabelField("Socket Settings", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(rotationWhenSocketedProp,
-                new GUIContent("Rotation When Socketed", "Additional rotation to apply when socketed"));
             EditorGUILayout.PropertyField(indicatorProp,
                 new GUIContent("Indicator", "Visual indicator to show socket position"));
+            EditorGUILayout.Space();
+            
+            EditorGUILayout.LabelField("Socket Detection", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(detectionRadiusProp,
+                new GUIContent("Detection Radius", "Radius of the detection sphere for finding nearby sockets"));
+            EditorGUILayout.PropertyField(detectionOffsetProp,
+                new GUIContent("Detection Offset", "Local space offset for the detection sphere center"));
+            EditorGUILayout.PropertyField(socketLayerMaskProp,
+                new GUIContent("Socket Layer Mask", "Layer mask for socket detection. Only objects on these layers will be detected"));
             EditorGUILayout.Space();
 
             EditorGUILayout.LabelField("Events", EditorStyles.boldLabel);

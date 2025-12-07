@@ -7,12 +7,12 @@ using UnityEngine.Events;
 namespace Shababeek.Interactions
 {
     /// <summary>
-    /// Component that allows objects to be socketed into specific locations using trigger-based detection.
+    /// Component that allows objects to be socketed into specific locations using sphere-based detection.
     /// Handles socket detection, positioning, and return-to-original-position functionality.
     /// </summary>
     /// <remarks>
     /// This component requires both an InteractableBase and VariableTweener component.
-    /// It uses trigger colliders to detect nearby sockets and handles the socketing process
+    /// It uses Physics.OverlapSphereNonAlloc to detect nearby sockets and handles the socketing process
     /// when the user deselects the object, with optional smooth return animations.
     /// </remarks>
     [RequireComponent(typeof(InteractableBase))]
@@ -31,14 +31,21 @@ namespace Shababeek.Interactions
         [Tooltip("Keyboard key for debug socket/unsocket operations.")] [SerializeField]
         private KeyCode debugKey = KeyCode.Space;
 
-        [Tooltip("Rotation to apply when the object is socketed.")] [SerializeField]
-        private Vector3 rotationWhenSocketed = Vector3.zero;
-
         [Tooltip("Transform used as a visual indicator for socket position.")] [SerializeField]
         private Transform indicator;
 
         [Tooltip("Event raised when the object is successfully socketed.")] [SerializeField]
         private SocketEvent onSocketed;
+
+        [Header("Socket Detection")]
+        [Tooltip("Radius of the detection sphere for finding nearby sockets.")] [SerializeField]
+        private float detectionRadius = 0.5f;
+
+        [Tooltip("Local space offset for the detection sphere center.")] [SerializeField]
+        private Vector3 detectionOffset = Vector3.zero;
+
+        [Tooltip("Layer mask for socket detection. Only objects on these layers will be detected.")] [SerializeField]
+        private LayerMask socketLayerMask = -1;
 
         [Tooltip("The currently detected socket.")] [ReadOnly] [SerializeField]
         private AbstractSocket socket;
@@ -51,11 +58,10 @@ namespace Shababeek.Interactions
         private Quaternion _initialLocalRotation;
 
         private InteractableBase _interactable;
-        private Collider _triggerCollider;
-
         private VariableTweener _tweener;
         private TransformTweenable _returnTweenable;
         private bool _isReturning = false;
+        private Collider[] _overlapResults = new Collider[3];
 
         /// <summary>
         /// Gets whether the object is currently socketed.
@@ -123,6 +129,7 @@ namespace Shababeek.Interactions
 
         private void Update()
         {
+            DetectSockets();
             HandeIndicator();
             DebugKeyHandling();
         }
@@ -136,7 +143,7 @@ namespace Shababeek.Interactions
                     indicator.gameObject.SetActive(true);
                     var pivotInfo = socket.GetPivotForSocketable(this);
                     indicator.position = pivotInfo.position;
-                    indicator.rotation = pivotInfo.rotation * Quaternion.Euler(rotationWhenSocketed);
+                    indicator.rotation = pivotInfo.rotation;
                 }
             }
             else
@@ -167,7 +174,7 @@ namespace Shababeek.Interactions
             _interactable.OnStateChanged(InteractionState.None, _interactable.CurrentInteractor);
             transform.parent = pivot.transform;
             transform.position = pivot.transform.position;
-            transform.rotation = pivot.transform.rotation * Quaternion.Euler(rotationWhenSocketed);
+            transform.rotation = pivot.transform.rotation;
         }
 
         private void Return()
@@ -236,24 +243,53 @@ namespace Shababeek.Interactions
         }
 
 
-        private void OnTriggerEnter(Collider other)
+        private void DetectSockets()
         {
-            var detectedSocket = other.GetComponent<AbstractSocket>();
-            if (detectedSocket == null) return;
+            if (isSocketed || !_interactable.IsSelected) return;
 
-            if (socket == null || socket != detectedSocket)
+            // Calculate world position of detection sphere center with local offset
+            Vector3 detectionCenter = transform.TransformPoint(detectionOffset);
+
+            // Use OverlapSphereNonAlloc to detect nearby sockets (avoids GC allocation)
+            int hitCount = Physics.OverlapSphereNonAlloc(detectionCenter, detectionRadius, _overlapResults, socketLayerMask);
+            
+            AbstractSocket closestSocket = null;
+            float closestDistance = float.MaxValue;
+
+            // Find the closest socket
+            for (int i = 0; i < hitCount; i++)
             {
-                socket = detectedSocket;
+                var col = _overlapResults[i];
+                var detectedSocket = col.GetComponent<AbstractSocket>();
+                if (detectedSocket == null || !detectedSocket.CanSocket()) continue;
+
+                float distance = Vector3.Distance(detectionCenter, col.transform.position);
+                if (distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    closestSocket = detectedSocket;
+                }
+            }
+
+            // Handle socket enter
+            if (closestSocket != null && closestSocket != socket)
+            {
+                // End hovering on previous socket if it exists
+                if (socket != null)
+                {
+                    socket.EndHovering(this);
+                }
+
+                socket = closestSocket;
                 socket.StartHovering(this);
             }
-        }
 
-        private void OnTriggerExit(Collider other)
-        {
-            var detectedSocket = other.GetComponent<AbstractSocket>();
-            if (detectedSocket == null || detectedSocket != socket) return;
-            socket.EndHovering(this);
-            socket = null;
+            // Handle socket exit
+            if (closestSocket == null && socket != null)
+            {
+                socket.EndHovering(this);
+                socket = null;
+            }
         }
 
         /// <summary>
@@ -331,6 +367,29 @@ namespace Shababeek.Interactions
             }
 
             ForceReturn();
+        }
+
+        private void OnDrawGizmosSelected()
+        {
+            if (detectionRadius <= 0) return;
+
+            // Calculate world position of detection sphere center with local offset
+            Vector3 detectionCenter = transform.TransformPoint(detectionOffset);
+
+            // Draw wire sphere to visualize detection range
+            Gizmos.color = new Color(0f, 1f, 0f, 0.5f); // Green with transparency
+            Gizmos.DrawWireSphere(detectionCenter, detectionRadius);
+
+            // Draw a line from transform to detection center
+            Gizmos.color = new Color(0f, 1f, 0f, 0.3f);
+            Gizmos.DrawLine(transform.position, detectionCenter);
+
+            // Draw a small sphere at the detection center
+            Gizmos.color = new Color(0f, 1f, 0f, 0.8f);
+            Gizmos.DrawSphere(detectionCenter, 0.02f);
+
+            // Reset color
+            Gizmos.color = Color.white;
         }
     }
     [System.Serializable]public class SocketEvent : UnityEvent<AbstractSocket>
