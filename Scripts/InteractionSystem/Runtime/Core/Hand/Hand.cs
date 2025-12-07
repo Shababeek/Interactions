@@ -86,7 +86,6 @@ namespace Shababeek.Interactions.Core
         private void AutoAssignHandModel()
         {
             if (handModel != null) return;
-            
             // Try to find any Renderer in children (MeshRenderer, SkinnedMeshRenderer, etc.)
             Renderer handRenderer = GetComponentInChildren<Renderer>();
             if (handRenderer != null)
