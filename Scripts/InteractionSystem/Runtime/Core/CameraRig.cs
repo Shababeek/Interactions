@@ -178,11 +178,14 @@ namespace Shababeek.Interactions.Core
             }
         }
 
-        private void OnTrackingOriginUpdated(XRInputSubsystem subsystem)
+        private async void OnTrackingOriginUpdated(XRInputSubsystem subsystem)
         {
-            if (_trackingInitialized || !alignRigForwardOnTracking) return;
-            
-            if (xrCamera != null)
+            await Awaitable.NextFrameAsync();
+            await Awaitable.NextFrameAsync();
+            if (xrCamera == null || offsetObject == null) return;
+
+            // Step 1: Align rig forward direction (only once if enabled)
+            if (!_trackingInitialized && alignRigForwardOnTracking)
             {
                 Vector3 cameraForward = xrCamera.transform.forward;
                 cameraForward.y = 0;
@@ -192,6 +195,26 @@ namespace Shababeek.Interactions.Core
                     _trackingInitialized = true;
                 }
             }
+
+            RecenterCameraToRig();
+        }
+
+
+        private void RecenterCameraToRig()
+        {
+            if (xrCamera == null || offsetObject == null) return;
+
+            // Reset offsetObject rotation to identity first
+            offsetObject.localRotation = Quaternion.identity;
+
+            // Get camera's current local position relative to offsetObject
+            Vector3 cameraLocalPos = xrCamera.transform.localPosition;
+
+            // Target: Camera should be at (0, cameraHeight, 0) in rig's local space
+            // Formula: offsetObject.localPosition + cameraLocalPos = (0, cameraHeight, 0)
+            // Therefore: offsetObject.localPosition = (0, cameraHeight, 0) - cameraLocalPos
+            Vector3 targetCameraPosInRigSpace = new Vector3(0f, cameraHeight, 0f);
+            offsetObject.localPosition = targetCameraPosInRigSpace - cameraLocalPos;
         }
         
         private IHandInputProvider SetupHandProviders(Transform handPivot, HandIdentifier hand)
