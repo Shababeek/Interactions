@@ -164,6 +164,13 @@ namespace Shababeek.Interactions
         /// </summary>
         /// <value>True if the interactable is being used, false otherwise.</value>
         public bool IsUsing => isUsing;
+        
+        
+        public InteractionHand InteractionHand
+        {
+            get => interactionHand; 
+            set => interactionHand = value;
+        }
 
         /// <summary>
         /// Handles state changes for this interactable.
