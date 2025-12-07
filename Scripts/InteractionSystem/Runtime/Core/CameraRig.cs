@@ -180,9 +180,9 @@ namespace Shababeek.Interactions.Core
 
         private void OnTrackingOriginUpdated(XRInputSubsystem subsystem)
         {
-            if (_trackingInitialized || !alignRigForwardOnTracking) return;
+            if (xrCamera == null || offsetObject == null) return;
             
-            if (xrCamera != null)
+            if (!_trackingInitialized && alignRigForwardOnTracking)
             {
                 Vector3 cameraForward = xrCamera.transform.forward;
                 cameraForward.y = 0;
@@ -192,6 +192,24 @@ namespace Shababeek.Interactions.Core
                     _trackingInitialized = true;
                 }
             }
+
+            RecenterCameraOffset();
+        }
+
+        private void RecenterCameraOffset()
+        {
+            if (offsetObject == null || xrCamera == null) return;
+
+            Vector3 cameraLocalToOffset = xrCamera.transform.localPosition;
+            
+            // We want the camera to be at (0, cameraHeight, 0) in rig's local space
+            // Currently: camera in rig space = offsetObject.localPosition + cameraLocalToOffset
+            // Target: camera in rig space = (0, cameraHeight, 0)
+            // So: offsetObject.localPosition = (0, cameraHeight, 0) - cameraLocalToOffset
+            
+            Vector3 targetOffset = new Vector3(-cameraLocalToOffset.x, cameraHeight - cameraLocalToOffset.y, -cameraLocalToOffset.z);
+            offsetObject.localPosition = targetOffset;
+            offsetObject.localRotation = Quaternion.identity;
         }
         
         private IHandInputProvider SetupHandProviders(Transform handPivot, HandIdentifier hand)
