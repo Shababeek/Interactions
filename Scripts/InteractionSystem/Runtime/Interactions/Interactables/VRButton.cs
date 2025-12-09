@@ -89,7 +89,8 @@ namespace Shababeek.Interactions
 
         private void OnTriggerEnter(Collider other)
         {
-            if(_coolDownTimer < coolDownTime)return;
+            if (other.isTrigger) return;
+            if (_coolDownTimer < coolDownTime)return;
             if (other.isTrigger || isClicked) return;
             _coolDownTimer = 0;
             onButtonDown.Invoke();
