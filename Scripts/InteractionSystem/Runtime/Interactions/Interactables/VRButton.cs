@@ -78,6 +78,13 @@ namespace Shababeek.Interactions
             get => button;
             set => button = value;
         }
+        void Awake()
+        {
+            if (button == null)
+            {
+                button = transform.GetChild(0);
+            }
+        }
 
         private void Update()
         {
