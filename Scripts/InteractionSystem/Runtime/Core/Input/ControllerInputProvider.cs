@@ -200,7 +200,6 @@ namespace Shababeek.Interactions.Core
                         {
                             _controllerDevice = controller;
                             foundController = true;
-                            Debug.Log($"Found {handedness} controller: {controller.name} (Display: {controller.displayName})");
                             break;
                         }
                     }

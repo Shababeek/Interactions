@@ -18,51 +18,51 @@ namespace Shababeek.Interactions
     /// The button raises events for click, button down, and button up actions with
     /// corresponding UniRx observables for reactive programming.
     /// </remarks>
-    [AddComponentMenu(menuName : "Shababeek/Interactions/Interactables/VRButton")]
+    [AddComponentMenu(menuName: "Shababeek/Interactions/Interactables/VRButton")]
     public class VRButton : MonoBehaviour
     {
         [Tooltip("Event raised when the button is clicked.")]
         [SerializeField] private UnityEvent onClick;
-        
+
         [Tooltip("Event raised when the button is pressed down.")]
         [SerializeField] private UnityEvent onButtonDown;
-        
+
         [Tooltip("Event raised when the button is released.")]
         [SerializeField] private UnityEvent onButtonUp;
-        
+
         [Tooltip("The transform of the button visual element that moves during press.")]
         [SerializeField] private Transform button;
-        
+
         [Tooltip("The normal (unpressed) position of the button.")]
         [SerializeField] private Vector3 normalPosition = new Vector3(0, .5f, 0);
-        
+
         [Tooltip("The pressed position of the button (how far it moves when pressed).")]
         [SerializeField] private Vector3 pressedPosition = new Vector3(0, .2f, 0);
-        
+
         [Tooltip("Indicates whether the button is currently in a clicked state.")]
         [SerializeField] private bool isClicked;
-        
+
         [Tooltip("Speed of the button press animation.")]
         [SerializeField] private float pressSpeed = 10;
-        
+
         [Tooltip("Cooldown time between button clicks to prevent rapid-fire activation.")]
         [SerializeField] private float coolDownTime = .2f;
-        
+
         private float _coolDownTimer = 0;
         private float t = 0;
-        
+
         /// <summary>
         /// Observable that fires when the button is clicked.
         /// </summary>
         /// <value>An observable that emits a Unit when the button is activated.</value>
         public IObservable<Unit> OnClick => onClick.AsObservable();
-        
+
         /// <summary>
         /// Observable that fires when the button is pressed down.
         /// </summary>
         /// <value>An observable that emits a Unit when the button is pressed down.</value>
         public IObservable<Unit> OnButtonDown => onButtonDown.AsObservable();
-        
+
         /// <summary>
         /// Observable that fires when the button is released.
         /// </summary>
@@ -96,15 +96,21 @@ namespace Shababeek.Interactions
 
         private void OnTriggerEnter(Collider other)
         {
-            if(_coolDownTimer < coolDownTime)return;
-            if (other.isTrigger || isClicked) return;
+            if (other.gameObject.name != "tip")
+            {
+
+                return;
+            }
+            if (_coolDownTimer < coolDownTime) return;
+            if (isClicked) return;
             _coolDownTimer = 0;
             onButtonDown.Invoke();
             isClicked = true;
+            Debug.Log($"Object name : {other.gameObject.name}");
         }
         private void OnTriggerExit(Collider other)
         {
-            if (!isClicked ||other.isTrigger) return;
+            if (!isClicked) return;
             onButtonUp.Invoke();
             onClick.Invoke();
 
