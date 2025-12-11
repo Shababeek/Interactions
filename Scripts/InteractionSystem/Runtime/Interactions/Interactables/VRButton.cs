@@ -2,8 +2,6 @@ using System;
 using UniRx;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.UI;
-using Shababeek.Interactions.Core;
 
 namespace Shababeek.Interactions
 {
@@ -47,6 +45,7 @@ namespace Shababeek.Interactions
 
         [Tooltip("Cooldown time between button clicks to prevent rapid-fire activation.")]
         [SerializeField] private float coolDownTime = .2f;
+        [SerializeField] private  string maskName="tip";
 
         private float _coolDownTimer = 0;
         private float t = 0;
@@ -96,7 +95,8 @@ namespace Shababeek.Interactions
 
         private void OnTriggerEnter(Collider other)
         {
-            if (other.gameObject.name != "tip")
+
+            if (maskName!="" && !other.gameObject.name .Contains( maskName))
             {
 
                 return;
@@ -106,7 +106,6 @@ namespace Shababeek.Interactions
             _coolDownTimer = 0;
             onButtonDown.Invoke();
             isClicked = true;
-            Debug.Log($"Object name : {other.gameObject.name}");
         }
         private void OnTriggerExit(Collider other)
         {
