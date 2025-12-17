@@ -353,7 +353,7 @@ namespace Shababeek.Interactions.Core
             var updater = GetComponent<HandPivotUpdater>();
             if (updater == null)
             {
-                updater = gameObject.AddComponent<HandPivotUpdater>();
+                return;updater = gameObject.AddComponent<HandPivotUpdater>();
             }
             
             // Initialize with references
