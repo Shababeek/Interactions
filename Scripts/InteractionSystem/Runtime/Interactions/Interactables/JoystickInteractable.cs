@@ -49,10 +49,6 @@ namespace Shababeek.Interactions
         [Header("Events")]
         [Tooltip("Event raised when the turret's rotation changes (provides current X,Z rotation in degrees).")]
         [SerializeField] private Vector2UnityEvent onRotationChanged = new();
-        [Tooltip("Event raised when the turret's X rotation changes (pitch in degrees).")]
-        [SerializeField] private FloatUnityEvent onXRotationChanged = new();
-        [Tooltip("Event raised when the turret's Z rotation changes (roll in degrees).")]
-        [SerializeField] private FloatUnityEvent onZRotationChanged = new();
 
         [Header("Debug")]
         [Tooltip("Current rotation of the turret in degrees (X=pitch, Z=roll) (read-only).")]
@@ -71,18 +67,6 @@ namespace Shababeek.Interactions
         /// <value>An observable that emits the current rotation (X=pitch, Z=roll) in degrees.</value>
         public IObservable<Vector2> OnRotationChanged => onRotationChanged.AsObservable();
         
-        /// <summary>
-        /// Observable that fires when the turret's X rotation (pitch) changes.
-        /// </summary>
-        /// <value>An observable that emits the current X rotation in degrees.</value>
-        public IObservable<float> OnXRotationChanged => onXRotationChanged.AsObservable();
-        
-        /// <summary>
-        /// Observable that fires when the turret's Z rotation (roll) changes.
-        /// </summary>
-        /// <value>An observable that emits the current Z rotation in degrees.</value>
-        public IObservable<float> OnZRotationChanged => onZRotationChanged.AsObservable();
-
         /// <summary>
         /// Current rotation of the turret in degrees (X=pitch, Z=roll).
         /// </summary>
@@ -140,7 +124,7 @@ namespace Shababeek.Interactions
         {
         }
 
-        protected override void HandleObjectMovement()
+        protected override void HandleObjectMovement(Vector3 target)
         {
             if (!IsSelected || _isReturning) return;
             
@@ -156,19 +140,7 @@ namespace Shababeek.Interactions
                 _isReturning = true;
             }
         }
-
-        private void Update()
-        {
-            if (IsSelected && !_isReturning)
-            {
-                HandleObjectMovement();
-            }
-            else if (_isReturning && returnToOriginal)
-            {
-                HandleReturnToOriginal();
-            }
-        }
-
+        
         /// <summary>
         /// Calculates the target rotation based on hand position relative to turret.
         /// </summary>
@@ -239,7 +211,7 @@ namespace Shababeek.Interactions
         /// <summary>
         /// Handles smooth return to original position.
         /// </summary>
-        private void HandleReturnToOriginal()
+        protected override void HandleReturnToOriginalPosition()
         {
             // Smoothly return to original rotation
             interactableObject.transform.localRotation = Quaternion.Slerp(
@@ -281,8 +253,6 @@ namespace Shababeek.Interactions
         private void InvokeEvents()
         {
             onRotationChanged?.Invoke(currentRotation);
-            onXRotationChanged?.Invoke(currentRotation.x);
-            onZRotationChanged?.Invoke(currentRotation.y);
         }
 
         /// <summary>

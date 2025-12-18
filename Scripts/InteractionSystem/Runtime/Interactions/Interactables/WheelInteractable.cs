@@ -12,12 +12,6 @@ namespace Shababeek.Interactions
     /// Wheel-style interactable that tracks rotation around a single axis.
     /// Provides smooth wheel rotation tracking with full rotation counting.
     /// </summary>
-    /// <remarks>
-    /// This component is ideal for steering wheels, control knobs, or any circular
-    /// object that needs to track rotation. It calculates the angle of the hand relative
-    /// to the wheel's forward axis and tracks both visual rotation and full rotation counts.
-    /// The wheel can be rotated continuously and tracks the total number of rotations.
-    /// </remarks>
     public class WheelInteractable : ConstrainedInteractableBase
     {
         [Header("Wheel Settings")]
@@ -71,26 +65,20 @@ namespace Shababeek.Interactions
         public float CurrentAngle => currentAngle;
         public float CurrentRotation => currentRotation;
 
-        protected override void HandleObjectMovement()
+        protected override void HandleObjectMovement( Vector3 target)
         {
-            if (!IsSelected || _isReturning) return;
-
-            // Calculate the angle of the hand relative to the wheel's rotation axis
+            //TODO: make the functions use target
             float targetAngle = CalculateHandAngle();
 
-            // Calculate the change in angle since last frame
             float deltaAngle = Mathf.DeltaAngle(_lastAngle, targetAngle);
             _totalRotationAngle += deltaAngle;
             _lastAngle = targetAngle;
             currentAngle = _totalRotationAngle;
 
-            // Apply visual rotation based on configured axis
             ApplyVisualRotation();
 
-            // Track full rotations
             TrackFullRotations();
 
-            // Fire angle changed event
             onWheelAngleChanged?.Invoke(currentAngle);
         }
 
@@ -106,41 +94,17 @@ namespace Shababeek.Interactions
         {
             _startingAngle = _totalRotationAngle;
         }
+        
 
-        private void Update()
-        {
-            if (IsSelected && !_isReturning)
-            {
-                HandleObjectMovement();
-            }
-            else if (_isReturning && returnToStart)
-            {
-                HandleReturnToStart();
-            }
-        }
-
-        /// <summary>
-        /// Calculates the angle of the hand relative to the wheel's rotation axis.
-        /// </summary>
-        /// <returns>The angle in degrees between the hand position and the reference vector.</returns>
-        /// <remarks>
-        /// This method projects the hand position onto a plane perpendicular to the wheel's rotation axis,
-        /// then calculates the signed angle between the projected direction and the reference vector.
-        /// The result is used to determine the wheel's rotation and track full rotations.
-        /// </remarks>
         private float CalculateHandAngle()
         {
-            // Get direction from wheel center to hand
             Vector3 handDirection = CurrentInteractor.transform.position - transform.position;
             
-            // Get rotation axis and reference vectors based on configured axis
             Vector3 rotationAxisVector = GetRotationAxisVector();
             Vector3 referenceVector = GetReferenceVector();
             
-            // Project the hand direction onto the plane perpendicular to the rotation axis
             Vector3 projectedDirection = Vector3.ProjectOnPlane(handDirection, rotationAxisVector);
             
-            // Calculate the angle between the projected direction and the reference vector
             float angle = Vector3.SignedAngle(referenceVector, projectedDirection, rotationAxisVector);
             
             return angle;
@@ -213,7 +177,7 @@ namespace Shababeek.Interactions
         /// <summary>
         /// Handles the return to start animation when the wheel is deselected.
         /// </summary>
-        private void HandleReturnToStart()
+        protected override void HandleReturnToOriginalPosition()
         {
             if (!_isReturning) return;
             
