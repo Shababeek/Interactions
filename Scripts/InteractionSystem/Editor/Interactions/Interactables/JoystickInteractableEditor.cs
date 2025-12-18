@@ -107,7 +107,7 @@ namespace Shababeek.Interactions.Editors
             DrawEditButton();
         }
 
-        protected override void DrawCommonEvents()
+        protected override void DrawCustomEvents()
         {
             EditorGUILayout.LabelField("Joystick Events", EditorStyles.boldLabel);
             
@@ -118,9 +118,7 @@ namespace Shababeek.Interactions.Editors
                 EditorGUILayout.PropertyField(_onJoystickReleasedProp, new GUIContent("On Joystick Released", "Event raised when the joystick is released"));
             
             EditorGUILayout.Space();
-            
-            // Call base to show common events
-            base.DrawCommonEvents();
+
         }
 
         protected override void DrawCustomDebugInfo()

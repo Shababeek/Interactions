@@ -76,6 +76,13 @@ namespace Shababeek.Interactions.Editors
             
         }
 
+        protected override void DrawCustomEvents()
+        {
+            if (_onLeverChangedProp != null)
+                EditorGUILayout.PropertyField(_onLeverChangedProp, new GUIContent("Current Normalized Angle", "Current lever position (0-1)"));
+        }
+
+
         protected override void DrawCustomDebugInfo()
         {
             if (_currentNormalizedAngleProp != null)

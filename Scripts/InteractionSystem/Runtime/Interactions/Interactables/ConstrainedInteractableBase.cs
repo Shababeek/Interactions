@@ -11,8 +11,8 @@ namespace Shababeek.Interactions
     [RequireComponent(typeof(PoseConstrainter))]
     public abstract class ConstrainedInteractableBase : InteractableBase
     {
-        [Tooltip("Transform representing the object that will be manipulated during interaction.")] [SerializeField]
-        protected Transform interactableObject;
+        [Tooltip("Transform representing the object that will be manipulated during interaction.")] 
+        [SerializeField] protected Transform interactableObject;
 
         [SerializeField] protected bool returnWhenDeselected;
         [SerializeField] protected float returnSpeed;
