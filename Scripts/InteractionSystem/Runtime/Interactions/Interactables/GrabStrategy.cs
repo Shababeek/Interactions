@@ -27,13 +27,9 @@ namespace Shababeek.Interactions
         protected GrabStrategy(GameObject gameObject)
         {
             this.gameObject = gameObject;
-            layer = gameObject.layer;
             colliders = gameObject.GetComponentsInChildren<Collider>();
             collisionLayers = new int[colliders.Length];
-            for (int i = 0; i < collisionLayers.Length; i++)
-            {
-                collisionLayers[i] = colliders[i].gameObject.layer;
-            }
+           
         }
         
         /// <summary>
@@ -43,6 +39,11 @@ namespace Shababeek.Interactions
         /// <param name="interactor">The interactor that will grab this object</param>
         public void Initialize(InteractorBase interactor)
         {
+            layer = gameObject.layer;
+            for (int i = 0; i < collisionLayers.Length; i++)
+            {
+                collisionLayers[i] = colliders[i].gameObject.layer;
+            }
             foreach (var collider in colliders)
             {
                 collider.gameObject.layer = interactor.gameObject.layer;

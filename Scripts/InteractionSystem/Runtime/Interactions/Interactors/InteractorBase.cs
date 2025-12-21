@@ -163,6 +163,8 @@ namespace Shababeek.Interactions
             DisposeHoverSubscription();
             currentInteractable.OnStateChanged(InteractionState.None, this);
             StartHover();
+            EndHover();
+            currentInteractable = null;
         }
 
 
