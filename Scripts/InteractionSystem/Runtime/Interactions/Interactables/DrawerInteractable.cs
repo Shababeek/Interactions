@@ -1,7 +1,6 @@
 using System;
 using UnityEngine;
 using UnityEngine.Events;
-using Shababeek.Interactions.Core;
 using Shababeek.Utilities;
 using UniRx;
 
@@ -14,36 +13,25 @@ namespace Shababeek.Interactions
     [CreateAssetMenu(menuName = "Shababeek/Interactions/Interactables/DrawerInteractable")]
     public class DrawerInteractable : ConstrainedInteractableBase
     {
-        [Header("Drawer/Slider Settings")]
-        [Tooltip("Local space position where the drawer movement starts.")]
-        [SerializeField] private Vector3 _localStart = Vector3.zero;
+        [Header("Drawer/Slider Settings")] [SerializeField]
+        private Vector3 localStart = Vector3.zero;
 
-        [Tooltip("Local space position where the drawer movement ends.")]
-        [SerializeField] private Vector3 _localEnd = Vector3.forward;
-        [Tooltip("Whether the drawer should return to its starting position when deselected.")]
-        [SerializeField] private bool returnToOriginal = false;
-        [Tooltip("Speed at which the drawer returns to its starting position.")]
-        [SerializeField] private float returnSpeed = 5f;
+        [SerializeField] private Vector3 localEnd = Vector3.forward;
 
-        [Header("Events")]
-        [Tooltip("Event raised when the drawer is moved.")]
-        [SerializeField] private UnityEvent onMoved;
-        [Tooltip("Event raised when the drawer reaches either start or end limit.")]
-        [SerializeField] private UnityEvent onLimitReached;
-        [Tooltip("Event raised when the drawer's normalized position changes (0-1 range).")]
-        [SerializeField] private FloatUnityEvent onValueChanged;
+        [SerializeField] private UnityEvent onOpened;
+        [SerializeField] private UnityEvent onClosed;
+        [SerializeField] private FloatUnityEvent onMoved;
 
-        [Header("Debug")]
-        [Tooltip("Current normalized position of the drawer (0-1 range) (read-only).")]
-        [ReadOnly] [SerializeField] private float currentValue = 0f;
+        [Header("Debug")] [ReadOnly, SerializeField]
+        private float currentValue = 0f;
 
         /// <summary>
         /// Gets or sets the local space starting position of the drawer.
         /// </summary>
         public Vector3 LocalStart
         {
-            get => _localStart;
-            set => _localStart = value;
+            get => localStart;
+            set => localStart = value;
         }
 
         /// <summary>
@@ -51,47 +39,48 @@ namespace Shababeek.Interactions
         /// </summary>
         public Vector3 LocalEnd
         {
-            get => _localEnd;
-            set => _localEnd = value;
+            get => localEnd;
+            set => localEnd = value;
         }
 
         /// <summary>
         /// Observable that fires when the drawer's normalized position changes.
         /// </summary>
-        public IObservable<float> OnValueChanged => onValueChanged.AsObservable();
+        public IObservable<float> OnMoved => onMoved.AsObservable();
 
-        // Private fields
+        /// <summary>
+        /// Fires when The drawer is opened (position nears 1)
+        /// </summary>
+        public IObservable<Unit> OnOpened => onOpened.AsObservable();
+
+        /// <summary>
+        /// Fires when the drawer is closed (position nears 0)
+        /// </summary>
+        public IObservable<Unit> OnClosed => onClosed.AsObservable();
+
         private Vector3 _lastPosition;
-        private const float LimitEpsilon = 0.001f;
+        private const float LimitEpsilon = 0.05f;
         private Vector3 _targetPosition;
-        private bool _isReturning = false;
         private Vector3 _originalPosition;
+        private float _returnTimer;
+        private static float _normalizedDistance;
 
-        protected override void UseStarted()
-        {
-        }
-
-        protected override void StartHover()
-        {
-        }
-
-        protected override void EndHover()
-        {
-        }
 
         private void Start()
         {
             _originalPosition = interactableObject.transform.localPosition;
         }
 
-        private void Reset()
+        protected override void Reset()
         {
+            base.Reset();
             AutoAssignInteractableObject();
         }
 
 #if UNITY_EDITOR
-        private void OnValidate()
+        protected override void OnValidate()
         {
+            base.OnValidate();
             AutoAssignInteractableObject();
         }
 #endif
@@ -112,66 +101,73 @@ namespace Shababeek.Interactions
             }
         }
 
-        protected override void HandleObjectMovement()
+        protected override void HandleObjectMovement(Vector3 target)
         {
             if (!IsSelected) return;
-            
-            var localInteractorPos = transform.InverseTransformPoint(CurrentInteractor.transform.position);
-            var newLocalPos = GetPositionBetweenTwoPoints(localInteractorPos, _localStart, _localEnd);
 
+            var localInteractorPos = transform.InverseTransformPoint(target);
+            var newLocalPos = GetPositionBetweenTwoPoints(localInteractorPos, localStart, localEnd);
+            HandleEvents(newLocalPos);
+        }
+
+        private void HandleEvents(Vector3 newLocalPos)
+        {
             if (interactableObject.transform.localPosition != newLocalPos)
             {
                 interactableObject.transform.localPosition = newLocalPos;
                 UpdateValue(newLocalPos);
-                onMoved?.Invoke();
+                onMoved?.Invoke(_normalizedDistance);
             }
 
-            // Check for limits
-            if ((newLocalPos - _localStart).sqrMagnitude < LimitEpsilon * LimitEpsilon ||
-                (newLocalPos - _localEnd).sqrMagnitude < LimitEpsilon * LimitEpsilon)
+            if (_normalizedDistance >= 1 - LimitEpsilon)
             {
-                onLimitReached?.Invoke();
+                onOpened?.Invoke();
             }
-
-            _isReturning = false;
+            else if (_normalizedDistance <= LimitEpsilon)
+            {
+                onClosed?.Invoke();
+            }
         }
 
         protected override void HandleObjectDeselection()
         {
-            if (returnToOriginal)
+            _returnTimer = 0;
+            if (returnWhenDeselected)
+                return;
+            switch (_normalizedDistance)
             {
-                _isReturning = true;
+                case >= 1 - LimitEpsilon:
+                    HandleObjectMovement(transform.TransformPoint(localEnd));
+                    break;
+                case <= LimitEpsilon:
+                    HandleObjectMovement(transform.TransformPoint(localStart));
+
+                    break;
             }
         }
 
-        private void Update()
+
+        protected override void HandleReturnToOriginalPosition()
         {
-            if (IsSelected)
-            {
-                HandleObjectMovement();
-            }
-            else if (returnToOriginal && _isReturning)
-            {
-                interactableObject.transform.localPosition = Vector3.Lerp(
-                    interactableObject.transform.localPosition,
-                    _originalPosition,
-                    returnSpeed * Time.deltaTime
-                );
+            _returnTimer += returnSpeed * Time.deltaTime;
+            interactableObject.transform.localPosition = Vector3.Lerp(
+                interactableObject.transform.localPosition,
+                _originalPosition,
+                _returnTimer
+            );
 
-                UpdateValue(interactableObject.transform.localPosition);
+            UpdateValue(interactableObject.transform.localPosition);
 
-                // Stop returning when close enough to original position
-                if (Vector3.Distance(interactableObject.transform.localPosition, _originalPosition) < 0.01f)
-                {
-                    _isReturning = false;
-                }
+            if (Vector3.Distance(interactableObject.transform.localPosition, _originalPosition) < 0.001f)
+            {
+                IsReturning = false;
             }
         }
 
         private void OnDrawGizmos()
         {
-            var worldStart = transform.TransformPoint(_localStart);
-            var worldEnd = transform.TransformPoint(_localEnd);
+            var worldStart = transform.TransformPoint(localStart);
+            var worldEnd = transform.TransformPoint(localEnd);
             var direction = worldEnd - worldStart;
             Gizmos.color = Color.red;
             Gizmos.DrawSphere(worldStart, .03f);
@@ -181,7 +177,7 @@ namespace Shababeek.Interactions
             if (interactableObject != null)
             {
                 var localObjPos = interactableObject.transform.localPosition;
-                var projectedPoint = Vector3.Project(localObjPos - _localStart, _localEnd - _localStart) + _localStart;
+                var projectedPoint = Vector3.Project(localObjPos - localStart, localEnd - localStart) + localStart;
                 var worldProjected = transform.TransformPoint(projectedPoint);
                 Gizmos.DrawSphere(worldProjected, .03f);
             }
@@ -191,8 +187,8 @@ namespace Shababeek.Interactions
         {
             var direction = (end - start);
             var projectedPoint = Vector3.Project(point - start, direction) + start;
-            var normalizedDistance = FindNormalizedDistanceAlongPath(direction, projectedPoint, start);
-            return Vector3.Lerp(start, end, normalizedDistance);
+            _normalizedDistance = Mathf.Clamp01(FindNormalizedDistanceAlongPath(direction, projectedPoint, start));
+            return Vector3.Lerp(start, end, _normalizedDistance);
         }
 
         private static float FindNormalizedDistanceAlongPath(Vector3 direction, Vector3 projectedPoint,
@@ -226,9 +222,9 @@ namespace Shababeek.Interactions
         private void UpdateValue(Vector3 position)
         {
             // Calculate normalized value (0-1) based on position
-            float normalizedDistance = FindNormalizedDistanceAlongPath(_localEnd - _localStart, position, _localStart);
+            float normalizedDistance = FindNormalizedDistanceAlongPath(localEnd - localStart, position, localStart);
             currentValue = normalizedDistance;
-            onValueChanged?.Invoke(currentValue);
+            onMoved?.Invoke(currentValue);
         }
     }
 }

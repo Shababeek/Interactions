@@ -95,12 +95,8 @@ namespace Shababeek.Interactions
 
         private void OnTriggerEnter(Collider other)
         {
-
-            if (maskName!="" && !other.gameObject.name .Contains( maskName))
-            {
-
-                return;
-            }
+            if (!enabled) return;
+            if (maskName!="" && !other.gameObject.name .Contains( maskName)) return;
             if (_coolDownTimer < coolDownTime) return;
             if (isClicked) return;
             _coolDownTimer = 0;

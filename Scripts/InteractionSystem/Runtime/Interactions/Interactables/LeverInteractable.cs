@@ -40,6 +40,7 @@ namespace Shababeek.Interactions
         
         private Vector3 _axisWorld;
         private Vector3 _referenceNormalWorld;
+        private Vector3 _previousTargetPosition;
         private const float ProjectedEpsilon = 1e-5f;
 
         /// <summary>
@@ -76,7 +77,7 @@ namespace Shababeek.Interactions
 
             OnDeselected
                 .Where(_ => returnToOriginal)
-                .Do(_ => ReturnToOriginal())
+                .Do(_ => HandleReturnToOriginalPosition())
                 .Do(_ => InvokeEvents())
                 .Subscribe().AddTo(this);
         }
@@ -93,19 +94,22 @@ namespace Shababeek.Interactions
         {
         }
 
-        protected override void HandleObjectMovement()
+        protected override void HandleObjectMovement(Vector3 target)
         {
-            if (!IsSelected) return;
+            Rotate(CalculateAngle(target,_axisWorld, _referenceNormalWorld));
+            if (Vector3.Distance(target, _previousTargetPosition)>.01f)
+            {
+                _previousTargetPosition=target;
 
-            Rotate(CalculateAngle(_axisWorld, _referenceNormalWorld));
-            InvokeEvents();
+                InvokeEvents();
+            } 
         }
 
         protected override void HandleObjectDeselection()
         {
             if (returnToOriginal)
             {
-                ReturnToOriginal();
+                HandleReturnToOriginalPosition();
                 InvokeEvents();
             }
         }
@@ -128,7 +132,7 @@ namespace Shababeek.Interactions
             currentNormalizedAngle = (angle - min) / (max - min);
         }
 
-        private void ReturnToOriginal()
+        protected override void HandleReturnToOriginalPosition()
         {
             interactableObject.transform.localRotation = _originalRotation;
             currentNormalizedAngle = 0;
@@ -144,10 +148,10 @@ namespace Shababeek.Interactions
             onLeverChanged.Invoke(currentNormalizedAngle);
         }
 
-        private float CalculateAngle(Vector3 axisWorld, Vector3 referenceNormalWorld)
+        private float CalculateAngle(Vector3 target,Vector3 axisWorld, Vector3 referenceNormalWorld)
         {
             // Direction from pivot to hand
-            var fromPivotToHand = CurrentInteractor.transform.position - interactableObject.transform.position;
+            var fromPivotToHand = target - interactableObject.transform.position;
 
             // Project the vector onto the plane perpendicular to the axis
             var projected = Vector3.ProjectOnPlane(fromPivotToHand, axisWorld);

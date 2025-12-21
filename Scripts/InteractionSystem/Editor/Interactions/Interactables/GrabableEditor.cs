@@ -39,6 +39,10 @@ namespace Shababeek.Interactions.Editors
             if (_tweenerProp != null)
                 EditorGUILayout.PropertyField(_tweenerProp, new GUIContent("Tweener", "The tweener component used for smooth grab animations."));
         }
-        
+
+        protected override void DrawCustomEvents()
+        {
+            //Nothing to Do, no custom Events
+        }
     }
 }

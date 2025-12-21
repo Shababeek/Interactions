@@ -70,7 +70,7 @@ namespace Shababeek.Interactions.Editors
                 EditorGUILayout.PropertyField(_returnSpeed, new GUIContent("Return Speed", "Speed of return animation (degrees per second)."));
         }
 
-        protected override void DrawCommonEvents()
+        protected override void DrawCustomEvents()
         {
             EditorGUILayout.LabelField("Wheel Events", EditorStyles.boldLabel);
             
@@ -82,8 +82,7 @@ namespace Shababeek.Interactions.Editors
             
             EditorGUILayout.Space();
             
-            // Call base to show common events
-            base.DrawCommonEvents();
+
         }
 
         protected override void DrawCustomDebugInfo()

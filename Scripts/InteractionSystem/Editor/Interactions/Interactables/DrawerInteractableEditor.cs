@@ -7,37 +7,29 @@ namespace Shababeek.Interactions.Editors
 {
     [CustomEditor(typeof(DrawerInteractable))]
     [CanEditMultipleObjects]
-    public class DrawerInteractableEditor : InteractableBaseEditor
+    public class DrawerInteractableEditor : ConstrainedInteractableEditor
     {
         private static bool _editDrawerRange = false;
-
         // Custom properties specific to DrawerInteractable
-        private SerializedProperty _interactableObjectProp;
-        private SerializedProperty _snapDistanceProp;
         private SerializedProperty _localStartProp;
         private SerializedProperty _localEndProp;
-        private SerializedProperty _returnToOriginalProp;
-        private SerializedProperty _returnSpeedProp;
         private SerializedProperty _onMovedProp;
-        private SerializedProperty _onLimitReachedProp;
-        private SerializedProperty _onValueChangedProp;
+        private SerializedProperty _onOpenedProb;
+        private SerializedProperty _onClosedProb;
         private SerializedProperty _currentValueProp;
+        
 
         protected override void OnEnable()
         {
             base.OnEnable();
 
             // Find custom properties
-            _interactableObjectProp = base.serializedObject.FindProperty("interactableObject");
-            _snapDistanceProp = base.serializedObject.FindProperty("_snapDistance");
-            _localStartProp = base.serializedObject.FindProperty("_localStart");
-            _localEndProp = base.serializedObject.FindProperty("_localEnd");
-            _returnToOriginalProp = base.serializedObject.FindProperty("returnToOriginal");
-            _returnSpeedProp = base.serializedObject.FindProperty("returnSpeed");
-            _onMovedProp = base.serializedObject.FindProperty("onMoved");
-            _onLimitReachedProp = base.serializedObject.FindProperty("onLimitReached");
-            _onValueChangedProp = base.serializedObject.FindProperty("onValueChanged");
-            _currentValueProp = base.serializedObject.FindProperty("currentValue");
+            _localStartProp = serializedObject.FindProperty("localStart");
+            _localEndProp = serializedObject.FindProperty("localEnd");
+            _onMovedProp = serializedObject.FindProperty("onMoved");
+            _onOpenedProb = serializedObject.FindProperty("onOpened");
+            _onClosedProb = serializedObject.FindProperty("onClosed");
+            _currentValueProp = serializedObject.FindProperty("currentValue");
         }
 
         protected override void DrawCustomHeader()
@@ -51,13 +43,8 @@ namespace Shababeek.Interactions.Editors
 
         protected override void DrawCustomProperties()
         {
-            EditorGUILayout.LabelField("Drawer Settings", EditorStyles.boldLabel);
-
-            if (_interactableObjectProp != null)
-                EditorGUILayout.PropertyField(_interactableObjectProp, new GUIContent("Interactable Object", "The object that will be moved by the drawer"));
-            if (_snapDistanceProp != null)
-                EditorGUILayout.PropertyField(_snapDistanceProp, new GUIContent("Snap Distance", "Distance threshold for snapping to positions"));
-
+            EditorGUILayout.LabelField("General Settings", EditorStyles.boldLabel);
+            base.DrawCustomProperties();
             EditorGUILayout.Space();
 
             EditorGUILayout.LabelField("Movement Range", EditorStyles.boldLabel);
@@ -68,30 +55,17 @@ namespace Shababeek.Interactions.Editors
 
             EditorGUILayout.Space();
 
-            EditorGUILayout.LabelField("Behavior", EditorStyles.boldLabel);
-            if (_returnToOriginalProp != null)
-                EditorGUILayout.PropertyField(_returnToOriginalProp, new GUIContent("Return To Original", "Whether the drawer returns to its original position when released"));
-            if (_returnSpeedProp != null)
-                EditorGUILayout.PropertyField(_returnSpeedProp, new GUIContent("Return Speed", "Speed of return animation"));
-
-            // Draw range editing button
+      
         }
 
-        protected override void DrawCommonEvents()
+        protected override void DrawCustomEvents()
         {
             EditorGUILayout.LabelField("Drawer Events", EditorStyles.boldLabel);
 
-            if (_onMovedProp != null)
-                EditorGUILayout.PropertyField(_onMovedProp, new GUIContent("On Moved", "Event raised when the drawer moves"));
-            if (_onLimitReachedProp != null)
-                EditorGUILayout.PropertyField(_onLimitReachedProp, new GUIContent("On Limit Reached", "Event raised when the drawer reaches its limits"));
-            if (_onValueChangedProp != null)
-                EditorGUILayout.PropertyField(_onValueChangedProp, new GUIContent("On Value Changed", "Event raised when the drawer value changes"));
-
-            EditorGUILayout.Space();
-
-            // Call base to show common events
-            base.DrawCommonEvents();
+                EditorGUILayout.PropertyField(_onMovedProp);
+                EditorGUILayout.PropertyField(_onOpenedProb);
+                EditorGUILayout.PropertyField(_onClosedProb);
+                EditorGUILayout.Space();
         }
 
         protected override void DrawCustomDebugInfo()

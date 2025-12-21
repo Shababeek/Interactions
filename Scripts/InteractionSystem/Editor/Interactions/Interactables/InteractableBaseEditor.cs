@@ -11,33 +11,32 @@ namespace Shababeek.Interactions.Editors
     public abstract class InteractableBaseEditor : Editor
     {
         // Common serialized properties for all interactables
-        protected SerializedProperty _interactionHandProp;
-        protected SerializedProperty _selectionButtonProp;
+        private SerializedProperty _interactionHandProp;
+        private SerializedProperty _selectionButtonProp;
 
         // Common event properties
-        protected SerializedProperty _onSelectedProp;
-        protected SerializedProperty _onDeselectedProp;
-        protected SerializedProperty _onHoverStartProp;
-        protected SerializedProperty _onHoverEndProp;
-        protected SerializedProperty _onUseStartedProp;
-        protected SerializedProperty _onUseEndedProp;
+        private SerializedProperty _onSelectedProp;
+        private SerializedProperty _onDeselectedProp;
+        private SerializedProperty _onHoverStartProp;
+        private SerializedProperty _onHoverEndProp;
+        private SerializedProperty _onUseStartedProp;
+        private SerializedProperty _onUseEndedProp;
 
         // Common read-only properties
-        protected SerializedProperty _isSelectedProp;
-        protected SerializedProperty _currentInteractorProp;
-        protected SerializedProperty _currentStateProp;
+        private SerializedProperty _isSelectedProp;
+        private SerializedProperty _currentInteractorProp;
+        private SerializedProperty _currentStateProp;
 
         // UI state
-        protected bool _showEvents = true;
-        protected bool _showDebug = true;
+        private bool _showEvents = true;
+        private bool _showDebug = true;
 
         protected virtual void OnEnable()
         {
             // Find common serialized properties
             _interactionHandProp = serializedObject.FindProperty("interactionHand");
             _selectionButtonProp = serializedObject.FindProperty("selectionButton");
-
-            // Find common event properties
+            
             _onSelectedProp = serializedObject.FindProperty("onSelected");
             _onDeselectedProp = serializedObject.FindProperty("onDeselected");
             _onHoverStartProp = serializedObject.FindProperty("onHoverStart");
@@ -45,7 +44,6 @@ namespace Shababeek.Interactions.Editors
             _onUseStartedProp = serializedObject.FindProperty("onUseStarted");
             _onUseEndedProp = serializedObject.FindProperty("onUseEnded");
 
-            // Find common read-only properties
             _isSelectedProp = serializedObject.FindProperty("isSelected");
             _currentInteractorProp = serializedObject.FindProperty("currentInteractor");
             _currentStateProp = serializedObject.FindProperty("currentState");
@@ -54,29 +52,18 @@ namespace Shababeek.Interactions.Editors
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
-            // Draw custom header/info
+            
             DrawCustomHeader();
             EditorGUILayout.Space();
             DrawImportantSettings();
-            // Draw interaction settings
             DrawInteractionSettings();
-
             EditorGUILayout.Space();
-
-            // Draw custom properties (implemented by derived classes)
             DrawCustomProperties();
-
+            EditorGUILayout.Space();
+            DrawEvents();
             EditorGUILayout.Space();
 
-            // Draw common events
-            DrawCommonEvents();
-
-            EditorGUILayout.Space();
-
-            // Draw common debug information
             DrawCommonDebugInfo();
-
-            // Draw custom debug info (implemented by derived classes)
             DrawCustomDebugInfo();
 
             serializedObject.ApplyModifiedProperties();
@@ -120,38 +107,40 @@ namespace Shababeek.Interactions.Editors
             // Override in derived classes to add custom properties
         }
 
-        /// <summary>
-        /// Draws the common events section.
-        /// </summary>
-        protected virtual void DrawCommonEvents()
+        protected virtual void DrawEvents()
         {
             _showEvents = EditorGUILayout.BeginFoldoutHeaderGroup(_showEvents, "Events");
             if (_showEvents)
             {
-                if (_onSelectedProp != null)
-                    EditorGUILayout.PropertyField(_onSelectedProp, new GUIContent("On Selected", "Event raised when this interactable is selected by an interactor."));
-
-                if (_onDeselectedProp != null)
-                    EditorGUILayout.PropertyField(_onDeselectedProp, new GUIContent("On Deselected", "Event raised when this interactable is deselected by an interactor."));
-
-                if (_onHoverStartProp != null)
-                    EditorGUILayout.PropertyField(_onHoverStartProp, new GUIContent("On Hover Start", "Event raised when an interactor starts hovering over this interactable."));
-
-                if (_onHoverEndProp != null)
-                    EditorGUILayout.PropertyField(_onHoverEndProp, new GUIContent("On Hover End", "Event raised when an interactor stops hovering over this interactable."));
-
-                if (_onUseStartedProp != null)
-                    EditorGUILayout.PropertyField(_onUseStartedProp, new GUIContent("On Use Started", "Event raised when the secondary button is pressed while selected."));
-
-                if (_onUseEndedProp != null)
-                    EditorGUILayout.PropertyField(_onUseEndedProp, new GUIContent("On Use Ended", "Event raised when the secondary button is released while selected."));
+                DrawCustomEvents();
+                DrawBaseEvents();
             }
             EditorGUILayout.EndFoldoutHeaderGroup();
         }
 
-        /// <summary>
-        /// Draws the common debug information section.
-        /// </summary>
+        private void DrawBaseEvents()
+        {
+            if (_onSelectedProp != null)
+                EditorGUILayout.PropertyField(_onSelectedProp);
+
+            if (_onDeselectedProp != null)
+                EditorGUILayout.PropertyField(_onDeselectedProp);
+
+            if (_onHoverStartProp != null)
+                EditorGUILayout.PropertyField(_onHoverStartProp);
+
+            if (_onHoverEndProp != null)
+                EditorGUILayout.PropertyField(_onHoverEndProp);
+
+            if (_onUseStartedProp != null)
+                EditorGUILayout.PropertyField(_onUseStartedProp);
+
+            if (_onUseEndedProp != null)
+                EditorGUILayout.PropertyField(_onUseEndedProp);
+        }
+
+        protected abstract void DrawCustomEvents();
+
         protected virtual void DrawCommonDebugInfo()
         {
             _showDebug = EditorGUILayout.BeginFoldoutHeaderGroup(_showDebug, "Debug Information");

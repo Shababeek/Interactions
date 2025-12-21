@@ -90,15 +90,8 @@ namespace Shababeek.Interactions
         /// Gets the interactableObject child transform if it exists.
         /// This is the standard location for models/visuals in all interactables.
         /// </summary>
-        public Transform InteractableObject
-        {
-            get
-            {
-                if (!_scaleCompensator) return null;
-                return _scaleCompensator.Find("interactableObject");
-            }
-        }
-        
+        public Transform InteractableObject => !_scaleCompensator ? null : _scaleCompensator.Find("interactableObject");
+
         /// <summary>
         /// Indicates whether this interactable is currently selected by an interactor.
         /// </summary>
