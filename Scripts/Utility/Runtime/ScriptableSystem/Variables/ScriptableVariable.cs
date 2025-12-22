@@ -59,6 +59,10 @@ namespace Shababeek.Utilities
             }
         }
 
+        public void Init(T value)
+        {
+            this.value = value; 
+        }
         /// <summary>
         /// Raises the game event with the current value.
         /// </summary>

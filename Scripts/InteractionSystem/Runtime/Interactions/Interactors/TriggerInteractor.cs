@@ -65,7 +65,10 @@ namespace Shababeek.Interactions
             
             if (Time.time - _lastDistanceCheck < DistanceCheckInterval)
                 return false;
-                
+            if (!CurrentInteractable.CanInteract(Hand))
+            {
+                return false;
+            }
             _lastDistanceCheck = Time.time;
             
             Vector3 newInteractionPoint = GetInteractionPoint(interactable);
