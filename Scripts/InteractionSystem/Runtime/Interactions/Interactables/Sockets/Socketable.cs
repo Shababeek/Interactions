@@ -56,13 +56,13 @@ namespace Shababeek.Interactions
         private Transform _initialParent;
         private Vector3 _initialLocalPosition;
         private Quaternion _initialLocalRotation;
-
+        private Transform _lastSocket;
         private InteractableBase _interactable;
         private VariableTweener _tweener;
         private TransformTweenable _returnTweenable;
         private bool _isReturning = false;
         private Collider[] _overlapResults = new Collider[3];
-
+        public Transform LastSocket=>_lastSocket;
         /// <summary>
         /// Gets whether the object is currently socketed.
         /// </summary>
@@ -114,6 +114,7 @@ namespace Shababeek.Interactions
                 .Do(_ => IsSocketed = true)
                 .Do(_ => onSocketed.Invoke(socket))
                 .Select(_ => socket.Insert(this))
+                .Do(t => _lastSocket=t)
                 .Do(LerpToPosition)
                 .Subscribe().AddTo(this);
             _interactable.OnDeselected
@@ -245,7 +246,7 @@ namespace Shababeek.Interactions
 
         private void DetectSockets()
         {
-            if (isSocketed || !_interactable.IsSelected) return;
+            if (isSocketed) return;
 
             // Calculate world position of detection sphere center with local offset
             Vector3 detectionCenter = transform.TransformPoint(detectionOffset);

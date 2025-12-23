@@ -10,10 +10,10 @@ using UnityEngine.UIElements;
 
 namespace Shababeek.Interactions.Core
 {
-  /// <summary>
+    /// <summary>
     /// Configuration settings for the interaction system including hand data, input, and layers.
     /// </summary>
-    [CreateAssetMenu(menuName = "Shababeek/Interactions/Config")]
+    [CreateAssetMenu(menuName = "Shababeek/Interaction System/Config")]
     public class Config : ScriptableObject
     {
         [Header("Hand Configuration")]

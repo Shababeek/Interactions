@@ -106,7 +106,8 @@ namespace Shababeek.Interactions
 
         public override void Remove(Socketable socketable)
         {
-            var pivotTransform = socketable.transform.parent;
+            Debug.Log(socketable);
+            var pivotTransform = socketable.LastSocket;
             if (pivotTransform != null && _occupiedSlots.ContainsKey(pivotTransform))
             {
                 _occupiedSlots.Remove(pivotTransform);
