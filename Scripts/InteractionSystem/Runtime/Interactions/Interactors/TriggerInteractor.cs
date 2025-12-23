@@ -65,20 +65,20 @@ namespace Shababeek.Interactions
             var currentInteractionPoint = GetInteractionPoint(CurrentInteractable);
             var interactorPosition = transform.position;
             
-            var newDistance = Vector3.SqrMagnitude(interactorPosition - newInteractionPoint);
-            var currentDistance = Vector3.SqrMagnitude(interactorPosition - currentInteractionPoint);
+            if (Time.time - _lastDistanceCheck < DistanceCheckInterval)
+                return false;
+            if (!CurrentInteractable.CanInteract(Hand))
+            {
+                return false;
+            }
+            _lastDistanceCheck = Time.time;
             
-            return newDistance < currentDistance;
-        }
-        private bool ShouldChangeInteractable(InteractableBase interactable,Collider newCollider)
-        {
-            if (CurrentInteractable == null) return true;
-            var newInteractionPoint = GetInteractionPoint(interactable);
-            var currentInteractionPoint = GetInteractionPoint(CurrentInteractable);
-            var interactorPosition = transform.position;
+            Vector3 newInteractionPoint = GetInteractionPoint(interactable);
+            Vector3 currentInteractionPoint = GetInteractionPoint(CurrentInteractable);
+            Vector3 interactorPosition = transform.position;
             
-            var newDistance = Vector3.SqrMagnitude(interactorPosition - newInteractionPoint);
-            var currentDistance = Vector3.SqrMagnitude(interactorPosition - currentInteractionPoint);
+            float newDistance = Vector3.SqrMagnitude(interactorPosition - newInteractionPoint);
+            float currentDistance = Vector3.SqrMagnitude(interactorPosition - currentInteractionPoint);
             
             return newDistance < currentDistance;
         }
