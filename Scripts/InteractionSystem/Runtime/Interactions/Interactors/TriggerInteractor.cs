@@ -16,8 +16,6 @@ namespace Shababeek.Interactions
         private Collider currentCollider;
 
         private Vector3 _lastInteractionPoint;
-        private float _lastDistanceCheck;
-        private const float DistanceCheckInterval = 0.08f;
         
         private void OnTriggerEnter(Collider other)
         {
@@ -61,23 +59,29 @@ namespace Shababeek.Interactions
 
         private bool ShouldChangeInteractable(InteractableBase interactable)
         {
+            
             if (CurrentInteractable == null) return true;
+            var newInteractionPoint = GetInteractionPoint(interactable);
+            var currentInteractionPoint = GetInteractionPoint(CurrentInteractable);
+            var interactorPosition = transform.position;
             
-            if (Time.time - _lastDistanceCheck < DistanceCheckInterval)
-                return false;
-                
-            _lastDistanceCheck = Time.time;
-            
-            Vector3 newInteractionPoint = GetInteractionPoint(interactable);
-            Vector3 currentInteractionPoint = GetInteractionPoint(CurrentInteractable);
-            Vector3 interactorPosition = transform.position;
-            
-            float newDistance = Vector3.SqrMagnitude(interactorPosition - newInteractionPoint);
-            float currentDistance = Vector3.SqrMagnitude(interactorPosition - currentInteractionPoint);
+            var newDistance = Vector3.SqrMagnitude(interactorPosition - newInteractionPoint);
+            var currentDistance = Vector3.SqrMagnitude(interactorPosition - currentInteractionPoint);
             
             return newDistance < currentDistance;
         }
-        
+        private bool ShouldChangeInteractable(InteractableBase interactable,Collider newCollider)
+        {
+            if (CurrentInteractable == null) return true;
+            var newInteractionPoint = GetInteractionPoint(interactable);
+            var currentInteractionPoint = GetInteractionPoint(CurrentInteractable);
+            var interactorPosition = transform.position;
+            
+            var newDistance = Vector3.SqrMagnitude(interactorPosition - newInteractionPoint);
+            var currentDistance = Vector3.SqrMagnitude(interactorPosition - currentInteractionPoint);
+            
+            return newDistance < currentDistance;
+        }
         private Vector3 GetInteractionPoint(InteractableBase interactable)
         {
             if (!interactable) return Vector3.zero;
