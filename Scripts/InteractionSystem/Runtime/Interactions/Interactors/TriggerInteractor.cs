@@ -2,6 +2,7 @@ using Shababeek.Utilities;
 using Shababeek.Interactions;
 using Shababeek.Interactions.Core;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Shababeek.Interactions
 {
@@ -11,43 +12,48 @@ namespace Shababeek.Interactions
     [AddComponentMenu("Shababeek/Interactions/Interactors/Trigger Interactor")]
     public class TriggerInteractor : InteractorBase
     {
-        [Header("Detection Settings")]
         [SerializeField] private float detectionRadius = 0.1f;
         [SerializeField] private Vector3 detectionOffset = Vector3.zero;
         [SerializeField] private LayerMask interactableLayerMask = -1;
-        [SerializeField] private float distanceCheckInterval = 0.1f;
-        
-        [ReadOnly][SerializeField]private Collider currentCollider;
+        [SerializeField] private float distanceCheckInterval = 0.05f;
 
-        private Collider[] _overlapResults = new Collider[10];
-        private float _lastDistanceCheck;
-        private InteractableBase _previousDetectedInteractable;
-        
+        [ReadOnly] [SerializeField] private Collider currentCollider;
+        [ReadOnly][SerializeField]private Collider[] overlapResults = new Collider[10];
+        private float _timeSinceLastColliderUpdate = 0;
+
         private void Update()
         {
+            _timeSinceLastColliderUpdate += Time.deltaTime;
+            if (_timeSinceLastColliderUpdate < distanceCheckInterval) return;
             if (IsInteracting) return;
             DetectInteractables();
         }
-        
+
         private void DetectInteractables()
         {
             Vector3 detectionCenter = transform.TransformPoint(detectionOffset);
-            var hitCount = Physics.OverlapSphereNonAlloc(detectionCenter, detectionRadius, _overlapResults, interactableLayerMask);
-            if (hitCount == 0)
+            var hitCount = Physics.OverlapSphereNonAlloc(detectionCenter, detectionRadius, overlapResults,
+                interactableLayerMask);
+            if (hitCount == 0 && CurrentInteractable)
             {
                 ChangeInteractable(null);
+                return;
             }
-            InteractableBase closestInteractable = CurrentInteractable;
+            var closestInteractable = FindNearestInteractable(hitCount, detectionCenter);
+            if (CurrentInteractable == closestInteractable) return;
+            ChangeInteractable(closestInteractable);
+
+        }
+
+        private InteractableBase FindNearestInteractable(int hitCount, Vector3 detectionCenter)
+        {
+            InteractableBase closestInteractable = null;
             float closestDistance = float.MaxValue;
             for (int i = 0; i < hitCount; i++)
             {
-                var col = _overlapResults[i];
-                
+                var col = overlapResults[i];
                 var interactable = col.GetComponentInParent<InteractableBase>();
-                
                 if (interactable == null || !interactable.CanInteract(Hand)) continue;
-                if (interactable == CurrentInteractable) continue;
-
                 var distance = Vector3.SqrMagnitude(detectionCenter - GetInteractionPoint(interactable));
                 if (distance < closestDistance)
                 {
@@ -55,22 +61,8 @@ namespace Shababeek.Interactions
                     closestInteractable = interactable;
                 }
             }
-            // Handle interactable enter/exit
-            if (closestInteractable != null && closestInteractable != CurrentInteractable)
-            {
-                if (ShouldChangeInteractable(closestInteractable))
-                {
-                    ChangeInteractable(closestInteractable);
-                }
-            }
-            else if (closestInteractable == null && CurrentInteractable != null)
-            {
-                // Only exit if not currently selected
-                if (CurrentInteractable.CurrentState != InteractionState.Selected)
-                {
-                    ChangeInteractable(null);
-                }
-            }
+
+            return closestInteractable;
         }
 
         private void ChangeInteractable(InteractableBase interactable)
@@ -85,9 +77,9 @@ namespace Shababeek.Interactions
                 return;
             }
 
-            try 
-            { 
-                StartHover(); 
+            try
+            {
+                StartHover();
             }
             catch (System.Exception e)
             {
@@ -101,49 +93,21 @@ namespace Shababeek.Interactions
         {
             if (CurrentInteractable != null)
             {
-                try 
-                { 
-                    EndHover(); 
+                try
+                {
+                    EndHover();
                 }
                 catch (System.Exception e)
                 {
-                    Debug.LogError($"Error ending hover on {CurrentInteractable.name}: {e.Message}", CurrentInteractable);
+                    Debug.LogError($"Error ending hover on {CurrentInteractable.name}: {e.Message}",
+                        CurrentInteractable);
                 }
             }
         }
 
-        private bool ShouldChangeInteractable(InteractableBase interactable)
-        {
-            if (CurrentInteractable == null) return true;
-            
-            if (!interactable.CanInteract(Hand) || !CurrentInteractable.CanInteract(Hand))
-            {
-                return false;
-            }
-
-            if (Time.time - _lastDistanceCheck < distanceCheckInterval)
-            {
-                return false;
-            }
-            _lastDistanceCheck = Time.time;
-
-            Vector3 detectionCenter = transform.TransformPoint(detectionOffset);
-            
-            Vector3 newInteractionPoint = GetInteractionPoint(interactable);
-            Vector3 currentInteractionPoint = GetInteractionPoint(CurrentInteractable);
-            
-            float newDistance = Vector3.SqrMagnitude(detectionCenter - newInteractionPoint);
-            float currentDistance = Vector3.SqrMagnitude(detectionCenter - currentInteractionPoint);
-            
-            return newDistance < currentDistance;
-        }
         private Vector3 GetInteractionPoint(InteractableBase interactable)
         {
             if (!interactable) return Vector3.zero;
-            
-            var interactionPoint = interactable[HandIdentifier];
-            //todo use the interaction point instead;
-            
             var firstCollider = interactable.GetComponentInChildren<Collider>();
             return firstCollider ? firstCollider.ClosestPoint(transform.position) : interactable.transform.position;
         }
