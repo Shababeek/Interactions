@@ -141,9 +141,9 @@ namespace Shababeek.Interactions
         {
             if (!interactable) return Vector3.zero;
             
-            var interactionPoint = interactable.InteractionPoint;
-            if (interactionPoint)
-                return interactionPoint.position;
+            var interactionPoint = interactable[HandIdentifier];
+            //todo use the interaction point instead;
+            
             var firstCollider = interactable.GetComponentInChildren<Collider>();
             return firstCollider ? firstCollider.ClosestPoint(transform.position) : interactable.transform.position;
         }

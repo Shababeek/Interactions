@@ -196,6 +196,7 @@ namespace Shababeek.Interactions
             return handIdentifier == HandIdentifier.Left ? leftPoseConstraints : rightPoseConstraints;
         }
         
+        
         public void UpdatePivots()
         {
             // This method is no longer needed as pivotParent is removed
