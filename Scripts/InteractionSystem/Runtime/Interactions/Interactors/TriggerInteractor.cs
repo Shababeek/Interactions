@@ -17,9 +17,8 @@ namespace Shababeek.Interactions
         [SerializeField] private LayerMask interactableLayerMask = -1;
         [SerializeField] private float distanceCheckInterval = 0.05f;
 
-        [ReadOnly] [SerializeField] private Collider currentCollider;
-        [ReadOnly][SerializeField]private Collider[] overlapResults = new Collider[10];
-        private float _timeSinceLastColliderUpdate = 0;
+        [ReadOnly] [SerializeField] private Collider[] overlapResults = new Collider[10];
+        private float _timeSinceLastColliderUpdate = 0;                                    
 
         private void Update()
         {
@@ -39,10 +38,10 @@ namespace Shababeek.Interactions
                 ChangeInteractable(null);
                 return;
             }
+
             var closestInteractable = FindNearestInteractable(hitCount, detectionCenter);
             if (CurrentInteractable == closestInteractable) return;
             ChangeInteractable(closestInteractable);
-
         }
 
         private InteractableBase FindNearestInteractable(int hitCount, Vector3 detectionCenter)
@@ -67,57 +66,17 @@ namespace Shababeek.Interactions
 
         private void ChangeInteractable(InteractableBase interactable)
         {
-            EndHoverToCurrentInteractor();
-
+            EndHover();
             CurrentInteractable = interactable;
-
-            if (CurrentInteractable == null)
-            {
-                currentCollider = null;
-                return;
-            }
-
-            try
-            {
-                StartHover();
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"Error starting hover on {CurrentInteractable.name}: {e.Message}", CurrentInteractable);
-                CurrentInteractable = null;
-                currentCollider = null;
-            }
-        }
-
-        private void EndHoverToCurrentInteractor()
-        {
-            if (CurrentInteractable != null)
-            {
-                try
-                {
-                    EndHover();
-                }
-                catch (System.Exception e)
-                {
-                    Debug.LogError($"Error ending hover on {CurrentInteractable.name}: {e.Message}",
-                        CurrentInteractable);
-                }
-            }
+            StartHover();
         }
 
         private Vector3 GetInteractionPoint(InteractableBase interactable)
         {
-            if (!interactable) return Vector3.zero;
             var firstCollider = interactable.GetComponentInChildren<Collider>();
             return firstCollider ? firstCollider.ClosestPoint(transform.position) : interactable.transform.position;
         }
 
-        /// <inheritdoc/>
-        protected override void EndHover()
-        {
-            base.EndHover();
-            currentCollider = null;
-        }
 
         private void OnDrawGizmosSelected()
         {
@@ -128,6 +87,7 @@ namespace Shababeek.Interactions
 
             Gizmos.color = new Color(0f, 0f, 1f, 0.3f);
             Gizmos.DrawLine(transform.position, detectionCenter);
+
             Gizmos.color = new Color(0f, 0f, 1f, 0.8f);
             Gizmos.DrawSphere(detectionCenter, 0.01f);
         }
