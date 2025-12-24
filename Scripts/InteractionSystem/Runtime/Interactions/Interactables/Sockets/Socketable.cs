@@ -7,15 +7,10 @@ using UnityEngine.Events;
 namespace Shababeek.Interactions
 {
     /// <summary>
-    /// Component that allows objects to be socketed into specific locations using sphere-based detection.
+    /// Component that allows objects to be socketed into specific locations using trigger-based detection.
     /// Handles socket detection, positioning, and return-to-original-position functionality.
     /// </summary>
-    /// <remarks>
-    /// This component requires both an InteractableBase and VariableTweener component.
-    /// It uses Physics.OverlapSphereNonAlloc to detect nearby sockets and handles the socketing process
-    /// when the user deselects the object, with optional smooth return animations.
-    /// </remarks>
-    [RequireComponent(typeof(InteractableBase))]
+    [RequireComponent(typeof(Grabable))]
     [RequireComponent(typeof(VariableTweener))]
     public class Socketable : MonoBehaviour
     {
