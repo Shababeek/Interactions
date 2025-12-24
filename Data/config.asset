@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: config
   m_EditorClassIdentifier: 
   handData: {fileID: 11400000, guid: 6aca1e053bffb4e23be6bcf251ae2a5d, type: 2}
-  leftHandLayer: 12
-  rightHandLayer: 13
-  interactableLayer: 14
+  leftHandLayer: 11
+  rightHandLayer: 12
+  interactableLayer: 13
   playerLayer: 14
   inputType: 1
   leftHandActions:

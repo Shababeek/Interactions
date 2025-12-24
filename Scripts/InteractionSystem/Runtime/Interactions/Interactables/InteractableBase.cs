@@ -159,10 +159,8 @@ namespace Shababeek.Interactions
             set => interactionHand = value;
         }
 
-        public Vector3 this[HandIdentifier index]
-        {
-            get => Constrainter ? Constrainter.GetTargetHandTransform(index).position : Vector3.zero;
-        }
+        public PoseConstrainter this[HandIdentifier index] => Constrainter;
+
         protected virtual void Awake()
         {
             ValidateAndCreateHierarchy();
