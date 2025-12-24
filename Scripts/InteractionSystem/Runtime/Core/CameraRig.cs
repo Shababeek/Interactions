@@ -407,11 +407,20 @@ namespace Shababeek.Interactions.Core
             
             handController.HandIdentifier = handIdentifier;
             handController.Config = config;
-            
+
             if (interactorType == HandInteractorType.Trigger)
-                handGameObject.AddComponent<TriggerInteractor>();
+            {
+                handGameObject.GetComponent<TriggerInteractor>().enabled = true;
+                handGameObject.AddComponent<RaycastInteractor>().enabled = false;
+            }
+
             else
-                handGameObject.AddComponent<RaycastInteractor>();
+            {
+                handGameObject.AddComponent<RaycastInteractor>().enabled = true;
+                handGameObject.AddComponent<TriggerInteractor>().enabled = false;
+
+            }
+
                 
             return hand;
         }
