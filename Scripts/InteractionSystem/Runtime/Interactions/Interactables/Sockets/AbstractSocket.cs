@@ -12,13 +12,9 @@ namespace Shababeek.Interactions
     [Serializable]
     public abstract class AbstractSocket : MonoBehaviour
     {
-        [Tooltip("Event raised when a socketable object is inserted into this socket.")]
         [SerializeField] private UnityEvent<Socketable> onSocketConnected;
-        [Tooltip("Event raised when a socketable object is removed from this socket.")]
         [SerializeField] private UnityEvent<Socketable> onSocketDisconnected;
-        [Tooltip("Event raised when a socketable object starts hovering near this socket.")]
         [SerializeField] private UnityEvent<Socketable> onHoverStart;
-        [Tooltip("Event raised when a socketable object stops hovering near this socket.")]
         [SerializeField] private UnityEvent<Socketable> onHoverEnd;
 
         /// <summary>
@@ -30,17 +26,17 @@ namespace Shababeek.Interactions
         /// Observable that fires when a socketable object is connected to this socket.
         /// </summary>
         public IObservable<Socketable> OnSocketConnected => onSocketConnected.AsObservable();
-        
+
         /// <summary>
         /// Observable that fires when a socketable object is disconnected from this socket.
         /// </summary>
         public IObservable<Socketable> OnSocketDisconnected => onSocketDisconnected.AsObservable();
-        
+
         /// <summary>
         /// Observable that fires when a socketable object starts hovering near this socket.
         /// </summary>
         public IObservable<Socketable> OnHoverStart => onHoverStart.AsObservable();
-        
+
         /// <summary>
         /// Observable that fires when a socketable object stops hovering near this socket.
         /// </summary>
@@ -53,7 +49,7 @@ namespace Shababeek.Interactions
         {
             onHoverStart.Invoke(socketable);
         }
-        
+
         /// <summary>
         /// Gets the pivot position and rotation for a specific socketable.
         /// </summary>
@@ -61,7 +57,7 @@ namespace Shababeek.Interactions
         {
             return (Pivot.position, Pivot.rotation);
         }
-        
+
         /// <summary>
         /// Called when a socketable object is no longer near the socket.
         /// </summary>
@@ -91,6 +87,17 @@ namespace Shababeek.Interactions
         /// Checks if the socket can accept a new socketable object.
         /// </summary>
         public abstract bool CanSocket();
-    }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="socketable"> the socketable to insert</param>
+        /// <returns>true if socketed false otherwise</returns>
+        public virtual bool Socket(Socketable socketable)
+        {
+            if (!CanSocket()) return false;
+            Insert(socketable);
+            return true;
+        }
+    }
 }

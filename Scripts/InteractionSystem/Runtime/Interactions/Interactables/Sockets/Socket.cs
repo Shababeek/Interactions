@@ -30,5 +30,7 @@ namespace Shababeek.Interactions
         {
             return !current;// true if current is null
         }
+
+
     }
 }
