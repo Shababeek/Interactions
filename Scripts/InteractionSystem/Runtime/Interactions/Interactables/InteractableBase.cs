@@ -32,39 +32,39 @@ namespace Shababeek.Interactions
         [Header("Interaction Settings")]
         [Tooltip("Specifies which hands can interact with this object (Left, Right, or Both).")]
         [SerializeField] private InteractionHand interactionHand = (InteractionHand.Left | InteractionHand.Right);
-        
+
         [Tooltip("The button that triggers selection of this interactable (Grip or Trigger).")]
         [SerializeField] private XRButton selectionButton = XRButton.Grip;
-        
+
         [Header("Interaction Events")]
         [Tooltip("Event raised when this interactable is selected by an interactor.")]
         [SerializeField] public InteractorUnityEvent onSelected;
-        
+
         [Tooltip("Event raised when this interactable is deselected by an interactor.")]
         [SerializeField] private InteractorUnityEvent onDeselected;
-        
+
         [Tooltip("Event raised when an interactor starts hovering over this interactable.")]
         [SerializeField] private InteractorUnityEvent onHoverStart;
-        
+
         [Tooltip("Event raised when an interactor stops hovering over this interactable.")]
         [SerializeField] private InteractorUnityEvent onHoverEnd;
-        
+
         [Tooltip("Event raised when the secondary button is pressed while selected.")]
         [SerializeField] private InteractorUnityEvent onUseStarted;
 
         [Tooltip("Event raised when the secondary button is released while selected.")]
         [SerializeField] private InteractorUnityEvent onUseEnded;
-        
+
         [Header("Runtime State")]
         [Tooltip("Indicates whether this interactable is currently selected.")]
         [SerializeField][ReadOnly] private bool isSelected;
-        
+
         [Tooltip("The interactor that is currently interacting with this object.")]
         [SerializeField][ReadOnly] private InteractorBase currentInteractor;
-        
+
         [Tooltip("The current interaction state of this interactable.")]
         [SerializeField][ReadOnly] private InteractionState currentState;
-        
+
         [Tooltip("Indicates whether this interactable is currently being used (secondary button pressed).")]
         [SerializeField][ReadOnly] private bool isUsing;
 
@@ -73,13 +73,13 @@ namespace Shababeek.Interactions
         public PoseConstrainter Constrainter => _constrainter ??= GetComponent<PoseConstrainter>();
         // Scale compensation - prevents shearing during editor pose setup and runtime manipulation
         protected Transform _scaleCompensator;
-        
+
         /// <summary>
         /// Transform used for pose constraints and hand positioning.
         /// Returns the scale compensator if it exists, otherwise returns this transform.
         /// </summary>
         public Transform ConstraintTransform => _scaleCompensator ? _scaleCompensator : transform;
-        
+
         /// <summary>
         /// Gets the interactableObject child transform if it exists.
         /// This is the standard location for models/visuals in all interactables.
@@ -91,31 +91,31 @@ namespace Shababeek.Interactions
         /// </summary>
         /// <value>True if the interactable is selected, false otherwise.</value>
         public bool IsSelected => isSelected;
-        
+
         /// <summary>
         /// Observable that fires when this interactable is selected by an interactor.
         /// </summary>
         /// <value>An observable that emits the interactor that selected this object.</value>
         public IObservable<InteractorBase> OnSelected => onSelected.AsObservable();
-        
+
         /// <summary>
         /// Observable that fires when this interactable is deselected by an interactor.
         /// </summary>
         /// <value>An observable that emits the interactor that deselected this object.</value>
         public IObservable<InteractorBase> OnDeselected => onDeselected.AsObservable();
-        
+
         /// <summary>
         /// Observable that fires when an interactor starts hovering over this interactable.
         /// </summary>
         /// <value>An observable that emits the interactor that started hovering.</value>
         public IObservable<InteractorBase> OnHoverStarted => onHoverStart.AsObservable();
-        
+
         /// <summary>
         /// Observable that fires when an interactor stops hovering over this interactable.
         /// </summary>
         /// <value>An observable that emits the interactor that stopped hovering.</value>
         public IObservable<InteractorBase> OnHoverEnded => onHoverEnd.AsObservable();
-        
+
         /// <summary>
         /// Observable that fires when the secondary button is pressed while this interactable is selected.
         /// </summary>
@@ -126,36 +126,36 @@ namespace Shababeek.Interactions
         /// Observable that fires when the secondary button is released while this interactable is selected.
         /// </summary>
         /// <value>An observable that emits the interactor that deactivated this object.</value>
-        public IObservable<InteractorBase> OnUseEnded => onUseEnded.AsObservable();        
-        
+        public IObservable<InteractorBase> OnUseEnded => onUseEnded.AsObservable();
+
         /// <summary>
         /// The button that triggers selection of this interactable.
         /// </summary>
         /// <value>The XR button used for selection (Grip or Trigger).</value>
         public XRButton SelectionButton => selectionButton;
-        
+
         /// <summary>
         /// The current interaction state of this interactable.
         /// </summary>
         /// <value>The current interaction state (None, Hovering, Selected).</value>
         public InteractionState CurrentState => currentState;
-        
+
         /// <summary>
         /// The interactor that is currently interacting with this object.
         /// </summary>
         /// <value>The current interactor, or null if no interaction is active.</value>
         public InteractorBase CurrentInteractor => currentInteractor;
-        
+
         /// <summary>
         /// Indicates whether this interactable is currently being used (secondary button pressed).
         /// </summary>
         /// <value>True if the interactable is being used, false otherwise.</value>
         public bool IsUsing => isUsing;
-        
-        
+
+
         public InteractionHand InteractionHand
         {
-            get => interactionHand; 
+            get => interactionHand;
             set => interactionHand = value;
         }
 
@@ -230,7 +230,14 @@ namespace Shababeek.Interactions
         {
             if (currentState == InteractionState.Hovering)
             {
-                onHoverEnd.Invoke(currentInteractor);
+                try
+                {
+                    onHoverEnd.Invoke(currentInteractor);
+                }
+                catch (Exception ee)
+                {
+                    Debug.LogError(ee, this);
+                }
                 EndHover();
             }
 
@@ -243,40 +250,47 @@ namespace Shababeek.Interactions
                 Debug.LogException(e);
             }
             isSelected = true;
-            onSelected.Invoke(currentInteractor);
+            try
+            {
+                onSelected.Invoke(currentInteractor);
+            }
+            catch (Exception ee)
+            {
+                Debug.LogError(ee, this);
+            }
             currentState = InteractionState.Selected;
         }
-        
+
         /// <summary>
         /// Called when the secondary button is pressed while this interactable is selected.
         /// Override this method to implement custom use behavior.
         /// </summary>
         protected abstract void UseStarted();
-        
+
         /// <summary>
         /// Called when an interactor starts hovering over this interactable.
         /// Override this method to implement custom hover start behavior.
         /// </summary>
         protected abstract void StartHover();
-        
+
         /// <summary>
         /// Called when an interactor stops hovering over this interactable.
         /// Override this method to implement custom hover end behavior.
         /// </summary>
         protected abstract void EndHover();
-        
+
         /// <summary>
         /// Attempts to select this interactable.
         /// </summary>
         /// <returns>True if selection should be cancelled/aborted, false to proceed normally.</returns>
         protected abstract bool Select();
-        
+
         /// <summary>
         /// Called when this interactable is deselected.
         /// Override this method to implement custom deselection behavior.
         /// </summary>
         protected abstract void DeSelected();
-        
+
         /// <summary>
         /// Called when the secondary button is released while this interactable is selected.
         /// Override this method to implement custom use end behavior.
@@ -292,7 +306,7 @@ namespace Shababeek.Interactions
         {
             var handID = (int)hand;
             var valid = (int)interactionHand;
-            var useableHand= (valid & handID ) != 0;
+            var useableHand = (valid & handID) != 0;
             return useableHand && enabled;
         }
 
@@ -325,17 +339,17 @@ namespace Shababeek.Interactions
                 UseEnded();
             }
         }
-        
+
         protected virtual void Reset()
         {
             ValidateAndCreateHierarchy();
         }
-        
+
         protected virtual void OnValidate()
         {
             ValidateAndCreateHierarchy();
         }
-        
+
         /// <summary>
         /// Override this method in derived classes for custom initialization logic.
         /// </summary>
@@ -343,7 +357,7 @@ namespace Shababeek.Interactions
         {
             // Override in derived classes
         }
-        
+
         public void ValidateAndCreateHierarchy()
         {
             ValidateScaleCompensator();
@@ -356,9 +370,9 @@ namespace Shababeek.Interactions
             {
                 return; // Already valid
             }
-            
+
             var existing = transform.Find("ScaleCompensator");
-            
+
             if (existing != null)
             {
                 if (existing.parent == transform)
@@ -370,25 +384,25 @@ namespace Shababeek.Interactions
             }
             CreateScaleCompensator();
         }
-        
+
         protected void CreateScaleCompensator()
         {
             _scaleCompensator = new GameObject("ScaleCompensator").transform;
             _scaleCompensator.SetParent(transform, false);
             _scaleCompensator.localPosition = Vector3.zero;
             _scaleCompensator.localRotation = Quaternion.identity;
-            
+
             UpdateScaleCompensatorScale();
         }
         protected void UpdateScaleCompensatorScale()
         {
             if (!_scaleCompensator) return;
-            
+
             if (transform.parent)
             {
                 var parentScale = transform.parent.lossyScale;
-                if (Mathf.Approximately(parentScale.x, 0f) || 
-                    Mathf.Approximately(parentScale.y, 0f) || 
+                if (Mathf.Approximately(parentScale.x, 0f) ||
+                    Mathf.Approximately(parentScale.y, 0f) ||
                     Mathf.Approximately(parentScale.z, 0f))
                 {
                     Debug.LogWarning($"Parent of {gameObject.name} has zero scale. Scale compensator created but not compensating.", this);
@@ -412,7 +426,7 @@ namespace Shababeek.Interactions
             var existing = _scaleCompensator.Find("interactableObject");
             if (existing != null)
             {
-                return; 
+                return;
             }
             var wrongLocation = transform.Find("interactableObject");
             if (wrongLocation != null)
@@ -421,10 +435,10 @@ namespace Shababeek.Interactions
                 wrongLocation.SetParent(_scaleCompensator, true);
                 return;
             }
-            
+
             CreateInteractableObject();
         }
-        
+
         protected virtual void CreateInteractableObject()
         {
             var interactableObject = new GameObject("interactableObject").transform;
@@ -433,7 +447,7 @@ namespace Shababeek.Interactions
             interactableObject.localRotation = Quaternion.identity;
             interactableObject.localScale = Vector3.one;
         }
-        
+
         protected virtual void OnDestroy()
         {
             if (_scaleCompensator)
@@ -445,6 +459,6 @@ namespace Shababeek.Interactions
                 }
             }
         }
-        
+
     }
 }

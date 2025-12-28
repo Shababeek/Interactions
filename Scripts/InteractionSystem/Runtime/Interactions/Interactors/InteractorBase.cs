@@ -115,6 +115,10 @@ namespace Shababeek.Interactions
 
         protected virtual void EndHover()
         {
+            if (currentInteractable==null)
+            {
+                return;
+            }
             if (currentInteractable && currentInteractable.CurrentState != InteractionState.Hovering) return;
             try
             {
@@ -142,8 +146,7 @@ namespace Shababeek.Interactions
             catch (Exception e)
             {
                 Debug.LogError($"Error during selection on {currentInteractable.name}: {e.Message}", currentInteractable);
-                currentInteractable = null;
-                return;
+               
             }
             isInteracting = true;
             

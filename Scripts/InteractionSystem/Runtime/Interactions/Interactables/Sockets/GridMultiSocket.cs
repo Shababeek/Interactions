@@ -33,7 +33,10 @@ namespace Shababeek.Interactions
         {
             CreateGridPivots();
         }
-
+        public int SocketsCount()
+        {
+            return gridSize.x * gridSize.y;
+        }
         private void CreateGridPivots()
         {
             _gridPivots.Clear();
@@ -121,7 +124,7 @@ namespace Shababeek.Interactions
             return _occupiedSlots.Count < _gridPivots.Count;
         }
 
-        private Transform FindClosestAvailableSlot(Vector3 worldPosition)
+        public Transform FindClosestAvailableSlot(Vector3 worldPosition)
         {
             Transform closestPivot = null;
             float closestDistance = float.MaxValue;

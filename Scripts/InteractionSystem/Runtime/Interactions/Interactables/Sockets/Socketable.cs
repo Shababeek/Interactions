@@ -123,6 +123,20 @@ namespace Shababeek.Interactions
                 .Subscribe().AddTo(this);
         }
 
+        public bool Insert(AbstractSocket socket)
+        {
+            if (!socket.CanSocket())
+            {
+                return false;
+            }
+            this.socket = socket;
+            var t = socket.Insert(this);
+            IsSocketed = true;
+            onSocketed.Invoke(socket);
+            _lastSocket = t;
+            LerpToPosition(t);
+            return true;
+        }
         private void Update()
         {
             DetectSockets();

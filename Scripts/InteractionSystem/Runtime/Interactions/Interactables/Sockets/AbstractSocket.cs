@@ -93,11 +93,11 @@ namespace Shababeek.Interactions
         /// </summary>
         /// <param name="socketable"> the socketable to insert</param>
         /// <returns>true if socketed false otherwise</returns>
-        public virtual bool Socket(Socketable socketable)
+        public virtual Transform Socket(Socketable socketable)
         {
-            if (!CanSocket()) return false;
-            Insert(socketable);
-            return true;
+            if (!CanSocket()) return null;
+            var t =Insert(socketable);
+            return t;
         }
     }
 }
