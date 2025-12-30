@@ -150,6 +150,17 @@ namespace Shababeek.Utilities
         {
             return Value;
         }
+
+
+        public void Reset(T value)
+        {
+            this.value = value;
+        }
+
+        public void Reset()
+        {
+            this.value = default;
+        }
     }
 
     /// <summary>

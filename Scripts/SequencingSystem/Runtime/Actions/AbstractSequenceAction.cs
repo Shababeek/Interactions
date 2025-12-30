@@ -33,7 +33,7 @@ namespace Shababeek.Sequencing
 
         private void OnDisable()
         {
-            Disposable.Dispose();
+            Disposable?.Dispose();
         }
 
         private void ChangeStatus(SequenceStatus status)
