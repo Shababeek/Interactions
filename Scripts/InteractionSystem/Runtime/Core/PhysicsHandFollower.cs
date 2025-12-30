@@ -147,16 +147,7 @@ namespace Shababeek.Interactions.Core
             Vector3 angularVelocity = axis * (angle * Mathf.Deg2Rad * rotationStrength * Time.fixedDeltaTime);
             _rigidbody.angularVelocity = Vector3.ClampMagnitude(angularVelocity, maxAngularVelocity);
         }
-
-        private void OnCollisionEnter(Collision collision)
-        {
-            _hasCollision = true;
-        }
-
-        private void OnCollisionExit(Collision collision)
-        {
-            _hasCollision = false;
-        }
+        
 
         private void Teleport()
         {
