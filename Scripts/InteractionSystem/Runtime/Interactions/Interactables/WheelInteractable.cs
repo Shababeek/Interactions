@@ -23,8 +23,6 @@ namespace Shababeek.Interactions
         [Header("Wheel Behavior")]
         [Tooltip("Return to starting position when deselected.")]
         [SerializeField] private bool returnToStart = false;
-        [Tooltip("Speed of return animation (degrees per second).")]
-        [SerializeField] private float returnSpeed = 90f;
         
         [Header("Events")]
         [Tooltip("Event raised when the wheel rotates (provides current angle).")]

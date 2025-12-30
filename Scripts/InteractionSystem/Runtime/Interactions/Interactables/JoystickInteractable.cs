@@ -43,9 +43,7 @@ namespace Shababeek.Interactions
         [Header("Return Behavior")]
         [Tooltip("Whether the turret should return to its original rotation when deselected.")]
         [SerializeField] private bool returnToOriginal = false;
-        [Tooltip("Speed at which the turret returns to its original rotation.")]
-        [SerializeField, Range(1f, 20f)] private float returnSpeed = 5f;
-
+ 
         [Header("Events")]
         [Tooltip("Event raised when the turret's rotation changes (provides current X,Z rotation in degrees).")]
         [SerializeField] private Vector2UnityEvent onRotationChanged = new();
@@ -104,7 +102,6 @@ namespace Shababeek.Interactions
         }
         
         public bool ReturnToOriginal => returnToOriginal;
-        public float ReturnSpeed => returnSpeed;
 
         private void Start()
         {
