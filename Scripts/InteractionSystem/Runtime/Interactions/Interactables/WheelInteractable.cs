@@ -242,9 +242,7 @@ namespace Shababeek.Interactions
         {
         }
         
-        /// <summary>
-        /// Validates the wheel configuration in the editor.
-        /// </summary>
+
         private void OnValidate()
         {
             // Ensure return speed is positive
@@ -254,20 +252,14 @@ namespace Shababeek.Interactions
             }
         }
 
-        #if UNITY_EDITOR
-        /// <summary>
-        /// Draws gizmos in the scene view to visualize wheel configuration.
-        /// </summary>
+
         private void OnDrawGizmos()
         {
             if (interactableObject == null) return;
             
             DrawWheelVisualization();
         }
-        
-        /// <summary>
-        /// Draws selected gizmos with more detail when the object is selected.
-        /// </summary>
+
         private void OnDrawGizmosSelected()
         {
             if (interactableObject == null) return;
@@ -275,10 +267,6 @@ namespace Shababeek.Interactions
             DrawWheelVisualization(true);
         }
         
-        /// <summary>
-        /// Draws the wheel visualization gizmos.
-        /// </summary>
-        /// <param name="selected">Whether the object is selected (for more detailed visualization).</param>
         private void DrawWheelVisualization(bool selected = false)
         {
             var position = interactableObject.transform.position;
@@ -304,8 +292,5 @@ namespace Shababeek.Interactions
                 Gizmos.DrawRay(position, currentDir * 0.7f);
             }
         }
-        
-        // Rotation limits visualization intentionally removed (limits are disabled for now)
-        #endif
     }
 } 

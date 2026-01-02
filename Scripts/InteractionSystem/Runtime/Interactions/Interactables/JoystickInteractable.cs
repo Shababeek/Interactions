@@ -321,9 +321,7 @@ namespace Shababeek.Interactions
         }
 
         #if UNITY_EDITOR
-        /// <summary>
-        /// Draws gizmos in the scene view to visualize turret configuration.
-        /// </summary>
+ 
         private void OnDrawGizmos()
         {
             if (interactableObject == null) return;
@@ -331,9 +329,6 @@ namespace Shababeek.Interactions
             DrawTurretVisualization();
         }
         
-        /// <summary>
-        /// Draws selected gizmos with more detail when the object is selected.
-        /// </summary>
         private void OnDrawGizmosSelected()
         {
             if (interactableObject == null) return;
@@ -342,21 +337,15 @@ namespace Shababeek.Interactions
             DrawRotationLimits();
         }
         
-        /// <summary>
-        /// Draws the turret visualization gizmos.
-        /// </summary>
-        /// <param name="selected">Whether the object is selected (for more detailed visualization).</param>
+
         private void DrawTurretVisualization(bool selected = false)
         {
             var position = interactableObject.transform.position;
             
-            // Draw center point
             Gizmos.color = selected ? Color.yellow : new Color(1f, 1f, 0f, 0.5f);
             Gizmos.DrawWireSphere(position, 0.02f);
             
-            // Dead zone visualization removed
             
-            // Draw current rotation indicator
             if (Application.isPlaying)
             {
                 var forward = interactableObject.transform.forward;
@@ -365,15 +354,11 @@ namespace Shababeek.Interactions
             }
         }
         
-        /// <summary>
-        /// Draws the rotation limits visualization.
-        /// </summary>
         private void DrawRotationLimits()
         {
             var position = interactableObject.transform.position;
             float radius = 0.5f;
             
-            // Draw X rotation limits (pitch)
             if (limitXRotation)
             {
                 Gizmos.color = Color.red;
@@ -385,7 +370,6 @@ namespace Shababeek.Interactions
                 Gizmos.DrawRay(position, maxDirX * radius);
             }
             
-            // Draw Z rotation limits (roll)
             if (limitZRotation)
             {
                 Gizmos.color = Color.blue;

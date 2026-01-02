@@ -60,7 +60,6 @@ namespace Shababeek.Interactions
 
         private Vector3 _lastPosition;
         private const float LimitEpsilon = 0.05f;
-        private Vector3 _targetPosition;
         private Vector3 _originalPosition;
         private float _returnTimer;
         private static float _normalizedDistance;
