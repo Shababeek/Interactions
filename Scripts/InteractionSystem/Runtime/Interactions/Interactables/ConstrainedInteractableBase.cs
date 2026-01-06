@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using Shababeek.Interactions.Core;
 using Shababeek.Interactions.Animations.Constraints;
@@ -269,5 +270,32 @@ namespace Shababeek.Interactions
         /// Called when the interactable is deselected to handle cleanup.
         /// </summary>
         protected abstract void HandleObjectDeselection();
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+            if (returnWhenDeselected)
+            {
+                ReturnWhenDisabled();
+            }
+        }
+
+        private async void ReturnWhenDisabled()
+        {
+            try
+            {
+                IsReturning = true;
+                await Awaitable.NextFrameAsync();
+
+                while (!enabled)
+                {
+                    await Awaitable.NextFrameAsync();
+                    HandleReturnToOriginalPosition();
+                }
+            }
+            catch (Exception e)
+            {
+                throw; // TODO handle exception
+            }
+        }
     }
 }
