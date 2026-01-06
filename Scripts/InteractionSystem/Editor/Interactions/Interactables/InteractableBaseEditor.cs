@@ -1,13 +1,9 @@
 using UnityEngine;
 using UnityEditor;
-using Shababeek.Interactions;
 
 namespace Shababeek.Interactions.Editors
 {
-    /// <summary>
-    /// Base editor class for all interactable objects.
-    /// Provides common functionality for displaying interaction settings, events, and debug information.
-    /// </summary>
+
     public abstract class InteractableBaseEditor : Editor
     {
         // Common serialized properties for all interactables

@@ -19,13 +19,7 @@ namespace Shababeek.Interactions
     /// <summary>
     /// Base class for all interactable objects in the interaction system.
     /// Provides the foundation for hover, selection, and activation interactions.
-    /// Derived classes must implement the abstract interaction methods.
     /// </summary>
-    /// <remarks>
-    /// This class handles the core interaction logic including state management,
-    /// event dispatching, and hand validation. Inherit from this class to create
-    /// custom interactable objects with specific interaction behaviors.
-    /// </remarks>
     public abstract class InteractableBase : MonoBehaviour
     {
         //TODO: Replace abstract methods with event subscriptions
@@ -89,25 +83,21 @@ namespace Shababeek.Interactions
         /// <summary>
         /// Indicates whether this interactable is currently selected by an interactor.
         /// </summary>
-        /// <value>True if the interactable is selected, false otherwise.</value>
         public bool IsSelected => isSelected;
 
         /// <summary>
         /// Observable that fires when this interactable is selected by an interactor.
         /// </summary>
-        /// <value>An observable that emits the interactor that selected this object.</value>
         public IObservable<InteractorBase> OnSelected => onSelected.AsObservable();
 
         /// <summary>
         /// Observable that fires when this interactable is deselected by an interactor.
         /// </summary>
-        /// <value>An observable that emits the interactor that deselected this object.</value>
         public IObservable<InteractorBase> OnDeselected => onDeselected.AsObservable();
 
         /// <summary>
         /// Observable that fires when an interactor starts hovering over this interactable.
         /// </summary>
-        /// <value>An observable that emits the interactor that started hovering.</value>
         public IObservable<InteractorBase> OnHoverStarted => onHoverStart.AsObservable();
 
         /// <summary>
@@ -457,6 +447,14 @@ namespace Shababeek.Interactions
                 {
                     DestroyImmediate(_scaleCompensator.gameObject);
                 }
+            }
+        }
+
+        protected virtual void OnDisable()
+        {
+            if (currentState == InteractionState.Selected || currentState == InteractionState.Hovering)
+            {
+                currentInteractor.Release(this);
             }
         }
 

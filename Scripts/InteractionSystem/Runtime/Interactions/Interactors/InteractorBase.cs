@@ -256,7 +256,19 @@ namespace Shababeek.Interactions
             DisposeHoverSubscription();
             DisposeActivationSubscription();
         }
-        
+
+        public void Release(InteractableBase interactableBase)
+        {
+            if(currentInteractable!=interactableBase) return;
+            if (isInteracting)
+            {
+                DeSelect();
+            }
+            else
+            {
+                EndHover();
+            }
+        }
     }
     [System.Serializable]
     public class InteractorUnityEvent : UnityEvent<InteractorBase> { }
