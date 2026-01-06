@@ -211,13 +211,6 @@ namespace Shababeek.Interactions
             return Mathf.Abs(direction.y) > Mathf.Abs(direction.z) ? 1 : 2;
         }
 
-
-        protected override void DeSelected()
-        {
-            base.DeSelected();
-            HandleObjectDeselection();
-        }
-
         private void UpdateValue(Vector3 position)
         {
             // Calculate normalized value (0-1) based on position
