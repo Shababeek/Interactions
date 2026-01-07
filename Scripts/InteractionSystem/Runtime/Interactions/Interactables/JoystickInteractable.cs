@@ -117,8 +117,7 @@ namespace Shababeek.Interactions
             if (CurrentInteractor == null) return;
             var pivot = interactableObject.transform;
 
-            var plane= GetProjectiuonPlane(pivot);
-            var angle = CalculateAngle(handWorldPosition, pivot, plane.center,plane.normal);
+            var angle = CalculateAngle(handWorldPosition, pivot);
             angle = ClampAngles(angle);
             currentRotation = angle;
             ApplyRotationToTransform();
@@ -131,17 +130,16 @@ namespace Shababeek.Interactions
             return angle;
         }
 
-        private Vector2 CalculateAngle(Vector3 handWorldPosition, Transform pivot, Vector3 planeCenter, Vector3 planeNormal)
+        private Vector2 CalculateAngle(Vector3 handWorldPosition, Transform pivot)
         {
             Vector3 localOffset;
-            
             if (projectionMethod == JoystickProjectionMethod.DirectionProjection)
             {
-                localOffset = CalculateAngleDirectionProjection(handWorldPosition, pivot, planeCenter, planeNormal);
+                localOffset = CalculateAngleDirectionProjection(handWorldPosition, pivot);
             }
             else
             {
-                localOffset = CalculateAnglePlaneIntersection(handWorldPosition, pivot, planeCenter, planeNormal);
+                localOffset = CalculateAnglePlaneIntersection(handWorldPosition, pivot);
             }
 
             Vector2 angle;
@@ -150,31 +148,25 @@ namespace Shababeek.Interactions
             return angle;
         }
 
-        private Vector3 CalculateAngleDirectionProjection(Vector3 handWorldPosition, Transform pivot, Vector3 planeCenter, Vector3 planeNormal)
+        private Vector3 CalculateAngleDirectionProjection(Vector3 handWorldPosition, Transform pivot)
         {
             var direction = handWorldPosition - pivot.position;
-            direction=transform.InverseTransformDirection(direction);
-            return  Vector3.ProjectOnPlane(direction, planeNormal);
+            direction = transform.InverseTransformDirection(direction);
+            return  Vector3.ProjectOnPlane(direction, Vector3.up);
         }
 
-        private Vector3 CalculateAnglePlaneIntersection(Vector3 handWorldPosition, Transform pivot, Vector3 planeCenter, Vector3 planeNormal)
+        private Vector3 CalculateAnglePlaneIntersection(Vector3 handWorldPosition, Transform pivot)
         {
-            // Find where hand would intersect the plane if moved perpendicular to it
-            Vector3 handToPlaneCenter = handWorldPosition - planeCenter;
-            float distanceToPlane = Vector3.Dot(handToPlaneCenter, planeNormal);
-            Vector3 projectedHandPosition = handWorldPosition - planeNormal * distanceToPlane;
-            
-            // Get offset from plane center in local space
-            Vector3 offsetFromCenter = projectedHandPosition - planeCenter;
-            return pivot.InverseTransformDirection(offsetFromCenter);
-        }
+            Vector3 handLocal = transform.InverseTransformPoint(handWorldPosition);
+            float scale = projectionPlaneHeight / Mathf.Max(0.01f, handLocal.y);
 
-        private (Vector3 center, Vector3 normal) GetProjectiuonPlane(Transform pivot)
-        {
-            var planeCenter = Vector3.up * projectionPlaneHeight;
-            var planeNormal = Vector3.up;
-            return (planeCenter, planeNormal);
+            return new Vector3(
+                handLocal.x * scale,
+                0,
+                handLocal.z * scale
+            );
         }
+        
 
         private float CalculateAngleFromOffset(float offset, float height)
         {
