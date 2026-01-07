@@ -20,9 +20,8 @@ namespace Shababeek.Interactions
     {
         [Header("Joystick Settings")]
         [Tooltip("should be where the height at which the hand will hold the object")]
-        [SerializeField] private float projectionPlaneHeight = 0.5f;
+        [SerializeField] private float projectionPlaneHeight = 0.3f;
         
-        [Tooltip("DirectionProjection: Hand height doesn't affect angle (arcade stick feel)\nPlaneIntersection: Hand height affects angle (realistic joystick feel)")]
         [SerializeField] private JoystickProjectionMethod projectionMethod = JoystickProjectionMethod.DirectionProjection;
         
         [Header("Rotation Limits")]
@@ -227,7 +226,10 @@ namespace Shababeek.Interactions
         
         private void InvokeEvents()
         {
-            onRotationChanged?.Invoke(currentRotation);
+            var normalizedAngle = currentRotation;
+            normalizedAngle.x /= Mathf.Abs(xRotationRange.x - xRotationRange.y);
+            normalizedAngle.y /= Mathf.Abs(xRotationRange.x - xRotationRange.y);
+            onRotationChanged?.Invoke(normalizedAngle);
         }
 
 
