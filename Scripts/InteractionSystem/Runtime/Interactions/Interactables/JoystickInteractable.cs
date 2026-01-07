@@ -171,7 +171,7 @@ namespace Shababeek.Interactions
 
         private (Vector3 center, Vector3 normal) GetProjectiuonPlane(Transform pivot)
         {
-            var planeCenter = pivot.position + transform.up * projectionPlaneHeight;
+            var planeCenter = Vector3.up * projectionPlaneHeight;
             var planeNormal = Vector3.up;
             return (planeCenter, planeNormal);
         }

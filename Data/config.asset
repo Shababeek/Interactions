@@ -43,6 +43,6 @@ MonoBehaviour:
     positionDeadzone: 0.001
     rotationDeadzone: 0.5
     teleportDistance: 1
-    respectCollisions: 1
+    respectCollisions: 0
   leftHandInputProvider: {fileID: 0}
   rightHandInputProvider: {fileID: 0}
