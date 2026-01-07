@@ -6,6 +6,12 @@ using UniRx;
 
 namespace Shababeek.Interactions
 {
+    public enum JoystickProjectionMethod
+    {
+        DirectionProjection,
+        PlaneIntersection
+    }
+    
     /// <summary>
     /// Joystick-style interactable that allows constrained rotation around X (pitch) and Z (yaw) axes.
     /// Uses plane projection for natural, intuitive joystick control with configurable angle limits.
@@ -15,6 +21,9 @@ namespace Shababeek.Interactions
         [Header("Joystick Settings")]
         [Tooltip("should be where the height at which the hand will hold the object")]
         [SerializeField] private float projectionPlaneHeight = 0.5f;
+        
+        [Tooltip("DirectionProjection: Hand height doesn't affect angle (arcade stick feel)\nPlaneIntersection: Hand height affects angle (realistic joystick feel)")]
+        [SerializeField] private JoystickProjectionMethod projectionMethod = JoystickProjectionMethod.DirectionProjection;
         
         [Header("Rotation Limits")]
         [SerializeField] private Vector2 xRotationRange = new Vector2(-45f, 45f);
@@ -31,12 +40,18 @@ namespace Shababeek.Interactions
         private const float MaxAngleLimit = 85f;
 
 
+        /// <summary>
+        /// Observable that fires when the joystick's rotation changes.
+        /// </summary>
         public IObservable<Vector2> OnRotationChanged => onRotationChanged.AsObservable();
         
         public Vector2 CurrentRotation => currentRotation;
         
         public Vector2 NormalizedRotation => normalizedRotation;
         
+        /// <summary>
+        /// X-axis rotation range (pitch). x=min, y=max. Clamped to ±85°.
+        /// </summary>
         public Vector2 XRotationRange
         {
             get => xRotationRange;
@@ -49,6 +64,9 @@ namespace Shababeek.Interactions
             }
         }
         
+        /// <summary>
+        /// Z-axis rotation range (yaw). x=min, y=max. Clamped to ±85°.
+        /// </summary>
         public Vector2 ZRotationRange
         {
             get => zRotationRange;
@@ -65,6 +83,12 @@ namespace Shababeek.Interactions
         {
             get => projectionPlaneHeight;
             set => projectionPlaneHeight = Mathf.Max(0.01f, value);
+        }
+        
+        public JoystickProjectionMethod ProjectionMethod
+        {
+            get => projectionMethod;
+            set => projectionMethod = value;
         }
         
         private void Start()
@@ -109,22 +133,46 @@ namespace Shababeek.Interactions
 
         private Vector2 CalculateAngle(Vector3 handWorldPosition, Transform pivot, Vector3 planeCenter, Vector3 planeNormal)
         {
-            var direction = handWorldPosition - pivot.position;
-            direction -= planeCenter;
-            var projectedAngle = Vector3.ProjectOnPlane(direction, planeNormal);
+            Vector3 localOffset;
+            
+            if (projectionMethod == JoystickProjectionMethod.DirectionProjection)
+            {
+                localOffset = CalculateAngleDirectionProjection(handWorldPosition, pivot, planeCenter, planeNormal);
+            }
+            else
+            {
+                localOffset = CalculateAnglePlaneIntersection(handWorldPosition, pivot, planeCenter, planeNormal);
+            }
 
             Vector2 angle;
-            angle.x = CalculateAngleFromOffset(projectedAngle.z, projectionPlaneHeight);
-            angle.y = CalculateAngleFromOffset(-projectedAngle.x, projectionPlaneHeight);
+            angle.x = CalculateAngleFromOffset(localOffset.z, projectionPlaneHeight);
+            angle.y = CalculateAngleFromOffset(-localOffset.x, projectionPlaneHeight);
             return angle;
+        }
+
+        private Vector3 CalculateAngleDirectionProjection(Vector3 handWorldPosition, Transform pivot, Vector3 planeCenter, Vector3 planeNormal)
+        {
+            var direction = handWorldPosition - pivot.position;
+            direction=transform.InverseTransformDirection(direction);
+            return  Vector3.ProjectOnPlane(direction, planeNormal);
+        }
+
+        private Vector3 CalculateAnglePlaneIntersection(Vector3 handWorldPosition, Transform pivot, Vector3 planeCenter, Vector3 planeNormal)
+        {
+            // Find where hand would intersect the plane if moved perpendicular to it
+            Vector3 handToPlaneCenter = handWorldPosition - planeCenter;
+            float distanceToPlane = Vector3.Dot(handToPlaneCenter, planeNormal);
+            Vector3 projectedHandPosition = handWorldPosition - planeNormal * distanceToPlane;
+            
+            // Get offset from plane center in local space
+            Vector3 offsetFromCenter = projectedHandPosition - planeCenter;
+            return pivot.InverseTransformDirection(offsetFromCenter);
         }
 
         private (Vector3 center, Vector3 normal) GetProjectiuonPlane(Transform pivot)
         {
-            
             var planeCenter = pivot.position + transform.up * projectionPlaneHeight;
-            //TODO: I think it will be better if this is the fake hand position + some small value
-            var planeNormal = transform.up;
+            var planeNormal = Vector3.up;
             return (planeCenter, planeNormal);
         }
 

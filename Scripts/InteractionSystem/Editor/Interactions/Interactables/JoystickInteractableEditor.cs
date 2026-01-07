@@ -1,5 +1,6 @@
 using UnityEditor;
 using UnityEngine;
+using Shababeek.Interactions;
 
 namespace Shababeek.Interactions.Editors
 {
@@ -12,6 +13,7 @@ namespace Shababeek.Interactions.Editors
     {
         private JoystickInteractable _joystickComponent;
         private SerializedProperty _projectionPlaneHeightProp;
+        private SerializedProperty _projectionMethodProp;
         private SerializedProperty _xRotationRangeProp;
         private SerializedProperty _zRotationRangeProp;
         private SerializedProperty _onRotationChangedProp;
@@ -28,6 +30,7 @@ namespace Shababeek.Interactions.Editors
 
             _joystickComponent = (JoystickInteractable)target;
             _projectionPlaneHeightProp = serializedObject.FindProperty("projectionPlaneHeight");
+            _projectionMethodProp = serializedObject.FindProperty("projectionMethod");
             _xRotationRangeProp = serializedObject.FindProperty("xRotationRange");
             _zRotationRangeProp = serializedObject.FindProperty("zRotationRange");
             _onRotationChangedProp = serializedObject.FindProperty("onRotationChanged");
@@ -53,6 +56,19 @@ namespace Shababeek.Interactions.Editors
             {
                 EditorGUILayout.PropertyField(_projectionPlaneHeightProp, 
                     new GUIContent("Projection Plane Height", "Height of the projection plane above the joystick base"));
+            }
+            
+            if (_projectionMethodProp != null)
+            {
+                EditorGUILayout.PropertyField(_projectionMethodProp, 
+                    new GUIContent("Projection Method", "How hand position is projected onto the control plane"));
+                
+                // Show helpful description based on selection
+                var method = (JoystickProjectionMethod)_projectionMethodProp.enumValueIndex;
+                string helpText = method == JoystickProjectionMethod.DirectionProjection
+                    ? "Direction Projection: Only horizontal hand movement affects angle (arcade stick feel)"
+                    : "Plane Intersection: Hand height also affects angle (realistic joystick feel)";
+                EditorGUILayout.HelpBox(helpText, MessageType.Info);
             }
             
             EditorGUILayout.Space();
