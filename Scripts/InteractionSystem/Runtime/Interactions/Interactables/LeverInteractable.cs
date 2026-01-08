@@ -5,170 +5,202 @@ using UniRx;
 
 namespace Shababeek.Interactions
 {
-    /// <summary>
-    /// Defines the axis around which a lever rotates.
-    /// </summary>
     public enum RotationAxis
     {
         Right,
         Up,
         Forward
     }
-
     /// <summary>
     /// Lever-style interactable that rotates around a single axis with configurable limits.
     /// Provides smooth rotation control and normalized output values.
     /// </summary>
-    [Serializable]
     public class LeverInteractable : ConstrainedInteractableBase
     {
-        [Tooltip("Minimum rotation angle in degrees. Must be negative.")]
-        [SerializeField, MinMax(-180, -1)] private float min = -40;
-        [Tooltip("Maximum rotation angle in degrees. Must be positive.")]
-        [SerializeField, MinMax(1, 180)] private float max = 40;
-        [Tooltip("The axis around which the lever rotates.")]
         [SerializeField] public RotationAxis rotationAxis = RotationAxis.Right;
-        [Tooltip("Event raised when the lever's normalized position changes (0-1 range).")]
-        [SerializeField] private FloatUnityEvent onLeverChanged = new();
-        [Tooltip("Whether the lever should return to its original position when deselected.")]
-        [SerializeField] private bool returnToOriginal;
-
-        [Tooltip("Current normalized rotation angle (0-1 range) (read-only).")]
-        [ReadOnly] [SerializeField] private float currentNormalizedAngle = 0;
-        private float _oldNormalizedAngle = 0;
-        private Quaternion _originalRotation;
+        [Tooltip("Rotation angle range in degrees (min, max)")]
+        [SerializeField] private Vector2 angleRange = new Vector2(-40f, 40f);
         
-        private Vector3 _axisWorld;
-        private Vector3 _referenceNormalWorld;
-        private Vector3 _previousTargetPosition;
-        private const float ProjectedEpsilon = 1e-5f;
+        [Tooltip("Reference distance for angle calculation (affects sensitivity) should be around the same height as the grab point")]
+        [SerializeField] private float projectionDistance = 0.3f;
+        [SerializeField] private FloatUnityEvent onLeverChanged = new();
+
+        [Header("Debug")]
+        [ReadOnly, SerializeField] private float currentAngle = 0f;
+        [ReadOnly, SerializeField] private float currentNormalizedAngle = 0f;
+
+        private Quaternion _originalRotation;
+        private float _returnTimer;
 
         /// <summary>
         /// Observable that fires when the lever's normalized position changes.
         /// </summary>
         public IObservable<float> OnLeverChanged => onLeverChanged.AsObservable();
-
-        /// <summary>
-        /// Gets or sets the minimum rotation angle in degrees.
-        /// </summary>
-        public float Min
+        public float CurrentAngle => currentAngle;
+        public float CurrentNormalizedAngle => currentNormalizedAngle;
+        public Vector2 AngleRange
         {
-            get => min;
-            set => min = value;
-        }
-
-        /// <summary>
-        /// Gets or sets the maximum rotation angle in degrees.
-        /// </summary>
-        public float Max
-        {
-            get => max;
-            set => max = value;
+            get => angleRange;
+            set =>
+                angleRange = new Vector2(
+                    Mathf.Clamp(value.x, -180f, value.y - 1f),
+                    Mathf.Clamp(value.y, value.x + 1f, 180f)
+                );
         }
 
         private void Start()
         {
-            // Cache the original local rotation of the interactable pivot
-            _originalRotation = interactableObject != null
-                ? interactableObject.transform.localRotation
-                : Quaternion.identity;
-
-            CacheWorldRotationBasis();
-
-            OnDeselected
-                .Where(_ => returnToOriginal)
-                .Do(_ => HandleReturnToOriginalPosition())
-                .Do(_ => InvokeEvents())
-                .Subscribe().AddTo(this);
-        }
-
-        protected override void UseStarted()
-        {
-        }
-
-        protected override void StartHover()
-        {
-        }
-
-        protected override void EndHover()
-        {
+            _originalRotation = interactableObject.transform.localRotation;
+            UpdateCurrentAngleFromTransform();
         }
 
         protected override void HandleObjectMovement(Vector3 target)
         {
-            Rotate(CalculateAngle(target,_axisWorld, _referenceNormalWorld));
-            if (Vector3.Distance(target, _previousTargetPosition)>.01f)
-            {
-                _previousTargetPosition=target;
+            if (!IsSelected || IsReturning) return;
 
-                InvokeEvents();
-            } 
+            CalculateAndApplyRotation(target);
+            UpdateDebugValues();
+            InvokeEvents();
         }
-
         protected override void HandleObjectDeselection()
         {
-            if (returnToOriginal)
-            {
-                HandleReturnToOriginalPosition();
-                InvokeEvents();
-            }
+            _returnTimer = 0f; //TODO: Snap to nearest step if stepped movement is implemented
+        }
+        private void CalculateAndApplyRotation(Vector3 handWorldPosition)
+        {
+            Transform pivot = interactableObject.transform;
+            
+            Vector3 direction = handWorldPosition - pivot.position;
+            direction = transform.InverseTransformDirection(direction);
+
+            var (axisNormal, tangent) = GetAxisVectors();
+
+            Vector3 projected = Vector3.ProjectOnPlane(direction, axisNormal);
+
+            var v = Vector3.Dot(projected, tangent);
+            var targetAngle = Mathf.Atan2(v, projectionDistance) * Mathf.Rad2Deg;
+
+            targetAngle = Mathf.Clamp(targetAngle, angleRange.x, angleRange.y);
+
+            currentAngle = targetAngle;
+            ApplyRotationToTransform();
         }
 
- 
-
-        private void Rotate(float x)
+        private (Vector3 axis, Vector3 tangentV) GetAxisVectors()
         {
-            var angle = LimitAngle(x, min, max);
-            Vector3 localAxis = rotationAxis switch
+            return rotationAxis switch
+            {
+                RotationAxis.Right => (Vector3.right, Vector3.forward),
+                RotationAxis.Up => (Vector3.up, Vector3.right),
+                RotationAxis.Forward => (Vector3.forward, Vector3.left),
+                _ => (Vector3.forward, Vector3.right)
+            };
+        }
+
+        private Vector3 GetLocalAxis()
+        {
+            return rotationAxis switch
             {
                 RotationAxis.Right => Vector3.right,
                 RotationAxis.Up => Vector3.up,
                 RotationAxis.Forward => Vector3.forward,
                 _ => Vector3.right
             };
+        }
 
-            var relative = Quaternion.AngleAxis(angle, localAxis);
+        private void ApplyRotationToTransform()
+        {
+            var localAxis = GetLocalAxis();
+            var relative = Quaternion.AngleAxis(currentAngle, localAxis);
             interactableObject.transform.localRotation = _originalRotation * relative;
-            currentNormalizedAngle = (angle - min) / (max - min);
+        }
+
+        private void UpdateCurrentAngleFromTransform()
+        {
+            // Extract current angle from transform
+            Vector3 eulerAngles = interactableObject.transform.localRotation.eulerAngles;
+            
+            float angle = rotationAxis switch
+            {
+                RotationAxis.Right => eulerAngles.x,
+                RotationAxis.Up => eulerAngles.y,
+                RotationAxis.Forward => eulerAngles.z,
+                _ => eulerAngles.x
+            };
+
+            currentAngle = NormalizeAngle(angle);
+        }
+
+        private void UpdateDebugValues()
+        {
+            currentNormalizedAngle = Mathf.InverseLerp(angleRange.x, angleRange.y, currentAngle);
         }
 
         protected override void HandleReturnToOriginalPosition()
         {
-            interactableObject.transform.localRotation = _originalRotation;
-            currentNormalizedAngle = 0;
-            _oldNormalizedAngle = 0;
+            _returnTimer += Time.deltaTime * returnSpeed;
+            var localRotation = interactableObject.transform.localRotation;
+            localRotation = Quaternion.Lerp(localRotation, _originalRotation, _returnTimer);
+            interactableObject.transform.localRotation = localRotation;
+
+            UpdateCurrentAngleFromTransform();
+            UpdateDebugValues();
+            InvokeEvents();
+
+            if (Quaternion.Angle(interactableObject.transform.localRotation, _originalRotation) < 1f)
+            {
+                IsReturning = false;
+                interactableObject.transform.localRotation = _originalRotation;
+                UpdateCurrentAngleFromTransform();
+            }
+        }
+
+        private float NormalizeAngle(float angle)
+        {
+            while (angle > 180f) angle -= 360f;
+            while (angle < -180f) angle += 360f;
+            return angle;
         }
 
         private void InvokeEvents()
         {
-            var difference = currentNormalizedAngle - _oldNormalizedAngle;
-            var absDifference = Mathf.Abs(difference);
-            if (absDifference < .1f) return;
-            _oldNormalizedAngle = currentNormalizedAngle;
-            onLeverChanged.Invoke(currentNormalizedAngle);
-        }
-
-        private float CalculateAngle(Vector3 target,Vector3 axisWorld, Vector3 referenceNormalWorld)
-        {
-            // Direction from pivot to hand
-            var fromPivotToHand = target - interactableObject.transform.position;
-
-            // Project the vector onto the plane perpendicular to the axis
-            var projected = Vector3.ProjectOnPlane(fromPivotToHand, axisWorld);
-            if (projected.sqrMagnitude < ProjectedEpsilon)
-            {
-                // Keep previous angle when the hand is on/near the axis to avoid jitter
-                return (currentNormalizedAngle * (max - min)) + min;
-            }
-            var projectedDirection = projected.normalized;
-
-            // Signed angle from reference normal to projected direction around the axis
-            var angle = Vector3.SignedAngle(referenceNormalWorld, projectedDirection, axisWorld);
-            return angle;
+            onLeverChanged?.Invoke(currentNormalizedAngle);
         }
 
         /// <summary>
-        /// Gets the rotation axis and normal vector for the lever.
+        /// Sets the lever rotation to a specific angle in degrees.
+        /// </summary>
+        public void SetAngle(float angle)
+        {
+            currentAngle = Mathf.Clamp(angle, angleRange.x, angleRange.y);
+            ApplyRotationToTransform();
+            UpdateDebugValues();
+            InvokeEvents();
+        }
+
+        /// <summary>
+        /// Sets the lever rotation using a normalized value (0-1).
+        /// </summary>
+        public void SetNormalizedAngle(float normalizedAngle)
+        {
+            float angle = Mathf.Lerp(angleRange.x, angleRange.y, normalizedAngle);
+            SetAngle(angle);
+        }
+
+        /// <summary>
+        /// Resets the lever to its original rotation.
+        /// </summary>
+        public void ResetToOriginal()
+        {
+            interactableObject.transform.localRotation = _originalRotation;
+            UpdateCurrentAngleFromTransform();
+            IsReturning = false;
+            UpdateDebugValues();
+            InvokeEvents();
+        }
+
+        /// <summary>
+        /// Gets the rotation axis and normal vector for the lever (used by editor).
         /// </summary>
         public (Vector3 plane, Vector3 normal) GetRotationAxis()
         {
@@ -182,38 +214,62 @@ namespace Shababeek.Interactions
             };
         }
 
-        private void CacheWorldRotationBasis()
+        private void OnValidate()
         {
-            var parent = interactableObject.transform.parent;
-            var basisRotation = parent != null ? parent.rotation : Quaternion.identity;
-
-            Vector3 LocalAxis() => rotationAxis switch
+            // Ensure min < max
+            if (angleRange.x >= angleRange.y)
             {
-                RotationAxis.Right => Vector3.right,
-                RotationAxis.Up => Vector3.up,
-                RotationAxis.Forward => Vector3.forward,
-                _ => Vector3.right
-            };
+                angleRange.y = angleRange.x + 1f;
+            }
 
-            Vector3 LocalReference() => rotationAxis switch
-            {
-                RotationAxis.Right => Vector3.up,
-                RotationAxis.Up => Vector3.forward,
-                RotationAxis.Forward => Vector3.up,
-                _ => Vector3.up
-            };
+            angleRange.x = Mathf.Clamp(angleRange.x, -180f, angleRange.y - 1f);
+            angleRange.y = Mathf.Clamp(angleRange.y, angleRange.x + 1f, 180f);
 
-            _axisWorld = basisRotation * LocalAxis();
-            _referenceNormalWorld = basisRotation * LocalReference();
+            returnSpeed = Mathf.Clamp(returnSpeed, 1f, 20f);
         }
 
-        private float LimitAngle(float angle, float min, float max)
+        private void OnDrawGizmos()
         {
-            if (angle > max) angle = max;
+            if (interactableObject == null) return;
+            DrawLeverVisualization();
+        }
 
-            if (angle < min) angle = min;
+        private void OnDrawGizmosSelected()
+        {
+            if (interactableObject == null) return;
+            DrawLeverVisualization(true);
+            DrawRotationLimits();
+        }
 
-            return angle;
+        private void DrawLeverVisualization(bool selected = false)
+        {
+            var position = interactableObject.transform.position;
+
+            Gizmos.color = selected ? Color.yellow : new Color(1f, 1f, 0f, 0.5f);
+            Gizmos.DrawWireSphere(position, 0.02f);
+
+            if (Application.isPlaying)
+            {
+                var axis = GetRotationAxis().normal;
+                Gizmos.color = selected ? Color.green : new Color(0f, 1f, 0f, 0.7f);
+                Gizmos.DrawRay(position, axis * 0.3f);
+            }
+        }
+
+        private void DrawRotationLimits()
+        {
+            var position = transform.position;
+            float radius = 0.5f;
+
+            var (axis, normal) = GetRotationAxis();
+
+            Gizmos.color = Color.cyan;
+            var minRot = Quaternion.AngleAxis(angleRange.x, axis);
+            var maxRot = Quaternion.AngleAxis(angleRange.y, axis);
+            var minDir = minRot * normal;
+            var maxDir = maxRot * normal;
+            Gizmos.DrawRay(position, minDir * radius);
+            Gizmos.DrawRay(position, maxDir * radius);
         }
     }
 }

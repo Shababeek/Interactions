@@ -3,45 +3,40 @@ using UnityEngine;
 
 namespace Shababeek.Interactions.Editors
 {
+    /// <summary>
+    /// Custom editor for LeverInteractable with MinMaxSlider controls and enhanced visualization.
+    /// </summary>
     [CustomEditor(typeof(LeverInteractable))]
     [CanEditMultipleObjects]
-    public class LeverInteractableEditor : InteractableBaseEditor
+    public class LeverInteractableEditor : ConstrainedInteractableEditor
     {
-        // Editable properties
-        private SerializedProperty _returnToOriginalProp;
-        private SerializedProperty _minProp;
-        private SerializedProperty _maxProp;
+        private LeverInteractable _leverComponent;
         private SerializedProperty _rotationAxisProp;
-        private SerializedProperty _interactableObjectProp;
-        private SerializedProperty _snapDistanceProp;
-
-        // Events
+        private SerializedProperty _angleRangeProp;
+        private SerializedProperty _projectionDistanceProp;
         private SerializedProperty _onLeverChangedProp;
-
-        // Read-only
+        private SerializedProperty _currentAngleProp;
         private SerializedProperty _currentNormalizedAngleProp;
-        
+
         private static bool _editLeverRange = false;
 
         protected override void OnEnable()
         {
             base.OnEnable();
-            
-            // Find custom properties
-            _returnToOriginalProp = base.serializedObject.FindProperty("returnToOriginal");
-            _minProp = base.serializedObject.FindProperty("min");
-            _maxProp = base.serializedObject.FindProperty("max");
-            _rotationAxisProp = base.serializedObject.FindProperty("rotationAxis");
-            _interactableObjectProp = base.serializedObject.FindProperty("interactableObject");
-            _snapDistanceProp = base.serializedObject.FindProperty("_snapDistance");
-            _onLeverChangedProp = base.serializedObject.FindProperty("onLeverChanged");
-            _currentNormalizedAngleProp = base.serializedObject.FindProperty("currentNormalizedAngle");
+
+            _leverComponent = (LeverInteractable)target;
+            _rotationAxisProp = serializedObject.FindProperty("rotationAxis");
+            _angleRangeProp = serializedObject.FindProperty("angleRange");
+            _projectionDistanceProp = serializedObject.FindProperty("projectionDistance");
+            _onLeverChangedProp = serializedObject.FindProperty("onLeverChanged");
+            _currentAngleProp = serializedObject.FindProperty("currentAngle");
+            _currentNormalizedAngleProp = serializedObject.FindProperty("currentNormalizedAngle");
         }
 
         protected override void DrawCustomHeader()
         {
             EditorGUILayout.HelpBox(
-                "The LeverInteractable component creates a lever that can be pulled to different positions.",
+                "Lever-style interactable with constrained rotation around a single axis. Provides smooth rotation control with configurable limits.",
                 MessageType.Info
             );
         }
@@ -49,49 +44,111 @@ namespace Shababeek.Interactions.Editors
         protected override void DrawCustomProperties()
         {
             EditorGUILayout.LabelField("Lever Settings", EditorStyles.boldLabel);
-            
-            if (_interactableObjectProp != null)
-                EditorGUILayout.PropertyField(_interactableObjectProp, new GUIContent("Interactable Object", "The visual part of the lever object that rotates"));
-            if (_snapDistanceProp != null)
-                EditorGUILayout.PropertyField(_snapDistanceProp, new GUIContent("Snap Distance", "Distance threshold for snapping to positions"));
-            
-            EditorGUILayout.Space();
-            
+
+            base.DrawCustomProperties();
+
             if (_rotationAxisProp != null)
-                EditorGUILayout.PropertyField(_rotationAxisProp, new GUIContent("Rotation Axis", "The axis around which the lever rotates"));
-            if (_returnToOriginalProp != null)
-                EditorGUILayout.PropertyField(_returnToOriginalProp, new GUIContent("Return To Original", "Whether the lever returns to its original position when released"));
-            
-            EditorGUILayout.Space();
-            
-            EditorGUILayout.LabelField("Rotation Limits", EditorStyles.boldLabel);
-            if (_minProp != null && _maxProp != null)
             {
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.PropertyField(_minProp, new GUIContent("Min (°)"));
-                EditorGUILayout.PropertyField(_maxProp, new GUIContent("Max (°)"));
-                EditorGUILayout.EndHorizontal();
+                EditorGUILayout.PropertyField(_rotationAxisProp,
+                    new GUIContent("Rotation Axis", "The axis around which the lever rotates"));
             }
-            
-            
+
+            if (_projectionDistanceProp != null)
+            {
+                EditorGUILayout.PropertyField(_projectionDistanceProp,
+                    new GUIContent("Projection Distance", "Reference distance for angle calculation (affects sensitivity)"));
+            }
+
+            EditorGUILayout.Space();
+
+            EditorGUILayout.LabelField("Rotation Limits", EditorStyles.boldLabel);
+
+            DrawAngleRangeSlider();
+        }
+
+        protected override void DrawImportantSettings()
+        {
+            DrawEditButton();
         }
 
         protected override void DrawCustomEvents()
         {
-            if (_onLeverChangedProp != null)
-                EditorGUILayout.PropertyField(_onLeverChangedProp, new GUIContent("Current Normalized Angle", "Current lever position (0-1)"));
-        }
+            EditorGUILayout.LabelField("Lever Events", EditorStyles.boldLabel);
 
+            if (_onLeverChangedProp != null)
+            {
+                EditorGUILayout.PropertyField(_onLeverChangedProp,
+                    new GUIContent("On Lever Changed", "Event fired when lever position changes (0-1)"));
+            }
+
+            EditorGUILayout.Space();
+        }
 
         protected override void DrawCustomDebugInfo()
         {
+            EditorGUILayout.LabelField("Lever Debug", EditorStyles.boldLabel);
+
+            if (_currentAngleProp != null)
+            {
+                EditorGUI.BeginDisabledGroup(true);
+                EditorGUILayout.PropertyField(_currentAngleProp,
+                    new GUIContent("Current Angle", "Current rotation angle in degrees"));
+                EditorGUI.EndDisabledGroup();
+            }
+
             if (_currentNormalizedAngleProp != null)
-                EditorGUILayout.PropertyField(_currentNormalizedAngleProp, new GUIContent("Current Normalized Angle", "Current lever position (0-1)"));
+            {
+                EditorGUI.BeginDisabledGroup(true);
+                EditorGUILayout.PropertyField(_currentNormalizedAngleProp,
+                    new GUIContent("Normalized Angle", "Normalized rotation value (0-1)"));
+                EditorGUI.EndDisabledGroup();
+            }
+        }
+
+        private void DrawAngleRangeSlider()
+        {
+            if (_angleRangeProp == null) return;
+
+            Vector2 range = _angleRangeProp.vector2Value;
+            float minValue = range.x;
+            float maxValue = range.y;
+
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            EditorGUILayout.LabelField("Angle Range", EditorStyles.miniBoldLabel);
+
+            EditorGUILayout.BeginHorizontal();
+
+            // Min value field
+            EditorGUILayout.LabelField("Min:", GUILayout.Width(35));
+            minValue = EditorGUILayout.FloatField(minValue, GUILayout.Width(50));
+
+            // MinMaxSlider
+            EditorGUILayout.MinMaxSlider(ref minValue, ref maxValue, -180f, 180f);
+
+            // Max value field
+            EditorGUILayout.LabelField("Max:", GUILayout.Width(35));
+            maxValue = EditorGUILayout.FloatField(maxValue, GUILayout.Width(50));
+
+            EditorGUILayout.EndHorizontal();
+
+            // Display range
+            EditorGUILayout.LabelField($"Range: {minValue:F1}° to {maxValue:F1}°", EditorStyles.miniLabel);
+
+            EditorGUILayout.EndVertical();
+
+            // Apply clamping
+            minValue = Mathf.Clamp(minValue, -180f, maxValue - 1f);
+            maxValue = Mathf.Clamp(maxValue, minValue + 1f, 180f);
+
+            _angleRangeProp.vector2Value = new Vector2(minValue, maxValue);
+
+            EditorGUILayout.Space(2);
         }
 
         private void DrawEditButton()
         {
             EditorGUILayout.Space();
+
             var icon = EditorGUIUtility.IconContent(_editLeverRange ? "d_EditCollider" : "EditCollider");
             var iconButtonStyle = new GUIStyle(GUI.skin.button)
             {
@@ -99,27 +156,30 @@ namespace Shababeek.Interactions.Editors
                 fixedHeight = 24,
                 padding = new RectOffset(2, 2, 2, 2)
             };
+
             Color prevColor = GUI.color;
             if (_editLeverRange)
                 GUI.color = Color.green;
+
             if (GUILayout.Button(icon, iconButtonStyle))
                 _editLeverRange = !_editLeverRange;
+
             GUI.color = prevColor;
             EditorGUILayout.Space();
         }
 
         private void OnSceneGUI()
         {
-            var lever = (LeverInteractable)target;
-            if (lever == null || lever.InteractableObject == null) return;
-            
-            Transform t = lever.transform;
+            if (_leverComponent == null || _leverComponent.InteractableObject == null) return;
+
+            Transform t = _leverComponent.InteractableObject;
             Vector3 pivot = t.position;
-            Vector3 axis = lever.GetRotationAxis().plane;
-            Vector3 up = GetUpVector(lever);
+            var (axis, up) = _leverComponent.GetRotationAxis();
             float radius = HandleUtility.GetHandleSize(pivot) * 1.2f;
-            float minAngle = lever.Min;
-            float maxAngle = lever.Max;
+
+            Vector2 angleRange = _leverComponent.AngleRange;
+            float minAngle = angleRange.x;
+            float maxAngle = angleRange.y;
 
             // Calculate world positions for min/max
             Quaternion minRot = Quaternion.AngleAxis(minAngle, axis);
@@ -129,64 +189,53 @@ namespace Shababeek.Interactions.Editors
             Vector3 minPos = pivot + minDir * radius;
             Vector3 maxPos = pivot + maxDir * radius;
 
-            // Always draw arc for visual feedback
+            // Draw arc visualization
             Handles.color = new Color(0.3f, 0.7f, 1f, 0.2f);
             Handles.DrawSolidArc(pivot, axis, minDir, maxAngle - minAngle, radius);
             Handles.color = Color.cyan;
             Handles.DrawWireArc(pivot, axis, minDir, maxAngle - minAngle, radius);
-            Handles.Label(minPos, $"Min ({lever.Min:F1}°)");
-            Handles.Label(maxPos, $"Max ({lever.Max:F1}°)");
+            Handles.Label(minPos, $"Min ({minAngle:F1}°)");
+            Handles.Label(maxPos, $"Max ({maxAngle:F1}°)");
 
             if (!_editLeverRange) return;
-            Undo.RecordObject(lever, "Edit Lever Limits");
 
-            // Draw and move min handle (blue circle)
+            Undo.RecordObject(_leverComponent, "Edit Lever Limits");
+
+            // Min handle
             Handles.color = Handles.preselectionColor;
             EditorGUI.BeginChangeCheck();
-            Vector3 newMinPos = Handles.FreeMoveHandle(minPos, HandleUtility.GetHandleSize(minPos) * 0.08f, Vector3.zero, Handles.DotHandleCap);
+            Vector3 newMinPos = Handles.FreeMoveHandle(minPos, 
+                HandleUtility.GetHandleSize(minPos) * 0.08f, Vector3.zero, Handles.DotHandleCap);
+
             if (EditorGUI.EndChangeCheck())
             {
                 Vector3 from = up;
                 Vector3 to = (newMinPos - pivot).normalized;
                 float newMin = Vector3.SignedAngle(from, to, axis);
-                lever.Min = Mathf.Clamp(newMin, -180, lever.Max - 1f);
-                EditorUtility.SetDirty(lever);
+                angleRange.x = Mathf.Clamp(newMin, -180f, angleRange.y - 1f);
+                _angleRangeProp.vector2Value = angleRange;
+                serializedObject.ApplyModifiedProperties();
+                EditorUtility.SetDirty(_leverComponent);
             }
 
-            // Draw and move max handle (blue circle)
+            // Max handle
             Handles.color = Handles.preselectionColor;
             EditorGUI.BeginChangeCheck();
-            Vector3 newMaxPos = Handles.FreeMoveHandle(maxPos, HandleUtility.GetHandleSize(maxPos) * 0.08f, Vector3.zero, Handles.DotHandleCap);
+            Vector3 newMaxPos = Handles.FreeMoveHandle(maxPos, 
+                HandleUtility.GetHandleSize(maxPos) * 0.08f, Vector3.zero, Handles.DotHandleCap);
+
             if (EditorGUI.EndChangeCheck())
             {
                 Vector3 from = up;
                 Vector3 to = (newMaxPos - pivot).normalized;
                 float newMax = Vector3.SignedAngle(from, to, axis);
-                lever.Max = Mathf.Clamp(newMax, lever.Min + 1f, 180);
-                EditorUtility.SetDirty(lever);
+                angleRange.y = Mathf.Clamp(newMax, angleRange.x + 1f, 180f);
+                _angleRangeProp.vector2Value = angleRange;
+                serializedObject.ApplyModifiedProperties();
+                EditorUtility.SetDirty(_leverComponent);
             }
 
             Handles.color = Color.white;
         }
-
-        private Vector3 GetUpVector(LeverInteractable lever)
-        {
-            switch (lever.rotationAxis)
-            {
-                case RotationAxis.Right:
-                    return lever.transform.up;
-                case RotationAxis.Up:
-                    return lever.transform.forward;
-                case RotationAxis.Forward:
-                    return lever.transform.up;
-                default:
-                    return lever.transform.up;
-            }
-        }
-
-        protected override void DrawImportantSettings()
-        {
-            DrawEditButton();
-        }
     }
-} 
+}
