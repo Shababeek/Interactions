@@ -206,22 +206,23 @@ namespace Shababeek.Interactions
                 : handData.RightHandPrefab).GetComponent<Hand>();
             var fakeHand = Instantiate(handPrefab);
             var fakeHandTransform = fakeHand.transform;
-            fakeHandTransform.position = CurrentInteractor.transform.position;
-            fakeHandTransform.rotation = CurrentInteractor.transform.rotation;
-            fakeHandTransform.SetParent(ManipulationTarget, false);
+            fakeHandTransform.SetParent(InteractableObject, false);
+            fakeHandTransform.localRotation = CurrentInteractor.transform.rotation;
+            fakeHandTransform.localPosition = CurrentInteractor.transform.position;
+
             fakeHand.name = $"FakeHand_{handData.name}_{handIdentifier}";
             return fakeHand;
         }
 
-        private void PositionFakeHand(Transform fakeHand, HandIdentifier handIdentifier)
+        protected virtual void PositionFakeHand(Transform fakeHand, HandIdentifier handIdentifier)
         {
             if (!fakeHand || !_poseConstrainer) return;
 
-            var positioning = _poseConstrainer.GetRelativeTargetHandTransform(ManipulationTarget, handIdentifier);
+            var positioning = _poseConstrainer.GetTargetHandTransform(handIdentifier);
             if (_poseConstrainer.UseSmoothTransitions)
             {
-                _startPosition = ManipulationTarget.InverseTransformPoint(CurrentInteractor.transform.position);
-                _startRotation = Quaternion.Inverse(ManipulationTarget.rotation) * CurrentInteractor.transform.rotation;
+                _startPosition = interactableObject.InverseTransformPoint(CurrentInteractor.transform.position);
+                _startRotation = Quaternion.Inverse(interactableObject.rotation) * CurrentInteractor.transform.rotation;
                 _targetPosition = positioning.position;
                 _targetRotation = positioning.rotation;
                 _transitionProgress = 0f;
@@ -293,8 +294,8 @@ namespace Shababeek.Interactions
                 }
             }
             catch (Exception e)
-            {
-                throw; // TODO handle exception
+            { 
+                // TODO handle exception
             }
         }
     }

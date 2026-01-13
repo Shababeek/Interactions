@@ -102,7 +102,7 @@ namespace Shababeek.Interactions
 
             Vector3 direction = handWorldPosition - pivot.position;
             direction = transform.InverseTransformDirection(direction);
-
+            direction = direction.normalized * .5f;
             Vector3 axisNormal = GetLocalAxis();
             Vector3 referenceVector = GetReferenceVector();
 
