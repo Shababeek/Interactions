@@ -14,50 +14,37 @@ namespace Shababeek.Interactions
     [RequireComponent(typeof(VariableTweener))]
     public class Socketable : MonoBehaviour
     {
-        [Tooltip("Whether the object should return to its original parent when unsocketed.")] [SerializeField]
-        private bool shouldReturnToParent = true;
+        [Tooltip("Whether the object should return to its socket when deselected.")] [SerializeField]
+        private bool shouldReturnToLastSocket = true;
 
-        [Tooltip("Whether to use smooth animation when returning to original position.")] [SerializeField]
-        private bool useSmoothReturn = true;
+        [SerializeField] private bool useSmoothReturn = true;
+        [SerializeField] private float returnDuration = 0.5f;
+        [SerializeField] private KeyCode debugKey = KeyCode.P;
+        [SerializeField] private Transform indicator;
+        [SerializeField] private SocketEvent onSocketed;
 
-        [Tooltip("Duration of the smooth return animation in seconds.")] [SerializeField]
-        private float returnDuration = 0.5f;
-
-        [Tooltip("Keyboard key for debug socket/unsocket operations.")] [SerializeField]
-        private KeyCode debugKey = KeyCode.Space;
-
-        [Tooltip("Transform used as a visual indicator for socket position.")] [SerializeField]
-        private Transform indicator;
-
-        [Tooltip("Event raised when the object is successfully socketed.")] [SerializeField]
-        private SocketEvent onSocketed;
-
-        [Header("Socket Detection")]
-        [Tooltip("Radius of the detection sphere for finding nearby sockets.")] [SerializeField]
+        [Header("Socket Detection")] [SerializeField]
         private float detectionRadius = 0.5f;
 
-        [Tooltip("Local space offset for the detection sphere center.")] [SerializeField]
-        private Vector3 detectionOffset = Vector3.zero;
+        [SerializeField] private Vector3 detectionOffset = Vector3.zero;
 
-        [Tooltip("Layer mask for socket detection. Only objects on these layers will be detected.")] [SerializeField]
-        private LayerMask socketLayerMask = -1;
+        [SerializeField] private LayerMask socketLayerMask = -1;
 
-        [Tooltip("The currently detected socket.")] [ReadOnly] [SerializeField]
-        private AbstractSocket socket;
+        [ReadOnly] [SerializeField] private AbstractSocket socket;
 
-        [Tooltip("Indicates whether the object is currently socketed.")] [ReadOnly] [SerializeField]
-        private bool isSocketed = false;
+        [ReadOnly] [SerializeField] private bool isSocketed = false;
 
         private Transform _initialParent;
         private Vector3 _initialLocalPosition;
         private Quaternion _initialLocalRotation;
-        private Transform _lastSocket;
+        private AbstractSocket _lastSocket;
         private InteractableBase _interactable;
         private VariableTweener _tweener;
         private TransformTweenable _returnTweenable;
         private bool _isReturning = false;
         private Collider[] _overlapResults = new Collider[3];
-        public Transform LastSocket=>_lastSocket;
+        public Transform LastSocket => _lastSocket.transform;
+
         /// <summary>
         /// Gets whether the object is currently socketed.
         /// </summary>
@@ -68,7 +55,7 @@ namespace Shababeek.Interactions
             {
                 isSocketed = value;
                 if (isSocketed) return;
-                if (shouldReturnToParent)
+                if (shouldReturnToLastSocket)
                 {
                     Return();
                 }
@@ -84,6 +71,7 @@ namespace Shababeek.Interactions
         /// Gets whether the object is currently returning to its original position.
         /// </summary>
         public bool IsReturning => _isReturning;
+
         public IObservable<AbstractSocket> OnSocketedAsObservable => onSocketed.AsObservable();
 
         private void Awake()
@@ -96,7 +84,7 @@ namespace Shababeek.Interactions
                 indicator?.gameObject.SetActive(false);
             }
 
-            if (shouldReturnToParent)
+            if (shouldReturnToLastSocket)
             {
                 _initialParent = transform.parent;
                 _initialLocalPosition = transform.localPosition;
@@ -109,11 +97,11 @@ namespace Shababeek.Interactions
                 .Do(_ => IsSocketed = true)
                 .Do(_ => onSocketed.Invoke(socket))
                 .Select(_ => socket.Insert(this))
-                .Do(t => _lastSocket=t)
+                .Do(t => _lastSocket = socket)
                 .Do(LerpToPosition)
                 .Subscribe().AddTo(this);
             _interactable.OnDeselected
-                .Where(_ => shouldReturnToParent && !IsSocketed && (socket == null || !socket.CanSocket()))
+                .Where(_ => shouldReturnToLastSocket && !IsSocketed && (socket == null || !socket.CanSocket()))
                 .Do(_ => Return()).Subscribe().AddTo(this);
 
             _interactable.OnSelected
@@ -129,14 +117,16 @@ namespace Shababeek.Interactions
             {
                 return false;
             }
+
             this.socket = socket;
             var t = socket.Insert(this);
             IsSocketed = true;
             onSocketed.Invoke(socket);
-            _lastSocket = t;
+            _lastSocket = socket;
             LerpToPosition(t);
             return true;
         }
+
         private void Update()
         {
             DetectSockets();
@@ -146,7 +136,7 @@ namespace Shababeek.Interactions
 
         private void HandeIndicator()
         {
-            if (!isSocketed&& socket != null && socket.CanSocket())
+            if (!isSocketed && socket != null && socket.CanSocket())
             {
                 if (indicator)
                 {
@@ -190,20 +180,24 @@ namespace Shababeek.Interactions
         private void Return()
         {
             if (_isReturning) return;
-
             isSocketed = false;
             transform.parent = null;
+            if (!shouldReturnToLastSocket) return;
+            if (_lastSocket != null)
+                Insert(_lastSocket);
+            else
+                ReturnToParent();
+        }
 
-            if (shouldReturnToParent)
+        private void ReturnToParent()
+        {
+            if (useSmoothReturn && _tweener != null)
             {
-                if (useSmoothReturn && _tweener != null)
-                {
-                    ReturnWithTween();
-                }
-                else
-                {
-                    ReturnImmediate();
-                }
+                ReturnWithTween();
+            }
+            else
+            {
+                ReturnImmediate();
             }
         }
 
@@ -261,8 +255,9 @@ namespace Shababeek.Interactions
             Vector3 detectionCenter = transform.TransformPoint(detectionOffset);
 
             // Use OverlapSphereNonAlloc to detect nearby sockets (avoids GC allocation)
-            int hitCount = Physics.OverlapSphereNonAlloc(detectionCenter, detectionRadius, _overlapResults, socketLayerMask);
-            
+            int hitCount =
+                Physics.OverlapSphereNonAlloc(detectionCenter, detectionRadius, _overlapResults, socketLayerMask);
+
             AbstractSocket closestSocket = null;
             float closestDistance = float.MaxValue;
 
@@ -356,6 +351,7 @@ namespace Shababeek.Interactions
 
             ReturnWithTween();
         }
+
         public void ReturToOriginalState()
         {
             if (isSocketed && socket != null)
@@ -402,6 +398,9 @@ namespace Shababeek.Interactions
             Gizmos.color = Color.white;
         }
     }
-    [System.Serializable]public class SocketEvent : UnityEvent<AbstractSocket>
-{}
+
+    [System.Serializable]
+    public class SocketEvent : UnityEvent<AbstractSocket>
+    {
+    }
 }

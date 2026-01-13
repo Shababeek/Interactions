@@ -28,7 +28,7 @@ namespace Shababeek.Interactions.Editors
         {
             socketable = (Socketable)target;
 
-            shouldReturnToParentProp = serializedObject.FindProperty("shouldReturnToParent");
+            shouldReturnToParentProp = serializedObject.FindProperty("shouldReturnToLastSocket");
             useSmoothReturnProp = serializedObject.FindProperty("useSmoothReturn");
             returnDurationProp = serializedObject.FindProperty("returnDuration");
             indicatorProp = serializedObject.FindProperty("indicator");
