@@ -388,7 +388,7 @@ namespace Shababeek.Interactions.Core
             
             var follower = hand.AddComponent<PhysicsHandFollower>();
             follower.Target = target;
-            follower.ApplySettings(config.FollowerSettings);
+            //follower.ApplySettings(config.FollowerSettings);
         }
 
         private HandPoseController InitializeHand(HandPoseController handPrefab, Transform handPivot,
