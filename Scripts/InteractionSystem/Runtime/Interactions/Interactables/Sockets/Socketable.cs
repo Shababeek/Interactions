@@ -42,8 +42,8 @@ namespace Shababeek.Interactions
         private VariableTweener _tweener;
         private TransformTweenable _returnTweenable;
         private bool _isReturning = false;
-        private Collider[] _overlapResults = new Collider[3];
-        public Transform LastSocket => _lastSocket.transform;
+        private readonly Collider[] _overlapResults = new Collider[3];
+        public Transform LastSocket => _lastSocket ? _lastSocket.transform : null;
 
         /// <summary>
         /// Gets whether the object is currently socketed.
@@ -54,11 +54,7 @@ namespace Shababeek.Interactions
             private set
             {
                 isSocketed = value;
-                if (isSocketed) return;
-                if (shouldReturnToLastSocket)
-                {
-                    Return();
-                }
+
             }
         }
 
@@ -171,7 +167,7 @@ namespace Shababeek.Interactions
 
         private void LerpToPosition(Transform pivot)
         {
-            _interactable.OnStateChanged(InteractionState.None, _interactable.CurrentInteractor);
+            //_interactable.OnStateChanged(InteractionState.None, _interactable.CurrentInteractor);
             transform.parent = pivot.transform;
             transform.position = pivot.transform.position;
             transform.rotation = pivot.transform.rotation;
