@@ -10,8 +10,8 @@ namespace Shababeek.Interactions.Core
     public class PhysicsHandFollower : MonoBehaviour
     {
         [SerializeField] private Transform target;
-        [SerializeField] private float followSpeed = 30f;
-        [SerializeField] private float rotationSpeed = 20f;
+        [SerializeField] private float followSpeed = 60;
+        [SerializeField] private float rotationSpeed = 40f;
 
         private Rigidbody _rb;
 
