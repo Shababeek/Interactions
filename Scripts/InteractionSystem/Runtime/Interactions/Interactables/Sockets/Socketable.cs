@@ -38,12 +38,13 @@ namespace Shababeek.Interactions
         private Vector3 _initialLocalPosition;
         private Quaternion _initialLocalRotation;
         private AbstractSocket _lastSocket;
+        private Transform _socketTransform;
         private InteractableBase _interactable;
         private VariableTweener _tweener;
         private TransformTweenable _returnTweenable;
         private bool _isReturning = false;
         private readonly Collider[] _overlapResults = new Collider[3];
-        public Transform LastSocket => _lastSocket ? _lastSocket.transform : null;
+        public Transform SocketTransform => _socketTransform ;
 
         /// <summary>
         /// Gets whether the object is currently socketed.
@@ -94,6 +95,7 @@ namespace Shababeek.Interactions
                 .Do(_ => onSocketed.Invoke(socket))
                 .Select(_ => socket.Insert(this))
                 .Do(t => _lastSocket = socket)
+                .Do(t => _socketTransform = t)
                 .Do(LerpToPosition)
                 .Subscribe().AddTo(this);
             _interactable.OnDeselected
