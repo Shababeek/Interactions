@@ -1,23 +1,36 @@
 using System;
+using Shababeek.Utilities;
 using UniRx;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Shababeek.Sequencing
 {
     /// <summary>
     /// Base class for all sequence actions that respond to step status changes.
+    /// Provides common subscription management and lifecycle handling.
     /// </summary>
     public abstract class AbstractSequenceAction : MonoBehaviour
     {
-        [Tooltip("The step this action is associated with.")]
         [SerializeField] private Step step;
-        protected bool _started;
-        protected CompositeDisposable Disposable;
+        [ReadOnly][SerializeField] private bool started;
+        
+
+        /// <summary>
+        /// Main disposable for the action's lifetime (OnEnable to OnDisable).
+        /// </summary>
+        private CompositeDisposable _disposable;
+
+        /// <summary>
+        /// Disposable for subscriptions that should only be active during step execution.
+        /// Automatically disposed when step completes or becomes inactive.
+        /// </summary>
+        protected CompositeDisposable StepDisposable;
 
         /// <summary>
         /// Gets whether this action has been started.
         /// </summary>
-        public bool Started => _started;
+        protected bool Started => started;
 
         /// <summary>
         /// Gets the step associated with this action.
@@ -26,14 +39,15 @@ namespace Shababeek.Sequencing
 
         private void OnEnable()
         {
-            Disposable = new CompositeDisposable();
-            _started = false;
-            step.OnRaisedData.Do(ChangeStatus).Subscribe().AddTo(Disposable);
+            _disposable = new CompositeDisposable();
+            started = false;
+            step.OnRaisedData.Do(ChangeStatus).Subscribe().AddTo(_disposable);
         }
 
         private void OnDisable()
         {
-            Disposable?.Dispose();
+            DisposeStepSubscriptions();
+            _disposable?.Dispose();
         }
 
         private void ChangeStatus(SequenceStatus status)
@@ -42,15 +56,38 @@ namespace Shababeek.Sequencing
             {
                 case SequenceStatus.Inactive:
                 case SequenceStatus.Completed:
-                    _started = false;
+                    started = false;
+                    DisposeStepSubscriptions();
                     break;
                 case SequenceStatus.Started:
-                    _started = true;
+                    started = true;
+                    InitializeStepSubscriptions();
                     break;
             }
             OnStepStatusChanged(status);
         }
         
+        private void InitializeStepSubscriptions()
+        {
+            DisposeStepSubscriptions();
+            StepDisposable = new CompositeDisposable();
+        }
+
+
+        private void DisposeStepSubscriptions()
+        {
+            StepDisposable?.Dispose();
+            StepDisposable = null;
+        }
+
+        /// <summary>
+        /// Completes the step. Convenience method for derived classes.
+        /// </summary>
+        protected void CompleteStep()
+        {
+            Step.CompleteStep();
+        }
+
         /// <summary>
         /// Called when the associated step's status changes.
         /// </summary>

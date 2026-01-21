@@ -1,3 +1,4 @@
+using System;
 using Shababeek.Interactions;
 using UnityEngine;
 using Shababeek.Interactions.Core;
@@ -10,65 +11,47 @@ namespace Shababeek.Sequencing
     /// </summary>
     public enum InteractionType
     {
-        Selection = 0,
-        Deselection = 1,
-        Activation = 2,
-        HoverStart = 3,
-        HoverEnd = 4,
+        Selected = 0,
+        Deselected = 1,
+        Used = 2,
+        StartedHover = 3,
+        EndedHover = 4,
     }
 
     /// <summary>
     /// Completes a step when a specific interaction occurs with an interactable object.
     /// </summary>
-    [CreateAssetMenu(menuName = "Shababeek/Sequencing/Actions/InteractionAction")]
+    [AddComponentMenu("Shababeek/Sequencing/Actions/InteractionAction")]
     public class InteractionAction : AbstractSequenceAction
     {
         [Tooltip("The interactable object to monitor for interactions.")]
         [SerializeField] private InteractableBase interactableObject;
-        
+
         [Tooltip("The type of interaction that will complete the step.")]
         [SerializeField] private InteractionType interactionType;
 
-        private CompositeDisposable _disposable;
-
-
-        void Subscribe()
+        private void Subscribe()
         {
-            switch (interactionType)
+            if (interactableObject == null) return;
+
+            IObservable<InteractorBase> observable = interactionType switch
             {
-                case InteractionType.Selection:
-                    interactableObject.OnSelected.Do(OnInteractionStarted).Subscribe().AddTo(_disposable);
-                    break;
-                case InteractionType.Deselection:
-                    interactableObject.OnDeselected.Do(OnInteractionStarted).Subscribe().AddTo(_disposable);
-                    break;
-                case InteractionType.Activation:
-                    interactableObject.OnUseStarted.Do(OnInteractionStarted).Subscribe().AddTo(_disposable);
-                    break;
-                case InteractionType.HoverStart:
-                    interactableObject.OnHoverStarted.Do(OnInteractionStarted).Subscribe().AddTo(_disposable);
-                    break;
-                case InteractionType.HoverEnd:
-                    interactableObject.OnHoverEnded.Do(OnInteractionStarted).Subscribe().AddTo(_disposable);
-                    break;
-            }
-        }
+                InteractionType.Selected => interactableObject.OnSelected,
+                InteractionType.Deselected => interactableObject.OnDeselected,
+                InteractionType.Used => interactableObject.OnUseStarted,
+                InteractionType.StartedHover => interactableObject.OnHoverStarted,
+                InteractionType.EndedHover => interactableObject.OnHoverEnded,
+                _ => null
+            };
 
-        private void OnInteractionStarted(InteractorBase interactor)
-        {
-            Step.CompleteStep();
+            observable?.Do(_ => CompleteStep()).Subscribe().AddTo(StepDisposable);
         }
 
         protected override void OnStepStatusChanged(SequenceStatus status)
         {
             if (status == SequenceStatus.Started)
             {
-                _disposable = new CompositeDisposable();
                 Subscribe();
-            }
-            else
-            {
-                _disposable?.Dispose();
             }
         }
     }

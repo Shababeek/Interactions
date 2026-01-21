@@ -4,39 +4,66 @@ using UnityEngine;
 
 namespace Shababeek.Sequencing
 {
-    [AddComponentMenu(menuName : "Shababeek/Sequencing/Actions/ControllerButtonAction")]
+    /// <summary>
+    /// Completes a step when a specific XR controller button is pressed.
+    /// </summary>
+    [AddComponentMenu("Shababeek/Sequencing/Actions/ControllerButtonAction")]
     public class ControllerButtonAction : AbstractSequenceAction
     {
-        [SerializeField] private Config config; 
+        [Tooltip("The configuration containing controller input references.")]
+        [SerializeField] private Config config;
+
+        [Tooltip("Which hand's controller to monitor.")]
         [SerializeField] private HandIdentifier hand;
+
+        [Tooltip("Which button press triggers step completion.")]
         [SerializeField] private XRButton button;
-        private StepEventListener listener;
 
         private void Awake()
         {
             if (config == null)
             {
-                config = FindAnyObjectByType<CameraRig>().Config;
+                var cameraRig = FindAnyObjectByType<CameraRig>();
+                if (cameraRig != null)
+                {
+                    config = cameraRig.Config;
+                }
             }
-            listener = GetComponent<StepEventListener>();
-            config[hand].TriggerObservable
-                .Where(_ => Started)
-                .Where(_ => button == XRButton.Trigger)
-                .Where(state => state == VRButtonState.Down)
-                .Do(_=>listener.OnActionCompleted())
-                .Subscribe().AddTo(this);
-            config[hand].GripObservable
-                .Where(_ => Started)
-                .Where(_ => button == XRButton.Grip)
-                .Where(state => state == VRButtonState.Down)
-                .Do(_=>listener.OnActionCompleted())
-                .Subscribe().AddTo(this);
         }
 
+        private void Subscribe()
+        {
+            if (config == null) return;
+
+            var handConfig = config[hand];
+            if (handConfig == null) return;
+
+            switch (button)
+            {
+                case XRButton.Trigger:
+                    handConfig.TriggerObservable
+                        .Where(state => state == VRButtonState.Down)
+                        .Do(_ => CompleteStep())
+                        .Subscribe()
+                        .AddTo(StepDisposable);
+                    break;
+
+                case XRButton.Grip:
+                    handConfig.GripObservable
+                        .Where(state => state == VRButtonState.Down)
+                        .Do(_ => CompleteStep())
+                        .Subscribe()
+                        .AddTo(StepDisposable);
+                    break;
+            }
+        }
 
         protected override void OnStepStatusChanged(SequenceStatus status)
         {
-            
+            if (status == SequenceStatus.Started)
+            {
+                Subscribe();
+            }
         }
     }
 }

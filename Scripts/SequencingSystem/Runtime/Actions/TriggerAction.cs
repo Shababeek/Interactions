@@ -9,23 +9,23 @@ namespace Shababeek.Sequencing
     public class TriggerAction : AbstractSequenceAction
     {
         [SerializeField]private string objectTag;
-        [SerializeField] private UnityEvent onTRiggerEnter;
-        bool active = false;
+        [SerializeField] private UnityEvent onTriggerEnter;
+        private bool _active = false;
 
 
 
         private void OnTriggerEnter(Collider other)
         {
-            if(!active)return;
+            if (!_active) return;
             if (string.IsNullOrEmpty(objectTag) || other.attachedRigidbody. CompareTag(objectTag))
             {
-                onTRiggerEnter.Invoke();
+                onTriggerEnter.Invoke();
             }
         }
 
         protected override void OnStepStatusChanged(SequenceStatus status)
         {
-            active = status == SequenceStatus.Started;
+            _active = status == SequenceStatus.Started;
         }
     }
 }
