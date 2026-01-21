@@ -8,13 +8,9 @@ namespace Shababeek.Sequencing
     /// </summary>
     public enum SequenceControlOperation
     {
-        /// <summary>Start a sequence and wait for it to complete.</summary>
         StartAndWait = 0,
-        /// <summary>Start a sequence without waiting (fire and forget).</summary>
         StartOnly = 1,
-        /// <summary>Wait for a sequence to complete (must already be running).</summary>
         WaitForCompletion = 2,
-        /// <summary>Wait for a specific step in a sequence to complete.</summary>
         WaitForStep = 3,
     }
 
