@@ -16,7 +16,7 @@ namespace Shababeek.Sequencing
             base.OnInspectorGUI();
             
             var sequence = (SequenceBehaviour)target;
-            if (sequence.StarOnAwake)
+            if (sequence.StartOnAwake)
             {
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("delay"));
             }

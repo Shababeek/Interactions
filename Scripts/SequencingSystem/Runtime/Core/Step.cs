@@ -19,7 +19,7 @@ namespace Shababeek.Sequencing
         [SerializeField] private AudioClip audioClip;
         
         [Tooltip("Enable to allow the step to be completed before it starts.")]
-        [SerializeField] private bool canBeFinshedBeforeStarted;
+        [SerializeField] private bool canBeFinishedBeforeStarted;
         
         [Tooltip("When enabled, the step automatically completes when the audio finishes playing.")]
         [SerializeField] private bool audioOnly;
@@ -78,7 +78,7 @@ namespace Shababeek.Sequencing
 
                 Complete();
             }
-            else if (canBeFinshedBeforeStarted)
+            else if (canBeFinishedBeforeStarted)
             {
                 _finished = true;
             }

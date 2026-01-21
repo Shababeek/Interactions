@@ -18,7 +18,7 @@ namespace Shababeek.Sequencing
         [SerializeField] public Sequence sequence;
         [HideInInspector] [SerializeField] private bool startOnSpace;
         [ReadOnly] [SerializeField] private bool started;
-        [SerializeField] private bool starOnAwake = false;
+        [SerializeField] private bool startOnAwake = false;
         [HideInInspector] [SerializeField] private float delay = 1;
         [SerializeField] private UnityEvent onSequenceStarted;
         [SerializeField] private UnityEvent onSequenceCompleted;
@@ -27,7 +27,7 @@ namespace Shababeek.Sequencing
         public bool listner;
         
 
-        public bool StarOnAwake => starOnAwake;
+        public bool StartOnAwake => startOnAwake;
         private float _time = 0;
 
         private void Awake()
@@ -72,12 +72,10 @@ namespace Shababeek.Sequencing
         private  void OnEnable()
         {
             sequence.OnRaisedData.Where(status => status == SequenceStatus.Started).Do(_ => onSequenceStarted.Invoke()).Subscribe().AddTo(this);
-            sequence.OnRaisedData.Where(status => status == SequenceStatus.Started).Do(_ => onSequenceCompleted.Invoke()).Subscribe().AddTo(this);
-            if (StarOnAwake)   
+            sequence.OnRaisedData.Where(status => status == SequenceStatus.Completed).Do(_ => onSequenceCompleted.Invoke()).Subscribe().AddTo(this);
+            if (StartOnAwake)   
                 StartQuest();
         }
-
-
         private async void StartQuest()
         {
             await Awaitable.NextFrameAsync();
@@ -85,16 +83,13 @@ namespace Shababeek.Sequencing
             sequence.Begin();
             started = true;
         }
-
         private void Update()
         {
             if (startOnSpace && !started && Input.GetKeyDown(KeyCode.Space))
                 StartQuest();
             else if (started && Input.GetKeyDown(KeyCode.Space)) sequence.CurrentStep.CompleteStep();
         }
-
-        [Serializable]
-        public class StepEventPair
+        [Serializable] public class StepEventPair
         {
             public UnityEvent listeners;
             public Step step;
