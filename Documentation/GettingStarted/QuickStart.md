@@ -27,7 +27,7 @@ By the end of this guide, you'll have:
 1. Open your Unity project
 2. **Window > Package Manager**
 3. Click **+** > **Add package from git URL**
-4. Enter: `https://github.com/YourRepo/Shababeek-Interactions.git`
+4. Enter: `https://github.com/Shababeek/Interactions.git`
 5. Click **Add**
 
 ![AddFromPackageManager.png](../Images/AddFromPackageManager.png)
