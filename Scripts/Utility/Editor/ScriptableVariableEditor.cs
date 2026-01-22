@@ -7,10 +7,10 @@ using UnityEngine;
 namespace Shababeek.Interactions.Editors
 {
     /// <summary>
-    /// Custom editor for GameEvent that shows scene references and a Raise button.
+    /// Custom editor for ScriptableVariable that shows scene references.
     /// </summary>
-    [CustomEditor(typeof(GameEvent), true)]
-    public class GameEventEditor : Editor
+    [CustomEditor(typeof(ScriptableVariable), true)]
+    public class ScriptableVariableEditor : Editor
     {
         private List<Component> _sceneReferences = new();
         private bool _showReferences = true;
@@ -19,16 +19,6 @@ namespace Shababeek.Interactions.Editors
         public override void OnInspectorGUI()
         {
             DrawDefaultInspector();
-
-            EditorGUILayout.Space(5);
-
-            if (Application.isPlaying)
-            {
-                if (GUILayout.Button("Raise Event", GUILayout.Height(30)))
-                {
-                    ((GameEvent)target).Raise();
-                }
-            }
 
             EditorGUILayout.Space(10);
             DrawSceneReferences();
@@ -64,12 +54,14 @@ namespace Shababeek.Interactions.Editors
 
                         EditorGUILayout.BeginHorizontal();
 
+                        // Ping button
                         if (GUILayout.Button("→", GUILayout.Width(25)))
                         {
                             Selection.activeObject = component.gameObject;
                             EditorGUIUtility.PingObject(component.gameObject);
                         }
 
+                        // Component info
                         string path = GetGameObjectPath(component.gameObject);
                         EditorGUILayout.LabelField($"{path}", EditorStyles.miniLabel);
                         EditorGUILayout.LabelField($"[{component.GetType().Name}]", EditorStyles.miniBoldLabel, GUILayout.Width(150));
@@ -89,6 +81,7 @@ namespace Shababeek.Interactions.Editors
             _sceneReferences.Clear();
             var targetObject = target;
 
+            // Find all MonoBehaviours in all loaded scenes
             var allComponents = Resources.FindObjectsOfTypeAll<MonoBehaviour>()
                 .Where(c => c != null && c.gameObject.scene.isLoaded);
 
@@ -100,6 +93,7 @@ namespace Shababeek.Interactions.Editors
                 }
             }
 
+            // Sort by path
             _sceneReferences = _sceneReferences
                 .OrderBy(c => GetGameObjectPath(c.gameObject))
                 .ToList();
