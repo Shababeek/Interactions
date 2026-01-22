@@ -101,10 +101,9 @@ namespace Shababeek.Utilities.Editors
 
         private void DrawHeader(Rect rect)
         {
-            // Split header into columns
-            float nameWidth = rect.width * 0.35f;
-            float typeWidth = rect.width * 0.2f;
-            float valueWidth = rect.width * 0.45f;
+            float nameWidth = rect.width * 0.25f;
+            float typeWidth = rect.width * 0.15f;
+            float valueWidth = rect.width * 0.6f;
 
             var nameRect = new Rect(rect.x, rect.y, nameWidth, rect.height);
             var typeRect = new Rect(rect.x + nameWidth, rect.y, typeWidth, rect.height);
@@ -117,6 +116,26 @@ namespace Shababeek.Utilities.Editors
 
         private float GetElementHeight(int index)
         {
+            var elementProp = _variableList.serializedProperty.GetArrayElementAtIndex(index);
+            var variable = elementProp.objectReferenceValue as ScriptableVariable;
+
+            if (variable == null)
+                return EditorGUIUtility.singleLineHeight + 4f;
+
+            // Get cached SerializedObject
+            if (!_cachedSerializedObjects.TryGetValue(variable, out var varSO))
+            {
+                varSO = new SerializedObject(variable);
+                _cachedSerializedObjects[variable] = varSO;
+            }
+
+            var valueProp = varSO.FindProperty("value");
+            if (valueProp != null)
+            {
+                float propHeight = EditorGUI.GetPropertyHeight(valueProp, true);
+                return Mathf.Max(propHeight, EditorGUIUtility.singleLineHeight) + 6f;
+            }
+
             return EditorGUIUtility.singleLineHeight + 4f;
         }
 
@@ -132,16 +151,17 @@ namespace Shababeek.Utilities.Editors
             }
 
             rect.y += 2f;
+            rect.height -= 4f;
             float lineHeight = EditorGUIUtility.singleLineHeight;
 
             // Calculate column widths
-            float nameWidth = rect.width * 0.35f - 4f;
-            float typeWidth = rect.width * 0.2f - 4f;
-            float valueWidth = rect.width * 0.45f - 4f;
+            float nameWidth = rect.width * 0.25f - 4f;
+            float typeWidth = rect.width * 0.15f - 4f;
+            float valueWidth = rect.width * 0.6f - 4f;
 
             var nameRect = new Rect(rect.x, rect.y, nameWidth, lineHeight);
             var typeRect = new Rect(rect.x + nameWidth + 4f, rect.y, typeWidth, lineHeight);
-            var valueRect = new Rect(rect.x + nameWidth + typeWidth + 8f, rect.y, valueWidth, lineHeight);
+            var valueRect = new Rect(rect.x + nameWidth + typeWidth + 8f, rect.y, valueWidth, rect.height);
 
             // Name field (editable)
             EditorGUI.BeginChangeCheck();
@@ -151,13 +171,11 @@ namespace Shababeek.Utilities.Editors
                 Undo.RecordObject(variable, "Rename Variable");
                 variable.name = newName;
                 EditorUtility.SetDirty(variable);
-
-                // Re-import to update the asset database
                 var path = AssetDatabase.GetAssetPath(_container);
                 AssetDatabase.ImportAsset(path);
             }
 
-            // Type label (read-only, styled)
+            // Type label
             string typeName = _typeDisplayNames.TryGetValue(variable.GetType(), out var display)
                 ? display
                 : variable.GetType().Name;
@@ -165,13 +183,12 @@ namespace Shababeek.Utilities.Editors
             EditorGUI.TextField(typeRect, typeName);
             GUI.enabled = true;
 
-            // Value field (inline editing)
+            // Value field
             DrawValueField(valueRect, variable);
         }
 
         private void DrawValueField(Rect rect, ScriptableVariable variable)
         {
-            // Get or create cached SerializedObject
             if (!_cachedSerializedObjects.TryGetValue(variable, out var varSO))
             {
                 varSO = new SerializedObject(variable);
@@ -184,17 +201,15 @@ namespace Shababeek.Utilities.Editors
             if (valueProp != null)
             {
                 EditorGUI.BeginChangeCheck();
-                EditorGUI.PropertyField(rect, valueProp, GUIContent.none);
+                EditorGUI.PropertyField(rect, valueProp, GUIContent.none, true);
                 if (EditorGUI.EndChangeCheck())
                 {
                     varSO.ApplyModifiedProperties();
-                    // Trigger the variable's event to update any listeners
                     variable.Raise();
                 }
             }
             else
             {
-                // Fallback: show as string
                 EditorGUI.LabelField(rect, variable.ToString(), EditorStyles.miniLabel);
             }
         }
