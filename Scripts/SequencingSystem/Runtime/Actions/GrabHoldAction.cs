@@ -56,6 +56,7 @@ namespace Shababeek.Sequencing
                 .Do(OnReleased)
                 .Subscribe()
                 .AddTo(StepDisposable);
+
         }
 
         private void OnGrabbed(InteractorBase interactor)
