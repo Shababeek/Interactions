@@ -6,8 +6,32 @@ namespace Shababeek.Utilities
     /// Scriptable variable that stores an integer value with full arithmetic operator support.
     /// </summary>
     [CreateAssetMenu(menuName = "Shababeek/Scriptable System/Variables/IntVariable")]
-    public class IntVariable : ScriptableVariable<int>
+    public class IntVariable : NumericalVariable<int>
     {
+        #region INumericalVariable Implementation
+
+        /// <inheritdoc/>
+        public override float AsFloat => Value;
+
+        /// <inheritdoc/>
+        public override int AsInt => Value;
+
+        /// <inheritdoc/>
+        public override void SetFromFloat(float value) => Value = Mathf.RoundToInt(value);
+
+        /// <inheritdoc/>
+        public override void Add(float amount) => Value += Mathf.RoundToInt(amount);
+
+        /// <inheritdoc/>
+        public override void Multiply(float factor) => Value = Mathf.RoundToInt(Value * factor);
+
+        /// <inheritdoc/>
+        public override void Clamp(float min, float max) => Value = Mathf.Clamp(Value, Mathf.RoundToInt(min), Mathf.RoundToInt(max));
+
+        #endregion
+
+        #region Int-Specific Methods
+
         /// <summary>
         /// Increments the integer value by 1.
         /// </summary>
@@ -15,6 +39,37 @@ namespace Shababeek.Utilities
         {
             Value++;
         }
+
+        /// <summary>
+        /// Decrements the integer value by 1.
+        /// </summary>
+        public void Decrement()
+        {
+            Value--;
+        }
+
+        /// <summary>
+        /// Adds an integer amount to the current value.
+        /// </summary>
+        /// <param name="amount">The integer amount to add</param>
+        public void Add(int amount)
+        {
+            Value += amount;
+        }
+
+        /// <summary>
+        /// Clamps the value between integer min and max bounds.
+        /// </summary>
+        /// <param name="min">The minimum allowed value</param>
+        /// <param name="max">The maximum allowed value</param>
+        public void Clamp(int min, int max)
+        {
+            Value = Mathf.Clamp(Value, min, max);
+        }
+
+        #endregion
+
+        #region Operators
 
         public static IntVariable operator ++(IntVariable variable)
         {
@@ -145,6 +200,8 @@ namespace Shababeek.Utilities
         {
             return Value.GetHashCode();
         }
+
+        #endregion
     }
 
     /// <summary>

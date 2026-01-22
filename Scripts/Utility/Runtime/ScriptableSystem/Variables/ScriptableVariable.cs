@@ -122,9 +122,7 @@ namespace Shababeek.Utilities
 
         /// <summary>
         /// DON'T USE THIS METHOD
-        /// it's only for prototyping and will be removed in the future
         /// </summary>
-        /// <param name="value">The object value to set</param>
         [Obsolete(
             "This method should not be used, I it only exsist for whan am prototyping and don't want to waste time on a proper archticture")]
         public override void SetValue(object value)
@@ -139,11 +137,7 @@ namespace Shababeek.Utilities
             }
         }
 
-        /// <summary>
-        /// DON'T USE THIS METHOD
-        /// it's only for prototyping and will be removed in the future
-        /// </summary>
-        /// <returns>The current value as an object</returns>
+
         [Obsolete(
             "This method should not be used, I it only exsist for whan am prototyping and don't want to waste time on a proper archticture")]
         public override object GetValue()

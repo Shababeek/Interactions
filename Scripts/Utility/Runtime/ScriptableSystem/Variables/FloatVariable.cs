@@ -5,27 +5,33 @@ namespace Shababeek.Utilities
     /// <summary>
     /// Scriptable variable that stores a float value with full arithmetic operator support.
     /// </summary>
-    /// <remarks>
-    /// This class extends ScriptableVariable<float> to provide mathematical operators for
-    /// float operations. It supports comparison, arithmetic, and increment/decrement operations
-    /// between FloatVariable instances and float values.
-    /// </remarks>
-    /// <example>
-    /// <code>
-    /// var var1 = ScriptableObject.CreateInstance<FloatVariable>();
-    /// var var2 = ScriptableObject.CreateInstance<FloatVariable>();
-    /// 
-    /// var1.Value = 5f;
-    /// var2.Value = 3f;
-    /// 
-    /// float result = var1 + var2; // result = 8f
-    /// bool isEqual = var1 == 5f;  // isEqual = true
-    /// </code>
-    /// </example>
+
     [CreateAssetMenu(menuName = "Shababeek/Scriptable System/Variables/FloatVariable")]
-    public class FloatVariable : ScriptableVariable<float>
+    public class FloatVariable : NumericalVariable<float>
     {
-        #region Comparison Operators
+        #region INumericalVariable Implementation
+
+        /// <inheritdoc/>
+        public override float AsFloat => Value;
+
+        /// <inheritdoc/>
+        public override int AsInt => Mathf.RoundToInt(Value);
+
+        /// <inheritdoc/>
+        public override void SetFromFloat(float value) => Value = value;
+
+        /// <inheritdoc/>
+        public override void Add(float amount) => Value += amount;
+
+        /// <inheritdoc/>
+        public override void Multiply(float factor) => Value *= factor;
+
+        /// <inheritdoc/>
+        public override void Clamp(float min, float max) => Value = Mathf.Clamp(Value, min, max);
+
+        #endregion
+
+        #region Operators
 
         public static bool operator ==(FloatVariable a, FloatVariable b)
         {
