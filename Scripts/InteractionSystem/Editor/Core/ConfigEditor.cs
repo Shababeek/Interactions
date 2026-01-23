@@ -347,41 +347,7 @@ namespace Shababeek.Interactions.Editors
 
             EditorGUILayout.PropertyField(_followerPresetProp,
                 new GUIContent("Follower Preset", "Preset configuration for physics hand following behavior"));
-
-            PhysicsFollowerPreset preset = (PhysicsFollowerPreset)_followerPresetProp.enumValueIndex;
-
-            if (preset == PhysicsFollowerPreset.Custom)
-            {
-                EditorGUI.indentLevel++;
-                EditorGUILayout.PropertyField(_customFollowerSettingsProp,
-                    new GUIContent("Custom Settings", "Custom physics follower settings"));
-                EditorGUI.indentLevel--;
-                EditorGUILayout.HelpBox("Custom settings active. Adjust values to tune hand following behavior.",
-                    MessageType.Info);
-            }
-            else
-            {
-                EditorGUILayout.HelpBox(GetPresetDescription(preset), MessageType.Info);
-            }
         }
-
-        private string GetPresetDescription(PhysicsFollowerPreset preset)
-        {
-            switch (preset)
-            {
-                case PhysicsFollowerPreset.Standard:
-                    return "Standard: Balanced settings for general VR use. Good starting point for most applications.";
-                case PhysicsFollowerPreset.Responsive:
-                    return
-                        "Responsive: Snappy, fast response for precise interactions. Best for games requiring quick hand movements.";
-                case PhysicsFollowerPreset.Smooth:
-                    return "Smooth: Floaty, gradual movement for comfortable experience. Best for relaxed exploration.";
-                case PhysicsFollowerPreset.Precise:
-                    return
-                        "Precise: Slower, very controlled for delicate manipulation. Best for puzzle games or intricate tasks.";
-                default:
-                    return "";
-            }
-        }
+        
     }
 }

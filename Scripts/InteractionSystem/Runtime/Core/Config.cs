@@ -70,15 +70,6 @@ namespace Shababeek.Interactions.Core
         [Tooltip("Angular damping for hand physics. Higher values reduce hand rotation more quickly.")] [SerializeField]
         private float angularDamping = 1f;
 
-        [Header("Hand Following Settings")]
-        [Tooltip("Preset configuration for physics hand following behavior.")]
-        [SerializeField]
-        private PhysicsFollowerPreset followerPreset = PhysicsFollowerPreset.Standard;
-
-        [Tooltip("Custom settings for physics hand following. Only used when preset is set to Custom.")]
-        [SerializeField]
-        private PhysicsFollowerSettings customFollowerSettings = PhysicsFollowerSettings.Standard;
-
         [Header("Hand Input Providers")] [Tooltip("Input provider for the left hand.")] [SerializeField]
         private MonoBehaviour leftHandInputProvider;
 
@@ -178,20 +169,6 @@ namespace Shababeek.Interactions.Core
         public float HandAngularDamping => angularDamping;
 
         /// <summary>
-        /// Physics follower settings based on the selected preset.
-        /// </summary>
-        public PhysicsFollowerSettings FollowerSettings
-        {
-            get
-            {
-                if (followerPreset == PhysicsFollowerPreset.Custom)
-                    return customFollowerSettings;
-
-                return PhysicsFollowerSettings.GetPreset(followerPreset);
-            }
-        }
-
-        /// <summary>
         /// StyleSheet for the feedback system UI.
         /// </summary>
         public StyleSheet FeedbackSystemStyleSheet => feedbackSystemStyleSheet;
@@ -285,128 +262,4 @@ public void SetHandProvider(HandIdentifier hand, IHandInputProvider provider)
 
         #endregion
     }
-
-  
-    #region Physics Follower Presets
-
-    public enum PhysicsFollowerPreset
-    {
-        Standard,
-        Responsive,
-        Smooth,
-        Precise,
-        Custom
-    }
-
-    [System.Serializable]
-    public struct PhysicsFollowerSettings
-    {
-        [Tooltip("Strength multiplier for position following. Higher values = faster response.")]
-        public float positionStrength;
-
-        [Tooltip("Strength multiplier for rotation following. Higher values = faster response.")]
-        public float rotationStrength;
-
-        [Tooltip("Maximum velocity magnitude in units per second.")]
-        public float maxVelocity;
-
-        [Tooltip("Maximum angular velocity magnitude in radians per second.")]
-        public float maxAngularVelocity;
-
-        [Tooltip("Distance threshold below which the hand won't move (reduces micro-jitter).")]
-        public float positionDeadzone;
-
-        [Tooltip("Angle threshold in degrees below which the hand won't rotate (reduces micro-jitter).")]
-        public float rotationDeadzone;
-
-        [Tooltip("Distance threshold above which the hand will teleport instead of follow.")]
-        public float teleportDistance;
-
-        [Tooltip("If enabled, stops applying forces when in contact with objects.")]
-        public bool respectCollisions;
-
-        /// <summary>
-        /// Standard preset balanced for general VR use.
-        /// </summary>
-        public static PhysicsFollowerSettings Standard => new PhysicsFollowerSettings
-        {
-            positionStrength = 1000f,
-            rotationStrength = 100f,
-            maxVelocity = 10f,
-            maxAngularVelocity = 20f,
-            positionDeadzone = 0.001f,
-            rotationDeadzone = 0.5f,
-            teleportDistance = 1f,
-            respectCollisions = true
-        };
-
-        /// <summary>
-        /// Responsive preset with snappy, fast response for precise interactions.
-        /// </summary>
-        public static PhysicsFollowerSettings Responsive => new PhysicsFollowerSettings
-        {
-            positionStrength = 2000f,
-            rotationStrength = 200f,
-            maxVelocity = 15f,
-            maxAngularVelocity = 30f,
-            positionDeadzone = 0.002f,
-            rotationDeadzone = 1f,
-            teleportDistance = 1f,
-            respectCollisions = true
-        };
-
-        /// <summary>
-        /// Smooth preset with floaty, gradual movement for comfortable experience.
-        /// </summary>
-        public static PhysicsFollowerSettings Smooth => new PhysicsFollowerSettings
-        {
-            positionStrength = 500f,
-            rotationStrength = 50f,
-            maxVelocity = 5f,
-            maxAngularVelocity = 10f,
-            positionDeadzone = 0.0005f,
-            rotationDeadzone = 0.2f,
-            teleportDistance = 1f,
-            respectCollisions = true
-        };
-
-        /// <summary>
-        /// Precise preset with slower, controlled movement for delicate manipulation.
-        /// </summary>
-        public static PhysicsFollowerSettings Precise => new PhysicsFollowerSettings
-        {
-            positionStrength = 800f,
-            rotationStrength = 80f,
-            maxVelocity = 7f,
-            maxAngularVelocity = 15f,
-            positionDeadzone = 0.0005f,
-            rotationDeadzone = 0.3f,
-            teleportDistance = 0.5f,
-            respectCollisions = true
-        };
-
-        /// <summary>
-        /// Preset settings for a given preset type.
-        /// </summary>
-        public static PhysicsFollowerSettings GetPreset(PhysicsFollowerPreset preset)
-        {
-            switch (preset)
-            {
-                case PhysicsFollowerPreset.Standard:
-                    return Standard;
-                case PhysicsFollowerPreset.Responsive:
-                    return Responsive;
-                case PhysicsFollowerPreset.Smooth:
-                    return Smooth;
-                case PhysicsFollowerPreset.Precise:
-                    return Precise;
-                case PhysicsFollowerPreset.Custom:
-                    return Standard;
-                default:
-                    return Standard;
-            }
-        }
-    }
-
-    #endregion
 }
