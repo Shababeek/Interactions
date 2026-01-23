@@ -35,8 +35,8 @@ namespace Shababeek.Interactions.Editors
                 EditorUtility.DisplayDialog("Setup Complete", "Default settings have been applied successfully!\n\n" +
                     "• Layers created and configured\n" +
                     "• OpenXR package installed\n" +
-                    "• Physics settings applied\n" +
-                    "• Input System selected\n" +
+                    "• Physics collision settings applied\n" +
+                    "• Controller tracking selected\n" +
                     "• Basic configuration complete\n\n" +
                     "The wizard will now close.", "OK");
                 
@@ -114,8 +114,8 @@ namespace Shababeek.Interactions.Editors
                 EditorUtility.DisplayDialog("Setup Complete", "Default settings have been applied successfully!\n\n" +
                     "✓ Layers created and configured\n" +
                     "✓ OpenXR package installed\n" +
-                    "✓ Physics settings applied\n" +
-                    "✓ Input System selected\n" +
+                    "✓ Physics collision settings applied\n" +
+                    "✓ Controller tracking selected\n" +
                     "✓ Basic configuration complete\n\n" +
                     "The wizard will now close.", "OK");
                 

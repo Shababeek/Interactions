@@ -23,7 +23,7 @@ namespace Shababeek.Interactions.Editors
             {
                 bool setupValid = true;
                 string validationMessage = "Setup validation results:\n\n";
-                
+
                 // Validate config asset
                 if (wizard.ConfigAsset == null)
                 {
@@ -33,11 +33,8 @@ namespace Shababeek.Interactions.Editors
                 else
                 {
                     validationMessage += "✓ Config asset found\n";
-                }
-                
-                // Validate layers
-                if (wizard.ConfigAsset != null)
-                {
+
+                    // Validate layers
                     if (wizard.ConfigAsset.LeftHandLayer == 0)
                     {
                         setupValid = false;
@@ -45,9 +42,9 @@ namespace Shababeek.Interactions.Editors
                     }
                     else
                     {
-                        validationMessage += "✓ Left hand layer configured\n";
+                        validationMessage += $"✓ Left hand layer: {LayerMask.LayerToName(wizard.ConfigAsset.LeftHandLayer)}\n";
                     }
-                    
+
                     if (wizard.ConfigAsset.RightHandLayer == 0)
                     {
                         setupValid = false;
@@ -55,9 +52,9 @@ namespace Shababeek.Interactions.Editors
                     }
                     else
                     {
-                        validationMessage += "✓ Right hand layer configured\n";
+                        validationMessage += $"✓ Right hand layer: {LayerMask.LayerToName(wizard.ConfigAsset.RightHandLayer)}\n";
                     }
-                    
+
                     if (wizard.ConfigAsset.InteractableLayer == 0)
                     {
                         setupValid = false;
@@ -65,9 +62,9 @@ namespace Shababeek.Interactions.Editors
                     }
                     else
                     {
-                        validationMessage += "✓ Interactable layer configured\n";
+                        validationMessage += $"✓ Interactable layer: {LayerMask.LayerToName(wizard.ConfigAsset.InteractableLayer)}\n";
                     }
-                    
+
                     if (wizard.ConfigAsset.PlayerLayer == 0)
                     {
                         setupValid = false;
@@ -75,15 +72,18 @@ namespace Shababeek.Interactions.Editors
                     }
                     else
                     {
-                        validationMessage += "✓ Player layer configured\n";
+                        validationMessage += $"✓ Player layer: {LayerMask.LayerToName(wizard.ConfigAsset.PlayerLayer)}\n";
                     }
+
+                    // Validate tracking type
+                    validationMessage += $"✓ Tracking type: {GetTrackingTypeDisplayName(wizard.ConfigAsset.InputType)}\n";
                 }
 
                 // Validate hand data
                 if (wizard.SelectedHandData != null)
                 {
                     validationMessage += $"✓ Hand data: {wizard.SelectedHandData.name}\n";
-                    
+
                     if (wizard.SelectedHandData.Poses != null && wizard.SelectedHandData.Poses.Length > 0)
                     {
                         validationMessage += $"✓ Hand poses: {wizard.SelectedHandData.Poses.Length} found\n";
@@ -99,7 +99,7 @@ namespace Shababeek.Interactions.Editors
                     setupValid = false;
                     validationMessage += "✗ No hand data selected\n";
                 }
-                
+
                 // Log validation results
                 if (setupValid)
                 {
@@ -109,7 +109,7 @@ namespace Shababeek.Interactions.Editors
                 {
                     Debug.LogWarning("Setup validation found issues:\n" + validationMessage);
                 }
-                
+
                 // Store validation results for display
                 _setupValidationMessage = validationMessage;
                 _setupIsValid = setupValid;
@@ -122,39 +122,23 @@ namespace Shababeek.Interactions.Editors
             }
         }
 
-        private bool CheckInputAxesExist()
+        private string GetTrackingTypeDisplayName(Config.TrackingType trackingType)
         {
-            try
+            return trackingType switch
             {
-                var inputManagerAsset = AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/InputManager.asset")[0];
-                var serializedObject = new SerializedObject(inputManagerAsset);
-                var axis = serializedObject.FindProperty("m_Axes");
-                
-                if (axis == null || !axis.isArray) return false;
-                
-                for (int i = 0; i < axis.arraySize; i++)
-                {
-                    var element = axis.GetArrayElementAtIndex(i);
-                    var name = element.FindPropertyRelative("m_Name")?.stringValue;
-                    
-                    if (!string.IsNullOrEmpty(name) && name.StartsWith("Shababeek_"))
-                    {
-                        return true;
-                    }
-                }
-                
-                return false;
-            }
-            catch
-            {
-                return false;
-            }
+                Config.TrackingType.ControllerTracking => "Controller Tracking",
+#if XR_HANDS_AVAILABLE
+                Config.TrackingType.HandTracking => "Hand Tracking",
+                Config.TrackingType.Both => "Both (Auto-Switch)",
+#endif
+                _ => trackingType.ToString()
+            };
         }
 
         public void DrawStep(ShababeekSetupWizard wizard)
         {
             EditorGUILayout.LabelField("Setup Complete!", EditorStyles.boldLabel);
-            
+
             // Show validation results
             if (_setupIsValid)
             {
@@ -164,9 +148,9 @@ namespace Shababeek.Interactions.Editors
             {
                 EditorGUILayout.HelpBox("⚠ Setup validation found some issues. Some features may not work properly.", MessageType.Warning);
             }
-            
+
             EditorGUILayout.Space();
-            
+
             if (wizard.useDefaultSettings && wizard.SelectedHandData != null)
             {
                 EditorGUILayout.HelpBox($"You have completed the setup using default settings with the '{wizard.SelectedHandData.name}' hand configuration.", MessageType.Info);
@@ -175,18 +159,18 @@ namespace Shababeek.Interactions.Editors
             {
                 EditorGUILayout.HelpBox("You have completed the initial setup. Refer to the documentation for advanced configuration and usage.", MessageType.Info);
             }
-            
+
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("What was configured:", EditorStyles.boldLabel);
             EditorGUILayout.LabelField("✓ Config asset created/configured");
-            EditorGUILayout.LabelField("✓ Layer collision physics applied");
-            EditorGUILayout.LabelField("✓ Input manager type set");
-            
+            EditorGUILayout.LabelField("✓ Physics layer collisions configured");
+            EditorGUILayout.LabelField("✓ Tracking type configured");
+
             if (wizard.SelectedHandData != null)
             {
                 EditorGUILayout.LabelField("✓ HandData linked to config");
             }
-            
+
             // Show detailed validation results
             if (!string.IsNullOrEmpty(_setupValidationMessage))
             {
@@ -194,10 +178,31 @@ namespace Shababeek.Interactions.Editors
                 EditorGUILayout.LabelField("Detailed Validation Results:", EditorStyles.boldLabel);
                 EditorGUILayout.HelpBox(_setupValidationMessage, _setupIsValid ? MessageType.Info : MessageType.Warning);
             }
-            
+
             EditorGUILayout.Space();
+
+            // Next steps
+            EditorGUILayout.LabelField("Next Steps:", EditorStyles.boldLabel);
+            EditorGUILayout.BeginVertical("box");
+            EditorGUILayout.LabelField("1. Add a CameraRig prefab to your scene", EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.LabelField("2. Assign the Config asset to the CameraRig", EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.LabelField("3. Configure Input Action References in the Config (optional)", EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.LabelField("4. Add Interactable components to objects you want to grab", EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.EndVertical();
+
+            EditorGUILayout.Space();
+
+            // Useful buttons
+            EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("Open Documentation"))
                 Application.OpenURL("https://github.com/Shababeek/Interactions/tree/master/Assets/Shababeek/Documentation");
+
+            if (wizard.ConfigAsset != null && GUILayout.Button("Select Config Asset"))
+            {
+                Selection.activeObject = wizard.ConfigAsset;
+                EditorGUIUtility.PingObject(wizard.ConfigAsset);
+            }
+            EditorGUILayout.EndHorizontal();
         }
 
         public void OnStepExit(ShababeekSetupWizard wizard)
