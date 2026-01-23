@@ -7,37 +7,42 @@ namespace Shababeek.Interactions.Core
     public class VRInteractionZoneVisualizer : MonoBehaviour
     {
         #region Constants
-        
+
         // Default player values
         private const float defaultStandingHeight = 1.7f;
         private const float defaultSeatedHeight = 1.2f;
         private const float defaultPlayerRadius = 0.25f;
-        
+
         // Room-scale preset values
         private const float roomScaleDefaultPlayAreaWidth = 2.0f;
         private const float roomScaleDefaultPlayAreaDepth = 2.0f;
         private const float roomScaleDefaultAtEdgeMax = 0.3f;
         private const float roomScaleDefaultExtendedMax = 0.6f;
         private const float roomScaleDefaultMaximumMax = 0.8f;
-        private const float roomScaleDefaultHeightMinPercent = -70f;
-        private const float roomScaleDefaultHeightMaxPercent = 0f;
-        private const float roomScaleDefaultOptimalHeightMinPercent = -53f;
-        private const float roomScaleDefaultOptimalHeightMaxPercent = -18f;
-        
+        // Height relative to HEAD - full reachable range from low crouch to above head
+        private const float roomScaleDefaultHeightMinPercent = -60f;
+        private const float roomScaleDefaultHeightMaxPercent = 10f;
+        // Optimal zone: comfortable arm reach (shoulder to waist, not starting at head!)
+        // -40% = roughly waist level, -10% = roughly shoulder level
+        private const float roomScaleDefaultOptimalHeightMinPercent = -40f;
+        private const float roomScaleDefaultOptimalHeightMaxPercent = -10f;
+
         // Seated preset values
         private const float seatedDefaultOptimalMin = 0.3f;
         private const float seatedDefaultOptimalMax = 0.5f;
         private const float seatedDefaultExtendedMax = 0.7f;
         private const float seatedDefaultMaximumMax = 0.9f;
-        private const float seatedDefaultHeightMinPercent = -40f;
-        private const float seatedDefaultHeightMaxPercent = 25f;
+        // Height relative to HEAD for seated users
+        private const float seatedDefaultHeightMinPercent = -35f;
+        private const float seatedDefaultHeightMaxPercent = 15f;
+        // Optimal seated: desk/lap to chest level
         private const float seatedDefaultOptimalHeightMinPercent = -25f;
-        private const float seatedDefaultOptimalHeightMaxPercent = 8f;
+        private const float seatedDefaultOptimalHeightMaxPercent = 5f;
         private const float seatedDefaultArcAngle = 60f;
-        
+
         // Common defaults
-        private const float defaultDeadZoneRadius = 0.25f;
-        
+        private const float defaultDeadZoneRadius = 0.2f;
+
         #endregion
         
         [Header("VR Mode")]

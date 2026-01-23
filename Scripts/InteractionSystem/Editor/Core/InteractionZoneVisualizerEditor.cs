@@ -7,43 +7,41 @@ namespace Shababeek.Interactions.Core.Editors
     public class VRInteractionZoneVisualizerEditor : Editor
     {
         #region Constants
-        
-        // Zone colors (when selected)
-        private static readonly Color optimalZoneColor = new Color(0f, 1f, 0f, 0.7f);
-        private static readonly Color extendedZoneColor = new Color(1f, 1f, 0f, 0.65f);
-        private static readonly Color maximumZoneColor = new Color(1f, 0.5f, 0f, 0.6f);
-        private static readonly Color deadZoneColor = new Color(1f, 0f, 0f, 0.9f);
-        private static readonly Color playAreaColor = new Color(0f, 1f, 1f, 0.15f); 
-        private static readonly Color playAreaOutlineColor = Color.cyan;
-        private static readonly Color headReferenceColor = Color.cyan;
-        private static readonly Color referenceLinesColor = Color.white;
+
+        private static readonly Color optimalZoneColor = new Color(0f, 1f, 0f, 0.4f);
+        private static readonly Color extendedZoneColor = new Color(1f, 1f, 0f, 0.4f);
+        private static readonly Color maximumZoneColor = new Color(1f, 0.5f, 0f, 0.4f);
+        private static readonly Color deadZoneColor = new Color(1f, 0f, 0f, 0.4f);
+        private static readonly Color playAreaColor = new Color(0f, 1f, 1f, 0.4f);
+        private static readonly Color playAreaOutlineColor = new Color(0f, 1f, 1f, 0.4f);
+        private static readonly Color headReferenceColor = new Color(0f, 1f, 1f, 0.5f);
+        private static readonly Color referenceLinesColor = new Color(1f, 1f, 1f, 0.3f);
         private static readonly Color playerBodyColor = new Color(0f, 0.5f, 1f, 0.3f);
-        private static readonly Color playerBodyOutlineColor = new Color(0f, 0.5f, 1f, 0.8f);
-        private static readonly Color directionArrowColor = new Color(1f, 0.8f, 0f, 0.7f);
-        
-        // Legend colors
+        private static readonly Color playerBodyOutlineColor = new Color(0f, 0.5f, 1f, 0.3f);
+        private static readonly Color directionArrowColor = new Color(1f, 0.8f, 0f, 0.4f);
+
         private static readonly Color legendOptimalColor = new Color(0f, 1f, 0f, 1f);
         private static readonly Color legendExtendedColor = new Color(1f, 1f, 0f, 1f);
         private static readonly Color legendMaximumColor = new Color(1f, 0.5f, 0f, 1f);
         private static readonly Color legendDeadZoneColor = new Color(1f, 0f, 0f, 1f);
         private static readonly Color legendPlayAreaColor = new Color(0f, 1f, 1f, 1f);
-        
+
         // GUI constants
         private const float colorBoxSize = 16f;
         private const float legendItemSpacing = 4f;
-        private const float headIndicatorSize = 0.05f;
+        private const float headIndicatorSize = 0.03f;
         private const float labelOffsetAboveHead = 0.3f;
         private const float playAreaLabelOffsetAboveFloor = 0.1f;
-        
+
         // Player visualization constants
-        private const int cylinderSegments = 20;
-        private const float directionArrowLength = 0.5f;
-        private const float directionArrowHeadSize = 0.15f;
+        private const int cylinderSegments = 12; // Reduced for less visual noise
+        private const float directionArrowLength = 0.3f;
+        private const float directionArrowHeadSize = 0.1f;
         private const float directionArrowHeadAngle = 25f;
-        
-        // Opacity multiplier for unselected state
-        private const float unselectedOpacityMultiplier = 0.6f;
-        
+
+        // Opacity multiplier for unselected state - very dim when not selected
+        private const float unselectedOpacityMultiplier = 0.25f;
+
         #endregion
         
         private SerializedProperty vrModeProp;
@@ -198,21 +196,8 @@ namespace Shababeek.Interactions.Core.Editors
                 visualizer.ApplyVRModePreset();
                 EditorUtility.SetDirty(visualizer);
             }
-            
-            // Auto-apply preset when mode changes
-            var currentMode = (VRMode)vrModeProp.enumValueIndex;
-            if (previousMode != currentMode)
-            {
-                if (EditorUtility.DisplayDialog(
-                    "Apply VR Mode Preset?",
-                    $"Do you want to apply the default preset values for {currentMode} mode?",
-                    "Yes", "No"))
-                {
-                    Undo.RecordObject(visualizer, "Apply VR Mode Preset");
-                    visualizer.ApplyVRModePreset();
-                    EditorUtility.SetDirty(visualizer);
-                }
-            }
+
+            // Note: Mode changes no longer auto-reset values - user must explicitly click Apply Preset
         }
         
         private void DrawRoomScaleFields()
@@ -621,37 +606,29 @@ namespace Shababeek.Interactions.Core.Editors
                 Handles.DrawWireDisc(headPosition, Vector3.up, visualizer.DeadZoneRadius);
             }
             
-            // Draw play area bounds (from floor)
+            // Draw play area bounds at floor level (Y=0 relative to rig)
             if (visualizer.ShowPlayAreaBounds)
             {
+                float floorY = rigPosition.y;
                 Handles.color = DimColor(playAreaOutlineColor, dimmed);
                 Vector3[] playAreaCorners = new Vector3[]
                 {
-                    rigPosition + new Vector3(-halfWidth, heightMin, -halfDepth),
-                    rigPosition + new Vector3(halfWidth, heightMin, -halfDepth),
-                    rigPosition + new Vector3(halfWidth, heightMin, halfDepth),
-                    rigPosition + new Vector3(-halfWidth, heightMin, halfDepth)
+                    new Vector3(rigPosition.x - halfWidth, floorY, rigPosition.z - halfDepth),
+                    new Vector3(rigPosition.x + halfWidth, floorY, rigPosition.z - halfDepth),
+                    new Vector3(rigPosition.x + halfWidth, floorY, rigPosition.z + halfDepth),
+                    new Vector3(rigPosition.x - halfWidth, floorY, rigPosition.z + halfDepth)
                 };
-                
+
                 Handles.DrawSolidRectangleWithOutline(playAreaCorners, DimColor(playAreaColor, dimmed), DimColor(playAreaOutlineColor, dimmed));
-                
-                // Draw vertical lines at corners
+
+                // Draw vertical lines at corners up to head height
+                float topY = headPosition.y;
                 for (int i = 0; i < 4; i++)
                 {
                     Vector3 bottom = playAreaCorners[i];
-                    Vector3 top = bottom + Vector3.up * (heightMax - heightMin);
+                    Vector3 top = new Vector3(bottom.x, topY, bottom.z);
                     Handles.DrawLine(bottom, top);
                 }
-                
-                // Draw top rectangle
-                Vector3[] topCorners = new Vector3[]
-                {
-                    rigPosition + new Vector3(-halfWidth, heightMax, -halfDepth),
-                    rigPosition + new Vector3(halfWidth, heightMax, -halfDepth),
-                    rigPosition + new Vector3(halfWidth, heightMax, halfDepth),
-                    rigPosition + new Vector3(-halfWidth, heightMax, halfDepth)
-                };
-                Handles.DrawSolidRectangleWithOutline(topCorners, DimColor(new Color(0f, 1f, 1f, 0.05f), dimmed), DimColor(playAreaOutlineColor, dimmed));
             }
             
             // Draw reach zones from play area edges (relative to head position, not rig position)
@@ -688,63 +665,69 @@ namespace Shababeek.Interactions.Core.Editors
         
         private static void DrawRoomScaleReachZone(VRInteractionZoneVisualizer visualizer, Vector3 rigPosition, Vector3 headPosition,
             float halfWidth, float halfDepth, float innerOffset, float outerOffset,
-            float minHeightPercent, float maxHeightPercent)
+            float minHeightOffset, float maxHeightOffset)
         {
-            // Heights are relative to head position (0% = head level)
-            float minHeight = headPosition.y + minHeightPercent;
-            float maxHeight = headPosition.y + maxHeightPercent;
-            
-            // Bottom rectangles
+            // Heights are OFFSETS relative to head position (negative = below head)
+            // minHeightOffset and maxHeightOffset are already converted from percentages
+            float minHeight = headPosition.y + minHeightOffset;
+            float maxHeight = headPosition.y + maxHeightOffset;
+
+            // Bottom rectangles (at minHeight world Y)
             Vector3[] bottomInner = new Vector3[]
             {
-                rigPosition + new Vector3(-halfWidth - innerOffset, minHeight - rigPosition.y, -halfDepth - innerOffset),
-                rigPosition + new Vector3(halfWidth + innerOffset, minHeight - rigPosition.y, -halfDepth - innerOffset),
-                rigPosition + new Vector3(halfWidth + innerOffset, minHeight - rigPosition.y, halfDepth + innerOffset),
-                rigPosition + new Vector3(-halfWidth - innerOffset, minHeight - rigPosition.y, halfDepth + innerOffset)
+                new Vector3(rigPosition.x - halfWidth - innerOffset, minHeight, rigPosition.z - halfDepth - innerOffset),
+                new Vector3(rigPosition.x + halfWidth + innerOffset, minHeight, rigPosition.z - halfDepth - innerOffset),
+                new Vector3(rigPosition.x + halfWidth + innerOffset, minHeight, rigPosition.z + halfDepth + innerOffset),
+                new Vector3(rigPosition.x - halfWidth - innerOffset, minHeight, rigPosition.z + halfDepth + innerOffset)
             };
-            
+
             Vector3[] bottomOuter = new Vector3[]
             {
-                rigPosition + new Vector3(-halfWidth - outerOffset, minHeight - rigPosition.y, -halfDepth - outerOffset),
-                rigPosition + new Vector3(halfWidth + outerOffset, minHeight - rigPosition.y, -halfDepth - outerOffset),
-                rigPosition + new Vector3(halfWidth + outerOffset, minHeight - rigPosition.y, halfDepth + outerOffset),
-                rigPosition + new Vector3(-halfWidth - outerOffset, minHeight - rigPosition.y, halfDepth + outerOffset)
+                new Vector3(rigPosition.x - halfWidth - outerOffset, minHeight, rigPosition.z - halfDepth - outerOffset),
+                new Vector3(rigPosition.x + halfWidth + outerOffset, minHeight, rigPosition.z - halfDepth - outerOffset),
+                new Vector3(rigPosition.x + halfWidth + outerOffset, minHeight, rigPosition.z + halfDepth + outerOffset),
+                new Vector3(rigPosition.x - halfWidth - outerOffset, minHeight, rigPosition.z + halfDepth + outerOffset)
             };
-            
-            // Top rectangles
+
+            // Top rectangles (at maxHeight world Y)
             Vector3[] topInner = new Vector3[]
             {
-                rigPosition + new Vector3(-halfWidth - innerOffset, maxHeight - rigPosition.y, -halfDepth - innerOffset),
-                rigPosition + new Vector3(halfWidth + innerOffset, maxHeight - rigPosition.y, -halfDepth - innerOffset),
-                rigPosition + new Vector3(halfWidth + innerOffset, maxHeight - rigPosition.y, halfDepth + innerOffset),
-                rigPosition + new Vector3(-halfWidth - innerOffset, maxHeight - rigPosition.y, halfDepth + innerOffset)
+                new Vector3(rigPosition.x - halfWidth - innerOffset, maxHeight, rigPosition.z - halfDepth - innerOffset),
+                new Vector3(rigPosition.x + halfWidth + innerOffset, maxHeight, rigPosition.z - halfDepth - innerOffset),
+                new Vector3(rigPosition.x + halfWidth + innerOffset, maxHeight, rigPosition.z + halfDepth + innerOffset),
+                new Vector3(rigPosition.x - halfWidth - innerOffset, maxHeight, rigPosition.z + halfDepth + innerOffset)
             };
-            
+
             Vector3[] topOuter = new Vector3[]
             {
-                rigPosition + new Vector3(-halfWidth - outerOffset, maxHeight - rigPosition.y, -halfDepth - outerOffset),
-                rigPosition + new Vector3(halfWidth + outerOffset, maxHeight - rigPosition.y, -halfDepth - outerOffset),
-                rigPosition + new Vector3(halfWidth + outerOffset, maxHeight - rigPosition.y, halfDepth + outerOffset),
-                rigPosition + new Vector3(-halfWidth - outerOffset, maxHeight - rigPosition.y, halfDepth + outerOffset)
+                new Vector3(rigPosition.x - halfWidth - outerOffset, maxHeight, rigPosition.z - halfDepth - outerOffset),
+                new Vector3(rigPosition.x + halfWidth + outerOffset, maxHeight, rigPosition.z - halfDepth - outerOffset),
+                new Vector3(rigPosition.x + halfWidth + outerOffset, maxHeight, rigPosition.z + halfDepth + outerOffset),
+                new Vector3(rigPosition.x - halfWidth - outerOffset, maxHeight, rigPosition.z + halfDepth + outerOffset)
             };
-            
+
             // Draw bottom rectangles
             Handles.DrawPolyLine(bottomOuter[0], bottomOuter[1], bottomOuter[2], bottomOuter[3], bottomOuter[0]);
-            Handles.DrawPolyLine(bottomInner[0], bottomInner[1], bottomInner[2], bottomInner[3], bottomInner[0]);
-            
+            if (innerOffset > 0.001f)
+                Handles.DrawPolyLine(bottomInner[0], bottomInner[1], bottomInner[2], bottomInner[3], bottomInner[0]);
+
             // Draw top rectangles
             Handles.DrawPolyLine(topOuter[0], topOuter[1], topOuter[2], topOuter[3], topOuter[0]);
-            Handles.DrawPolyLine(topInner[0], topInner[1], topInner[2], topInner[3], topInner[0]);
-            
-            // Connect corners with vertical lines
+            if (innerOffset > 0.001f)
+                Handles.DrawPolyLine(topInner[0], topInner[1], topInner[2], topInner[3], topInner[0]);
+
+            // Connect corners with vertical lines (only at corners, not all)
             for (int i = 0; i < 4; i++)
             {
-                Handles.DrawLine(bottomInner[i], topInner[i]);
                 Handles.DrawLine(bottomOuter[i], topOuter[i]);
-                
-                // Connect inner to outer at bottom and top
-                Handles.DrawLine(bottomInner[i], bottomOuter[i]);
-                Handles.DrawLine(topInner[i], topOuter[i]);
+
+                if (innerOffset > 0.001f)
+                {
+                    Handles.DrawLine(bottomInner[i], topInner[i]);
+                    // Connect inner to outer at bottom and top
+                    Handles.DrawLine(bottomInner[i], bottomOuter[i]);
+                    Handles.DrawLine(topInner[i], topOuter[i]);
+                }
             }
         }
         
