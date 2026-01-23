@@ -1,334 +1,325 @@
 using System;
 using UnityEngine;
 using Shababeek.Utilities;
+using Shababeek.Interactions.Core;
 using UniRx;
 
 namespace Shababeek.Interactions
 {
+    public enum WheelGrabMode
+    {
+        ObjectFollowsHand,
+        HandFollowsObject
+    }
+
     /// <summary>
-    /// Wheel-style interactable that tracks rotation around a single axis with optional limits.
-    /// Provides smooth wheel rotation tracking with full rotation counting.
+    /// Wheel interactable for steering wheels and similar rotating objects.
+    /// Both modes rotate the wheel when moving the hand - the difference is initial grab behavior.
     /// </summary>
     public class WheelInteractable : ConstrainedInteractableBase
     {
         [Header("Wheel Settings")]
-        [Tooltip("The axis around which the wheel rotates")]
+        [SerializeField] private WheelGrabMode grabMode = WheelGrabMode.ObjectFollowsHand;
         [SerializeField] private RotationAxis rotationAxis = RotationAxis.Forward;
 
         [Header("Rotation Limits")]
-        [Tooltip("Enable rotation limits")]
-        [SerializeField] private bool limitRotations = false;
-
-        [Tooltip("Rotation limit range (min rotations, max rotations)")]
-        [SerializeField] private Vector2 rotationLimits = new Vector2(-2f, 2f);
-
+        [Tooltip("Maximum rotations in each direction (0.5 = half turn, 1 = full turn)")]
+        [SerializeField] private float maxRotations = 1f;
+        
         [Header("Events")]
-        [SerializeField] private FloatUnityEvent onWheelAngleChanged = new();
-        [SerializeField] private FloatUnityEvent onWheelRotated = new();
+        [SerializeField] private FloatUnityEvent onAngleChanged = new();
+        [SerializeField] private FloatUnityEvent onNormalizedChanged = new();
 
         [Header("Debug")]
-        [ReadOnly, SerializeField] private float currentAngle = 0f;
-        [ReadOnly, SerializeField] private float totalRotations = 0f;
+        [ReadOnly, SerializeField] private float currentAngle;
+        [ReadOnly, SerializeField] private float normalizedValue;
 
         private Quaternion _originalRotation;
-        private float _lastAngle = 0f;
-        private float _accumulatedAngle = 0f;
+        private float _previousHandAngle;
         private float _returnTimer;
 
-        /// <summary>
-        /// Observable that fires when the wheel angle changes.
-        /// </summary>
-        public IObservable<float> OnWheelAngleChanged => onWheelAngleChanged.AsObservable();
+        // For HandFollowsObject mode
+        private Transform _fakeHand;
+        private PoseConstrainter _poseConstrainer;
+        private float _fakeHandOrbitAngle;
 
-        /// <summary>
-        /// Observable that fires when the wheel completes a full rotation.
-        /// </summary>
-        public IObservable<float> OnWheelRotated => onWheelRotated.AsObservable();
+        public IObservable<float> OnAngleChanged => onAngleChanged.AsObservable();
+        public IObservable<float> OnNormalizedChanged => onNormalizedChanged.AsObservable();
 
-        public RotationAxis RotationAxis => rotationAxis;
         public float CurrentAngle => currentAngle;
-        public float TotalRotations => totalRotations;
-        public bool LimitRotations => limitRotations;
+        public float NormalizedValue => normalizedValue;
+        public float MaxRotations => maxRotations;
+        public WheelGrabMode GrabMode => grabMode;
+        public RotationAxis RotationAxis => rotationAxis;
 
-        public Vector2 RotationLimits
-        {
-            get => rotationLimits;
-            set
-            {
-                rotationLimits = new Vector2(
-                    Mathf.Min(value.x, value.y - 0.1f),
-                    Mathf.Max(value.y, value.x + 0.1f)
-                );
-            }
-        }
+        private float MaxAngle => maxRotations * 360f;
+        private float MinAngle => -maxRotations * 360f;
 
         private void Start()
         {
             _originalRotation = interactableObject.transform.localRotation;
-            _lastAngle = 0f;
-            _accumulatedAngle = 0f;
+            _poseConstrainer = GetComponent<PoseConstrainter>();
         }
 
-        protected override void HandleObjectMovement(Vector3 target)
+        protected override void HandleObjectMovement(Vector3 handWorldPosition)
         {
             if (!IsSelected || IsReturning) return;
 
-            CalculateAndApplyRotation(target);
+            var handAngle = GetHandAngle(handWorldPosition);
+
+            var delta = Mathf.DeltaAngle(_previousHandAngle, handAngle);
+            _previousHandAngle = handAngle;
+
+            var newAngle = currentAngle + delta;
+            currentAngle = Mathf.Clamp(newAngle, MinAngle, MaxAngle);
+
+            if (grabMode == WheelGrabMode.HandFollowsObject && _fakeHand != null)
+            {
+                _fakeHandOrbitAngle += delta;
+                UpdateFakeHandOrbit();
+            }
+
+            ApplyWheelRotation();
+            UpdateNormalizedValue();
             InvokeEvents();
         }
 
-        protected override void HandleObjectDeselection()
+        /// <summary>
+        /// Gets the angle of hand position on the rotation plane using the interactable's parent space.
+        /// </summary>
+        private float GetHandAngle(Vector3 handWorldPosition)
         {
-            _returnTimer = 0f;
-        }
+            // Use parent transform space (not interactableObject which rotates)
+            Vector3 localPos = transform.InverseTransformPoint(handWorldPosition);
 
-        protected override void UseStarted()
-        {
-        }
-
-        protected override void StartHover()
-        {
-        }
-
-        protected override void EndHover()
-        {
-        }
-
-        private void CalculateAndApplyRotation(Vector3 handWorldPosition)
-        {
-            if (CurrentInteractor == null) return;
-
-            Transform pivot = interactableObject.transform;
-
-            Vector3 direction = handWorldPosition - pivot.position;
-            direction = transform.InverseTransformDirection(direction);
-            direction = direction.normalized * .5f;
-            Vector3 axisNormal = GetLocalAxis();
-            Vector3 referenceVector = GetReferenceVector();
-
-            Vector3 projected = Vector3.ProjectOnPlane(direction, axisNormal);
-
-            if (projected.sqrMagnitude < 0.0001f)
+            float x, y;
+            switch (rotationAxis)
             {
-                return;
+                case RotationAxis.Right:  x = localPos.z; y = localPos.y; break;
+                case RotationAxis.Up:     x = localPos.x; y = localPos.z; break;
+                case RotationAxis.Forward:
+                default:                  x = localPos.x; y = localPos.y; break;
             }
 
-            // Calculate angle from reference vector
-            float targetAngle = Vector3.SignedAngle(referenceVector, projected.normalized, axisNormal);
-
-            float deltaAngle = Mathf.DeltaAngle(_lastAngle, targetAngle);
-            _accumulatedAngle += deltaAngle;
-            _lastAngle = targetAngle;
-
-            TrackFullRotations();
-
-            if (limitRotations)
-            {
-                float maxAngle = rotationLimits.y * 360f;
-                float minAngle = rotationLimits.x * 360f;
-                _accumulatedAngle = Mathf.Clamp(_accumulatedAngle, minAngle, maxAngle);
-            }
-
-            currentAngle = _accumulatedAngle;
-            ApplyRotationToTransform();
+            return Mathf.Atan2(y, x) * Mathf.Rad2Deg;
         }
 
-        private Vector3 GetLocalAxis()
+        private void ApplyWheelRotation()
+        {
+            Vector3 axis = GetAxis();
+            Quaternion rot = Quaternion.AngleAxis(currentAngle, axis);
+            interactableObject.transform.localRotation = _originalRotation * rot;
+        }
+
+        private Vector3 GetAxis()
         {
             return rotationAxis switch
             {
                 RotationAxis.Right => Vector3.right,
                 RotationAxis.Up => Vector3.up,
-                RotationAxis.Forward => Vector3.forward,
                 _ => Vector3.forward
             };
         }
 
-        private Vector3 GetReferenceVector()
+        private void UpdateNormalizedValue()
         {
-            return rotationAxis switch
-            {
-                RotationAxis.Right => Vector3.forward,
-                RotationAxis.Up => Vector3.forward,
-                RotationAxis.Forward => Vector3.up,
-                _ => Vector3.up
-            };
+            normalizedValue = MaxAngle > 0 ? currentAngle / MaxAngle : 0f;
         }
 
-        private void ApplyRotationToTransform()
+        private void InvokeEvents()
         {
-            var localAxis = GetLocalAxis();
-            var relative = Quaternion.AngleAxis(_accumulatedAngle, localAxis);
-            interactableObject.transform.localRotation = _originalRotation * relative;
+            onAngleChanged?.Invoke(currentAngle);
+            onNormalizedChanged?.Invoke(normalizedValue);
         }
 
-        private void TrackFullRotations()
+        #region Grab Handling
+
+        protected override void PositionFakeHand(Transform fakeHand, HandIdentifier handIdentifier)
         {
-            // Calculate total rotations (positive = clockwise, negative = counter-clockwise)
-            float newTotalRotations = _accumulatedAngle / 360f;
-            
-            // Check if we crossed a full rotation threshold
-            if (Mathf.Floor(Mathf.Abs(newTotalRotations)) != Mathf.Floor(Mathf.Abs(totalRotations)))
+            _fakeHand = fakeHand;
+
+            // Get hand angle at grab moment
+            float grabHandAngle = GetHandAngle(CurrentInteractor.transform.position);
+            _previousHandAngle = grabHandAngle;
+
+            if (grabMode == WheelGrabMode.ObjectFollowsHand)
             {
-                onWheelRotated?.Invoke(newTotalRotations);
+                float constraintAngle = GetConstraintAngle(handIdentifier);
+                float targetWheelAngle = grabHandAngle - constraintAngle;
+
+                currentAngle = Mathf.Clamp(targetWheelAngle, MinAngle, MaxAngle);
+                ApplyWheelRotation();
+                UpdateNormalizedValue();
+
+                base.PositionFakeHand(fakeHand, handIdentifier);
             }
-            
-            totalRotations = newTotalRotations;
+            else
+            {
+                _fakeHandOrbitAngle = grabHandAngle;
+                UpdateFakeHandOrbit();
+            }
+
+            InvokeEvents();
+        }
+
+        /// <summary>
+        /// Gets the angle of the constraint position on the rotation plane.
+        /// </summary>
+        private float GetConstraintAngle(HandIdentifier handIdentifier)
+        {
+            if (_poseConstrainer == null) return 0f;
+
+            var positioning = _poseConstrainer.GetTargetHandTransform(handIdentifier);
+            Vector3 constraintLocal = positioning.position;
+
+            float x, y;
+            switch (rotationAxis)
+            {
+                case RotationAxis.Right:  x = constraintLocal.z; y = constraintLocal.y; break;
+                case RotationAxis.Up:     x = constraintLocal.x; y = constraintLocal.z; break;
+                case RotationAxis.Forward:
+                default:                  x = constraintLocal.x; y = constraintLocal.y; break;
+            }
+
+            return Mathf.Atan2(y, x) * Mathf.Rad2Deg;
+        }
+
+        private void UpdateFakeHandOrbit()
+        {
+            if (_fakeHand == null || _poseConstrainer == null) return;
+
+            var basePose = _poseConstrainer.GetTargetHandTransform(CurrentInteractor.HandIdentifier);
+            var orbitRadius = basePose.position.magnitude;
+            float rad = _fakeHandOrbitAngle * Mathf.Deg2Rad;
+            float cos = Mathf.Cos(rad) * orbitRadius;
+            float sin = Mathf.Sin(rad) * orbitRadius;
+
+            Vector3 offset = rotationAxis switch
+            {
+                RotationAxis.Right => new Vector3(0, sin, cos),
+                RotationAxis.Up => new Vector3(cos, 0, sin),
+                _ => new Vector3(cos, sin, 0)
+            };
+
+            _fakeHand.position = transform.TransformPoint(offset);
+
+            // Rotate hand to match orbit position
+            Quaternion orbitRot = Quaternion.AngleAxis(_fakeHandOrbitAngle, GetAxis());
+            _fakeHand.localRotation = orbitRot * basePose.rotation;
+        }
+
+        #endregion
+
+        #region Deselection / Return
+
+        protected override void HandleObjectDeselection()
+        {
+            _returnTimer = 0f;
+            _fakeHand = null;
         }
 
         protected override void HandleReturnToOriginalPosition()
         {
             _returnTimer += Time.deltaTime * returnSpeed;
+            currentAngle = Mathf.Lerp(currentAngle, 0f, _returnTimer);
 
-            // Lerp accumulated angle back to 0
-            _accumulatedAngle = Mathf.Lerp(_accumulatedAngle, 0f, _returnTimer);
-            currentAngle = _accumulatedAngle;
-
-            ApplyRotationToTransform();
-            TrackFullRotations();
+            ApplyWheelRotation();
+            UpdateNormalizedValue();
             InvokeEvents();
 
-            if (Mathf.Abs(_accumulatedAngle) < 0.1f)
+            if (Mathf.Abs(currentAngle) < 0.5f)
             {
-                IsReturning = false;
-                _accumulatedAngle = 0f;
-                _lastAngle = 0f;
                 currentAngle = 0f;
-                totalRotations = 0f;
+                normalizedValue = 0f;
+                IsReturning = false;
                 interactableObject.transform.localRotation = _originalRotation;
             }
         }
 
-        private void InvokeEvents()
+        #endregion
+
+        #region Public API
+
+        public void SetAngle(float angle)
         {
-            onWheelAngleChanged?.Invoke(currentAngle);
+            currentAngle = Mathf.Clamp(angle, MinAngle, MaxAngle);
+            ApplyWheelRotation();
+            UpdateNormalizedValue();
+            InvokeEvents();
         }
 
+        public void SetNormalized(float value)
+        {
+            SetAngle(value * MaxAngle);
+        }
 
         public void ResetWheel()
         {
-            _accumulatedAngle = 0f;
-            _lastAngle = 0f;
             currentAngle = 0f;
-            totalRotations = 0f;
+            normalizedValue = 0f;
             IsReturning = false;
             interactableObject.transform.localRotation = _originalRotation;
             InvokeEvents();
         }
 
+        #endregion
 
-        public void SetWheelAngle(float angle)
-        {
-            _accumulatedAngle = angle;
-            currentAngle = angle;
-            TrackFullRotations();
-            ApplyRotationToTransform();
-            InvokeEvents();
-        }
+        #region Editor
 
- 
-        public void SetWheelRotations(float rotations)
-        {
-            SetWheelAngle(rotations * 360f);
-        }
-
-
-        public Vector3 GetRotationAxisVector()
+        public Vector3 GetWorldAxis()
         {
             var t = interactableObject.transform;
             return rotationAxis switch
             {
                 RotationAxis.Right => t.right,
                 RotationAxis.Up => t.up,
-                RotationAxis.Forward => t.forward,
                 _ => t.forward
-            };
-        }
-
-
-        public Vector3 GetWorldReferenceVector()
-        {
-            var t = interactableObject.transform;
-            return rotationAxis switch
-            {
-                RotationAxis.Right => t.forward,
-                RotationAxis.Up => t.forward,
-                RotationAxis.Forward => t.up,
-                _ => t.up
             };
         }
 
         private void OnValidate()
         {
-            if (limitRotations)
-            {
-                // Ensure min < max
-                if (rotationLimits.x >= rotationLimits.y)
-                {
-                    rotationLimits.y = rotationLimits.x + 0.1f;
-                }
-            }
-
+            maxRotations = Mathf.Max(0.1f, maxRotations);
             returnSpeed = Mathf.Clamp(returnSpeed, 1f, 20f);
-        }
-
-        private void OnDrawGizmos()
-        {
-            if (interactableObject == null) return;
-            DrawWheelVisualization();
         }
 
         private void OnDrawGizmosSelected()
         {
             if (interactableObject == null) return;
-            DrawWheelVisualization(true);
-            if (limitRotations) DrawRotationLimits();
-        }
 
-        private void DrawWheelVisualization(bool selected = false)
-        {
-            var position = interactableObject.transform.position;
-            var axis = GetRotationAxisVector();
-            var reference = GetWorldReferenceVector();
+            var pos = interactableObject.transform.position;
+            var axis = GetWorldAxis();
 
-            // Draw rotation axis
-            Gizmos.color = selected ? Color.yellow : new Color(1f, 1f, 0f, 0.5f);
-            float axisLength = selected ? 1f : 0.5f;
-            Gizmos.DrawRay(position, axis * axisLength);
-            Gizmos.DrawRay(position, -axis * axisLength);
+            // Draw axis
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawRay(pos, axis * 0.2f);
+            Gizmos.DrawRay(pos, -axis * 0.2f);
 
-            // Draw reference direction
-            Gizmos.color = selected ? Color.cyan : new Color(0f, 1f, 1f, 0.5f);
-            Gizmos.DrawRay(position, reference * 0.5f);
+            // Draw rotation limits
+            var t = interactableObject.transform;
+            Vector3 reference = rotationAxis switch
+            {
+                RotationAxis.Right => t.forward,
+                RotationAxis.Up => t.right,
+                _ => t.right
+            };
 
-            // Draw current rotation indicator
+            Gizmos.color = Color.red;
+            var minRot = Quaternion.AngleAxis(-maxRotations * 360f, axis);
+            Gizmos.DrawRay(pos, minRot * reference * 0.3f);
+
+            Gizmos.color = Color.blue;
+            var maxRot = Quaternion.AngleAxis(maxRotations * 360f, axis);
+            Gizmos.DrawRay(pos, maxRot * reference * 0.3f);
+
             if (Application.isPlaying)
             {
-                var currentRotationQuat = Quaternion.AngleAxis(currentAngle, axis);
-                var currentDir = currentRotationQuat * reference;
-                Gizmos.color = selected ? Color.green : new Color(0f, 1f, 0f, 0.7f);
-                Gizmos.DrawRay(position, currentDir * 0.7f);
+                Gizmos.color = Color.green;
+                var curRot = Quaternion.AngleAxis(currentAngle, axis);
+                Gizmos.DrawRay(pos, curRot * reference * 0.25f);
             }
         }
 
-        private void DrawRotationLimits()
-        {
-            var position = interactableObject.transform.position;
-            var axis = GetRotationAxisVector();
-            var reference = GetWorldReferenceVector();
-            float radius = 0.6f;
-
-            // Draw min rotation limit
-            Gizmos.color = Color.red;
-            var minRot = Quaternion.AngleAxis(rotationLimits.x * 360f, axis);
-            var minDir = minRot * reference;
-            Gizmos.DrawRay(position, minDir * radius);
-
-            // Draw max rotation limit
-            Gizmos.color = Color.blue;
-            var maxRot = Quaternion.AngleAxis(rotationLimits.y * 360f, axis);
-            var maxDir = maxRot * reference;
-            Gizmos.DrawRay(position, maxDir * radius);
-        }
+        #endregion
     }
 }
