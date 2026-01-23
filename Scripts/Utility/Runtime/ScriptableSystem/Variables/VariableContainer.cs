@@ -6,129 +6,100 @@ using UnityEngine;
 namespace Shababeek.Utilities
 {
     /// <summary>
-    /// Container that holds multiple named ScriptableVariables as sub-assets within a single asset file.
+    /// Container that holds multiple named ScriptableVariables and GameEvents as sub-assets.
     /// </summary>
     [CreateAssetMenu(menuName = "Shababeek/Scriptable System/Variables/Variable Container")]
     public class VariableContainer : ScriptableObject
     {
-        [SerializeField]
-        [Tooltip("List of variables stored in this container. Add variables using the + button to create sub-assets.")]
-        private List<ScriptableVariable> variables = new();
+        [SerializeField] private List<ScriptableVariable> variables = new();
+        [SerializeField] private List<GameEvent> events = new();
 
-        /// <summary>
-        /// Gets a read-only list of all variables in this container.
-        /// </summary>
         public IReadOnlyList<ScriptableVariable> Variables => variables;
+        public IReadOnlyList<GameEvent> Events => events;
+        public int VariableCount => variables.Count;
+        public int EventCount => events.Count;
 
-        /// <summary>
-        /// Gets the number of variables in this container.
-        /// </summary>
-        public int Count => variables.Count;
+        public ScriptableVariable GetVariable(int index) => variables[index];
+        public GameEvent GetEvent(int index) => events[index];
 
-        /// <summary>
-        /// Gets a variable by index.
-        /// </summary>
-        /// <param name="index">The index of the variable</param>
-        /// <returns>The variable at the specified index</returns>
-        /// <exception cref="ArgumentOutOfRangeException">If index is out of range</exception>
-        public ScriptableVariable this[int index] => variables[index];
-
-        /// <summary>
-        /// Gets a typed variable by name.
-        /// </summary>
-        /// <typeparam name="T">The type of variable to get</typeparam>
-        /// <param name="name">The name of the variable</param>
-        /// <returns>The variable if found and of correct type, null otherwise</returns>
-
-        public T Get<T>(string name) where T : ScriptableVariable
+        public T GetVariable<T>(string variableName) where T : ScriptableVariable
         {
-            return variables.FirstOrDefault(v => v != null && v.name == name) as T;
+            return variables.FirstOrDefault(v => v != null && v.name == variableName) as T;
         }
 
-        /// <summary>
-        /// Gets a variable by name (non-generic).
-        /// </summary>
-        /// <param name="name">The name of the variable</param>
-        /// <returns>The variable if found, null otherwise</returns>
-        public ScriptableVariable Get(string name)
+        public ScriptableVariable GetVariable(string variableName)
         {
-            return variables.FirstOrDefault(v => v != null && v.name == name);
+            return variables.FirstOrDefault(v => v != null && v.name == variableName);
         }
 
-        /// <summary>
-        /// Tries to get a typed variable by name.
-        /// </summary>
-        /// <typeparam name="T">The type of variable to get</typeparam>
-        /// <param name="name">The name of the variable</param>
-        /// <param name="variable">The output variable if found</param>
-        /// <returns>True if the variable was found and is of correct type</returns>
-        public bool TryGet<T>(string name, out T variable) where T : ScriptableVariable
+        public T GetEvent<T>(string eventName) where T : GameEvent
         {
-            variable = Get<T>(name);
+            return events.FirstOrDefault(e => e != null && e.name == eventName) as T;
+        }
+
+        public GameEvent GetEvent(string eventName)
+        {
+            return events.FirstOrDefault(e => e != null && e.name == eventName);
+        }
+
+        public bool TryGetVariable<T>(string variableName, out T variable) where T : ScriptableVariable
+        {
+            variable = GetVariable<T>(variableName);
             return variable != null;
         }
 
-        /// <summary>
-        /// Checks if the container has a variable with the given name.
-        /// </summary>
-        /// <param name="name">The name to check for</param>
-        /// <returns>True if a variable with the given name exists</returns>
-        public bool Has(string name)
+        public bool TryGetEvent<T>(string eventName, out T gameEvent) where T : GameEvent
         {
-            return variables.Any(v => v != null && v.name == name);
+            gameEvent = GetEvent<T>(eventName);
+            return gameEvent != null;
         }
 
-        /// <summary>
-        /// Gets all variables of a specific type.
-        /// </summary>
-        /// <typeparam name="T">The type of variables to get</typeparam>
-        /// <returns>An enumerable of all variables of the specified type</returns>
+        public bool HasVariable(string variableName)
+        {
+            return variables.Any(v => v != null && v.name == variableName);
+        }
 
-        public IEnumerable<T> GetAll<T>() where T : ScriptableVariable
+        public bool HasEvent(string eventName)
+        {
+            return events.Any(e => e != null && e.name == eventName);
+        }
+
+        public IEnumerable<T> GetAllVariables<T>() where T : ScriptableVariable
         {
             return variables.OfType<T>();
         }
 
-        /// <summary>
-        /// Gets all numeric variables (IntVariable and FloatVariable).
-        /// </summary>
-        /// <returns>An enumerable of all numeric variables as INumericalVariable</returns>
+        public IEnumerable<T> GetAllEvents<T>() where T : GameEvent
+        {
+            return events.OfType<T>();
+        }
+
         public IEnumerable<INumericalVariable> GetAllNumerical()
         {
             return variables.OfType<INumericalVariable>();
         }
 
-        /// <summary>
-        /// Gets the names of all variables in this container.
-        /// </summary>
-        /// <returns>An enumerable of variable names</returns>
-        public IEnumerable<string> GetNames()
+        public IEnumerable<string> GetVariableNames()
         {
             return variables.Where(v => v != null).Select(v => v.name);
         }
 
-        /// <summary>
-        /// Resets all variables in this container to their default values.
-        /// </summary>
-        public void ResetAll()
+        public IEnumerable<string> GetEventNames()
+        {
+            return events.Where(e => e != null).Select(e => e.name);
+        }
+
+        public void ResetAllVariables()
         {
             foreach (var variable in variables)
             {
                 if (variable == null) continue;
-
-                // Use reflection to call Reset() if available
                 var resetMethod = variable.GetType().GetMethod("Reset", Type.EmptyTypes);
                 resetMethod?.Invoke(variable, null);
             }
         }
 
-        /// <summary>
-        /// Raises all variables (triggers their events without changing values).
-        /// </summary>
-        /// <remarks>
-        /// Useful for forcing UI updates when the container is first loaded.
-        /// </remarks>
-        public void RaiseAll()
+        public void RaiseAllVariables()
         {
             foreach (var variable in variables)
             {
@@ -136,15 +107,15 @@ namespace Shababeek.Utilities
             }
         }
 
+        public void RaiseAllEvents()
+        {
+            foreach (var evt in events)
+            {
+                evt?.Raise();
+            }
+        }
+
 #if UNITY_EDITOR
-        /// <summary>
-        /// Editor-only: Adds a variable to the container.
-        /// </summary>
-        /// <param name="variable">The variable to add</param>
-        /// <remarks>
-        /// This method is called by the custom editor when adding new variables.
-        /// The variable should be added as a sub-asset to this container's asset file.
-        /// </remarks>
         public void EditorAddVariable(ScriptableVariable variable)
         {
             if (variable == null) return;
@@ -155,11 +126,6 @@ namespace Shababeek.Utilities
             }
         }
 
-        /// <summary>
-        /// Editor-only: Removes a variable from the container.
-        /// </summary>
-        /// <param name="variable">The variable to remove</param>
-
         public void EditorRemoveVariable(ScriptableVariable variable)
         {
             if (variable == null) return;
@@ -169,11 +135,6 @@ namespace Shababeek.Utilities
             }
         }
 
-        /// <summary>
-        /// Editor-only: Removes a variable at the specified index.
-        /// </summary>
-        /// <param name="index">The index of the variable to remove</param>
-        /// <returns>The removed variable, or null if index was invalid</returns>
         public ScriptableVariable EditorRemoveVariableAt(int index)
         {
             if (index < 0 || index >= variables.Count) return null;
@@ -183,13 +144,39 @@ namespace Shababeek.Utilities
             return variable;
         }
 
-        /// <summary>
-        /// Editor-only: Cleans up null references in the variables list.
-        /// </summary>
+        public void EditorAddEvent(GameEvent gameEvent)
+        {
+            if (gameEvent == null) return;
+            if (!events.Contains(gameEvent))
+            {
+                events.Add(gameEvent);
+                UnityEditor.EditorUtility.SetDirty(this);
+            }
+        }
+
+        public void EditorRemoveEvent(GameEvent gameEvent)
+        {
+            if (gameEvent == null) return;
+            if (events.Remove(gameEvent))
+            {
+                UnityEditor.EditorUtility.SetDirty(this);
+            }
+        }
+
+        public GameEvent EditorRemoveEventAt(int index)
+        {
+            if (index < 0 || index >= events.Count) return null;
+            var evt = events[index];
+            events.RemoveAt(index);
+            UnityEditor.EditorUtility.SetDirty(this);
+            return evt;
+        }
+
         public void EditorCleanupNulls()
         {
-            int removed = variables.RemoveAll(v => v == null);
-            if (removed > 0)
+            int removedVars = variables.RemoveAll(v => v == null);
+            int removedEvents = events.RemoveAll(e => e == null);
+            if (removedVars > 0 || removedEvents > 0)
             {
                 UnityEditor.EditorUtility.SetDirty(this);
             }

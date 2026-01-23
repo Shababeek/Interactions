@@ -1,53 +1,68 @@
-# Variable Container — Group Multiple Variables in One Asset
+# Variable Container — Group Multiple Variables and Events in One Asset
 
 > **Quick Reference**
 > **Menu Path:** Assets > Create > Shababeek > Scriptable System > Variables > Variable Container
-> **Use For:** Organizing related variables into a single asset
-> **Requires:** ScriptableVariable types
+> **Use For:** Organizing related variables and events into a single asset
+> **Requires:** ScriptableVariable types, GameEvent
 
 ---
 
 ## What It Does
 
-**Variable Container** is a ScriptableObject that holds multiple named variables as sub-assets within a single .asset file. This provides:
+**Variable Container** is a ScriptableObject that holds multiple named variables and events as sub-assets within a single .asset file. This provides:
 
-- ✅ **Organization:** Group related variables together (player stats, game settings)
+- ✅ **Organization:** Group related variables and events together (player stats, game settings)
 - ✅ **Single Reference:** One asset to manage instead of many
-- ✅ **Dynamic Types:** Add any variable type via dropdown (populated by reflection)
+- ✅ **Dynamic Types:** Add any variable or event type via dropdown (populated by reflection)
 - ✅ **Inline Editing:** Edit variable values directly in the container inspector
-- ✅ **Code Access:** Easily retrieve variables by name at runtime
+- ✅ **Auto-Naming:** Sub-assets are automatically named with container prefix (ContainerName_variableName)
+- ✅ **Code Access:** Easily retrieve variables and events by name at runtime
 
 ---
 
 ## Quick Example
 
-> **Goal:** Create a container for player stats
+> **Goal:** Create a container for player stats with variables and events
 > **Time:** ~3 minutes
 
-[PLACEHOLDER_GIF: Creating container and adding variables]
+[PLACEHOLDER_GIF: Creating container and adding variables/events]
 
 1. **Create the Container:**
    - Right-click in Project > **Create > Shababeek > Scriptable System > Variables > Variable Container**
    - Name it "PlayerStats"
 
 2. **Add Variables:**
-   - Click the **+** button
+   - In the **Variables** section, click the **+** button
    - Select from the dropdown: Int, Float, Text, etc.
    - Rename variables: "Health", "MaxHealth", "Speed", "Gold"
    - Set initial values
 
-3. **Use in Code:**
+3. **Add Events:**
+   - In the **Events** section, click the **+** button
+   - Select "GameEvent" from the dropdown
+   - Rename events: "OnDeath", "OnLevelUp", "OnDamaged"
+
+4. **Use in Code:**
    ```csharp
    public class Player : MonoBehaviour
    {
        [SerializeField] private VariableContainer stats;
 
+       private IntVariable _health;
+       private GameEvent _onDeath;
+
        void Start()
        {
-           var health = stats.Get<IntVariable>("Health");
-           var speed = stats.Get<FloatVariable>("Speed");
+           _health = stats.Get<IntVariable>("Health");
+           _onDeath = stats.GetEvent("OnDeath");
 
-           health.OnValueChanged.Subscribe(OnHealthChanged);
+           _health.OnValueChanged.Subscribe(OnHealthChanged);
+       }
+
+       void OnHealthChanged(int newHealth)
+       {
+           if (newHealth <= 0)
+               _onDeath.Raise();
        }
    }
    ```
@@ -56,41 +71,62 @@
 
 ## Inspector Reference
 
-[PLACEHOLDER_SCREENSHOT: VariableContainer inspector with multiple variables]
+[PLACEHOLDER_SCREENSHOT: VariableContainer inspector with variables and events]
 
-### Variables List
+### Variables Section
 
 A reorderable list showing all variables in this container. Each entry displays:
 
 | Column | Description |
 |--------|-------------|
-| **Name** | Editable name (stored as the sub-asset name) |
+| **Name** | Editable name (stored as the sub-asset name with container prefix) |
 | **Type** | Variable type (Int, Float, Bool, etc.) |
 | **Value** | Inline editable value field |
 
+### Events Section
+
+A reorderable list showing all GameEvents in this container. Each entry displays:
+
+| Column | Description |
+|--------|-------------|
+| **Name** | Editable name (stored as the sub-asset name with container prefix) |
+| **Type** | Always "GameEvent" |
+
 ### Add Button (+)
 
-Click to show a dropdown menu with all available variable types:
+Click to show a dropdown menu with all available types:
 
-**Categories:**
+**Variable Categories:**
 - **Primitives:** Int, Float, Bool, Text
 - **Vectors:** Vector2, Vector2Int, Vector3, Quaternion
 - **Graphics:** Color, Gradient, AnimationCurve
 - **Other:** GameObject, Transform, AudioClip, LayerMask, Enum
 
+**Event Types:**
+- GameEvent (with parameterized variants if available)
+
 The dropdown is populated via reflection, so custom variable types automatically appear.
 
 ### Remove Button (-)
 
-Removes the selected variable from the container and deletes its sub-asset.
+Removes the selected variable or event from the container and deletes its sub-asset.
 
-⚠️ **Warning:** This permanently deletes the variable. References to it will become null.
+⚠️ **Warning:** This permanently deletes the asset. References to it will become null.
+
+### Naming Convention
+
+Sub-assets are automatically named with the container name as a prefix:
+- Container: "PlayerStats"
+- Variable named "Health" → Asset name: "PlayerStats_Health"
+- Event named "OnDeath" → Asset name: "PlayerStats_OnDeath"
+
+This prevents naming conflicts when using multiple containers.
 
 ### Utility Buttons
 
 | Button | Description |
 |--------|-------------|
-| **Cleanup Nulls** | Removes any null references from the list |
+| **Cleanup Nulls** | Removes any null references from the lists |
 | **Raise All** | Triggers events on all variables (useful for UI refresh) |
 | **Reset All** | Resets all variables to default values (with confirmation) |
 
@@ -120,6 +156,22 @@ if (container.Has("Gold"))
 }
 ```
 
+### Getting Events
+
+```csharp
+// Get event by name
+GameEvent onDeath = container.GetEvent("OnDeath");
+
+// Check existence
+if (container.HasEvent("OnLevelUp"))
+{
+    // ...
+}
+
+// Get all events
+IReadOnlyList<GameEvent> allEvents = container.Events;
+```
+
 ### Getting Multiple Variables
 
 ```csharp
@@ -145,11 +197,12 @@ IEnumerable<string> names = container.GetNames();
 ### Indexer Access
 
 ```csharp
-// Access by index
+// Access variable by index
 ScriptableVariable first = container[0];
 
-// Count
-int count = container.Count;
+// Counts
+int variableCount = container.Count;
+int eventCount = container.EventCount;
 ```
 
 ### Utility Methods
@@ -168,7 +221,7 @@ container.RaiseAll();
 
 ### How To: Create Player Stats Container
 
-> **Goal:** Set up a complete player stats system
+> **Goal:** Set up a complete player stats system with variables and events
 > **Time:** ~5 minutes
 
 1. Create **Variable Container** named "PlayerStats"
@@ -183,24 +236,41 @@ container.RaiseAll();
    | Gold | Int | 0 |
    | PlayerName | Text | "Player" |
 
-3. Create player script:
+3. Add events:
+
+   | Name | Description |
+   |------|-------------|
+   | OnDeath | Raised when health reaches 0 |
+   | OnDamaged | Raised when taking damage |
+   | OnHealed | Raised when healing |
+   | OnLevelUp | Raised on level up |
+
+4. Create player script:
    ```csharp
    public class PlayerController : MonoBehaviour
    {
        [SerializeField] private VariableContainer stats;
        private IntVariable _health;
        private FloatVariable _speed;
+       private GameEvent _onDeath;
+       private GameEvent _onDamaged;
 
        void Start()
        {
            _health = stats.Get<IntVariable>("Health");
            _speed = stats.Get<FloatVariable>("Speed");
+           _onDeath = stats.GetEvent("OnDeath");
+           _onDamaged = stats.GetEvent("OnDamaged");
        }
 
-       void TakeDamage(int damage)
+       public void TakeDamage(int damage)
        {
            _health.Add(-damage);
            _health.Clamp(0, stats.Get<IntVariable>("MaxHealth").Value);
+           _onDamaged.Raise();
+
+           if (_health.Value <= 0)
+               _onDeath.Raise();
        }
    }
    ```
@@ -209,7 +279,7 @@ container.RaiseAll();
 
 ### How To: Game Settings Container
 
-> **Goal:** Centralize game settings
+> **Goal:** Centralize game settings with events for changes
 > **Time:** ~3 minutes
 
 1. Create **Variable Container** named "GameSettings"
@@ -224,18 +294,33 @@ container.RaiseAll();
    | Difficulty | Int | 1 |
    | InvertY | Bool | false |
 
-3. Reference in settings menu:
+3. Add events:
+
+   | Name | Description |
+   |------|-------------|
+   | OnSettingsChanged | Raised when any setting changes |
+   | OnVolumeChanged | Raised when volume settings change |
+
+4. Reference in settings menu:
    ```csharp
    public class SettingsMenu : MonoBehaviour
    {
        [SerializeField] private VariableContainer settings;
        [SerializeField] private Slider volumeSlider;
 
+       private GameEvent _onVolumeChanged;
+
        void Start()
        {
            var volume = settings.Get<FloatVariable>("MasterVolume");
+           _onVolumeChanged = settings.GetEvent("OnVolumeChanged");
+
            volumeSlider.value = volume.Value;
-           volumeSlider.onValueChanged.AddListener(v => volume.Value = v);
+           volumeSlider.onValueChanged.AddListener(v =>
+           {
+               volume.Value = v;
+               _onVolumeChanged.Raise();
+           });
        }
    }
    ```
@@ -244,7 +329,7 @@ container.RaiseAll();
 
 ### How To: Level Data Container
 
-> **Goal:** Store level-specific data
+> **Goal:** Store level-specific data with completion events
 > **Time:** ~3 minutes
 
 1. Create **Variable Container** for each level: "Level1Data", "Level2Data"
@@ -259,7 +344,15 @@ container.RaiseAll();
    | Completed | Bool | Has been completed |
    | BestTime | Float | Best completion time |
 
-3. Load dynamically:
+3. Add events:
+
+   | Name | Description |
+   |------|-------------|
+   | OnLevelStart | Raised when level starts |
+   | OnLevelComplete | Raised when level completed |
+   | OnNewBestTime | Raised when new best time achieved |
+
+4. Load dynamically:
    ```csharp
    public class LevelManager : MonoBehaviour
    {
@@ -267,6 +360,9 @@ container.RaiseAll();
        {
            var timeLimit = levelData.Get<FloatVariable>("TimeLimit").Value;
            var targetScore = levelData.Get<IntVariable>("TargetScore").Value;
+           var onStart = levelData.GetEvent("OnLevelStart");
+
+           onStart.Raise();
            // ...
        }
    }
@@ -277,10 +373,10 @@ container.RaiseAll();
 ## Tips & Best Practices
 
 💡 **Name Variables Descriptively**
-Use clear names like "PlayerHealth" not just "Health" — the container already provides context.
+Use clear names like "Health" not "HP" — the container prefix provides additional context.
 
 💡 **Cache Variable References**
-Get variables once in Start/Awake and cache them for performance.
+Get variables and events once in Start/Awake and cache them for performance.
 
 💡 **Group by Context**
 Create separate containers for different systems: PlayerStats, GameSettings, AudioSettings.
@@ -291,11 +387,20 @@ Call `ResetAll()` when starting a new game to restore default values.
 💡 **Raise After Loading**
 Call `RaiseAll()` after loading a scene to ensure all UI updates with current values.
 
+💡 **Events for Side Effects**
+Use events to trigger side effects (sounds, particles, UI updates) rather than coupling systems directly.
+
+💡 **Container Prefix**
+The automatic naming (ContainerName_variableName) helps identify assets at a glance in the Project view.
+
 ⚠️ **Common Mistake:** Modifying container at runtime
-Don't add/remove variables at runtime — the list is for editor-time configuration.
+Don't add/remove variables at runtime — the lists are for editor-time configuration.
 
 ⚠️ **Common Mistake:** Same name different types
 Avoid having multiple variables with the same name but different types.
+
+⚠️ **Common Mistake:** Forgetting to cache
+Calling `Get<T>()` every frame is wasteful — cache references in Start/Awake.
 
 ---
 
@@ -308,6 +413,8 @@ Avoid having multiple variables with the same name but different types.
 | Sub-assets missing | Asset corruption | Re-create the container |
 | Dropdown empty | No variable types | Ensure variable classes compile |
 | Changes not saved | Forgot to save | Save project after making changes |
+| Event not in dropdown | Wrong event type | Ensure GameEvent class is available |
+| Name shows full path | Expected behavior | Container prefix is intentional |
 
 ---
 
@@ -315,9 +422,10 @@ Avoid having multiple variables with the same name but different types.
 
 - [Scriptable Variables](ScriptableVariables.md) — Individual variable types
 - [Binders](Binders.md) — Connect variables to components
+- [Game Events](GameEvents.md) — Event system documentation
 - [Quick Start Guide](../GettingStarted/QuickStart.md) — Basic setup
 
 ---
 
 **Last Updated:** January 2026
-**Component Version:** 1.0.0
+**Component Version:** 1.1.0
