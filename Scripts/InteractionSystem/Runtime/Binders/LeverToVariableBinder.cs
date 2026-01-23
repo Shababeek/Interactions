@@ -1,13 +1,13 @@
-using Shababeek.Interactions;
+using Shababeek.Utilities;
 using UniRx;
 using UnityEngine;
 
-namespace Shababeek.Utilities
+namespace Shababeek.Interactions
 {
     /// <summary>
     /// Binds a LeverInteractable's output to scriptable variables.
     /// </summary>
-    [AddComponentMenu("Shababeek/Scriptable System/Lever To Variable Binder")]
+    [AddComponentMenu("Shababeek/Interactions/Binders/Lever To Variable Binder")]
     public class LeverToVariableBinder : MonoBehaviour
     {
         [Header("Source")]

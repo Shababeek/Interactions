@@ -1,13 +1,13 @@
-using Shababeek.Interactions;
+using Shababeek.Utilities;
 using UniRx;
 using UnityEngine;
 
-namespace Shababeek.Utilities
+namespace Shababeek.Interactions
 {
     /// <summary>
     /// Binds a JoystickInteractable's output to scriptable variables.
     /// </summary>
-    [AddComponentMenu("Shababeek/Scriptable System/Joystick To Variable Binder")]
+    [AddComponentMenu("Shababeek/Interactions/Binders/Joystick To Variable Binder")]
     public class JoystickToVariableBinder : MonoBehaviour
     {
         [Header("Source")]

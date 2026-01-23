@@ -1,13 +1,13 @@
-using Shababeek.Interactions;
+using Shababeek.Utilities;
 using UniRx;
 using UnityEngine;
 
-namespace Shababeek.Utilities
+namespace Shababeek.Interactions
 {
     /// <summary>
     /// Binds interactable interaction events to GameEvents and variables.
     /// </summary>
-    [AddComponentMenu("Shababeek/Scriptable System/Interactable Event Binder")]
+    [AddComponentMenu("Shababeek/Interactions/Binders/Interactable Event Binder")]
     public class InteractableEventBinder : MonoBehaviour
     {
         [Header("Source")]

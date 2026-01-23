@@ -1,13 +1,13 @@
-using Shababeek.Interactions;
+using Shababeek.Utilities;
 using UniRx;
 using UnityEngine;
 
-namespace Shababeek.Utilities
+namespace Shababeek.Interactions
 {
     /// <summary>
     /// Binds a DrawerInteractable's output to scriptable variables and events.
     /// </summary>
-    [AddComponentMenu("Shababeek/Scriptable System/Drawer To Variable Binder")]
+    [AddComponentMenu("Shababeek/Interactions/Binders/Drawer To Variable Binder")]
     public class DrawerToVariableBinder : MonoBehaviour
     {
         [Header("Source")]

@@ -1,13 +1,13 @@
-using Shababeek.Interactions;
+using Shababeek.Utilities;
 using UniRx;
 using UnityEngine;
 
-namespace Shababeek.Utilities
+namespace Shababeek.Interactions
 {
     /// <summary>
     /// Binds a WheelInteractable's output to scriptable variables.
     /// </summary>
-    [AddComponentMenu("Shababeek/Scriptable System/Wheel To Variable Binder")]
+    [AddComponentMenu("Shababeek/Interactions/Binders/Wheel To Variable Binder")]
     public class WheelToVariableBinder : MonoBehaviour
     {
         [Header("Source")]
