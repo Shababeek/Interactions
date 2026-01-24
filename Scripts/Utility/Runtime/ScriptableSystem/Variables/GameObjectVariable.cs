@@ -79,16 +79,9 @@ namespace Shababeek.Utilities
             return !(b == a);
         }
 
-        public override bool Equals(object obj)
-        {
-            if (obj is GameObjectVariable other) return this == other;
-            if (obj is GameObject gameObjectValue) return this == gameObjectValue;
-            return false;
-        }
-
-        public override int GetHashCode()
-        {
-            return Value?.GetHashCode() ?? 0;
-        }
+        // Use reference equality for Equals (standard object behavior)
+        // Use == operator for value comparison in code
+        public override bool Equals(object obj) => ReferenceEquals(this, obj);
+        public override int GetHashCode() => base.GetHashCode();
     }
 }

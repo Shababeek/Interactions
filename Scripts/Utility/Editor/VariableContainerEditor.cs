@@ -10,72 +10,59 @@ namespace Shababeek.Utilities.Editors
     [CustomEditor(typeof(VariableContainer))]
     public class VariableContainerEditor : Editor
     {
+        private VariableContainer _container;
         private ReorderableList _variableList;
         private ReorderableList _eventList;
-        private VariableContainer _container;
-        private List<Type> _variableTypes;
-        private List<Type> _eventTypes;
-        private Dictionary<Type, string> _typeDisplayNames;
-        private Dictionary<UnityEngine.Object, SerializedObject> _cachedSerializedObjects = new();
+
+        // Foldout states
         private bool _showVariables = true;
         private bool _showEvents = true;
+
+        // Cached serialized objects for sub-assets
+        private readonly Dictionary<UnityEngine.Object, SerializedObject> _serializedCache = new();
+
+        // Hardcoded list of variable types - simple and reliable
+        private static readonly (Type type, string displayName, string category)[] VariableTypes = new[]
+        {
+            // Primitives
+            (typeof(IntVariable), "Int", "Primitives"),
+            (typeof(FloatVariable), "Float", "Primitives"),
+            (typeof(BoolVariable), "Bool", "Primitives"),
+            (typeof(TextVariable), "Text", "Primitives"),
+
+            // Vectors
+            (typeof(Vector2Variable), "Vector2", "Vectors"),
+            (typeof(Vector2IntVariable), "Vector2Int", "Vectors"),
+            (typeof(Vector3Variable), "Vector3", "Vectors"),
+            (typeof(QuaternionVariable), "Quaternion", "Vectors"),
+
+            // Graphics
+            (typeof(ColorVariable), "Color", "Graphics"),
+            (typeof(GradientVariable), "Gradient", "Graphics"),
+            (typeof(AnimationCurveVariable), "AnimationCurve", "Graphics"),
+
+            // References
+            (typeof(GameObjectVariable), "GameObject", "References"),
+            (typeof(TransformVariable), "Transform", "References"),
+            (typeof(AudioClipVariable), "AudioClip", "References"),
+
+            // Other
+            (typeof(LayerMaskVariable), "LayerMask", "Other"),
+        };
 
         private void OnEnable()
         {
             _container = (VariableContainer)target;
-            CacheTypes();
             SetupVariableList();
             SetupEventList();
         }
 
         private void OnDisable()
         {
-            _cachedSerializedObjects.Clear();
+            _serializedCache.Clear();
         }
 
-        private void CacheTypes()
-        {
-            _variableTypes = new List<Type>();
-            _eventTypes = new List<Type>();
-            _typeDisplayNames = new Dictionary<Type, string>();
-
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-            {
-                try
-                {
-                    // Cache variable types
-                    var varTypes = assembly.GetTypes()
-                        .Where(t => typeof(ScriptableVariable).IsAssignableFrom(t)
-                                    && !t.IsAbstract && t != typeof(ScriptableVariable)
-                                    && !t.IsGenericType);
-
-                    foreach (var type in varTypes)
-                    {
-                        _variableTypes.Add(type);
-                        string name = type.Name;
-                        if (name.EndsWith("Variable")) name = name.Substring(0, name.Length - 8);
-                        _typeDisplayNames[type] = name;
-                    }
-
-                    // Cache event types
-                    var eventTypes = assembly.GetTypes()
-                        .Where(t => typeof(GameEvent).IsAssignableFrom(t)
-                                    && !t.IsAbstract && !t.IsGenericType);
-
-                    foreach (var type in eventTypes)
-                    {
-                        _eventTypes.Add(type);
-                        string name = type.Name;
-                        if (name.EndsWith("Event")) name = name.Substring(0, name.Length - 5);
-                        _typeDisplayNames[type] = name;
-                    }
-                }
-                catch { }
-            }
-
-            _variableTypes = _variableTypes.OrderBy(t => _typeDisplayNames[t]).ToList();
-            _eventTypes = _eventTypes.OrderBy(t => _typeDisplayNames[t]).ToList();
-        }
+        // ==================== LIST SETUP ====================
 
         private void SetupVariableList()
         {
@@ -84,9 +71,9 @@ namespace Shababeek.Utilities.Editors
             {
                 drawHeaderCallback = rect => EditorGUI.LabelField(rect, "Variables", EditorStyles.boldLabel),
                 drawElementCallback = DrawVariableElement,
-                elementHeightCallback = GetVariableElementHeight,
-                onAddDropdownCallback = ShowVariableDropdown,
-                onRemoveCallback = RemoveVariable
+                elementHeightCallback = GetVariableHeight,
+                onAddDropdownCallback = OnAddVariableDropdown,
+                onRemoveCallback = OnRemoveVariable
             };
         }
 
@@ -97,51 +84,47 @@ namespace Shababeek.Utilities.Editors
             {
                 drawHeaderCallback = rect => EditorGUI.LabelField(rect, "Events", EditorStyles.boldLabel),
                 drawElementCallback = DrawEventElement,
-                elementHeightCallback = GetEventElementHeight,
-                onAddDropdownCallback = ShowEventDropdown,
-                onRemoveCallback = RemoveEvent
+                elementHeightCallback = _ => EditorGUIUtility.singleLineHeight + 4f,
+                onAddCallback = OnAddEvent,
+                onRemoveCallback = OnRemoveEvent
             };
         }
 
-        private float GetVariableElementHeight(int index)
+        // ==================== VARIABLE DRAWING ====================
+
+        private float GetVariableHeight(int index)
         {
-            var prop = _variableList.serializedProperty.GetArrayElementAtIndex(index);
-            var variable = prop.objectReferenceValue as ScriptableVariable;
+            if (index < 0 || index >= _container.VariableCount) return EditorGUIUtility.singleLineHeight;
+
+            var variable = _container.GetVariable(index);
             if (variable == null) return EditorGUIUtility.singleLineHeight + 4f;
 
-            if (!_cachedSerializedObjects.TryGetValue(variable, out var so))
-            {
-                so = new SerializedObject(variable);
-                _cachedSerializedObjects[variable] = so;
-            }
-
+            var so = GetSerializedObject(variable);
             var valueProp = so.FindProperty("value");
+
+            float height = EditorGUIUtility.singleLineHeight;
             if (valueProp != null)
             {
-                return Mathf.Max(EditorGUI.GetPropertyHeight(valueProp, true), EditorGUIUtility.singleLineHeight) + 6f;
+                height = Mathf.Max(height, EditorGUI.GetPropertyHeight(valueProp, true));
             }
-            return EditorGUIUtility.singleLineHeight + 4f;
-        }
-
-        private float GetEventElementHeight(int index)
-        {
-            return EditorGUIUtility.singleLineHeight + 4f;
+            return height + 6f;
         }
 
         private void DrawVariableElement(Rect rect, int index, bool isActive, bool isFocused)
         {
-            var prop = _variableList.serializedProperty.GetArrayElementAtIndex(index);
-            var variable = prop.objectReferenceValue as ScriptableVariable;
+            if (index < 0 || index >= _container.VariableCount) return;
 
+            var variable = _container.GetVariable(index);
             if (variable == null)
             {
-                EditorGUI.LabelField(rect, "(Missing)", EditorStyles.miniLabel);
+                EditorGUI.LabelField(rect, "(Missing Reference)", EditorStyles.miniLabel);
                 return;
             }
 
             rect.y += 2f;
             rect.height -= 4f;
 
+            // Layout: [Name 30%] [Type 15%] [Value 55%]
             float nameWidth = rect.width * 0.30f - 4f;
             float typeWidth = rect.width * 0.15f - 4f;
             float valueWidth = rect.width * 0.55f - 4f;
@@ -150,17 +133,17 @@ namespace Shababeek.Utilities.Editors
             var typeRect = new Rect(rect.x + nameWidth + 4f, rect.y, typeWidth, EditorGUIUtility.singleLineHeight);
             var valueRect = new Rect(rect.x + nameWidth + typeWidth + 8f, rect.y, valueWidth, rect.height);
 
-            // Name field - extract the variable name without container prefix
+            // Name field (editable)
             string displayName = GetDisplayName(variable.name);
             EditorGUI.BeginChangeCheck();
             string newName = EditorGUI.TextField(nameRect, displayName);
-            if (EditorGUI.EndChangeCheck() && newName != displayName)
+            if (EditorGUI.EndChangeCheck() && newName != displayName && !string.IsNullOrWhiteSpace(newName))
             {
-                RenameAsset(variable, newName);
+                RenameSubAsset(variable, newName);
             }
 
-            // Type label
-            string typeName = _typeDisplayNames.TryGetValue(variable.GetType(), out var dn) ? dn : variable.GetType().Name;
+            // Type label (read-only)
+            string typeName = GetTypeName(variable.GetType());
             GUI.enabled = false;
             EditorGUI.TextField(typeRect, typeName);
             GUI.enabled = true;
@@ -169,79 +152,11 @@ namespace Shababeek.Utilities.Editors
             DrawValueField(valueRect, variable);
         }
 
-        private void DrawEventElement(Rect rect, int index, bool isActive, bool isFocused)
-        {
-            var prop = _eventList.serializedProperty.GetArrayElementAtIndex(index);
-            var evt = prop.objectReferenceValue as GameEvent;
-
-            if (evt == null)
-            {
-                EditorGUI.LabelField(rect, "(Missing)", EditorStyles.miniLabel);
-                return;
-            }
-
-            rect.y += 2f;
-            rect.height -= 4f;
-
-            float nameWidth = rect.width * 0.50f - 4f;
-            float typeWidth = rect.width * 0.30f - 4f;
-            float buttonWidth = rect.width * 0.20f - 4f;
-
-            var nameRect = new Rect(rect.x, rect.y, nameWidth, EditorGUIUtility.singleLineHeight);
-            var typeRect = new Rect(rect.x + nameWidth + 4f, rect.y, typeWidth, EditorGUIUtility.singleLineHeight);
-            var buttonRect = new Rect(rect.x + nameWidth + typeWidth + 8f, rect.y, buttonWidth, EditorGUIUtility.singleLineHeight);
-
-            // Name field
-            string displayName = GetDisplayName(evt.name);
-            EditorGUI.BeginChangeCheck();
-            string newName = EditorGUI.TextField(nameRect, displayName);
-            if (EditorGUI.EndChangeCheck() && newName != displayName)
-            {
-                RenameAsset(evt, newName);
-            }
-
-            // Type label
-            string typeName = _typeDisplayNames.TryGetValue(evt.GetType(), out var dn) ? dn : evt.GetType().Name;
-            GUI.enabled = false;
-            EditorGUI.TextField(typeRect, typeName);
-            GUI.enabled = true;
-
-            // Raise button
-            if (GUI.Button(buttonRect, "Raise"))
-            {
-                evt.Raise();
-            }
-        }
-
-        private string GetDisplayName(string fullName)
-        {
-            // Remove "ContainerName_" prefix if present
-            string prefix = _container.name + "_";
-            if (fullName.StartsWith(prefix))
-            {
-                return fullName.Substring(prefix.Length);
-            }
-            return fullName;
-        }
-
-        private void RenameAsset(ScriptableObject asset, string newDisplayName)
-        {
-            string newFullName = $"{_container.name}_{newDisplayName}";
-            Undo.RecordObject(asset, "Rename Asset");
-            asset.name = newFullName;
-            EditorUtility.SetDirty(asset);
-            AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(_container));
-        }
-
         private void DrawValueField(Rect rect, ScriptableVariable variable)
         {
-            if (!_cachedSerializedObjects.TryGetValue(variable, out var so))
-            {
-                so = new SerializedObject(variable);
-                _cachedSerializedObjects[variable] = so;
-            }
-
+            var so = GetSerializedObject(variable);
             so.Update();
+
             var valueProp = so.FindProperty("value");
             if (valueProp != null)
             {
@@ -250,7 +165,7 @@ namespace Shababeek.Utilities.Editors
                 if (EditorGUI.EndChangeCheck())
                 {
                     so.ApplyModifiedProperties();
-                    variable.Raise();
+                    variable.Raise(); // Notify listeners of change
                 }
             }
             else
@@ -259,96 +174,108 @@ namespace Shababeek.Utilities.Editors
             }
         }
 
-        private void ShowVariableDropdown(Rect rect, ReorderableList list)
+        // ==================== EVENT DRAWING ====================
+
+        private void DrawEventElement(Rect rect, int index, bool isActive, bool isFocused)
+        {
+            if (index < 0 || index >= _container.EventCount) return;
+
+            var evt = _container.GetEvent(index);
+            if (evt == null)
+            {
+                EditorGUI.LabelField(rect, "(Missing Reference)", EditorStyles.miniLabel);
+                return;
+            }
+
+            rect.y += 2f;
+            rect.height -= 4f;
+
+            // Layout: [Name 60%] [Raise Button 40%]
+            float nameWidth = rect.width * 0.60f - 4f;
+            float buttonWidth = rect.width * 0.40f - 4f;
+
+            var nameRect = new Rect(rect.x, rect.y, nameWidth, EditorGUIUtility.singleLineHeight);
+            var buttonRect = new Rect(rect.x + nameWidth + 4f, rect.y, buttonWidth, EditorGUIUtility.singleLineHeight);
+
+            // Name field (editable)
+            string displayName = GetDisplayName(evt.name);
+            EditorGUI.BeginChangeCheck();
+            string newName = EditorGUI.TextField(nameRect, displayName);
+            if (EditorGUI.EndChangeCheck() && newName != displayName && !string.IsNullOrWhiteSpace(newName))
+            {
+                RenameSubAsset(evt, newName);
+            }
+
+            // Raise button
+            if (GUI.Button(buttonRect, "Raise"))
+            {
+                evt.Raise();
+            }
+        }
+
+        // ==================== ADD/REMOVE CALLBACKS ====================
+
+        private void OnAddVariableDropdown(Rect buttonRect, ReorderableList list)
         {
             var menu = new GenericMenu();
-            var primitives = new[] { "Int", "Float", "Bool", "Text" };
-            var vectors = new[] { "Vector2", "Vector2Int", "Vector3", "Quaternion" };
-            var graphics = new[] { "Color", "Gradient", "AnimationCurve" };
 
-            foreach (var type in _variableTypes)
+            // Group by category
+            string lastCategory = null;
+            foreach (var (type, displayName, category) in VariableTypes)
             {
-                string name = _typeDisplayNames[type];
-                string category = primitives.Any(p => name.StartsWith(p)) ? "Primitives/" :
-                                  vectors.Any(v => name.StartsWith(v)) ? "Vectors/" :
-                                  graphics.Any(g => name.StartsWith(g)) ? "Graphics/" : "Other/";
+                // Add separator between categories
+                if (lastCategory != null && lastCategory != category)
+                {
+                    menu.AddSeparator("");
+                }
+                lastCategory = category;
 
-                menu.AddItem(new GUIContent(category + name), false, () => AddVariable(type));
+                // Capture for closure
+                Type capturedType = type;
+                string capturedName = displayName;
+
+                menu.AddItem(
+                    new GUIContent($"{category}/{displayName}"),
+                    false,
+                    () => AddVariable(capturedType, capturedName)
+                );
             }
+
             menu.ShowAsContext();
         }
 
-        private void ShowEventDropdown(Rect rect, ReorderableList list)
+        private void AddVariable(Type type, string baseName)
         {
-            var menu = new GenericMenu();
-            foreach (var type in _eventTypes)
-            {
-                string name = _typeDisplayNames[type];
-                menu.AddItem(new GUIContent(name), false, () => AddEvent(type));
-            }
-            menu.ShowAsContext();
-        }
+            string assetPath = AssetDatabase.GetAssetPath(_container);
 
-        private void AddVariable(Type type)
-        {
-            var path = AssetDatabase.GetAssetPath(_container);
+            // Create the variable instance
             var variable = (ScriptableVariable)CreateInstance(type);
+            variable.name = GenerateUniqueName(baseName, isVariable: true);
 
-            string baseName = _typeDisplayNames.TryGetValue(type, out var dn) ? dn : type.Name;
-            variable.name = GenerateUniqueName(baseName, true);
-
+            // Add as sub-asset
             Undo.RecordObject(_container, "Add Variable");
-            AssetDatabase.AddObjectToAsset(variable, path);
+            AssetDatabase.AddObjectToAsset(variable, assetPath);
             _container.EditorAddVariable(variable);
 
+            // Refresh
             serializedObject.Update();
             AssetDatabase.SaveAssets();
-            AssetDatabase.ImportAsset(path);
+            AssetDatabase.ImportAsset(assetPath);
         }
 
-        private void AddEvent(Type type)
-        {
-            var path = AssetDatabase.GetAssetPath(_container);
-            var evt = (GameEvent)CreateInstance(type);
-
-            string baseName = _typeDisplayNames.TryGetValue(type, out var dn) ? dn : type.Name;
-            evt.name = GenerateUniqueName(baseName, false);
-
-            Undo.RecordObject(_container, "Add Event");
-            AssetDatabase.AddObjectToAsset(evt, path);
-            _container.EditorAddEvent(evt);
-
-            serializedObject.Update();
-            AssetDatabase.SaveAssets();
-            AssetDatabase.ImportAsset(path);
-        }
-
-        private string GenerateUniqueName(string baseName, bool isVariable)
-        {
-            string prefix = _container.name + "_";
-            string fullName = prefix + baseName;
-            int counter = 1;
-
-            while ((isVariable && _container.HasVariable(fullName)) || (!isVariable && _container.HasEvent(fullName)))
-            {
-                fullName = $"{prefix}{baseName}_{counter}";
-                counter++;
-            }
-            return fullName;
-        }
-
-        private void RemoveVariable(ReorderableList list)
+        private void OnRemoveVariable(ReorderableList list)
         {
             int index = list.index;
             if (index < 0 || index >= _container.VariableCount) return;
 
             var variable = _container.GetVariable(index);
+
             Undo.RecordObject(_container, "Remove Variable");
             _container.EditorRemoveVariableAt(index);
 
             if (variable != null)
             {
-                _cachedSerializedObjects.Remove(variable);
+                _serializedCache.Remove(variable);
                 AssetDatabase.RemoveObjectFromAsset(variable);
                 DestroyImmediate(variable, true);
             }
@@ -357,18 +284,38 @@ namespace Shababeek.Utilities.Editors
             AssetDatabase.SaveAssets();
         }
 
-        private void RemoveEvent(ReorderableList list)
+        private void OnAddEvent(ReorderableList list)
+        {
+            string assetPath = AssetDatabase.GetAssetPath(_container);
+
+            // Create GameEvent instance
+            var evt = CreateInstance<GameEvent>();
+            evt.name = GenerateUniqueName("Event", isVariable: false);
+
+            // Add as sub-asset
+            Undo.RecordObject(_container, "Add Event");
+            AssetDatabase.AddObjectToAsset(evt, assetPath);
+            _container.EditorAddEvent(evt);
+
+            // Refresh
+            serializedObject.Update();
+            AssetDatabase.SaveAssets();
+            AssetDatabase.ImportAsset(assetPath);
+        }
+
+        private void OnRemoveEvent(ReorderableList list)
         {
             int index = list.index;
             if (index < 0 || index >= _container.EventCount) return;
 
             var evt = _container.GetEvent(index);
+
             Undo.RecordObject(_container, "Remove Event");
             _container.EditorRemoveEventAt(index);
 
             if (evt != null)
             {
-                _cachedSerializedObjects.Remove(evt);
+                _serializedCache.Remove(evt);
                 AssetDatabase.RemoveObjectFromAsset(evt);
                 DestroyImmediate(evt, true);
             }
@@ -377,14 +324,117 @@ namespace Shababeek.Utilities.Editors
             AssetDatabase.SaveAssets();
         }
 
+        // ==================== UTILITY METHODS ====================
+
+        private SerializedObject GetSerializedObject(UnityEngine.Object obj)
+        {
+            if (!_serializedCache.TryGetValue(obj, out var so))
+            {
+                so = new SerializedObject(obj);
+                _serializedCache[obj] = so;
+            }
+            return so;
+        }
+
+        private string GetDisplayName(string fullName)
+        {
+            // Remove "ContainerName_" prefix if present
+            string prefix = _container.name + "_";
+            return fullName.StartsWith(prefix) ? fullName.Substring(prefix.Length) : fullName;
+        }
+
+        private string GetTypeName(Type type)
+        {
+            // Look up in our hardcoded list first
+            foreach (var (t, displayName, _) in VariableTypes)
+            {
+                if (t == type) return displayName;
+            }
+
+            // Fallback: remove "Variable" suffix
+            string name = type.Name;
+            return name.EndsWith("Variable") ? name.Substring(0, name.Length - 8) : name;
+        }
+
+        private void RenameSubAsset(ScriptableObject asset, string newDisplayName)
+        {
+            string newFullName = $"{_container.name}_{newDisplayName}";
+            Undo.RecordObject(asset, "Rename Asset");
+            asset.name = newFullName;
+            EditorUtility.SetDirty(asset);
+            AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(_container));
+        }
+
+        private string GenerateUniqueName(string baseName, bool isVariable)
+        {
+            string prefix = _container.name + "_";
+            string fullName = prefix + baseName;
+            int counter = 1;
+
+            // Check for existing names
+            while (isVariable ? _container.HasVariable(fullName) : _container.HasEvent(fullName))
+            {
+                fullName = $"{prefix}{baseName}_{counter}";
+                counter++;
+            }
+            return fullName;
+        }
+
+        private void ClearOrphanedSubAssets()
+        {
+            string path = AssetDatabase.GetAssetPath(_container);
+            var allAssets = AssetDatabase.LoadAllAssetsAtPath(path);
+
+            // Build set of referenced assets
+            var referenced = new HashSet<UnityEngine.Object> { _container };
+            foreach (var v in _container.Variables) if (v != null) referenced.Add(v);
+            foreach (var e in _container.Events) if (e != null) referenced.Add(e);
+
+            // Find orphans
+            var orphans = allAssets
+                .Where(a => a != null && !referenced.Contains(a))
+                .Where(a => a is ScriptableVariable || a is GameEvent)
+                .ToList();
+
+            if (orphans.Count == 0)
+            {
+                EditorUtility.DisplayDialog("No Orphans", "No orphaned sub-assets found.", "OK");
+                return;
+            }
+
+            // Confirm
+            string names = string.Join("\n  - ", orphans.Select(o => o.name));
+            if (!EditorUtility.DisplayDialog("Clear Orphaned Sub-Assets",
+                $"Found {orphans.Count} orphaned sub-assets:\n  - {names}\n\nDelete them?",
+                "Delete", "Cancel"))
+            {
+                return;
+            }
+
+            // Delete
+            foreach (var orphan in orphans)
+            {
+                _serializedCache.Remove(orphan);
+                AssetDatabase.RemoveObjectFromAsset(orphan);
+                DestroyImmediate(orphan, true);
+            }
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.ImportAsset(path);
+            Debug.Log($"Deleted {orphans.Count} orphaned sub-assets from {_container.name}");
+        }
+
+        // ==================== INSPECTOR GUI ====================
+
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
 
+            // Header
             EditorGUILayout.Space(5);
             EditorGUILayout.HelpBox(
-                "Container holds Variables and Events as sub-assets.\n" +
-                "Names are automatically prefixed with container name.",
+                "Container for Variables and Events stored as sub-assets.\n" +
+                "Names are prefixed with the container name.",
                 MessageType.Info);
             EditorGUILayout.Space(5);
 
@@ -408,19 +458,32 @@ namespace Shababeek.Utilities.Editors
 
             // Utility buttons
             EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("Cleanup Nulls", GUILayout.Height(25)))
+
+            if (GUILayout.Button("Cleanup Nulls", GUILayout.Height(24)))
             {
                 _container.EditorCleanupNulls();
                 serializedObject.Update();
             }
-            if (GUILayout.Button("Raise All Vars", GUILayout.Height(25)))
+
+            if (GUILayout.Button("Clear Orphans", GUILayout.Height(24)))
+            {
+                ClearOrphanedSubAssets();
+            }
+
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.BeginHorizontal();
+
+            if (GUILayout.Button("Raise All Variables", GUILayout.Height(24)))
             {
                 _container.RaiseAllVariables();
             }
-            if (GUILayout.Button("Raise All Events", GUILayout.Height(25)))
+
+            if (GUILayout.Button("Raise All Events", GUILayout.Height(24)))
             {
                 _container.RaiseAllEvents();
             }
+
             EditorGUILayout.EndHorizontal();
 
             serializedObject.ApplyModifiedProperties();

@@ -186,16 +186,9 @@ namespace Shababeek.Utilities
             return !(b == a);
         }
 
-        public override bool Equals(object obj)
-        {
-            if (obj is TransformVariable other) return this == other;
-            if (obj is Transform transformValue) return this == transformValue;
-            return false;
-        }
-
-        public override int GetHashCode()
-        {
-            return Value?.GetHashCode() ?? 0;
-        }
+        // Use reference equality for Equals (standard object behavior)
+        // Use == operator for value comparison in code
+        public override bool Equals(object obj) => ReferenceEquals(this, obj);
+        public override int GetHashCode() => base.GetHashCode();
     }
 }

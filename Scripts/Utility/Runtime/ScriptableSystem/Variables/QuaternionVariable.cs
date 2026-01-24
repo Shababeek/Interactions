@@ -115,16 +115,9 @@ namespace Shababeek.Utilities
             return a * b.Value;
         }
 
-        public override bool Equals(object obj)
-        {
-            if (obj is QuaternionVariable other) return this == other;
-            if (obj is Quaternion quaternionValue) return this == quaternionValue;
-            return false;
-        }
-
-        public override int GetHashCode()
-        {
-            return Value.GetHashCode();
-        }
+        // Use reference equality for Equals (standard object behavior)
+        // Use == operator for value comparison in code
+        public override bool Equals(object obj) => ReferenceEquals(this, obj);
+        public override int GetHashCode() => base.GetHashCode();
     }
 }
