@@ -40,7 +40,6 @@ namespace Shababeek.Interactions
 
         // For HandFollowsObject mode
         private Transform _fakeHand;
-        private PoseConstrainter _poseConstrainer;
         private float _fakeHandOrbitAngle;
 
         public IObservable<float> OnAngleChanged => onAngleChanged.AsObservable();
@@ -58,7 +57,7 @@ namespace Shababeek.Interactions
         private void Start()
         {
             _originalRotation = interactableObject.transform.localRotation;
-            _poseConstrainer = GetComponent<PoseConstrainter>();
+            PoseConstrainer = GetComponent<PoseConstrainter>();
         }
 
         protected override void HandleObjectMovement(Vector3 handWorldPosition)
@@ -167,9 +166,9 @@ namespace Shababeek.Interactions
         /// </summary>
         private float GetConstraintAngle(HandIdentifier handIdentifier)
         {
-            if (_poseConstrainer == null) return 0f;
+            if (PoseConstrainer == null) return 0f;
 
-            var positioning = _poseConstrainer.GetTargetHandTransform(handIdentifier);
+            var positioning = PoseConstrainer.GetTargetHandTransform(handIdentifier);
             Vector3 constraintLocal = positioning.position;
 
             float x, y;
@@ -186,9 +185,9 @@ namespace Shababeek.Interactions
 
         private void UpdateFakeHandOrbit()
         {
-            if (_fakeHand == null || _poseConstrainer == null) return;
+            if (_fakeHand == null || PoseConstrainer == null) return;
 
-            var basePose = _poseConstrainer.GetTargetHandTransform(CurrentInteractor.HandIdentifier);
+            var basePose = PoseConstrainer.GetTargetHandTransform(CurrentInteractor.HandIdentifier);
             var orbitRadius = basePose.position.magnitude;
             float rad = _fakeHandOrbitAngle * Mathf.Deg2Rad;
             float cos = Mathf.Cos(rad) * orbitRadius;

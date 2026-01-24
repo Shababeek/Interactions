@@ -17,18 +17,18 @@ namespace Shababeek.Interactions
 
         [SerializeField] protected bool returnWhenDeselected;
         [SerializeField] protected float returnSpeed;
+        protected bool IsReturning = false;
+        protected PoseConstrainter PoseConstrainer;
 
         private Hand _leftFakeHand;
         private Hand _rightFakeHand;
         private Hand _currentFakeHand;
-        private PoseConstrainter _poseConstrainer;
         private float _transitionProgress = 0f;
         private Vector3 _startPosition;
         private Quaternion _startRotation;
         private Vector3 _targetPosition;
         private Quaternion _targetRotation;
         private bool _isTransitioning = false;
-        protected bool IsReturning = false;
 
         /// <summary>
         /// Transform representing the object being manipulated during interaction.
@@ -45,7 +45,7 @@ namespace Shababeek.Interactions
         {
             if (_isTransitioning && _currentFakeHand)
             {
-                _transitionProgress += Time.deltaTime * _poseConstrainer.TransitionSpeed;
+                _transitionProgress += Time.deltaTime * PoseConstrainer.TransitionSpeed;
                 var t = Mathf.Clamp01(_transitionProgress);
                 _currentFakeHand.transform.localPosition = Vector3.Lerp(_startPosition, _targetPosition, t);
                 _currentFakeHand.transform.localRotation = Quaternion.Lerp(_startRotation, _targetRotation, t);
@@ -78,18 +78,18 @@ namespace Shababeek.Interactions
 
         protected override bool Select()
         {
-            if (!_poseConstrainer) _poseConstrainer = GetComponent<PoseConstrainter>();
+            if (!PoseConstrainer) PoseConstrainer = GetComponent<PoseConstrainter>();
             var handIdentifier = CurrentInteractor.HandIdentifier;
-            if (_poseConstrainer.ConstraintType == HandConstrainType.Constrained)
+            if (PoseConstrainer.ConstraintType == HandConstrainType.Constrained)
             {
                 _currentFakeHand = GetOrCreateFakeHand(handIdentifier);
-                _poseConstrainer.ApplyConstraints(_currentFakeHand);
+                PoseConstrainer.ApplyConstraints(_currentFakeHand);
                 CurrentInteractor.ToggleHandModel(false);
                 PositionFakeHand(_currentFakeHand.transform, handIdentifier);
             }
             else
             {
-                _poseConstrainer.ApplyConstraints(CurrentInteractor.Hand);
+                PoseConstrainer.ApplyConstraints(CurrentInteractor.Hand);
             }
 
             HandleObjectMovement(CurrentInteractor.transform.position);
@@ -216,10 +216,10 @@ namespace Shababeek.Interactions
 
         protected virtual void PositionFakeHand(Transform fakeHand, HandIdentifier handIdentifier)
         {
-            if (!fakeHand || !_poseConstrainer) return;
+            if (!fakeHand || !PoseConstrainer) return;
 
-            var positioning = _poseConstrainer.GetTargetHandTransform(handIdentifier);
-            if (_poseConstrainer.UseSmoothTransitions)
+            var positioning = PoseConstrainer.GetTargetHandTransform(handIdentifier);
+            if (PoseConstrainer.UseSmoothTransitions)
             {
                 _startPosition = interactableObject.InverseTransformPoint(CurrentInteractor.transform.position);
                 _startRotation = Quaternion.Inverse(interactableObject.rotation) * CurrentInteractor.transform.rotation;
