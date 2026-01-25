@@ -119,11 +119,9 @@ namespace Shababeek.Utilities
         public void EditorAddVariable(ScriptableVariable variable)
         {
             if (variable == null) return;
-            if (!variables.Contains(variable))
-            {
-                variables.Add(variable);
-                UnityEditor.EditorUtility.SetDirty(this);
-            }
+            if (variables.Contains(variable)) return;
+            variables.Add(variable);
+            UnityEditor.EditorUtility.SetDirty(this);
         }
 
         public void EditorRemoveVariable(ScriptableVariable variable)

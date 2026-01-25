@@ -96,15 +96,12 @@ namespace Shababeek.Interactions
         public override Transform Insert(Socketable socketable)
         {
             var closestPivot = FindClosestAvailableSlot(socketable.transform.position);
-            if (closestPivot != null)
-            {
-                var slotIndex = _gridPivots.IndexOf(closestPivot);
-                _occupiedSlots[closestPivot] = slotIndex;
-                base.Insert(socketable);
-                return closestPivot;
-            }
-            
-            return null; // No available slots
+            if (closestPivot == null) return null; 
+            var slotIndex = _gridPivots.IndexOf(closestPivot);
+            _occupiedSlots[closestPivot] = slotIndex;
+            base.Insert(socketable);
+            return closestPivot;
+
         }
 
         public override void Remove(Socketable socketable)

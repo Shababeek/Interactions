@@ -91,12 +91,8 @@ namespace Shababeek.Interactions
             _interactable = GetComponent<InteractableBase>();
             _interactable.OnDeselected
                 .Where(_ => !IsSocketed && socket != null && socket.CanSocket())
-                .Do(_ => IsSocketed = true)
-                .Do(_ => onSocketed.Invoke(socket))
-                .Select(_ => socket.Insert(this))
-                .Do(t => _lastSocket = socket)
-                .Do(t => _socketTransform = t)
-                .Do(LerpToPosition)
+                .Select(_=>socket)
+                .Do(soc=>Insert(soc))
                 .Subscribe().AddTo(this);
             _interactable.OnDeselected
                 .Where(_ => shouldReturnToLastSocket && !IsSocketed && (socket == null || !socket.CanSocket()))
@@ -109,18 +105,19 @@ namespace Shababeek.Interactions
                 .Subscribe().AddTo(this);
         }
 
-        public bool Insert(AbstractSocket socket)
+        public bool Insert(AbstractSocket soc)
         {
-            if (!socket.CanSocket())
+            if (!soc.CanSocket())
             {
                 return false;
             }
 
-            this.socket = socket;
-            var t = socket.Insert(this);
+            this.socket = soc;
+            var t = soc.Insert(this);
             IsSocketed = true;
-            onSocketed.Invoke(socket);
-            _lastSocket = socket;
+            onSocketed.Invoke(soc);
+            _lastSocket = soc;
+            _socketTransform = t;
             LerpToPosition(t);
             return true;
         }
