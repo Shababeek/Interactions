@@ -1,7 +1,8 @@
 using Shababeek.Interactions.Animations;
 using UnityEngine;
-using UnityEngine.XR;
+using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.XR;
 
 namespace Shababeek.Interactions.Core
 {
@@ -10,7 +11,7 @@ namespace Shababeek.Interactions.Core
     {
         [Tooltip("The target object to assign the layer to.")]
         public Transform target;
-        
+
         [Tooltip("The layer index to assign to the target object and all its children.")]
         public int layer;
     }
@@ -21,7 +22,7 @@ namespace Shababeek.Interactions.Core
         [Header("Core Configuration")]
         [Tooltip("Configuration asset containing hand data, layer settings, and input configuration.")]
         [SerializeField] private Config config;
-        
+
         [Tooltip("Whether to automatically initialize hands when the rig starts. Disable for manual control.")]
         [SerializeField][HideInInspector] private bool initializeHands = true;
 
@@ -30,72 +31,57 @@ namespace Shababeek.Interactions.Core
         [SerializeField][HideInInspector] private InteractionSystemType trackingMethod = InteractionSystemType.PhysicsBased;
 
         [Header("Hand Pivots")]
-        [Tooltip("Transform for the left hand pivot point. This defines where the left hand will be positioned relative to the camera rig.")]
+        [Tooltip("Transform for the left hand pivot point.")]
         [SerializeField][HideInInspector] private Transform leftHandPivot;
-        
-        [Tooltip("Transform for the right hand pivot point. This defines where the right hand will be positioned relative to the camera rig.")]
+
+        [Tooltip("Transform for the right hand pivot point.")]
         [SerializeField][HideInInspector] private Transform rightHandPivot;
-        
+
         [Header("Interactor Configuration")]
-        [Tooltip("Type of interactor to use for the left hand. Trigger provides direct collision detection, Ray provides distance-based interaction.")]
+        [Tooltip("Type of interactor to use for the left hand.")]
         [SerializeField] private HandInteractorType leftHandInteractorType = HandInteractorType.Trigger;
-        
-        [Tooltip("Type of interactor to use for the right hand. Trigger provides direct collision detection, Ray provides distance-based interaction.")]
+
+        [Tooltip("Type of interactor to use for the right hand.")]
         [SerializeField] private HandInteractorType rightHandInteractorType = HandInteractorType.Trigger;
-        
+
         [Header("Camera Configuration")]
-        [Tooltip("Transform used to offset the camera position and height. Usually a child of the main camera.")]
+        [Tooltip("Transform used to offset the camera position. Usually a child containing the XR camera.")]
         [SerializeField] private Transform offsetObject;
 
-        [Tooltip("The XR camera component for the camera rig. Automatically found if not assigned.")]
+        [Tooltip("The XR camera component. Automatically found if not assigned.")]
         [SerializeField] private Camera xrCamera;
-        
-        [Tooltip("Height offset for the camera rig in world units. Default is 1 unit (typical standing height).")]
-        [SerializeField] private float cameraHeight = 1f;
-        
-        [Tooltip("Whether to align the rig's forward direction with the tracking origin on initialization.")]
-        [SerializeField] private bool alignRigForwardOnTracking = true;
-        
+
+        [Tooltip("Expected height of the camera from the floor in world units.")]
+        [SerializeField] private float cameraHeight = 1.7f;
+
+        [Tooltip("Whether to align the rig's forward direction with the initial head direction.")]
+        [SerializeField] private bool alignRigForwardOnStart = true;
+
         [Header("Layer Management")]
-        [Tooltip("Whether to automatically initialize layers for the camera rig and hands on startup.")]
+        [Tooltip("Whether to automatically initialize layers on startup.")]
         [SerializeField][HideInInspector] private bool initializeLayers = true;
 
-        [Tooltip("Custom layer assignments for specific objects. These will be applied during initialization.")]
+        [Tooltip("Custom layer assignments for specific objects.")]
         [SerializeField] private LayerAssignment[] customLayerAssignments;
 
         #region Private Fields
 
-        private bool _trackingInitialized = false;
+        private bool _initialized;
+        private bool _cameraInitialized;
+        private bool _cameraInitializing;
         private HandPoseController _leftPoseController, _rightPoseController;
         private float _lastCameraHeight;
+        private static readonly List<XRInputSubsystem> s_InputSubsystems = new();
 
         #endregion
 
         #region Public Properties
 
-        /// <summary>
-        /// Left hand prefab 
-        /// </summary>
         public HandPoseController LeftHandPrefab => config?.HandData?.LeftHandPrefab;
-        
-        /// <summary>
-        /// Right hand prefab 
-        /// </summary>
         public HandPoseController RightHandPrefab => config?.HandData?.RightHandPrefab;
-        
-        /// <summary>
-        /// Configuration asset.
-        /// </summary>
         public Config Config => config;
-        
-        /// <summary>
-        /// Offset transform used for camera positioning.
-        /// </summary>
         public Transform Offset => offsetObject;
-        
-        /// <summary>
-        /// Camera height. Automatically updates the offset object position.
-        /// </summary>
+
         public float CameraHeight
         {
             get => cameraHeight;
@@ -103,7 +89,7 @@ namespace Shababeek.Interactions.Core
             {
                 if (Mathf.Approximately(cameraHeight, value)) return;
                 cameraHeight = value;
-                ApplyCameraHeight();
+                RecenterCamera();
             }
         }
 
@@ -115,20 +101,25 @@ namespace Shababeek.Interactions.Core
         {
             if (xrCamera == null)
                 xrCamera = GetComponentInChildren<Camera>(true);
-                
+
             CreateAndInitializeHands();
             InitializeLayers();
         }
 
-        private void OnEnable()
+        private void Start()
         {
-            ApplyCameraHeight();
-            SubscribeToTrackingEvents();
+            // Like XROrigin, attempt camera initialization on Start
+            TryInitializeCamera();
         }
 
-        private void OnDisable()
+        private void OnDestroy()
         {
-            UnsubscribeFromTrackingEvents();
+            // Unsubscribe from all XR input subsystem events
+            foreach (var inputSubsystem in s_InputSubsystems)
+            {
+                if (inputSubsystem != null)
+                    inputSubsystem.trackingOriginUpdated -= OnTrackingOriginUpdated;
+            }
         }
 
 #if UNITY_EDITOR
@@ -137,117 +128,140 @@ namespace Shababeek.Interactions.Core
             if (!Mathf.Approximately(_lastCameraHeight, cameraHeight))
             {
                 _lastCameraHeight = cameraHeight;
-                ApplyCameraHeight();
+                if (Application.isPlaying)
+                    RecenterCamera();
             }
         }
 #endif
 
         #endregion
 
-        #region Camera Height Management
+        #region Camera Positioning
 
-        private void ApplyCameraHeight()
+        /// <summary>
+        /// Attempts to initialize the camera tracking. If XR subsystems aren't ready yet,
+        /// starts a coroutine that keeps trying until successful.
+        /// </summary>
+        private void TryInitializeCamera()
         {
-            if (offsetObject == null) return;
-            
-            offsetObject.transform.localPosition = Vector3.up * cameraHeight;
-            offsetObject.transform.localRotation = Quaternion.identity;
+            if (!Application.isPlaying) return;
+
+            _cameraInitialized = SetupCamera();
+            if (!_cameraInitialized && !_cameraInitializing)
+                StartCoroutine(RepeatInitializeCamera());
         }
 
-        #endregion
-
-        #region XR Tracking
-
-        private void SubscribeToTrackingEvents()
+        /// <summary>
+        /// Sets up camera tracking and subscribes to XR tracking origin events.
+        /// Returns true if setup was successful.
+        /// </summary>
+        private bool SetupCamera()
         {
-            var subsystems = new List<XRInputSubsystem>();
-            SubsystemManager.GetSubsystems(subsystems);
-            foreach (var subsystem in subsystems)
+            bool initialized = true;
+
+#if UNITY_2023_2_OR_NEWER
+            SubsystemManager.GetSubsystems(s_InputSubsystems);
+#else
+            SubsystemManager.GetInstances(s_InputSubsystems);
+#endif
+
+            if (s_InputSubsystems.Count > 0)
             {
-                subsystem.trackingOriginUpdated += OnTrackingOriginUpdated;
-            }
-        }
+                foreach (var inputSubsystem in s_InputSubsystems)
+                {
+                    if (inputSubsystem == null) continue;
 
-        private void UnsubscribeFromTrackingEvents()
-        {
-            var subsystems = new List<XRInputSubsystem>();
-            SubsystemManager.GetSubsystems(subsystems);
-            foreach (var subsystem in subsystems)
+                    // Check if subsystem is ready (can get tracking origin mode)
+                    var mode = inputSubsystem.GetTrackingOriginMode();
+                    if (mode == TrackingOriginModeFlags.Unknown)
+                    {
+                        initialized = false;
+                        continue;
+                    }
+
+                    // Subscribe to tracking origin updates (unsubscribe first to prevent duplicates)
+                    inputSubsystem.trackingOriginUpdated -= OnTrackingOriginUpdated;
+                    inputSubsystem.trackingOriginUpdated += OnTrackingOriginUpdated;
+                }
+            }
+            else
             {
-                subsystem.trackingOriginUpdated -= OnTrackingOriginUpdated;
+                // No XR subsystems found yet
+                initialized = false;
             }
+
+            if (initialized)
+            {
+                // Do initial alignment and recenter
+                DoInitialAlignment();
+                RecenterCamera();
+            }
+
+            return initialized;
         }
 
-        private async void OnTrackingOriginUpdated(XRInputSubsystem subsystem)
+        /// <summary>
+        /// Called when XR tracking origin is updated (headset detected, recentered, etc.)
+        /// </summary>
+        private void OnTrackingOriginUpdated(XRInputSubsystem inputSubsystem)
         {
-            await Awaitable.NextFrameAsync();
-            await Awaitable.NextFrameAsync();
-            if (xrCamera == null || offsetObject == null) return;
+            // Recenter when tracking origin changes
+            RecenterCamera();
+        }
 
-            // Step 1: Align rig forward direction (only once if enabled)
-            if (!_trackingInitialized && alignRigForwardOnTracking)
+        /// <summary>
+        /// Coroutine that repeatedly tries to initialize the camera until successful.
+        /// </summary>
+        private IEnumerator RepeatInitializeCamera()
+        {
+            _cameraInitializing = true;
+            while (!_cameraInitialized)
+            {
+                yield return null;
+                if (!_cameraInitialized)
+                    _cameraInitialized = SetupCamera();
+            }
+            _cameraInitializing = false;
+        }
+
+        /// <summary>
+        /// Performs initial alignment of the rig to face the camera's forward direction.
+        /// </summary>
+        private void DoInitialAlignment()
+        {
+            if (_initialized) return;
+            if (xrCamera == null) return;
+
+            if (alignRigForwardOnStart)
             {
                 Vector3 cameraForward = xrCamera.transform.forward;
                 cameraForward.y = 0;
                 if (cameraForward.sqrMagnitude > 0.001f)
                 {
                     transform.rotation = Quaternion.LookRotation(cameraForward);
-                    _trackingInitialized = true;
                 }
             }
 
-            RecenterCameraToRig();
+            _initialized = true;
         }
 
-
-        private void RecenterCameraToRig()
+        /// <summary>
+        /// Recenters the camera so the XR camera is at the expected height.
+        /// Call this after XR tracking has initialized.
+        /// </summary>
+        public void RecenterCamera()
         {
             if (xrCamera == null || offsetObject == null) return;
 
-            // Reset offsetObject rotation to identity first
+            // Calculate offset needed to place camera at desired height
+            // We want the camera world Y to be at rig.position.y + cameraHeight
+            float currentCameraWorldY = xrCamera.transform.position.y;
+            float desiredCameraWorldY = transform.position.y + cameraHeight;
+            float yOffset = desiredCameraWorldY - currentCameraWorldY;
+
+            // Apply offset (only adjust Y, keep XZ from tracking)
+            offsetObject.localPosition = new Vector3(0f, offsetObject.localPosition.y + yOffset, 0f);
             offsetObject.localRotation = Quaternion.identity;
-
-            // Get camera's current local position relative to offsetObject
-            Vector3 cameraLocalPos = xrCamera.transform.localPosition;
-
-            // Target: Camera should be at (0, cameraHeight, 0) in rig's local space
-            // Formula: offsetObject.localPosition + cameraLocalPos = (0, cameraHeight, 0)
-            // Therefore: offsetObject.localPosition = (0, cameraHeight, 0) - cameraLocalPos
-            Vector3 targetCameraPosInRigSpace = new Vector3(0f, cameraHeight, 0f);
-            offsetObject.localPosition = targetCameraPosInRigSpace - cameraLocalPos;
-        }
-        
-        private IHandInputProvider SetupHandProviders(Transform handPivot, HandIdentifier hand)
-        {
-            var inputActions = hand == HandIdentifier.Left ? config.LeftHandActions : config.RightHandActions;
-            var trackingType = config.InputType;
-            
-            // Create provider based on tracking type
-            switch (trackingType)
-            {
-
-                case Config.TrackingType.ControllerTracking:
-                    // Create only controller provider
-                    var controllerOnly = handPivot.gameObject.AddComponent<ControllerInputProvider>();
-                    controllerOnly.Handedness = hand;
-                    controllerOnly.Initialize(inputActions);
-                    return controllerOnly;
-                    
-#if XR_HANDS_AVAILABLE
-                case Config.TrackingType.HandTracking:
-                    // Create only hand tracking provider
-                    var handTrackingOnly = handPivot.gameObject.AddComponent<HandTrackingInputProvider>();
-                    handTrackingOnly.Handedness = hand;
-                    return handTrackingOnly;
-#endif
-                    
-                default:
-                    // Fallback to controller if unknown
-                    var fallbackController = handPivot.gameObject.AddComponent<ControllerInputProvider>();
-                    fallbackController.Handedness = hand;
-                    fallbackController.Initialize(inputActions);
-                    return fallbackController;
-            }
         }
 
         #endregion
@@ -257,9 +271,9 @@ namespace Shababeek.Interactions.Core
         private void InitializeLayers()
         {
             if (!initializeLayers || config == null) return;
-            
+
             ChangeLayerRecursive(transform, config.PlayerLayer);
-            
+
             if (leftHandPivot != null)
                 ChangeLayerRecursive(leftHandPivot, config.LeftHandLayer);
             if (rightHandPivot != null)
@@ -278,7 +292,7 @@ namespace Shababeek.Interactions.Core
         private static void ChangeLayerRecursive(Transform transform, int layer)
         {
             if (transform == null) return;
-            
+
             transform.gameObject.layer = layer;
             for (var i = 0; i < transform.childCount; i++)
             {
@@ -293,7 +307,7 @@ namespace Shababeek.Interactions.Core
         private void CreateAndInitializeHands()
         {
             if (!initializeHands || config?.HandData == null) return;
-            
+
             switch (trackingMethod)
             {
                 case InteractionSystemType.TransformBased:
@@ -308,7 +322,7 @@ namespace Shababeek.Interactions.Core
         private void InitializeTransformBasedHands()
         {
             InitializeHands();
-            
+
             if (_rightPoseController != null)
                 InitializeKinematicRigidbody(_rightPoseController.gameObject);
             if (_leftPoseController != null)
@@ -318,7 +332,7 @@ namespace Shababeek.Interactions.Core
         private void InitializePhysicsBasedHands()
         {
             InitializeHands();
-            
+
             if (_rightPoseController != null)
                 InitializePhysics(_rightPoseController.gameObject, rightHandPivot);
             if (_leftPoseController != null)
@@ -328,45 +342,66 @@ namespace Shababeek.Interactions.Core
         private void InitializeHands()
         {
             if (config?.HandData == null) return;
+
             var leftProvider = SetupHandProviders(leftHandPivot, HandIdentifier.Left);
             var rightProvider = SetupHandProviders(rightHandPivot, HandIdentifier.Right);
-    
-            // Assign to config
+
             config.SetHandProvider(HandIdentifier.Left, leftProvider);
             config.SetHandProvider(HandIdentifier.Right, rightProvider);
+
             _leftPoseController = InitializeHand(LeftHandPrefab, leftHandPivot, HandIdentifier.Left, leftHandInteractorType);
             _rightPoseController = InitializeHand(RightHandPrefab, rightHandPivot, HandIdentifier.Right, rightHandInteractorType);
-            
-            // Initialize hand pivot updater
+
             InitializeHandPivotUpdater();
         }
-        
-        /// <summary>
-        /// Initializes the HandPivotUpdater component to update hand pivots from input providers.
-        /// </summary>
+
+        private IHandInputProvider SetupHandProviders(Transform handPivot, HandIdentifier hand)
+        {
+            var inputActions = hand == HandIdentifier.Left ? config.LeftHandActions : config.RightHandActions;
+            var trackingType = config.InputType;
+
+            switch (trackingType)
+            {
+                case Config.TrackingType.ControllerTracking:
+                    var controllerOnly = handPivot.gameObject.AddComponent<ControllerInputProvider>();
+                    controllerOnly.Handedness = hand;
+                    controllerOnly.Initialize(inputActions);
+                    return controllerOnly;
+
+#if XR_HANDS_AVAILABLE
+                case Config.TrackingType.HandTracking:
+                    var handTrackingOnly = handPivot.gameObject.AddComponent<HandTrackingInputProvider>();
+                    handTrackingOnly.Handedness = hand;
+                    return handTrackingOnly;
+#endif
+
+                default:
+                    var fallbackController = handPivot.gameObject.AddComponent<ControllerInputProvider>();
+                    fallbackController.Handedness = hand;
+                    fallbackController.Initialize(inputActions);
+                    return fallbackController;
+            }
+        }
+
         private void InitializeHandPivotUpdater()
         {
             if (config == null || leftHandPivot == null || rightHandPivot == null)
                 return;
-            
-            // Get or create HandPivotUpdater component
+
             var updater = GetComponent<HandPivotUpdater>();
             if (updater == null)
-            {
-                return;updater = gameObject.AddComponent<HandPivotUpdater>();
-            }
-            
-            // Initialize with references
+                return;
+
             updater.Initialize(config, leftHandPivot, rightHandPivot);
         }
 
         private void InitializeKinematicRigidbody(GameObject hand)
         {
             if (hand == null) return;
-            
+
             var rb = hand.GetComponent<Rigidbody>();
             if (rb == null) rb = hand.AddComponent<Rigidbody>();
-            
+
             rb.isKinematic = true;
             rb.useGravity = false;
             rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
@@ -375,36 +410,35 @@ namespace Shababeek.Interactions.Core
         private void InitializePhysics(GameObject hand, Transform target)
         {
             if (hand == null || target == null) return;
-            
+
             var rb = hand.GetComponent<Rigidbody>();
             if (rb == null) rb = hand.AddComponent<Rigidbody>();
-            
+
             rb.mass = config.HandMass;
             rb.linearDamping = config.HandLinearDamping;
             rb.angularDamping = config.HandAngularDamping;
             rb.useGravity = false;
             rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
             rb.interpolation = RigidbodyInterpolation.Interpolate;
-            
+
             var follower = hand.AddComponent<PhysicsHandFollower>();
             follower.Target = target;
-            //follower.ApplySettings(config.FollowerSettings);
         }
 
         private HandPoseController InitializeHand(HandPoseController handPrefab, Transform handPivot,
             HandIdentifier handIdentifier, HandInteractorType interactorType)
         {
             if (handPrefab == null || handPivot == null) return null;
-            
+
             var hand = Instantiate(handPrefab, handPivot);
             var handTransform = hand.transform;
             handTransform.localPosition = Vector3.zero;
             handTransform.localRotation = Quaternion.identity;
-            
+
             var handGameObject = hand.gameObject;
             var handController = handGameObject.GetComponent<Hand>();
             handController ??= handGameObject.AddComponent<Hand>();
-            
+
             handController.HandIdentifier = handIdentifier;
             handController.Config = config;
 
@@ -413,15 +447,12 @@ namespace Shababeek.Interactions.Core
                 handGameObject.GetComponent<TriggerInteractor>().enabled = true;
                 handGameObject.AddComponent<RaycastInteractor>().enabled = false;
             }
-
             else
             {
                 handGameObject.AddComponent<RaycastInteractor>().enabled = true;
                 handGameObject.AddComponent<TriggerInteractor>().enabled = false;
-
             }
 
-                
             return hand;
         }
 

@@ -174,8 +174,8 @@ namespace Shababeek.Utilities
 
         public void EditorCleanupNulls()
         {
-            int removedVars = variables.RemoveAll(v => v == null);
-            int removedEvents = events.RemoveAll(e => e == null);
+            var removedVars = variables.RemoveAll(v => v == null);
+            var removedEvents = events.RemoveAll(e => e == null);
             if (removedVars > 0 || removedEvents > 0)
             {
                 UnityEditor.EditorUtility.SetDirty(this);
