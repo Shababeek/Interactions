@@ -18,13 +18,12 @@ namespace Shababeek.Utilities
         [Header("Fill Settings")]
         [Tooltip("The minimum value from the IntVariable that maps to 0 fill.")]
         [SerializeField] private int minValue = 0;
-
         [Tooltip("The maximum value from the IntVariable that maps to 1 (full) fill.")]
         [SerializeField] private int maxValue = 100;
-
+        [Tooltip("Invert the fill direction (useful for overlays that hide content as value increases).")]
+        [SerializeField] private bool invertFill = false;
         [Tooltip("Whether to smoothly interpolate fill changes.")]
         [SerializeField] private bool smoothFill = false;
-
         [Tooltip("Fill speed for smooth interpolation (0-1 per second).")]
         [SerializeField] private float fillSpeed = 1f;
 
@@ -76,6 +75,12 @@ namespace Shababeek.Utilities
             // Map value to fill amount (0-1)
             float t = maxValue != minValue ? (float)(clampedValue - minValue) / (maxValue - minValue) : 0f;
             _targetFillAmount = Mathf.Clamp01(t);
+
+            // Invert if needed
+            if (invertFill)
+            {
+                _targetFillAmount = 1f - _targetFillAmount;
+            }
 
             if (!smoothFill)
             {

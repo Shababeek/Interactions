@@ -17,11 +17,17 @@ namespace Shababeek.Interactions
         [SerializeField] private Vector2 spacing = new Vector2(1f, 1f);
         [Tooltip("The plane orientation for the grid layout.")]
         [SerializeField] private LocalDirection gridPlane = LocalDirection.Forward;
+
+        [Header("Scale")]
+        [Tooltip("Uniform scale for the entire grid - similar to scaling the transform.")]
+        [SerializeField] private float gridScale = 1f;
+
         [Header("Positioning")]
         [Tooltip("Local space offset for the grid center.")]
         [SerializeField] private Vector3 localOffset = Vector3.zero;
         [Tooltip("Whether to center the grid at the offset position.")]
         [SerializeField] private bool centerGrid = true;
+
         [Header("Pivot Settings")]
         [Tooltip("Rotation offset applied to all grid pivots.")]
         [SerializeField] private Vector3 pivotRotationOffset = Vector3.zero;
@@ -33,14 +39,18 @@ namespace Shababeek.Interactions
         {
             CreateGridPivots();
         }
+
         public int SocketsCount()
         {
             return gridSize.x * gridSize.y;
         }
+
         private void CreateGridPivots()
         {
             _gridPivots.Clear();
             _occupiedSlots.Clear();
+
+            var scaledOffset = localOffset * gridScale;
 
             for (int row = 0; row < gridSize.y; row++)
             {
@@ -49,11 +59,11 @@ namespace Shababeek.Interactions
                     var gridIndex = row * gridSize.x + col;
                     var pivot = new GameObject($"GridPivot_{col}_{row}").transform;
                     pivot.SetParent(Pivot);
-                    
+
                     var localPos = CalculateGridPosition(col, row);
-                    pivot.localPosition = localPos + localOffset;
+                    pivot.localPosition = localPos + scaledOffset;
                     pivot.localRotation = Quaternion.Euler(pivotRotationOffset);
-                    
+
                     _gridPivots.Add(pivot);
                 }
             }
@@ -61,14 +71,14 @@ namespace Shababeek.Interactions
 
         private Vector3 CalculateGridPosition(int col, int row)
         {
-            // Calculate offset for centering
-            var centerOffset = centerGrid 
-                ? new Vector2((gridSize.x - 1) * spacing.x * 0.5f, (gridSize.y - 1) * spacing.y * 0.5f)
+            var scaledSpacing = spacing * gridScale;
+
+            var centerOffset = centerGrid
+                ? new Vector2((gridSize.x - 1) * scaledSpacing.x * 0.5f, (gridSize.y - 1) * scaledSpacing.y * 0.5f)
                 : Vector2.zero;
 
-            var gridPos = new Vector2(col * spacing.x - centerOffset.x, row * spacing.y - centerOffset.y);
+            var gridPos = new Vector2(col * scaledSpacing.x - centerOffset.x, row * scaledSpacing.y - centerOffset.y);
 
-            // Map to 3D space based on grid plane
             return gridPlane switch
             {
                 LocalDirection.Forward => new Vector3(gridPos.x, gridPos.y, 0),
@@ -88,20 +98,19 @@ namespace Shababeek.Interactions
             {
                 return (closestPivot.position, closestPivot.rotation);
             }
-            
-            // Fallback to center if no slots available
-            return (transform.TransformPoint(localOffset), transform.rotation * Quaternion.Euler(pivotRotationOffset));
+
+            var scaledOffset = localOffset * gridScale;
+            return (transform.TransformPoint(scaledOffset), transform.rotation * Quaternion.Euler(pivotRotationOffset));
         }
 
         public override Transform Insert(Socketable socketable)
         {
             var closestPivot = FindClosestAvailableSlot(socketable.transform.position);
-            if (closestPivot == null) return null; 
+            if (closestPivot == null) return null;
             var slotIndex = _gridPivots.IndexOf(closestPivot);
             _occupiedSlots[closestPivot] = slotIndex;
             base.Insert(socketable);
             return closestPivot;
-
         }
 
         public override void Remove(Socketable socketable)
@@ -112,7 +121,7 @@ namespace Shababeek.Interactions
             {
                 _occupiedSlots.Remove(pivotTransform);
             }
-            
+
             base.Remove(socketable);
         }
 
@@ -157,13 +166,12 @@ namespace Shababeek.Interactions
 
         private void OnValidate()
         {
-            // Ensure reasonable grid size
             gridSize.x = Mathf.Max(1, gridSize.x);
             gridSize.y = Mathf.Max(1, gridSize.y);
             spacing.x = Mathf.Max(0.1f, spacing.x);
             spacing.y = Mathf.Max(0.1f, spacing.y);
+            gridScale = Mathf.Max(0.01f, gridScale);
 
-            // Recreate grid if in play mode and values changed
             if (Application.isPlaying && _gridPivots.Count != gridSize.x * gridSize.y)
             {
                 CreateGridPivots();
@@ -185,31 +193,36 @@ namespace Shababeek.Interactions
             var oldMatrix = Gizmos.matrix;
             Gizmos.matrix = transform.localToWorldMatrix;
 
-            // Draw grid plane
+            var scaledSpacing = spacing * gridScale;
+            var scaledOffset = localOffset * gridScale;
+            var sphereRadius = 0.1f * gridScale;
+
             var planeNormal = GetPlaneNormal();
-            var planeSize = new Vector2((gridSize.x - 1) * spacing.x + 1f, (gridSize.y - 1) * spacing.y + 1f);
-            
+            var planeSize = new Vector2(
+                (gridSize.x - 1) * scaledSpacing.x + gridScale,
+                (gridSize.y - 1) * scaledSpacing.y + gridScale
+            );
+
             Gizmos.color = selected ? new Color(0f, 1f, 1f, 0.3f) : new Color(0f, 1f, 1f, 0.1f);
-            
+
             var planeThickness = gridPlane switch
             {
-                LocalDirection.Forward or LocalDirection.Back => new Vector3(planeSize.x, planeSize.y, 0.1f),
-                LocalDirection.Right or LocalDirection.Left => new Vector3(0.1f, planeSize.y, planeSize.x),
-                LocalDirection.Up or LocalDirection.Down => new Vector3(planeSize.x, 0.1f, planeSize.y),
-                _ => new Vector3(planeSize.x, planeSize.y, 0.1f)
+                LocalDirection.Forward or LocalDirection.Back => new Vector3(planeSize.x, planeSize.y, 0.1f * gridScale),
+                LocalDirection.Right or LocalDirection.Left => new Vector3(0.1f * gridScale, planeSize.y, planeSize.x),
+                LocalDirection.Up or LocalDirection.Down => new Vector3(planeSize.x, 0.1f * gridScale, planeSize.y),
+                _ => new Vector3(planeSize.x, planeSize.y, 0.1f * gridScale)
             };
-            
-            Gizmos.DrawCube(localOffset, planeThickness);
 
-            // Draw grid points
+            Gizmos.DrawCube(scaledOffset, planeThickness);
+
             Gizmos.color = selected ? Color.cyan : new Color(0f, 1f, 1f, 0.7f);
-            
+
             for (int row = 0; row < gridSize.y; row++)
             {
                 for (int col = 0; col < gridSize.x; col++)
                 {
-                    var gridPos = CalculateGridPosition(col, row) + localOffset;
-                    Gizmos.DrawWireSphere(gridPos, 0.1f);
+                    var gridPos = CalculateGridPosition(col, row) + scaledOffset;
+                    Gizmos.DrawWireSphere(gridPos, sphereRadius);
                 }
             }
 
