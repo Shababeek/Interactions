@@ -172,31 +172,6 @@ namespace Shababeek.Interactions
                 return (position, rotation);
             }
         }
-        
-        /// <summary>
-        /// Target hand transform relative to a specified parent transform.
-        /// </summary>
-        public (Vector3 position, Quaternion rotation) GetRelativeTargetHandTransform(Transform parent, HandIdentifier handIdentifier)
-        {
-            var transfom = GetTargetHandTransform(handIdentifier);
-            Vector3 worldPosition = ConstraintTransform.TransformPoint(transfom.position);
-            Quaternion worldRotation = ConstraintTransform.rotation * transfom.rotation;
-            
-            //  convert from world space to parent's local space
-            transfom.position = parent.InverseTransformPoint(worldPosition);
-            transfom.rotation = Quaternion.Inverse(parent.rotation) * worldRotation;
-            return transfom;
-        }
-        
-        /// <summary>
-        /// Pose constraints for the specified hand.
-        /// </summary>
-        public PoseConstrains GetPoseConstraints(HandIdentifier handIdentifier)
-        {
-            return handIdentifier == HandIdentifier.Left ? leftPoseConstraints : rightPoseConstraints;
-        }
-        
-        
         public void UpdatePivots()
         {
             // This method is no longer needed as pivotParent is removed

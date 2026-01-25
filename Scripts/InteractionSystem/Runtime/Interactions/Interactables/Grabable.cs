@@ -105,21 +105,14 @@ namespace Shababeek.Interactions
         
         private void InitializeAttachmentPointTransform()
         {
-            // Get target position and rotation for the current hand (in local coordinates)
             var (localPosition, localRotation) = CurrentInteractor.Hand.HandIdentifier == HandIdentifier.Left ? 
-                GetLeftHandTarget() : GetRightHandTarget();
-            
-            // Convert local coordinates to world coordinates using ConstraintTransform
-            // This ensures consistent behavior whether using ScaleCompensator or not
+                GetLeftHandTarget() : GetRightHandTarget(); 
             var worldPosition = ConstraintTransform.TransformPoint(localPosition);
-            var worldRotation = ConstraintTransform.rotation * localRotation;
+            var worldRotation =  localRotation;
             
-            // Calculate the attachment point offset using pure math
-            // The attachment point needs to represent where the object currently is
-            // relative to where the hand target is
             Quaternion inverseTargetRotation = Quaternion.Inverse(worldRotation);
             Vector3 localPositionOffset = inverseTargetRotation * (transform.position - worldPosition);
-            Quaternion localRotationOffset = inverseTargetRotation * transform.rotation;
+            Quaternion localRotationOffset = localRotation;
             
             CurrentInteractor.AttachmentPoint.localPosition = localPositionOffset;
             CurrentInteractor.AttachmentPoint.localRotation = localRotationOffset;

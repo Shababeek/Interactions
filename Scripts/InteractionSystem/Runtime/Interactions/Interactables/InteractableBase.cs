@@ -126,7 +126,7 @@ namespace Shababeek.Interactions
 
         /// <summary>
         /// The current interaction state of this interactable.
-        /// </summary>
+        /// </summary>  
         /// <value>The current interaction state (None, Hovering, Selected).</value>
         public InteractionState CurrentState => currentState;
 
