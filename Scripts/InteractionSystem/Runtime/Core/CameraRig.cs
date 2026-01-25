@@ -1,3 +1,4 @@
+using System;
 using Shababeek.Interactions.Animations;
 using UnityEngine;
 using System.Collections;
@@ -96,6 +97,12 @@ namespace Shababeek.Interactions.Core
         #endregion
 
         #region Unity Lifecycle
+
+        private async void OnEnable()
+        {
+            await Awaitable.NextFrameAsync();
+            RecenterCamera();
+        }
 
         private void Awake()
         {
@@ -249,7 +256,7 @@ namespace Shababeek.Interactions.Core
         /// Recenters the camera so the XR camera is at the expected height.
         /// Call this after XR tracking has initialized.
         /// </summary>
-        public void RecenterCamera()
+        private void RecenterCamera()
         {
             if (xrCamera == null || offsetObject == null) return;
 
