@@ -664,4 +664,313 @@ namespace Shababeek.Interactions.Feedback
             audioSource.Play();
         }
     }
+
+    /// <summary>
+    /// Object toggle feedback for enabling/disabling GameObjects based on interaction state.
+    /// </summary>
+    [Serializable]
+    public class ObjectToggleFeedback : FeedbackData
+    {
+        [Header("Hover Objects")]
+        [Tooltip("Objects to enable when hovered (disabled when not hovered).")]
+        [SerializeField] public GameObject[] enableOnHover;
+
+        [Tooltip("Objects to disable when hovered (enabled when not hovered).")]
+        [SerializeField] public GameObject[] disableOnHover;
+
+        [Header("Selection Objects")]
+        [Tooltip("Objects to enable when selected (disabled when deselected).")]
+        [SerializeField] public GameObject[] enableOnSelect;
+
+        [Tooltip("Objects to disable when selected (enabled when deselected).")]
+        [SerializeField] public GameObject[] disableOnSelect;
+
+        [Header("Activation Objects")]
+        [Tooltip("Objects to enable when activated.")]
+        [SerializeField] public GameObject[] enableOnActivate;
+
+        [Tooltip("Objects to disable when activated.")]
+        [SerializeField] public GameObject[] disableOnActivate;
+
+        [Header("Options")]
+        [Tooltip("Reset objects to original state on deselect/hover end.")]
+        [SerializeField] public bool resetOnEnd = true;
+
+        public ObjectToggleFeedback()
+        {
+            feedbackName = "Object Toggle Feedback";
+        }
+
+        public override void OnHoverStarted(InteractorBase interactor)
+        {
+            if (!enabled) return;
+            SetObjectsActive(enableOnHover, true);
+            SetObjectsActive(disableOnHover, false);
+        }
+
+        public override void OnHoverEnded(InteractorBase interactor)
+        {
+            if (!enabled || !resetOnEnd) return;
+            SetObjectsActive(enableOnHover, false);
+            SetObjectsActive(disableOnHover, true);
+        }
+
+        public override void OnSelected(InteractorBase interactor)
+        {
+            if (!enabled) return;
+            SetObjectsActive(enableOnSelect, true);
+            SetObjectsActive(disableOnSelect, false);
+        }
+
+        public override void OnDeselected(InteractorBase interactor)
+        {
+            if (!enabled || !resetOnEnd) return;
+            SetObjectsActive(enableOnSelect, false);
+            SetObjectsActive(disableOnSelect, true);
+        }
+
+        public override void OnActivated(InteractorBase interactor)
+        {
+            if (!enabled) return;
+            SetObjectsActive(enableOnActivate, true);
+            SetObjectsActive(disableOnActivate, false);
+        }
+
+        private void SetObjectsActive(GameObject[] objects, bool active)
+        {
+            if (objects == null) return;
+            foreach (var obj in objects)
+            {
+                if (obj != null) obj.SetActive(active);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Scale feedback for animating object scale based on interaction state.
+    /// </summary>
+    [Serializable]
+    public class ScaleFeedback : FeedbackData
+    {
+        [Header("Target")]
+        [Tooltip("Transform to scale. Uses feedback system's transform if not set.")]
+        [SerializeField] public Transform target;
+
+        [Header("Scale Settings")]
+        [Tooltip("Scale multiplier when hovered.")]
+        [SerializeField] public float hoverScale = 1.1f;
+
+        [Tooltip("Scale multiplier when selected.")]
+        [SerializeField] public float selectScale = 1.2f;
+
+        [Tooltip("Scale multiplier when activated.")]
+        [SerializeField] public float activateScale = 0.9f;
+
+        [Header("Animation")]
+        [Tooltip("Whether to animate scale changes.")]
+        [SerializeField] public bool animate = true;
+
+        [Tooltip("Animation speed.")]
+        [SerializeField] public float animationSpeed = 10f;
+
+        private Vector3 _originalScale;
+        private Vector3 _targetScale;
+        private bool _isAnimating;
+
+        public ScaleFeedback()
+        {
+            feedbackName = "Scale Feedback";
+        }
+
+        public override void Initialize(FeedbackSystem system)
+        {
+            base.Initialize(system);
+            if (target == null) target = feedbackSystem.transform;
+            _originalScale = target.localScale;
+            _targetScale = _originalScale;
+        }
+
+        public override bool IsValid()
+        {
+            return base.IsValid() && target != null;
+        }
+
+        public override void OnHoverStarted(InteractorBase interactor)
+        {
+            if (!IsValid() || !enabled) return;
+            SetTargetScale(hoverScale);
+        }
+
+        public override void OnHoverEnded(InteractorBase interactor)
+        {
+            if (!IsValid() || !enabled) return;
+            SetTargetScale(1f);
+        }
+
+        public override void OnSelected(InteractorBase interactor)
+        {
+            if (!IsValid() || !enabled) return;
+            SetTargetScale(selectScale);
+        }
+
+        public override void OnDeselected(InteractorBase interactor)
+        {
+            if (!IsValid() || !enabled) return;
+            SetTargetScale(1f);
+        }
+
+        public override void OnActivated(InteractorBase interactor)
+        {
+            if (!IsValid() || !enabled) return;
+            SetTargetScale(activateScale);
+        }
+
+        private void SetTargetScale(float multiplier)
+        {
+            _targetScale = _originalScale * multiplier;
+            if (!animate)
+            {
+                target.localScale = _targetScale;
+            }
+            else if (!_isAnimating)
+            {
+                _isAnimating = true;
+                feedbackSystem.StartCoroutine(AnimateScale());
+            }
+        }
+
+        private System.Collections.IEnumerator AnimateScale()
+        {
+            while (Vector3.Distance(target.localScale, _targetScale) > 0.001f)
+            {
+                target.localScale = Vector3.Lerp(target.localScale, _targetScale, animationSpeed * UnityEngine.Time.deltaTime);
+                yield return null;
+            }
+            target.localScale = _targetScale;
+            _isAnimating = false;
+        }
+    }
+
+    /// <summary>
+    /// Particle feedback for playing particle effects on interaction events.
+    /// </summary>
+    [Serializable]
+    public class ParticleFeedback : FeedbackData
+    {
+        [Header("Particle Systems")]
+        [Tooltip("Particle system to play on hover start.")]
+        [SerializeField] public ParticleSystem hoverParticles;
+
+        [Tooltip("Particle system to play on selection.")]
+        [SerializeField] public ParticleSystem selectParticles;
+
+        [Tooltip("Particle system to play on deselection.")]
+        [SerializeField] public ParticleSystem deselectParticles;
+
+        [Tooltip("Particle system to play on activation.")]
+        [SerializeField] public ParticleSystem activateParticles;
+
+        [Header("Options")]
+        [Tooltip("Stop hover particles when hover ends.")]
+        [SerializeField] public bool stopHoverOnEnd = true;
+
+        public ParticleFeedback()
+        {
+            feedbackName = "Particle Feedback";
+        }
+
+        public override void OnHoverStarted(InteractorBase interactor)
+        {
+            if (!enabled) return;
+            PlayParticles(hoverParticles);
+        }
+
+        public override void OnHoverEnded(InteractorBase interactor)
+        {
+            if (!enabled) return;
+            if (stopHoverOnEnd && hoverParticles != null)
+                hoverParticles.Stop();
+        }
+
+        public override void OnSelected(InteractorBase interactor)
+        {
+            if (!enabled) return;
+            PlayParticles(selectParticles);
+        }
+
+        public override void OnDeselected(InteractorBase interactor)
+        {
+            if (!enabled) return;
+            PlayParticles(deselectParticles);
+        }
+
+        public override void OnActivated(InteractorBase interactor)
+        {
+            if (!enabled) return;
+            PlayParticles(activateParticles);
+        }
+
+        private void PlayParticles(ParticleSystem particles)
+        {
+            if (particles != null) particles.Play();
+        }
+    }
+
+    /// <summary>
+    /// UnityEvent feedback for triggering custom events on interaction states.
+    /// </summary>
+    [Serializable]
+    public class UnityEventFeedback : FeedbackData
+    {
+        [Header("Events")]
+        [Tooltip("Event fired when hover starts.")]
+        [SerializeField] public UnityEngine.Events.UnityEvent onHoverStart;
+
+        [Tooltip("Event fired when hover ends.")]
+        [SerializeField] public UnityEngine.Events.UnityEvent onHoverEnd;
+
+        [Tooltip("Event fired when selected.")]
+        [SerializeField] public UnityEngine.Events.UnityEvent onSelect;
+
+        [Tooltip("Event fired when deselected.")]
+        [SerializeField] public UnityEngine.Events.UnityEvent onDeselect;
+
+        [Tooltip("Event fired when activated.")]
+        [SerializeField] public UnityEngine.Events.UnityEvent onActivate;
+
+        public UnityEventFeedback()
+        {
+            feedbackName = "UnityEvent Feedback";
+        }
+
+        public override void OnHoverStarted(InteractorBase interactor)
+        {
+            if (!enabled) return;
+            onHoverStart?.Invoke();
+        }
+
+        public override void OnHoverEnded(InteractorBase interactor)
+        {
+            if (!enabled) return;
+            onHoverEnd?.Invoke();
+        }
+
+        public override void OnSelected(InteractorBase interactor)
+        {
+            if (!enabled) return;
+            onSelect?.Invoke();
+        }
+
+        public override void OnDeselected(InteractorBase interactor)
+        {
+            if (!enabled) return;
+            onDeselect?.Invoke();
+        }
+
+        public override void OnActivated(InteractorBase interactor)
+        {
+            if (!enabled) return;
+            onActivate?.Invoke();
+        }
+    }
 }
