@@ -269,6 +269,11 @@ namespace Shababeek.Interactions
                 EndHover();
             }
         }
+
+        public void SendHapticImpulse(float hapticAmplitude, float hapticDuration)
+        {
+            //TODO: Implement
+        }
     }
     [System.Serializable]
     public class InteractorUnityEvent : UnityEvent<InteractorBase> { }

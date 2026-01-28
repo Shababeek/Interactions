@@ -1,8 +1,9 @@
 using UniRx;
 using UnityEngine;
 using Shababeek.Interactions;
+using Shababeek.Utilities;
 
-namespace Shababeek.Utilities
+namespace Shababeek.Interactions.Binders
 {
     /// <summary>
     /// Binds interactable states (Hovered, Selected, Used) to BoolVariables.

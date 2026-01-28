@@ -340,7 +340,7 @@ namespace Shababeek.Utilities
                     return JsonUtility.ToJson(vec2IntVar.Value);
 
                 case StringListVariable listVar:
-                    return JsonUtility.ToJson(new StringListWrapper { items = listVar.ToList() });
+                    return JsonUtility.ToJson(new StringListWrapper { items = listVar.Value });
 
                 default:
                     Debug.LogWarning($"Unsupported variable type for serialization: {variable.GetType().Name}");

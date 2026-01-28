@@ -1,8 +1,8 @@
+using Shababeek.Utilities;
 using UniRx;
 using UnityEngine;
-using Shababeek.Interactions;
 
-namespace Shababeek.Utilities
+namespace Shababeek.Interactions
 {
     /// <summary>
     /// Binds socket states to BoolVariables.
