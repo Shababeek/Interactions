@@ -50,13 +50,15 @@
 | **SliderBinder** | Int/Float | UI Slider value (bidirectional) |
 | **CanvasGroupBinder** | Float/Bool | CanvasGroup alpha, interactability |
 | **LightBinder** | Float/Color/Bool | Light intensity, color, range, enabled |
+| **CameraBinder** | Float/Color/Bool/Vector2 | FOV, ortho size, clip planes, background |
 
 ### State & Toggle Binders
 
 | Binder | Variable Type | Updates |
 |--------|--------------|---------|
 | **BoolToggleBinder** | Bool | Enable/disable GameObjects, Components |
-| **EventAnimatorBinder** | GameEvent | Animator parameters (triggers, bools) |
+| **AnimatorBinder** | Bool/Float/Int/Event | Animator parameters (comprehensive) |
+| **EventAnimatorBinder** | GameEvent | Animator parameters (event-based) |
 
 ### Interactable-to-Variable Binders
 
@@ -867,6 +869,59 @@ Binds variables to Light component properties.
 
 ---
 
+## Camera Binder
+
+Binds variables to Camera component properties.
+
+### Settings
+
+#### Field of View
+| Setting | Description |
+|---------|-------------|
+| **FOV Variable** | Float for field of view (perspective) |
+| **Use FOV Mapping** | Map variable range to FOV range |
+| **Min/Max FOV Value** | Variable range |
+| **Min/Max FOV** | Output FOV range (1-179) |
+
+#### Orthographic Size
+| Setting | Description |
+|---------|-------------|
+| **Ortho Size Variable** | Float for orthographic size |
+| **Use Ortho Mapping** | Map variable range |
+
+#### Clip Planes
+| Setting | Description |
+|---------|-------------|
+| **Near Clip Variable** | Float for near clip plane |
+| **Far Clip Variable** | Float for far clip plane |
+
+#### Background
+| Setting | Description |
+|---------|-------------|
+| **Background Color Variable** | ColorVariable for background |
+
+#### Viewport
+| Setting | Description |
+|---------|-------------|
+| **Viewport Position Variable** | Vector2 for viewport (x, y) |
+| **Viewport Size Variable** | Vector2 for viewport (width, height) |
+
+#### Other
+| Setting | Description |
+|---------|-------------|
+| **Depth Variable** | Float for camera depth |
+| **Enabled Variable** | Bool to enable/disable camera |
+| **Use Target Texture Variable** | Bool to toggle render texture |
+
+### Use Cases
+
+- **Zoom controls**: FOV controlled by scroll/input
+- **Camera shake**: Viewport position wobble
+- **Split-screen**: Dynamic viewport sizing
+- **Cinematic effects**: Animated clip planes for fog/reveal
+
+---
+
 ## Bool Toggle Binder
 
 Binds BoolVariable to enable/disable GameObjects, Components, or Renderers.
@@ -902,6 +957,87 @@ Binds BoolVariable to enable/disable GameObjects, Components, or Renderers.
 Variable = true → All targets enabled
 Variable = false → All targets disabled
 (Inverted if **Invert** is checked)
+
+---
+
+## Animator Binder
+
+Comprehensive binder that connects ScriptableVariables directly to Animator parameters.
+
+### Bool Bindings
+
+Bind BoolVariables directly to Animator bool parameters.
+
+| Setting | Description |
+|---------|-------------|
+| **Variable** | BoolVariable to bind |
+| **Parameter Name** | Animator bool parameter name |
+| **Invert** | Invert the bool value |
+
+### Float Bindings
+
+Bind numeric variables to Animator float parameters with optional remapping.
+
+| Setting | Description |
+|---------|-------------|
+| **Variable** | Int or Float variable |
+| **Parameter Name** | Animator float parameter name |
+| **Multiplier** | Scale the value |
+| **Use Remapping** | Enable input→output range mapping |
+| **Input Min/Max** | Source value range |
+| **Output Min/Max** | Target value range |
+| **Clamp Output** | Clamp to min/max |
+| **Use Damping** | Smooth parameter changes |
+| **Damp Time** | Damping duration |
+
+### Int Bindings
+
+Bind numeric variables to Animator integer parameters.
+
+| Setting | Description |
+|---------|-------------|
+| **Variable** | Int or Float variable |
+| **Parameter Name** | Animator int parameter name |
+| **Offset** | Value added to output |
+| **Clamp Output** | Clamp to min/max |
+| **Min/Max Value** | Clamp range |
+
+### Trigger Bindings
+
+Bind GameEvents to Animator triggers.
+
+| Setting | Description |
+|---------|-------------|
+| **Game Event** | Event that fires the trigger |
+| **Parameter Name** | Animator trigger parameter name |
+| **Reset First** | Reset trigger before setting (prevents queuing) |
+
+### Options
+
+| Setting | Description |
+|---------|-------------|
+| **Continuous Update** | Update every frame (for smooth blending) |
+
+### Use Cases
+
+- **Player state machine**: Variables control animation states
+- **Blend trees**: Float variables for blend weights
+- **Combat**: Events trigger attack animations
+- **UI animations**: Menu state controls animator
+
+### Comparison: AnimatorBinder vs EventAnimatorBinder
+
+| Feature | AnimatorBinder | EventAnimatorBinder |
+|---------|---------------|---------------------|
+| Bool via variable | ✅ BoolVariable | ❌ Events only |
+| Float/Int | ✅ Direct binding | ✅ Variable binding |
+| Triggers | ✅ GameEvent | ✅ GameEvent |
+| Remapping | ✅ Full support | ❌ Multiplier only |
+| Damping | ✅ Built-in | ❌ None |
+| Continuous mode | ✅ Yes | ❌ No |
+
+Use **AnimatorBinder** when you want direct variable-to-parameter binding.
+Use **EventAnimatorBinder** for simple event-based trigger/bool control.
 
 ---
 
@@ -1003,6 +1139,8 @@ When you select any ScriptableVariable or GameEvent asset, the inspector shows a
 
 ⚠️ **Material Binder Property Names** — Ensure property names match your shader exactly (case-sensitive).
 
+⚠️ **Animator Parameter Names** — Ensure parameter names match your Animator Controller exactly (case-sensitive).
+
 ---
 
 ## Troubleshooting
@@ -1020,4 +1158,4 @@ When you select any ScriptableVariable or GameEvent asset, the inspector shows a
 ---
 
 **Last Updated:** January 2026
-**Component Version:** 1.4.0
+**Component Version:** 1.5.0
