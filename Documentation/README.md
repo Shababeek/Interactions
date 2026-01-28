@@ -113,7 +113,7 @@ Each component manual follows a consistent structure:
 Throughout the documentation, you'll see placeholders like:
 
 ```
-[PLACEHOLDER_SCREENSHOT: Description of needed image]
+![Documentation Example](Images/documentation-example.png)
 ```
 
 These indicate where screenshots or GIFs should be added to improve clarity.
