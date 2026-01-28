@@ -56,9 +56,19 @@ Higher-level systems that add functionality.
 | System | Description | Document |
 |--------|-------------|----------|
 | **Pose Constrainer** | Controls hand poses during interactions | **[PoseConstrainer](PoseSystem/PoseConstrainer.md)** |
-| **Feedback System** | Haptic, audio, and visual feedback | **[Feedback](Systems/FeedbackSystem.md)** |
+| **Feedback System** | Haptic, audio, visual, scale, particle feedback | **[Feedback](Systems/FeedbackSystem.md)** |
 | **Socket System** | Object placement and snapping | **[Sockets](SocketSystem/SocketSystem.md)** |
 | **Sequencing System** | Tutorials and guided workflows | **[Sequencing](Systems/SequencingSystem.md)** |
+
+### 🔗 Scriptable System
+Decoupled variable-based architecture for data flow.
+
+| Document | Description |
+|----------|-------------|
+| **[Scriptable Variables](ScriptableSystem/ScriptableVariables.md)** | Variables, events, and references |
+| **[Variable Container](ScriptableSystem/VariableContainer.md)** | Group variables as sub-assets |
+| **[Binders](ScriptableSystem/Binders.md)** | Connect variables to components |
+| **[Designer Guide](GettingStarted/ScriptableSystemForDesigners.md)** | No-code workflows |
 
 ---
 
@@ -131,10 +141,13 @@ These indicate where screenshots or GIFs should be added to improve clarity.
 | VRButton | ✅ Complete |
 | Constrained Interactables | ✅ Complete |
 | PoseConstrainer | ✅ Complete |
-| Feedback System | ✅ Complete |
-| Socket System | ✅ Complete |
+| Feedback System | ✅ Complete (v1.1 - added Scale, Particle, Toggle, UnityEvent) |
+| Socket System | ✅ Complete (v1.1 - added Socket Binders) |
 | Sequencing System | ✅ Complete |
 | Interactors | ✅ Complete |
+| Scriptable Variables | ✅ Complete |
+| Variable Container | ✅ Complete |
+| Binders | ✅ Complete (v1.3 - added Speed, Scale, Material, Socket binders) |
 
 ---
 

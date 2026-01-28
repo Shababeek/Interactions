@@ -526,14 +526,73 @@ public class MultiSocket : AbstractSocket
 
 ---
 
+---
+
+## Socket Binders (Scriptable System Integration)
+
+The Socket System integrates with the Scriptable System through dedicated binders. These allow socket events to drive variables and trigger GameEvents without custom code.
+
+### Available Binders
+
+| Binder | Attached To | Purpose |
+|--------|-------------|---------|
+| **SocketToBoolBinder** | Socket | Track if socket has an object |
+| **SocketToEventBinder** | Socket | Fire events on insert/remove |
+| **SocketableToBoolBinder** | Socketable | Track if object is socketed |
+| **SocketableToEventBinder** | Socketable | Fire events on socket/unsocket |
+
+### Socket To Bool Binder
+
+Attach to a Socket to expose its state as a BoolVariable.
+
+```
+Socket (with SocketToBoolBinder)
+├── Has Object Variable → true when filled
+├── On Inserted Event → fires when object inserted
+└── On Removed Event → fires when object removed
+```
+
+**Use Case:** Light indicator that turns on when slot is filled.
+
+### Socketable To Bool Binder
+
+Attach to a Socketable object to track its socketed state.
+
+```
+Key (with SocketableToBoolBinder)
+├── Is Socketed Variable → true when in socket
+├── On Socketed Event → fires when inserted
+└── On Unsocketed Event → fires when removed
+```
+
+**Use Case:** Key that triggers door unlock when inserted.
+
+### Example: Puzzle with All Slots Filled
+
+1. Create 3 sockets, each with `SocketToBoolBinder`
+2. Assign each to a different `BoolVariable` (Slot1Filled, Slot2Filled, Slot3Filled)
+3. Create a `BoolComposite` that ANDs all three
+4. Use result to trigger puzzle completion
+
+### Example: Battery Installation Feedback
+
+1. Add `SocketableToBoolBinder` to battery
+2. Assign `IsInstalledVariable` BoolVariable
+3. Use `BoolToggleBinder` to enable device when `IsInstalledVariable = true`
+
+See [Binders Documentation](../ScriptableSystem/Binders.md) for full binder reference.
+
+---
+
 ## Related Documentation
 
 - [Grabable](../Interactables/Grabable.md) — Making objects grabbable
-- [Feedback System](FeedbackSystem.md) — Adding snap feedback
-- [Sequencing System](SequencingSystem.md) — Validating socket sequences
+- [Feedback System](../Systems/FeedbackSystem.md) — Adding snap feedback
+- [Sequencing System](../Systems/SequencingSystem.md) — Validating socket sequences
+- [Binders](../ScriptableSystem/Binders.md) — Socket binder details
 - [Quick Start Guide](../GettingStarted/QuickStart.md) — Basic setup
 
 ---
 
 **Last Updated:** January 2026
-**Component Version:** 1.0.0
+**Component Version:** 1.1.0

@@ -27,6 +27,10 @@ The **Feedback System** provides unified feedback management for interactions. I
 | **Animation** | Triggers animator parameters | Character reactions, UI animations |
 | **Haptic** | Controller vibration | Physical confirmation of interactions |
 | **Audio** | Plays sound effects | Click sounds, interaction audio |
+| **Object Toggle** | Enables/disables GameObjects | Show/hide visual elements |
+| **Scale** | Animates object scale | Punch effects, size feedback |
+| **Particle** | Plays particle effects | Sparkles, dust, magical effects |
+| **Unity Event** | Fires UnityEvents | Custom event-based responses |
 
 ---
 
@@ -228,6 +232,164 @@ Strong feedback for triggering actions.
 
 ---
 
+## Object Toggle Feedback
+
+Enables or disables GameObjects based on interaction events.
+
+[PLACEHOLDER_SCREENSHOT: ObjectToggleFeedback settings expanded]
+
+### Settings
+
+#### Hover Objects
+Array of GameObjects to enable when hovered (disabled when not hovered).
+
+#### Select Objects
+Array of GameObjects to enable when selected (disabled when deselected).
+
+#### Activate Objects
+Array of GameObjects to enable when activated (disabled when not activated).
+
+### How It Works
+- **Hover Start** → Enable hover objects
+- **Hover End** → Disable hover objects
+- **Select** → Enable select objects
+- **Deselect** → Disable select objects
+- **Activate** → Enable activate objects (then disable)
+
+### Use Cases
+- Show glow effect when hovered
+- Display grab handles when object is selected
+- Show activation particles when used
+
+---
+
+## Scale Feedback
+
+Animates object scale in response to interaction events.
+
+[PLACEHOLDER_SCREENSHOT: ScaleFeedback settings expanded]
+
+### Settings
+
+#### Target Transform
+The transform to scale. If not assigned, uses the interactable's transform.
+
+#### Hover Scale
+Scale multiplier when hovered.
+
+**Default:** 1.05 (5% larger)
+
+#### Select Scale
+Scale multiplier when selected.
+
+**Default:** 0.95 (5% smaller — "pressed" feel)
+
+#### Activate Scale
+Scale multiplier when activated.
+
+**Default:** 0.9 (10% smaller — strong "punch" feel)
+
+#### Animation Settings
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| **Use Animation** | Animate scale changes | true |
+| **Animation Duration** | Time for scale animation | 0.15s |
+| **Animation Curve** | Easing for animation | EaseOutBack |
+
+### How It Works
+- Stores original scale on start
+- Multiplies original scale by event-specific multiplier
+- Animates between scales (if enabled)
+- Returns to original on event end
+
+### Use Cases
+- Button "press" effect
+- Hover "grow" effect
+- Activation "punch" feedback
+
+---
+
+## Particle Feedback
+
+Plays particle effects for interaction events.
+
+[PLACEHOLDER_SCREENSHOT: ParticleFeedback settings expanded]
+
+### Settings
+
+#### Hover Particles
+ParticleSystem to play during hover.
+
+**Behavior:** Plays on hover start, stops on hover end.
+
+#### Select Particles
+ParticleSystem to play when selected.
+
+**Behavior:** Plays once on select.
+
+#### Deselect Particles
+ParticleSystem to play when deselected.
+
+**Behavior:** Plays once on deselect.
+
+#### Activate Particles
+ParticleSystem to play when activated.
+
+**Behavior:** Plays once on activate.
+
+### How It Works
+- **Hover Start** → Play hover particles (looping)
+- **Hover End** → Stop hover particles
+- **Select** → Play select particles (one-shot)
+- **Deselect** → Play deselect particles (one-shot)
+- **Activate** → Play activate particles (one-shot)
+
+### Tips
+- Use looping particles for hover
+- Use burst/one-shot particles for select/activate
+- Position particle system at object center or attach point
+
+---
+
+## Unity Event Feedback
+
+Fires UnityEvents for maximum flexibility.
+
+[PLACEHOLDER_SCREENSHOT: UnityEventFeedback settings expanded]
+
+### Settings
+
+#### On Hover Start
+UnityEvent invoked when hover starts.
+
+#### On Hover End
+UnityEvent invoked when hover ends.
+
+#### On Selected
+UnityEvent invoked when selected.
+
+#### On Deselected
+UnityEvent invoked when deselected.
+
+#### On Activated
+UnityEvent invoked when activated.
+
+### Use Cases
+- Call custom methods on interaction
+- Trigger external systems (UI, audio managers, etc.)
+- Chain multiple actions together
+- Prototype without writing code
+
+### Example Setup
+
+1. Add UnityEvent Feedback to feedbacks list
+2. Click **+** on On Selected event
+3. Drag target object to slot
+4. Select method to call (e.g., `MyScript.DoSomething`)
+
+---
+
 ## Audio Feedback
 
 Plays sound effects for interaction events.
@@ -418,6 +580,10 @@ Feedback will silently fail if clips are null. Assign or check your audio clips.
 | No vibration | Haptic not added | Add HapticFeedback to the list |
 | Sound doesn't play | AudioClip not assigned | Assign sound clips to Audio Feedback |
 | Animation doesn't trigger | Parameter names wrong | Match animator parameter names exactly |
+| Objects not toggling | Arrays empty | Assign GameObjects to toggle arrays |
+| Scale not animating | useAnimation = false | Enable Use Animation option |
+| Particles not playing | ParticleSystem null | Assign ParticleSystem references |
+| UnityEvent not firing | No listeners | Add methods to event in inspector |
 
 ---
 
@@ -442,36 +608,84 @@ system.ClearFeedbacks();
 List<FeedbackData> feedbacks = system.GetFeedbacks();
 ```
 
+### Using Built-in Feedback Types
+
+```csharp
+FeedbackSystem system = GetComponent<FeedbackSystem>();
+
+// Add Object Toggle feedback
+var toggleFeedback = new ObjectToggleFeedback();
+toggleFeedback.hoverObjects = new[] { glowEffect };
+toggleFeedback.selectObjects = new[] { grabHandles };
+system.AddFeedback(toggleFeedback);
+
+// Add Scale feedback
+var scaleFeedback = new ScaleFeedback();
+scaleFeedback.hoverScale = 1.1f;
+scaleFeedback.selectScale = 0.95f;
+scaleFeedback.useAnimation = true;
+system.AddFeedback(scaleFeedback);
+
+// Add Particle feedback
+var particleFeedback = new ParticleFeedback();
+particleFeedback.hoverParticles = sparkleSystem;
+particleFeedback.selectParticles = burstSystem;
+system.AddFeedback(particleFeedback);
+
+// Add Unity Event feedback
+var eventFeedback = new UnityEventFeedback();
+eventFeedback.onSelected.AddListener(() => Debug.Log("Selected!"));
+system.AddFeedback(eventFeedback);
+```
+
 ### Creating Custom Feedback
 
 Extend `FeedbackData` to create custom feedback types:
 
 ```csharp
 [Serializable]
-public class ParticleFeedback : FeedbackData
+public class CustomFeedback : FeedbackData
 {
-    [SerializeField] public ParticleSystem particles;
+    [SerializeField] public float customValue;
 
-    public ParticleFeedback()
+    public CustomFeedback()
     {
-        feedbackName = "Particle Feedback";
+        feedbackName = "Custom Feedback";
     }
 
     public override void OnHoverStarted(InteractorBase interactor)
     {
-        if (!enabled || particles == null) return;
-        particles.Play();
+        if (!enabled) return;
+        // Your hover start logic
     }
 
     public override void OnHoverEnded(InteractorBase interactor)
     {
-        if (!enabled || particles == null) return;
-        particles.Stop();
+        if (!enabled) return;
+        // Your hover end logic
+    }
+
+    public override void OnSelected(InteractorBase interactor)
+    {
+        if (!enabled) return;
+        // Your select logic
+    }
+
+    public override void OnDeselected(InteractorBase interactor)
+    {
+        if (!enabled) return;
+        // Your deselect logic
+    }
+
+    public override void OnActivated(InteractorBase interactor)
+    {
+        if (!enabled) return;
+        // Your activate logic
     }
 
     public override bool IsValid()
     {
-        return base.IsValid() && particles != null;
+        return base.IsValid();
     }
 }
 ```
@@ -498,4 +712,4 @@ Feedback events fire in this order:
 ---
 
 **Last Updated:** January 2026
-**Component Version:** 1.0.0
+**Component Version:** 1.1.0

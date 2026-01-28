@@ -38,11 +38,22 @@
 | **TextMeshProBinder** | Any | TMP_Text content |
 | **ColorTextMeshProBinder** | Color | TMP_Text color |
 | **NumericalFillBinder** | Int/Float | Image fillAmount |
-| **NumericalRotationBinder** | Int/Float | Transform rotation |
-| **NumericalPositionBinder** | Int/Float | Position between two points |
+| **NumericalRotationBinder** | Int/Float | Transform rotation (direct mapping) |
+| **NumericalRotationSpeedBinder** | Int/Float | Rotation speed (continuous) |
+| **NumericalPositionBinder** | Int/Float | Position between two points (direct) |
+| **NumericalPositionSpeedBinder** | Int/Float | Movement speed between two points |
+| **NumericalScaleBinder** | Int/Float | Transform scale |
+| **NumericalMaterialBinder** | Int/Float | Shader property values |
 | **ColorSpriteBinder** | Color | SpriteRenderer color |
 | **ColorImageBinder** | Color | UI Image color |
 | **AudioSourceBinder** | Audio | AudioSource settings |
+
+### State & Toggle Binders
+
+| Binder | Variable Type | Updates |
+|--------|--------------|---------|
+| **BoolToggleBinder** | Bool | Enable/disable GameObjects, Components |
+| **EventAnimatorBinder** | GameEvent | Animator parameters (triggers, bools) |
 
 ### Interactable-to-Variable Binders
 
@@ -53,6 +64,17 @@
 | **JoystickToVariableBinder** | JoystickInteractable | Vector2, Float (x, y) |
 | **DrawerToVariableBinder** | DrawerInteractable | Float, Bool, Events |
 | **InteractableEventBinder** | InteractableBase | GameEvents, BoolVariables |
+| **InteractableToBoolBinder** | InteractableBase | BoolVariables for Hovered/Selected/Used |
+| **InteractableToEventBinder** | InteractableBase | GameEvents for all interaction events |
+
+### Socket-to-Variable Binders
+
+| Binder | Source | Outputs |
+|--------|--------|---------|
+| **SocketToBoolBinder** | Socket | BoolVariable for HasObject, GameEvents |
+| **SocketToEventBinder** | Socket | GameEvents for Insert/Remove |
+| **SocketableToBoolBinder** | Socketable | BoolVariable for IsSocketed |
+| **SocketableToEventBinder** | Socketable | GameEvents for Socketed/Unsocketed |
 
 ---
 
@@ -383,6 +405,98 @@ Binds any InteractableBase's interaction events to GameEvents and BoolVariables.
 | **Is Hovered Variable** | BoolVariable tracking hover |
 | **Is Using Variable** | BoolVariable tracking use |
 
+### Interactable To Bool Binder
+
+Simplified binder focusing only on BoolVariables for interaction states.
+
+| Setting | Description |
+|---------|-------------|
+| **Hovered Variable** | BoolVariable set true when hovered |
+| **Selected Variable** | BoolVariable set true when selected/grabbed |
+| **Used Variable** | BoolVariable set true during use |
+| **Reset On Disable** | Reset all to false when disabled |
+
+**Use cases:**
+- UI indicators showing interaction state
+- Enabling features based on selection
+- Analytics tracking of interactions
+
+### Interactable To Event Binder
+
+Simplified binder focusing only on GameEvents for interaction events.
+
+| Setting | Description |
+|---------|-------------|
+| **On Hover Start Event** | GameEvent raised when hover starts |
+| **On Hover End Event** | GameEvent raised when hover ends |
+| **On Selected Event** | GameEvent raised when selected |
+| **On Deselected Event** | GameEvent raised when deselected |
+| **On Use Start Event** | GameEvent raised when use starts |
+| **On Use End Event** | GameEvent raised when use ends |
+
+**Use cases:**
+- Triggering game logic when objects are grabbed
+- Playing effects through event listeners
+- Updating UI/analytics when interactions occur
+
+---
+
+## Socket Binders
+
+These binders connect Socket System events to the Scriptable System.
+
+### Socket To Bool Binder
+
+Binds a Socket's state to BoolVariables and GameEvents.
+
+| Setting | Description |
+|---------|-------------|
+| **Socket** | Source Socket component |
+| **Has Object Variable** | BoolVariable true when socket contains object |
+| **On Inserted Event** | GameEvent raised when object inserted |
+| **On Removed Event** | GameEvent raised when object removed |
+
+**Use cases:**
+- Light indicator when slot is filled
+- Trigger puzzle logic when all sockets filled
+- Play sound effects on socket events
+
+### Socket To Event Binder
+
+Simplified version focusing only on GameEvents.
+
+| Setting | Description |
+|---------|-------------|
+| **Socket** | Source Socket component |
+| **On Inserted Event** | GameEvent raised on insert |
+| **On Removed Event** | GameEvent raised on remove |
+
+### Socketable To Bool Binder
+
+Binds a Socketable object's state to BoolVariable.
+
+| Setting | Description |
+|---------|-------------|
+| **Socketable** | Source Socketable component |
+| **Is Socketed Variable** | BoolVariable true when in a socket |
+| **On Socketed Event** | GameEvent raised when socketed |
+| **On Unsocketed Event** | GameEvent raised when unsocketed |
+
+**Use cases:**
+- Battery shows "installed" indicator
+- Key disappears when inserted in lock
+- Tool shows different state when holstered
+
+### Socketable To Event Binder
+
+Simplified version focusing only on GameEvents.
+
+| Setting | Description |
+|---------|-------------|
+| **Socketable** | Source Socketable component |
+| **On Socketed Event** | GameEvent raised when socketed |
+| **On Unsocketed Event** | GameEvent raised when unsocketed |
+
 ---
 
 ## Numerical Position Binder
@@ -443,17 +557,250 @@ Binds any numeric variable to a UI Image's fill amount.
 
 ## Numerical Rotation Binder
 
-Maps numeric value to rotation angle.
+Maps numeric value directly to rotation angle.
 
 ### Settings
 
 | Setting | Description | Default |
-|---------|-------------|Her
+|---------|-------------|---------|
 | **Variable** | Int or Float | None |
 | **Min/Max Value** | Value range | 0-100 |
 | **Min/Max Angle** | Angle range | 0-360 |
 | **Rotation Axis** | X, Y, or Z | Z |
 | **Use Shortest Path** | Angle interpolation | true |
+
+---
+
+## Numerical Rotation Speed Binder
+
+Maps numeric value to rotation **speed** instead of direct angle. Perfect for continuous rotation controlled by input.
+
+### Settings
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| **Variable** | Int or Float | None |
+| **Min Value** | Maps to max negative speed | -1 |
+| **Max Value** | Maps to max positive speed | 1 |
+| **Max Speed** | Rotation speed in degrees/sec | 180 |
+| **Dead Zone** | Values within this range = no rotation | 0.01 |
+| **Rotation Axis** | X, Y, or Z | Z |
+| **Use Local Rotation** | Local vs world space | true |
+| **Limit Rotation** | Enable min/max angle limits | false |
+| **Min Angle** | Minimum angle (if limited) | -180 |
+| **Max Angle** | Maximum angle (if limited) | 180 |
+| **Smooth Acceleration** | Gradual speed changes | false |
+| **Acceleration Rate** | Speed change rate | 10 |
+
+### Use Cases
+
+- **Steering wheel**: Input controls rotation speed, not position
+- **Rotating platforms**: Hold button = platform rotates
+- **Camera turret**: Joystick controls rotation speed
+- **Valve handles**: Continuous turning while held
+
+### Example
+
+```csharp
+// Joystick X controls rotation speed
+joystickVariable.Value = Input.GetAxis("Horizontal");
+// Object rotates left/right based on input
+// Release = rotation stops (value returns to 0)
+```
+
+---
+
+## Numerical Position Speed Binder
+
+Maps numeric value to movement **speed** between two positions. Unlike NumericalPositionBinder which maps value to position directly, this maps value to velocity.
+
+### Settings
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| **Variable** | Int or Float | None |
+| **Start Position** | Position at T=0 | Vector3.zero |
+| **End Position** | Position at T=1 | Vector3.zero |
+| **Use Local Position** | Local vs world space | true |
+| **Min Value** | Maps to max speed toward start | -1 |
+| **Max Value** | Maps to max speed toward end | 1 |
+| **Max Speed** | Movement speed in units/sec | 2 |
+| **Dead Zone** | Values within this = no movement | 0.01 |
+| **Clamp To Endpoints** | Stop at start/end (vs wrap) | true |
+| **Smooth Acceleration** | Gradual speed changes | false |
+| **Acceleration Rate** | Speed change rate | 10 |
+
+### Context Menu
+
+- **Set Start Position** — Save current position as start
+- **Set End Position** — Save current position as end
+- **Preview Start** — Move to start position
+- **Preview End** — Move to end position
+
+### Use Cases
+
+- **Sliding doors**: Button held = door moves, released = stops
+- **Elevator platforms**: Up/down input controls movement
+- **Conveyor belts**: Speed control
+- **Throttle-controlled mechanisms**
+
+### Public API
+
+```csharp
+binder.CurrentSpeed     // Current speed in units/sec
+binder.CurrentT         // Position as 0-1 value
+binder.CurrentPosition  // Current world/local position
+binder.SetPositionImmediate(float t)  // Jump to position
+binder.GoToStart()      // Jump to start
+binder.GoToEnd()        // Jump to end
+binder.GoToCenter()     // Jump to center
+```
+
+---
+
+## Numerical Scale Binder
+
+Maps numeric value to object scale.
+
+### Settings
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| **Variable** | Int or Float | None |
+| **Min Value** | Value for min scale | 0 |
+| **Max Value** | Value for max scale | 1 |
+| **Scale Mode** | Uniform, PerAxis, XOnly, YOnly, ZOnly | Uniform |
+| **Min Scale** | Scale at min value | (0.5, 0.5, 0.5) |
+| **Max Scale** | Scale at max value | (1, 1, 1) |
+| **Smooth** | Enable interpolation | false |
+| **Speed** | Interpolation speed | 5 |
+| **Curve** | Animation curve | Linear |
+
+### Scale Modes
+
+| Mode | Description |
+|------|-------------|
+| **Uniform** | All axes scale equally |
+| **PerAxis** | Each axis interpolates independently |
+| **XOnly** | Only X axis scales |
+| **YOnly** | Only Y axis scales |
+| **ZOnly** | Only Z axis scales |
+
+---
+
+## Numerical Material Binder
+
+Maps numeric value to shader properties (float, color, vector).
+
+### Settings
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| **Variable** | Int or Float | None |
+| **Renderer** | Target Renderer | Auto-detect |
+| **Material Index** | Which material to modify | 0 |
+| **Property Name** | Shader property name | "_Intensity" |
+| **Property Type** | Float, Color, or Vector | Float |
+| **Min Value** | Input value for min output | 0 |
+| **Max Value** | Input value for max output | 1 |
+
+#### For Float Properties
+| **Min Float** | Output at min value | 0 |
+| **Max Float** | Output at max value | 1 |
+
+#### For Color Properties
+| **Min Color** | Color at min value | Black |
+| **Max Color** | Color at max value | White |
+
+#### For Vector Properties
+| **Min Vector** | Vector at min value | (0,0,0,0) |
+| **Max Vector** | Vector at max value | (1,1,1,1) |
+
+### Use Cases
+
+- **Dissolve effects**: Value controls dissolve amount
+- **Emission intensity**: Health controls glow
+- **Color transitions**: Temperature controls material color
+- **Shader animations**: Script-driven visual effects
+
+---
+
+## Bool Toggle Binder
+
+Binds BoolVariable to enable/disable GameObjects, Components, or Renderers.
+
+### Settings
+
+| Setting | Description |
+|---------|-------------|
+| **Variable** | BoolVariable to bind |
+| **Toggle Mode** | What to toggle |
+| **Invert** | Flip the logic |
+
+### Toggle Modes
+
+| Mode | Description |
+|------|-------------|
+| **GameObject** | Enable/disable GameObjects |
+| **Behaviour** | Enable/disable Behaviour components |
+| **Collider** | Enable/disable Colliders |
+| **Renderer** | Enable/disable Renderers |
+
+### Target Arrays
+
+| Setting | Description |
+|---------|-------------|
+| **Game Objects** | List of GameObjects to toggle |
+| **Behaviours** | List of Behaviours to toggle |
+| **Colliders** | List of Colliders to toggle |
+| **Renderers** | List of Renderers to toggle |
+
+### Example
+
+Variable = true → All targets enabled
+Variable = false → All targets disabled
+(Inverted if **Invert** is checked)
+
+---
+
+## Event Animator Binder
+
+Binds GameEvents and ScriptableVariables to Animator parameters.
+
+### Settings
+
+| Setting | Description |
+|---------|-------------|
+| **Animator** | Target Animator |
+
+### Event Bindings
+
+Add bindings for GameEvents that trigger Animator parameters:
+
+| Setting | Description |
+|---------|-------------|
+| **Event** | GameEvent to listen to |
+| **Parameter Name** | Animator parameter name |
+| **Parameter Type** | Trigger, Bool, Int, Float |
+| **Bool Value** | Value to set (for Bool type) |
+| **Int Value** | Value to set (for Int type) |
+| **Float Value** | Value to set (for Float type) |
+
+### Variable Bindings
+
+Add bindings for Variables that sync to Animator parameters:
+
+| Setting | Description |
+|---------|-------------|
+| **Variable** | Any ScriptableVariable |
+| **Parameter Name** | Animator parameter name |
+| **Parameter Type** | Bool, Int, Float |
+
+### Use Cases
+
+- **Door open event** → Trigger "Open" animation
+- **Health variable** → Sync to "Health" float parameter
+- **Is grounded bool** → Sync to "Grounded" bool parameter
 
 ---
 
@@ -502,9 +849,17 @@ When you select any ScriptableVariable or GameEvent asset, the inspector shows a
 
 💡 **Interactable Binders** — Use these to connect VR interactions to the Scriptable System without custom code.
 
+💡 **Speed vs Direct Binders** — Use `NumericalRotationSpeedBinder` when input should control rotation speed (steering wheel), use `NumericalRotationBinder` when input should control rotation angle directly (dial).
+
+💡 **Socket Binders** — Connect socket events to your game logic without writing socket-specific code.
+
+💡 **Bool Toggle for UI** — Use `BoolToggleBinder` to show/hide UI elements based on game state.
+
 ⚠️ **Filled Image** — NumericalFillBinder requires Image.Type = Filled.
 
 ⚠️ **Physics Timing** — Physics binders apply in FixedUpdate. For manual control, disable continuous mode.
+
+⚠️ **Material Binder Property Names** — Ensure property names match your shader exactly (case-sensitive).
 
 ---
 
@@ -523,4 +878,4 @@ When you select any ScriptableVariable or GameEvent asset, the inspector shows a
 ---
 
 **Last Updated:** January 2026
-**Component Version:** 1.2.0
+**Component Version:** 1.3.0
