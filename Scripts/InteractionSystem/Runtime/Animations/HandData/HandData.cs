@@ -53,7 +53,7 @@ namespace Shababeek.Interactions.Animations
     /// <summary>
     /// Hand pose data, avatar masks, and prefab references.
     /// </summary>
-    [CreateAssetMenu(menuName = "Shababeek/Interaction System/Hand Data")]
+    [CreateAssetMenu(menuName = "Shababeek/Interactions/Hand Data")]
     public class HandData : ScriptableObject, IAvatarMaskIndexer
     {
         [Header("Visual Preview")]

@@ -7,7 +7,7 @@ namespace Shababeek.Interactions
     /// <summary>
     /// ScriptableObject storing a Gesture value.
     /// </summary>
-    [CreateAssetMenu(menuName = "Shababeek/Interaction System/Gesture")]
+    [CreateAssetMenu(menuName = "Shababeek/Interactions/Interactors/Gesture")]
     public class GestureVariable : ScriptableObject
     {
         [SerializeField]

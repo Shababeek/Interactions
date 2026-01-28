@@ -13,7 +13,7 @@ namespace Shababeek.Interactions.Core
     /// <summary>
     /// Configuration settings for the interaction system including hand data, input, and layers.
     /// </summary>
-    [CreateAssetMenu(menuName = "Shababeek/Interaction System/Config")]
+    [CreateAssetMenu(menuName = "Shababeek/Interactions/Config")]
     public class Config : ScriptableObject
     {
         [Header("Hand Configuration")]

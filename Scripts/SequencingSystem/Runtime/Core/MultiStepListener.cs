@@ -15,7 +15,7 @@ namespace Shababeek.Sequencing
     /// when any step starts or completes, allowing for coordinated responses
     /// across multiple steps in a sequence.
     /// </remarks>
-    [AddComponentMenu("Shababeek/SequenceSystem/MultiStepListener")]
+    [AddComponentMenu("Shababeek/Sequencing/Multi Step Listener")]
     public class MultiStepListener : MonoBehaviour
     {
         [Tooltip("Array of steps to listen to for status changes.")]

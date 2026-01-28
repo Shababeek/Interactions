@@ -11,7 +11,7 @@ namespace Shababeek.Utilities
     /// This component automatically raises both GameEvents and UnityEvents when the GameObject
     /// is enabled or disabled, providing a simple way to trigger events on object lifecycle changes.
     /// </remarks>
-    [AddComponentMenu("Shababeek/Interactions/Object Lifecycle Events")]
+    [AddComponentMenu("Shababeek/Scriptable System/Events/Object Lifecycle Events")]
     public class ObjectLifecycleEvents : MonoBehaviour
     {
         [Header("Game Events")]
