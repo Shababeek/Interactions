@@ -307,6 +307,7 @@ Don't modify variable values in constructors or field initializers.
 ## Related Documentation
 
 - [Variable Container](VariableContainer.md) — Group multiple variables
+- [Scriptable System Window](ScriptableSystemWindow.md) — Debug and monitoring tool
 - [Binders](Binders.md) — Connect variables to components
 - [Quick Start Guide](../GettingStarted/QuickStart.md) — Basic setup
 

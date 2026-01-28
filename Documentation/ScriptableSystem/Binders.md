@@ -1111,6 +1111,8 @@ When you select any ScriptableVariable or GameEvent asset, the inspector shows a
 - Click **Refresh** to rescan
 - Shows component path and type
 
+For a comprehensive view of all variables and events across your project, use the [Scriptable System Window](ScriptableSystemWindow.md).
+
 ---
 
 ## Tips

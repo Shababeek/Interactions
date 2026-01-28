@@ -68,6 +68,7 @@ Decoupled variable-based architecture for data flow.
 | **[Scriptable Variables](ScriptableSystem/ScriptableVariables.md)** | Variables, events, and references |
 | **[Variable Container](ScriptableSystem/VariableContainer.md)** | Group variables as sub-assets |
 | **[Binders](ScriptableSystem/Binders.md)** | Connect variables to components |
+| **[Scriptable System Window](ScriptableSystem/ScriptableSystemWindow.md)** | Editor tool for debugging and monitoring |
 | **[Designer Guide](GettingStarted/ScriptableSystemForDesigners.md)** | No-code workflows |
 
 ---
@@ -148,6 +149,7 @@ These indicate where screenshots or GIFs should be added to improve clarity.
 | Scriptable Variables | ✅ Complete |
 | Variable Container | ✅ Complete |
 | Binders | ✅ Complete (v1.3 - added Speed, Scale, Material, Socket binders) |
+| Scriptable System Window | ✅ Complete |
 
 ---
 
