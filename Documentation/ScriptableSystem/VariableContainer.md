@@ -217,6 +217,153 @@ container.RaiseAll();
 
 ---
 
+## Persistence (Save/Load)
+
+Variable Containers support saving and loading all variable values to JSON files. This enables save systems, settings persistence, and state serialization.
+
+### Quick Save/Load
+
+```csharp
+// Save to default location (Application.persistentDataPath/VariableContainers/)
+container.Save();  // Uses container name as filename
+
+// Load from default location
+container.Load();
+
+// Check if save exists
+if (container.SaveExists())
+{
+    container.Load();
+}
+
+// Delete save file
+container.DeleteSave();
+```
+
+### Custom File Paths
+
+```csharp
+// Save to specific file
+container.SaveToFile("/path/to/save.json");
+
+// Load from specific file
+container.LoadFromFile("/path/to/save.json");
+
+// Get the default save path
+string path = container.GetDefaultSavePath();
+// Returns: "{persistentDataPath}/VariableContainers/{containerName}.json"
+```
+
+### Supported Variable Types
+
+| Type | Serialization |
+|------|---------------|
+| IntVariable | Integer string |
+| FloatVariable | Float string (invariant culture) |
+| BoolVariable | "True"/"False" |
+| TextVariable | Raw string |
+| Vector2Variable | JSON object |
+| Vector3Variable | JSON object |
+| QuaternionVariable | JSON object |
+| ColorVariable | JSON object |
+| Vector2IntVariable | JSON object |
+| StringListVariable | JSON array |
+
+### Save File Format
+
+```json
+{
+    "containerName": "PlayerStats",
+    "savedAt": "2026-01-28 14:30:45",
+    "variables": [
+        { "name": "Health", "type": "IntVariable", "value": "85" },
+        { "name": "Speed", "type": "FloatVariable", "value": "5.5" },
+        { "name": "PlayerName", "type": "TextVariable", "value": "Hero" }
+    ]
+}
+```
+
+### Example: Game Save System
+
+```csharp
+public class SaveManager : MonoBehaviour
+{
+    [SerializeField] private VariableContainer playerStats;
+    [SerializeField] private VariableContainer gameProgress;
+    [SerializeField] private VariableContainer settings;
+
+    public void SaveGame()
+    {
+        playerStats.Save("player_save.json");
+        gameProgress.Save("progress_save.json");
+    }
+
+    public void LoadGame()
+    {
+        if (playerStats.SaveExists("player_save.json"))
+        {
+            playerStats.Load("player_save.json");
+            gameProgress.Load("progress_save.json");
+            playerStats.RaiseAllVariables(); // Refresh UI
+        }
+    }
+
+    public void SaveSettings()
+    {
+        settings.Save("settings.json");
+    }
+
+    public void LoadSettings()
+    {
+        settings.Load("settings.json");
+    }
+
+    public void NewGame()
+    {
+        playerStats.ResetAllVariables();
+        gameProgress.ResetAllVariables();
+    }
+}
+```
+
+### Example: Auto-Save on Application Quit
+
+```csharp
+public class AutoSave : MonoBehaviour
+{
+    [SerializeField] private VariableContainer[] containersToSave;
+
+    void OnApplicationQuit()
+    {
+        foreach (var container in containersToSave)
+        {
+            container.Save();
+        }
+    }
+
+    void Start()
+    {
+        foreach (var container in containersToSave)
+        {
+            if (container.SaveExists())
+            {
+                container.Load();
+            }
+        }
+    }
+}
+```
+
+### Notes on Persistence
+
+- **Reference types not saved**: GameObjectVariable, TransformVariable, etc. cannot be serialized
+- **Events not saved**: GameEvents don't have values to persist
+- **Missing variables**: When loading, variables not found in container are skipped with a warning
+- **Type mismatches**: If a variable type changed since save, loading will fail for that variable
+- **Thread safety**: Save/Load operations are not thread-safe
+
+---
+
 ## Common Workflows
 
 ### How To: Create Player Stats Container
@@ -428,4 +575,4 @@ Calling `Get<T>()` every frame is wasteful — cache references in Start/Awake.
 ---
 
 **Last Updated:** January 2026
-**Component Version:** 1.1.0
+**Component Version:** 1.2.0
