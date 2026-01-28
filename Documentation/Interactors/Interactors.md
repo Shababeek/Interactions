@@ -33,7 +33,7 @@ The **TriggerInteractor** uses sphere-based detection (Physics.OverlapSphere) to
 
 ## Inspector Reference
 
-[PLACEHOLDER_SCREENSHOT: TriggerInteractor Inspector]
+![Trigger Interactor Inspector](../Images/trigger-interactor-inspector.png)
 
 ### Settings
 
@@ -98,7 +98,7 @@ In Scene view, TriggerInteractor shows:
 - **Blue line:** Offset from transform to detection center
 - **Blue dot:** Detection center point
 
-[PLACEHOLDER_SCREENSHOT: TriggerInteractor gizmos in scene view]
+![Trigger Interactor Gizmos](../Images/trigger-interactor-gizmos.png)
 
 ---
 
@@ -121,7 +121,7 @@ The **RaycastInteractor** projects a ray from a specified origin point to detect
 
 ## Inspector Reference
 
-[PLACEHOLDER_SCREENSHOT: RaycastInteractor Inspector]
+![Raycast Interactor Inspector](../Images/raycast-interactor-inspector.png)
 
 ### Raycast Settings
 

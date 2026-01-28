@@ -40,7 +40,7 @@ An **Action** defines the condition for completing a step. Examples: wait for in
 
 > **Goal:** Create a "Pick up the tool" tutorial step
 
-[PLACEHOLDER_GIF: Tutorial sequence with visual prompt and audio]
+![Sequence Tutorial](../Images/sequence-tutorial.gif)
 
 ```
 Sequence: "Tool Tutorial"

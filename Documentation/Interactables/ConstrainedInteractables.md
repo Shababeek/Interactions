@@ -32,11 +32,11 @@ All constrained interactables share common features:
 
 The Lever rotates around a single axis within defined angle limits. As you move the grabbed lever, it outputs a normalized value (0-1) representing its position between minimum and maximum angles.
 
-[PLACEHOLDER_GIF: Lever being pulled with value indicator]
+![Lever Interaction](../Images/lever-interaction.gif)
 
 ## Inspector Reference
 
-[PLACEHOLDER_SCREENSHOT: LeverInteractable Inspector]
+![Lever Inspector](../Images/lever-inspector.png)
 
 ### Settings
 
@@ -134,11 +134,11 @@ public class ThrottleController : MonoBehaviour
 
 The Drawer slides along a linear path between a start and end position. Perfect for desk drawers, sliding doors, or any sliding mechanism.
 
-[PLACEHOLDER_GIF: Drawer being pulled open and closed]
+![Drawer Interaction](../Images/drawer-interaction.gif)
 
 ## Inspector Reference
 
-[PLACEHOLDER_SCREENSHOT: DrawerInteractable Inspector]
+![Drawer Inspector](../Images/drawer-inspector.png)
 
 ### Settings
 
@@ -215,11 +215,11 @@ public class DrawerContents : MonoBehaviour
 
 The Joystick rotates around two axes simultaneously, outputting X and Y values. Perfect for flight controls, vehicle steering, or any two-dimensional input.
 
-[PLACEHOLDER_GIF: Joystick being moved in all directions]
+![Joystick Interaction](../Images/joystick-interaction.gif)
 
 ## Inspector Reference
 
-[PLACEHOLDER_SCREENSHOT: JoystickInteractable Inspector]
+![Joystick Inspector](../Images/joystick-inspector.png)
 
 ### Settings
 
@@ -301,11 +301,11 @@ public class AircraftControls : MonoBehaviour
 
 The Wheel rotates continuously around a single axis. Unlike Lever which has angle limits, Wheel can spin indefinitely, tracking total rotation.
 
-[PLACEHOLDER_GIF: Wheel being rotated continuously]
+![Wheel Interaction](../Images/wheel-interaction.gif)
 
 ## Inspector Reference
 
-[PLACEHOLDER_SCREENSHOT: WheelInteractable Inspector]
+![Wheel Inspector](../Images/wheel-inspector.png)
 
 ### Settings
 
@@ -385,11 +385,11 @@ public class ValveController : MonoBehaviour
 
 The Dial rotates between discrete positions (steps), snapping to the nearest step when released. Unlike Wheel which outputs continuous rotation, Dial outputs an integer step index.
 
-[PLACEHOLDER_GIF: Dial being rotated through discrete steps]
+![Dial Interaction](../Images/dial-interaction.gif)
 
 ## Inspector Reference
 
-[PLACEHOLDER_SCREENSHOT: DialInteractable Inspector]
+![Dial Inspector](../Images/dial-inspector.png)
 
 ### Settings
 

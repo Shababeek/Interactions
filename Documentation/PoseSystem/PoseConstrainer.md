@@ -40,7 +40,7 @@ You typically **configure** PoseConstrainer rather than add it manually.
 
 ## Inspector Reference
 
-[PLACEHOLDER_SCREENSHOT: Full PoseConstrainer Inspector with numbered sections]
+![PoseConstrainer Inspector](../Images/pose-constrainer-inspector-full.png)
 
 ### Constraint Configuration
 
@@ -57,7 +57,7 @@ Controls how hands behave during interaction.
 
 **Visual Example:**
 
-[PLACEHOLDER_GIF: Side-by-side comparison of Constrained vs FreeHand vs HideHand]
+![Pose Mode Comparison](../Images/pose-mode-comparison.gif)
 
 ---
 
@@ -93,7 +93,7 @@ How fast the hand moves to the target position (only visible when Smooth Transit
 
 Pose Constraints define how each finger behaves when holding the object. There are separate settings for **Left** and **Right** hands.
 
-[PLACEHOLDER_SCREENSHOT: Pose Constraints section expanded]
+![Pose Constraints Section](../Images/pose-constraints-section.png)
 
 #### Target Pose Index
 Which base pose to use from the HandData asset.
@@ -145,7 +145,7 @@ The actual finger position interpolates between Min and Max based on controller 
 
 Defines where each hand appears relative to the object when grabbed. Separate settings for **Left** and **Right** hands.
 
-[PLACEHOLDER_SCREENSHOT: Hand Positioning section with position/rotation fields]
+![Hand Positioning Section](../Images/pose-hand-positioning.png)
 
 #### Position Offset
 Local position offset from the object's transform origin.
@@ -219,7 +219,7 @@ Pinky:  Locked=true, Min=0.9 (tightly curled)
 3. Check if grip looks natural
 4. Adjust and repeat until satisfied
 
-[PLACEHOLDER_GIF: Before/after of hammer grip configuration]
+![Hammer Grip Configuration](../Images/pose-hammer-grip.gif)
 
 ✅ **Result:** A hammer with a natural-looking power grip!
 
@@ -241,7 +241,7 @@ Pinky:  Locked=true, Min=0.8 (curled)
 
 This creates a pose where the index finger stays extended while other fingers grip the object.
 
-[PLACEHOLDER_SCREENSHOT: Hand in pointing pose holding wand]
+![Wand Pointing Pose](../Images/pose-wand-pointing.png)
 
 ---
 
@@ -313,7 +313,7 @@ That's it! When the player grabs the orb, their hand model will become invisible
    - **10-15**: Natural, balanced (recommended)
    - **20+**: Quick, snappy grabs
 
-[PLACEHOLDER_GIF: Comparison of instant vs smooth grab transition]
+![Grab Transition Comparison](../Images/pose-grab-transition.gif)
 
 ---
 

@@ -27,7 +27,7 @@ Perfect for creating tools, weapons, toys, or any object your player needs to pi
 
 > **Goal:** Make a cube you can pick up and throw
 
-[PLACEHOLDER_SCREENSHOT: Gif of an object being selected and thrown]
+![Grabable Select and Throw](../Images/grabable-select-throw.gif)
 
 This example shows a basic grabbable Object. The player can pick it up, move it around, and throw it. You'll learn the essential settings needed for any grabbable object.
 
@@ -199,7 +199,7 @@ These fields show the object's state while in Play mode. You can't edit them.
 ![ThrowableComponent.png](../Images/ThrowableComponent.png)
 #### ✅ Result
 
-[PLACEHOLDER_SCREENSHOT: Gif of Hand grabbing the cube in Play mode and throwing it]
+![Grabable Play Mode](../Images/grabable-playmode.gif)
 
 Press Play! Put on your VR headset, reach for the cube, and press the **Grip** button. You can now move it around and throw it by releasing grip while moving your hand!
 
@@ -230,7 +230,7 @@ Press Play! Put on your VR headset, reach for the cube, and press the **Grip** b
 
 
 #### ✅ Result
-[PLACEHOLDER_SCREENSHOT:Video Playing with sound effect icons showing grab/release]
+![Grabable Audio Feedback](../Images/grabable-audio-feedback.png)
 
 Now your object plays a sound when grabbed and released!
 
@@ -276,7 +276,7 @@ These settings make throwing feel good:
 
 
 #### ✅ Result
-[PLACEHOLDER_SCREENSHOT: Gif/Video of Object mid-throw with motion trail]
+![Grabable Throw Trail](../Images/grabable-throw-trail.gif)
 
 Your object now throws realistically! The Grabable automatically calculates release velocity from your hand's movement.
 
@@ -326,7 +326,7 @@ public class FlashlightToggle : MonoBehaviour
 
 
 #### ✅ Result
-[PLACEHOLDER_SCREENSHOT: Gif of Flashlight on/off in dark scene]
+![Grabable Flashlight Toggle](../Images/grabable-flashlight-toggle.gif)
 
 Grab the flashlight (Grip), then press **Trigger** to turn it on/off!
 

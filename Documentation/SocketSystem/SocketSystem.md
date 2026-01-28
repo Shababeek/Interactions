@@ -39,7 +39,7 @@ The **Socket System** enables objects to snap into designated holders or positio
 
 > **Goal:** Create a flashlight holder
 
-[PLACEHOLDER_GIF: Flashlight snapping into wall mount]
+![Socket Snap](../Images/socket-snap.gif)
 
 1. Create mount → Add Socket component + Trigger collider
 2. Create flashlight → Add Socketable + Grabable
@@ -54,7 +54,7 @@ The receiver that accepts Socketable objects.
 
 ### Inspector Reference
 
-[PLACEHOLDER_SCREENSHOT: Socket Inspector]
+![Socket Inspector](../Images/socket-inspector.png)
 
 ### Settings
 
@@ -106,7 +106,7 @@ Objects that can be placed into sockets.
 
 ### Inspector Reference
 
-[PLACEHOLDER_SCREENSHOT: Socketable Inspector]
+![Socketable Inspector](../Images/socketable-inspector.png)
 
 ### Required Setup
 
@@ -328,7 +328,7 @@ public class SocketPreview : MonoBehaviour
 }
 ```
 
-[PLACEHOLDER_SCREENSHOT: Ghost preview showing snap position]
+![Socket Ghost Preview](../Images/socket-ghost-preview.png)
 
 ---
 
