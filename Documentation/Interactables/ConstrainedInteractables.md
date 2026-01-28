@@ -1,4 +1,4 @@
-# Constrained Interactables — Lever, Drawer, Joystick, Wheel
+# Constrained Interactables — Lever, Drawer, Joystick, Wheel, Dial
 
 > **Overview**
 > Constrained interactables are objects that move in limited, predictable ways when grabbed. Unlike Grabable objects that follow the hand freely, these components restrict movement to specific axes or paths.
@@ -13,6 +13,7 @@
 | **Drawer** | Linear slide between points | 1 | Drawers, sliding doors, sliders |
 | **Joystick** | Rotation around two axes | 2 | Flight sticks, arcade controls |
 | **Wheel** | Continuous rotation | 1 | Steering wheels, valves, cranks |
+| **Dial** | Discrete step rotation | 1 | Combination locks, rotary selectors |
 
 All constrained interactables share common features:
 - PoseConstrainer for hand positioning
@@ -375,6 +376,162 @@ public class ValveController : MonoBehaviour
 
 ---
 
+# Dial Interactable {#dial}
+
+> **Menu Path:** Component > Shababeek > Interactions > Interactables > Dial
+> **Use For:** Discrete step rotation (combination locks, rotary selectors)
+
+## What It Does
+
+The Dial rotates between discrete positions (steps), snapping to the nearest step when released. Unlike Wheel which outputs continuous rotation, Dial outputs an integer step index.
+
+[PLACEHOLDER_GIF: Dial being rotated through discrete steps]
+
+## Inspector Reference
+
+[PLACEHOLDER_SCREENSHOT: DialInteractable Inspector]
+
+### Settings
+
+#### Interactable Object
+The transform that rotates.
+
+#### Grab Mode
+How the object behaves when grabbed.
+
+| Value | Description |
+|-------|-------------|
+| **ObjectFollowsHand** | Dial snaps to hand position on grab |
+| **HandFollowsObject** | Hand position follows dial rotation |
+
+#### Rotation Axis
+Which axis the dial rotates around.
+
+| Value | Common Use |
+|-------|------------|
+| **Forward** | Safe dial (facing player) |
+| **Up** | Control knob (horizontal) |
+| **Right** | Side-mounted selector |
+
+#### Number Of Steps
+How many discrete positions on the dial (minimum 2).
+
+**Examples:**
+- Safe dial: 10 or 100 steps
+- Mode selector: 3-5 steps
+- Volume knob: 10 steps
+
+#### Starting Step
+Initial step index (0-based).
+
+#### Wrap Around
+Allow continuous rotation past the last step to wrap to the first.
+
+- **Enabled**: Step 9 → Step 0 (continuous)
+- **Disabled**: Step 9 stops at max
+
+#### Total Angle
+Total rotation angle covered by all steps.
+
+**Examples:**
+- 360° — Full rotation dial
+- 270° — 3/4 rotation knob
+- 180° — Half rotation selector
+
+#### Snap On Release
+When enabled, dial animates to nearest step when released.
+
+#### Snap Speed
+Animation speed for snapping.
+
+#### Haptic Feedback
+Enable haptic pulse when passing through steps.
+
+### Events
+
+#### On Step Changed (int)
+Fires when the current step changes. Passes the new step index (0-based).
+
+**Use cases:**
+- Update UI display
+- Change mode/setting
+- Trigger per-step sounds
+
+#### On Angle Changed (float)
+Fires continuously as the dial rotates. Passes the current angle.
+
+**Use cases:**
+- Visual feedback during rotation
+- Audio pitch adjustment
+
+#### On Step Confirmed (int)
+Fires when a step is confirmed (on release with snapOnRelease, or immediately without).
+
+**Use cases:**
+- Confirm combination digit
+- Apply setting change
+- Play confirmation sound
+
+### Debug Values
+
+- **Current Step** — Current step index (0-based)
+- **Current Angle** — Current rotation angle
+
+## Quick Setup
+
+1. Create dial model with pivot at center
+2. **Add Component > Dial Interactable**
+3. Assign **Interactable Object**
+4. Set **Number Of Steps** (e.g., 10 for 0-9 dial)
+5. Set **Total Angle** (e.g., 360° for full rotation)
+6. Enable **Snap On Release** for discrete positions
+7. Wire **On Step Changed** event to your logic
+
+## Code Example
+
+```csharp
+public class CombinationLock : MonoBehaviour
+{
+    [SerializeField] private DialInteractable[] dials;
+    [SerializeField] private int[] combination = { 3, 7, 1 };
+
+    void Start()
+    {
+        foreach (var dial in dials)
+        {
+            dial.OnStepConfirmed
+                .Subscribe(_ => CheckCombination())
+                .AddTo(this);
+        }
+    }
+
+    void CheckCombination()
+    {
+        for (int i = 0; i < dials.Length; i++)
+        {
+            if (dials[i].CurrentStep != combination[i])
+                return; // Wrong combination
+        }
+
+        Debug.Log("Lock opened!");
+        // Unlock logic here
+    }
+}
+```
+
+## Binder Integration
+
+Use **DialToVariableBinder** to connect dial output to the Scriptable System:
+
+```csharp
+// Dial outputs:
+// - Step as IntVariable
+// - Normalized value (0-1) as FloatVariable
+// - Per-step GameEvents
+```
+
+---
+
 ## Common Base Features
 
 All constrained interactables inherit from **ConstrainedInteractableBase** and share:
@@ -402,10 +559,12 @@ Constrained interactables automatically handle scaled objects. The internal Scal
 
 ## Comparison Table
 
-| Feature | Lever | Drawer | Joystick | Wheel |
-|---------|-------|--------|----------|-------|
-| **Movement** | Rotation | Linear | Rotation | Rotation |
-| **Axes** | 1 | 1 | 2 | 1 |
+| Feature | Lever | Drawer | Joystick | Wheel | Dial |
+|---------|-------|--------|----------|-------|------|
+| **Movement** | Rotation | Linear | Rotation | Rotation | Rotation |
+| **Axes** | 1 | 1 | 2 | 1 | 1 |
+| **Output Type** | Float | Float | Vector2 | Float | Int (step) |
+| **Discrete** | No | No | No | No | Yes |
 | **Limited** | Yes (angle) | Yes (position) | Yes (angle) | Optional |
 | **Output Type** | float (0-1) | float (0-1) | Vector2 | float (degrees) |
 | **Return Option** | ✓ | ✓ | ✓ | ✓ |

@@ -33,6 +33,7 @@ The **Scriptable Variables System** provides reactive, asset-based data containe
 | **FloatVariable** | Decimal numbers | Speed, Timer, Progress |
 | **BoolVariable** | True/False values | IsAlive, IsPaused, HasKey |
 | **TextVariable** | String text | Player Name, Messages |
+| **StringListVariable** | List of strings | Dialogue options, Tags, Inventory names |
 | **Vector2Variable** | 2D vectors | Direction, Position 2D |
 | **Vector3Variable** | 3D vectors | Position, Velocity |
 | **ColorVariable** | RGBA colors | UI Theme, Effects |
@@ -115,6 +116,58 @@ void ProcessNumber(INumericalVariable numVar)
     numVar.SetFromFloat(42.5f);        // Set from float
 }
 ```
+
+---
+
+## String List Variable
+
+`StringListVariable` stores a dynamic list of strings, useful for dialogue systems, inventories, or any collection of text.
+
+### Common Operations
+
+```csharp
+// Adding items
+stringList.Add("New Item");
+stringList.AddUnique("Only Once");     // Won't add duplicates
+stringList.AddRange(new[] { "A", "B" });
+
+// Removing items
+stringList.Remove("Item Name");
+stringList.RemoveAt(0);
+stringList.Clear();
+
+// Querying
+bool has = stringList.Contains("Item");
+int index = stringList.IndexOf("Item");
+int count = stringList.Count;
+
+// Accessing
+string first = stringList.First;
+string last = stringList.Last;
+string item = stringList[2];        // By index
+
+// Random
+string random = stringList.GetRandom();
+string popped = stringList.PopRandom(); // Get and remove
+
+// Manipulation
+stringList.Sort();
+stringList.Reverse();
+stringList.Shuffle();
+
+// Conversion
+string joined = stringList.Join(", ");
+string[] array = stringList.ToArray();
+List<string> copy = stringList.ToList();
+```
+
+### Use Cases
+
+- **Dialogue options**: Store available responses
+- **Inventory lists**: Track item names
+- **Tag systems**: Dynamic list of tags
+- **Quest objectives**: List of tasks
+- **High scores**: Player names
 
 ---
 

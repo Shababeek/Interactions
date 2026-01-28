@@ -47,6 +47,9 @@
 | **ColorSpriteBinder** | Color | SpriteRenderer color |
 | **ColorImageBinder** | Color | UI Image color |
 | **AudioSourceBinder** | Audio | AudioSource settings |
+| **SliderBinder** | Int/Float | UI Slider value (bidirectional) |
+| **CanvasGroupBinder** | Float/Bool | CanvasGroup alpha, interactability |
+| **LightBinder** | Float/Color/Bool | Light intensity, color, range, enabled |
 
 ### State & Toggle Binders
 
@@ -61,6 +64,7 @@
 |--------|--------|---------|
 | **LeverToVariableBinder** | LeverInteractable | Float (normalized, angle) |
 | **WheelToVariableBinder** | WheelInteractable | Float (normalized, angle) |
+| **DialToVariableBinder** | DialInteractable | Int (step), Float (normalized, angle) |
 | **JoystickToVariableBinder** | JoystickInteractable | Vector2, Float (x, y) |
 | **DrawerToVariableBinder** | DrawerInteractable | Float, Bool, Events |
 | **InteractableEventBinder** | InteractableBase | GameEvents, BoolVariables |
@@ -359,6 +363,29 @@ Binds a WheelInteractable's output to float variables.
 | **Angle Output** | FloatVariable for actual angle |
 | **Invert Output** | Flip the output direction |
 | **Output Multiplier** | Scale the output values |
+
+### Dial To Variable Binder
+
+Binds a DialInteractable's discrete step output to variables and events.
+
+| Setting | Description |
+|---------|-------------|
+| **Step Variable** | IntVariable for current step (0-based) |
+| **Normalized Variable** | FloatVariable for 0-1 value |
+| **Angle Variable** | FloatVariable for current angle |
+| **On Step Changed Event** | GameEvent raised when step changes |
+| **On Step Confirmed Event** | GameEvent raised when step is confirmed (on release) |
+| **Step Events** | Array of GameEvents for specific steps |
+
+**Features:**
+- Outputs step index as integer
+- Normalized value (0-1) for progress indicators
+- Per-step events for specific actions (e.g., step 0 = Event A, step 1 = Event B)
+
+**Use cases:**
+- Combination locks (each step is a digit)
+- Rotary selectors (mode selection)
+- Safe dials with discrete positions
 
 ### Joystick To Variable Binder
 
@@ -725,6 +752,121 @@ Maps numeric value to shader properties (float, color, vector).
 
 ---
 
+## Slider Binder
+
+Binds a numeric variable to a UI Slider with bidirectional support.
+
+### Settings
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| **Variable** | Int or Float variable | None |
+| **Binding Mode** | OneWayToSlider, OneWayToVariable, TwoWay | TwoWay |
+| **Use Value Mapping** | Map variable range to slider range | false |
+| **Min Variable Value** | Variable value for slider min | 0 |
+| **Max Variable Value** | Variable value for slider max | 100 |
+| **Round To Int** | Round values to whole numbers | false |
+
+### Binding Modes
+
+| Mode | Description |
+|------|-------------|
+| **OneWayToSlider** | Variable changes update slider only |
+| **OneWayToVariable** | Slider changes update variable only |
+| **TwoWay** | Both directions sync |
+
+### Use Cases
+
+- **Volume controls**: Float variable bound to volume slider
+- **Settings panels**: Variables driving UI sliders
+- **Progress indicators**: Read-only display of variable values
+
+---
+
+## Canvas Group Binder
+
+Binds variables to CanvasGroup properties (alpha, interactability, raycasts).
+
+### Settings
+
+| Setting | Description |
+|---------|-------------|
+| **Alpha Variable** | Float variable for alpha (0-1) |
+| **Use Alpha Mapping** | Map variable range to 0-1 |
+| **Smooth Alpha** | Animate alpha changes |
+| **Alpha Speed** | Animation speed |
+| **Interactable Variable** | Bool for interactability |
+| **Blocks Raycasts Variable** | Bool for blocking raycasts |
+| **Ignore Parent Groups Variable** | Bool for ignoring parent |
+
+### Methods
+
+| Method | Description |
+|--------|-------------|
+| `FadeIn()` | Animate to alpha 1 |
+| `FadeOut()` | Animate to alpha 0 |
+| `Show()` | Full visibility + interactable |
+| `Hide()` | Invisible + non-interactable |
+
+### Use Cases
+
+- **UI panels**: Fade in/out based on game state
+- **Menu visibility**: Hide/show menus with variables
+- **Loading screens**: Alpha controlled by progress
+
+---
+
+## Light Binder
+
+Binds variables to Light component properties.
+
+### Settings
+
+#### Intensity Binding
+| Setting | Description |
+|---------|-------------|
+| **Intensity Variable** | Float for intensity |
+| **Use Intensity Mapping** | Map variable range to intensity range |
+| **Min/Max Intensity Value** | Variable range |
+| **Min/Max Intensity** | Output intensity range |
+
+#### Color Binding
+| Setting | Description |
+|---------|-------------|
+| **Color Variable** | ColorVariable for light color |
+
+#### Range Binding (Point/Spot)
+| Setting | Description |
+|---------|-------------|
+| **Range Variable** | Float for light range |
+| **Use Range Mapping** | Map variable range to light range |
+
+#### Spot Angle Binding (Spot only)
+| Setting | Description |
+|---------|-------------|
+| **Spot Angle Variable** | Float for spot angle |
+
+#### Enabled Binding
+| Setting | Description |
+|---------|-------------|
+| **Enabled Variable** | Bool to control on/off |
+| **Invert Enabled** | Flip the logic |
+
+#### Animation
+| Setting | Description |
+|---------|-------------|
+| **Smooth Changes** | Animate property changes |
+| **Smooth Speed** | Animation speed |
+
+### Use Cases
+
+- **Day/night cycle**: Intensity from time variable
+- **Health indicator lights**: Color changes with health
+- **Flashlight**: Enabled by bool variable
+- **Alert lights**: Pulsing controlled by float
+
+---
+
 ## Bool Toggle Binder
 
 Binds BoolVariable to enable/disable GameObjects, Components, or Renderers.
@@ -878,4 +1020,4 @@ When you select any ScriptableVariable or GameEvent asset, the inspector shows a
 ---
 
 **Last Updated:** January 2026
-**Component Version:** 1.3.0
+**Component Version:** 1.4.0
