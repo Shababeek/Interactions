@@ -32,7 +32,7 @@ namespace Shababeek.Interactions
             if (joystick == null) return;
 
             _disposable = new CompositeDisposable();
-
+            OnRotationChanged(joystick.NormalizedRotation);
             joystick.OnRotationChanged
                 .Subscribe(OnRotationChanged)
                 .AddTo(_disposable);
