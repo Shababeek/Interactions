@@ -14,12 +14,12 @@ namespace Shababeek.Interactions.Editors
     [CanEditMultipleObjects]
     public class FeedbackSystemEditor : Editor
     {
-        private SerializedProperty feedbacksProperty;
-        private List<bool> foldoutStates = new List<bool>();
+        private SerializedProperty _feedbacksProperty;
+        private readonly List<bool> _foldoutStates = new List<bool>();
 
         private void OnEnable()
         {
-            feedbacksProperty = serializedObject.FindProperty("feedbacks");
+            _feedbacksProperty = serializedObject.FindProperty("feedbacks");
             RefreshFoldoutStates();
         }
         
@@ -46,7 +46,7 @@ namespace Shababeek.Interactions.Editors
             DrawAddButton();
             
             // Only show help box when there are feedbacks
-            if (feedbacksProperty.arraySize > 0)
+            if (_feedbacksProperty.arraySize > 0)
             {
                 EditorGUILayout.Space(5);
                 DrawHelpBox();
@@ -94,7 +94,7 @@ namespace Shababeek.Interactions.Editors
 
         private void DrawFeedbackList()
         {
-            if (feedbacksProperty.arraySize == 0)
+            if (_feedbacksProperty.arraySize == 0)
             {
                 // Compact empty state
                 var emptyStyle = new GUIStyle(EditorStyles.helpBox)
@@ -109,7 +109,7 @@ namespace Shababeek.Interactions.Editors
 
             RefreshFoldoutStates();
 
-            for (int i = 0; i < feedbacksProperty.arraySize; i++)
+            for (int i = 0; i < _feedbacksProperty.arraySize; i++)
             {
                 DrawFeedbackItem(i);
             }
@@ -117,7 +117,7 @@ namespace Shababeek.Interactions.Editors
 
         private void DrawFeedbackItem(int index)
         {
-            var feedbackProp = feedbacksProperty.GetArrayElementAtIndex(index);
+            var feedbackProp = _feedbacksProperty.GetArrayElementAtIndex(index);
             var feedback = feedbackProp.managedReferenceValue as FeedbackData;
             
             if (feedback == null)
@@ -139,7 +139,7 @@ namespace Shababeek.Interactions.Editors
             EditorGUILayout.BeginHorizontal();
             
             // Foldout
-            foldoutStates[index] = EditorGUILayout.Foldout(foldoutStates[index], "", true);
+            _foldoutStates[index] = EditorGUILayout.Foldout(_foldoutStates[index], "", true);
             
             // Enabled toggle
             var enabledProp = feedbackProp.FindPropertyRelative("enabled");
@@ -201,7 +201,7 @@ namespace Shababeek.Interactions.Editors
             EditorGUILayout.EndHorizontal();
             
             // Expanded content
-            if (foldoutStates[index])
+            if (_foldoutStates[index])
             {
                 EditorGUILayout.Space(2);
                 
@@ -246,6 +246,18 @@ namespace Shababeek.Interactions.Editors
                     break;
                 case AudioFeedback:
                     DrawAudioFeedbackProperties(feedbackProp);
+                    break;
+                case ObjectToggleFeedback:
+                    DrawObjectToggleFeedbackProperties(feedbackProp);
+                    break;
+                case ScaleFeedback:
+                    DrawScaleFeedbackProperties(feedbackProp);
+                    break;
+                case ParticleFeedback:
+                    DrawParticleFeedbackProperties(feedbackProp);
+                    break;
+                case UnityEventFeedback:
+                    DrawUnityEventFeedbackProperties(feedbackProp);
                     break;
             }
         }
@@ -324,6 +336,73 @@ namespace Shababeek.Interactions.Editors
             }
         }
 
+        private void DrawObjectToggleFeedbackProperties(SerializedProperty prop)
+        {
+            EditorGUILayout.LabelField("Hover Objects", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(prop.FindPropertyRelative("enableOnHover"));
+            EditorGUILayout.PropertyField(prop.FindPropertyRelative("disableOnHover"));
+
+            EditorGUILayout.Space(2);
+            EditorGUILayout.LabelField("Selection Objects", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(prop.FindPropertyRelative("enableOnSelect"));
+            EditorGUILayout.PropertyField(prop.FindPropertyRelative("disableOnSelect"));
+
+            EditorGUILayout.Space(2);
+            EditorGUILayout.LabelField("Activation Objects", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(prop.FindPropertyRelative("enableOnActivate"));
+            EditorGUILayout.PropertyField(prop.FindPropertyRelative("disableOnActivate"));
+
+            EditorGUILayout.Space(2);
+            EditorGUILayout.LabelField("Options", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(prop.FindPropertyRelative("resetOnEnd"));
+        }
+
+        private void DrawScaleFeedbackProperties(SerializedProperty prop)
+        {
+            EditorGUILayout.PropertyField(prop.FindPropertyRelative("target"));
+
+            EditorGUILayout.Space(2);
+            EditorGUILayout.LabelField("Scale Settings", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(prop.FindPropertyRelative("hoverScale"));
+            EditorGUILayout.PropertyField(prop.FindPropertyRelative("selectScale"));
+            EditorGUILayout.PropertyField(prop.FindPropertyRelative("activateScale"));
+
+            EditorGUILayout.Space(2);
+            EditorGUILayout.LabelField("Animation", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(prop.FindPropertyRelative("animate"));
+
+            var animate = prop.FindPropertyRelative("animate");
+            if (animate.boolValue)
+            {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(prop.FindPropertyRelative("animationSpeed"));
+                EditorGUI.indentLevel--;
+            }
+        }
+
+        private void DrawParticleFeedbackProperties(SerializedProperty prop)
+        {
+            EditorGUILayout.LabelField("Particle Systems", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(prop.FindPropertyRelative("hoverParticles"));
+            EditorGUILayout.PropertyField(prop.FindPropertyRelative("selectParticles"));
+            EditorGUILayout.PropertyField(prop.FindPropertyRelative("deselectParticles"));
+            EditorGUILayout.PropertyField(prop.FindPropertyRelative("activateParticles"));
+
+            EditorGUILayout.Space(2);
+            EditorGUILayout.LabelField("Options", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(prop.FindPropertyRelative("stopHoverOnEnd"));
+        }
+
+        private void DrawUnityEventFeedbackProperties(SerializedProperty prop)
+        {
+            EditorGUILayout.LabelField("Events", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(prop.FindPropertyRelative("onHoverStart"));
+            EditorGUILayout.PropertyField(prop.FindPropertyRelative("onHoverEnd"));
+            EditorGUILayout.PropertyField(prop.FindPropertyRelative("onSelect"));
+            EditorGUILayout.PropertyField(prop.FindPropertyRelative("onDeselect"));
+            EditorGUILayout.PropertyField(prop.FindPropertyRelative("onActivate"));
+        }
+
         private void DrawAddButton()
         {
             var buttonStyle = new GUIStyle(GUI.skin.button)
@@ -345,6 +424,10 @@ namespace Shababeek.Interactions.Editors
             menu.AddItem(new GUIContent("Animation Feedback"), false, () => AddFeedback(new AnimationFeedback()));
             menu.AddItem(new GUIContent("Haptic Feedback"), false, () => AddFeedback(new HapticFeedback()));
             menu.AddItem(new GUIContent("Audio Feedback"), false, () => AddFeedback(new AudioFeedback()));
+            menu.AddItem(new GUIContent("Object Toggle Feedback"), false, () => AddFeedback(new ObjectToggleFeedback()));
+            menu.AddItem(new GUIContent("Scale Feedback"), false, () => AddFeedback(new ScaleFeedback()));
+            menu.AddItem(new GUIContent("Particle Feedback"), false, () => AddFeedback(new ParticleFeedback()));
+            menu.AddItem(new GUIContent("UnityEvent Feedback"), false, () => AddFeedback(new UnityEventFeedback()));
             menu.ShowAsContext();
         }
 
@@ -360,9 +443,9 @@ namespace Shababeek.Interactions.Editors
             RefreshFoldoutStates();
             
             // Auto-expand the newly added feedback
-            if (foldoutStates.Count > 0)
+            if (_foldoutStates.Count > 0)
             {
-                foldoutStates[foldoutStates.Count - 1] = true;
+                _foldoutStates[_foldoutStates.Count - 1] = true;
             }
         }
 
@@ -398,13 +481,13 @@ namespace Shababeek.Interactions.Editors
 
         private void RefreshFoldoutStates()
         {
-            while (foldoutStates.Count < feedbacksProperty.arraySize)
+            while (_foldoutStates.Count < _feedbacksProperty.arraySize)
             {
-                foldoutStates.Add(false);
+                _foldoutStates.Add(false);
             }
-            while (foldoutStates.Count > feedbacksProperty.arraySize)
+            while (_foldoutStates.Count > _feedbacksProperty.arraySize)
             {
-                foldoutStates.RemoveAt(foldoutStates.Count - 1);
+                _foldoutStates.RemoveAt(_foldoutStates.Count - 1);
             }
         }
 
@@ -416,6 +499,10 @@ namespace Shababeek.Interactions.Editors
                 AnimationFeedback => "Animation",
                 HapticFeedback => "Haptic",
                 AudioFeedback => "Audio",
+                ObjectToggleFeedback => "Object Toggle",
+                ScaleFeedback => "Scale",
+                ParticleFeedback => "Particle",
+                UnityEventFeedback => "UnityEvent",
                 _ => "Unknown"
             };
         }
@@ -428,6 +515,10 @@ namespace Shababeek.Interactions.Editors
                 AnimationFeedback => "d_AnimationClip Icon",
                 HapticFeedback => "d_Profiler.Audio",
                 AudioFeedback => "d_AudioSource Icon",
+                ObjectToggleFeedback => "d_GameObject Icon",
+                ScaleFeedback => "d_ScaleTool",
+                ParticleFeedback => "d_ParticleSystem Icon",
+                UnityEventFeedback => "d_EventSystem Icon",
                 _ => "d_Settings Icon"
             };
         }
@@ -439,6 +530,7 @@ namespace Shababeek.Interactions.Editors
                 MaterialFeedback => "Please assign at least one renderer.",
                 AnimationFeedback => "Please assign an Animator component.",
                 AudioFeedback => "Please assign an Audio Source component.",
+                ScaleFeedback => "Please assign a target Transform.",
                 _ => "This feedback is not properly configured."
             };
         }
