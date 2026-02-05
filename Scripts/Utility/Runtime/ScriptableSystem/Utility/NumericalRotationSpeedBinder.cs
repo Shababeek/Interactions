@@ -21,12 +21,14 @@ namespace Shababeek.Utilities
         [SerializeField] private bool useAngleLimits = false;
         [SerializeField] private float minAngle = -90f;
         [SerializeField] private float maxAngle = 90f;
-
+       
         [Header("Dead Zone")]
         [SerializeField] private float deadZone = 0.01f;
 
         [Header("Debug")]
         [SerializeField] private bool enableDebugLogs = false;
+        [Tooltip("Avoid Rot Control")]
+        [SerializeField] private bool _isPaused = false;
 
         private CompositeDisposable _disposable;
         private INumericalVariable _numericalVariable;
@@ -34,6 +36,10 @@ namespace Shababeek.Utilities
         private Vector3 _trackedEulerAngles;
         private float _currentAngle;
         private float _currentSpeed;
+
+        public void Pause() => _isPaused = true;
+        public void Resume() => _isPaused = false;
+        public void SetPaused(bool paused) => _isPaused = paused;
 
         #region Unity Lifecycle
 
@@ -54,7 +60,7 @@ namespace Shababeek.Utilities
 
         private void Update()
         {
-            if (Mathf.Approximately(_currentSpeed, 0f))
+            if (_isPaused || Mathf.Approximately(_currentSpeed, 0f))
                 return;
 
             float deltaAngle = _currentSpeed * Time.deltaTime;

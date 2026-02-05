@@ -56,13 +56,18 @@ namespace Shababeek.Utilities
 
         [Tooltip("Acceleration rate when smoothAcceleration is enabled.")]
         [SerializeField] private float accelerationRate = 10f;
+        [Tooltip("Avoid Position Control")]
+        [SerializeField] private bool _isPaused = false;
 
         private CompositeDisposable _disposable;
         private float _targetSpeed;
         private float _currentSpeed;
         private float _currentT; // 0 = start, 1 = end
-        private INumericalVariable _numericalVariable;
 
+        private INumericalVariable _numericalVariable;
+        public void Pause() => _isPaused = true;
+        public void Resume() => _isPaused = false;
+        public void SetPaused(bool paused) => _isPaused = paused;
         private void OnEnable()
         {
             _disposable = new CompositeDisposable();
@@ -97,6 +102,10 @@ namespace Shababeek.Utilities
 
         private void Update()
         {
+            if (_isPaused)
+            {
+                return;
+            }
             // Handle smooth acceleration
             if (smoothAcceleration)
             {
