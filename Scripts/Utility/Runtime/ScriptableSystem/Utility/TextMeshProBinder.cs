@@ -11,6 +11,8 @@ namespace Shababeek.Utilities
     [AddComponentMenu(menuName: "Shababeek/Scriptable System/TMPro Variable Binder")]
     public class TextMeshProBinder : MonoBehaviour
     {
+        [Tooltip("Format string (e.g., 'X' for hex, 'F2' for 2 decimals, 'N0' for thousands separator)")]
+        [SerializeField] private string format = "";
         [Tooltip("The ScriptableVariable to bind to the UI.")]
         [SerializeField] private ScriptableVariable variable;
         [Tooltip("The TextMeshProUGUI component to update with the variable's value.")]
@@ -31,11 +33,22 @@ namespace Shababeek.Utilities
             if(_text3D) _text3D.text = variable.ToString();
             variable.OnRaised.Do(_ => UpdateText()).Subscribe().AddTo(this);
         }
+        private string FormatValue(object value)
+        {
+            if (value == null)
+                return string.Empty;
 
+            if (!string.IsNullOrEmpty(format) && value is IFormattable formattable)
+                return formattable.ToString(format, null);
+
+            return value.ToString();
+        }
         private void UpdateText()
         {
-            if(_textUI)_textUI.text = variable.ToString();
-            if(_text3D) _text3D.text = variable.ToString();
+            string text = FormatValue(variable.GetValue());
+
+            if (_textUI) _textUI.text = text;
+            if (_text3D) _text3D.text = text;
         }
 
         private void OnDisable()
