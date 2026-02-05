@@ -105,22 +105,18 @@ namespace Shababeek.Interactions
         
         private void InitializeAttachmentPointTransform()
         {
-            var (localPosition, localRotation) = CurrentInteractor.Hand.HandIdentifier == HandIdentifier.Left ? 
-                GetLeftHandTarget() : GetRightHandTarget(); 
-            var worldPosition = ConstraintTransform.TransformPoint(localPosition);
-            var worldRotation =  localRotation;
+            var (handLocalPosition, handLocalRotation) = CurrentInteractor.Hand.HandIdentifier == HandIdentifier.Left ?
+                GetLeftHandTarget() : GetRightHandTarget();
             
-            Quaternion inverseTargetRotation = Quaternion.Inverse(worldRotation);
-            Vector3 localPositionOffset = inverseTargetRotation * (transform.position - worldPosition);
-            Quaternion localRotationOffset = localRotation;
-            
-            CurrentInteractor.AttachmentPoint.localPosition = localPositionOffset;
-            CurrentInteractor.AttachmentPoint.localRotation = localRotationOffset;
+            Quaternion objectRotation = Quaternion.Inverse(handLocalRotation);
+            Vector3 objectPosition = objectRotation * (-handLocalPosition);
+
+            CurrentInteractor.AttachmentPoint.localPosition = objectPosition;
+            CurrentInteractor.AttachmentPoint.localRotation = objectRotation;
         }
 
         private void MoveObjectToPosition(Action callBack)
         {
-            // Unsubscribe from any previous callback to prevent memory leaks
             UnsubscribeTweenComplete();
             
             _transformTweenable.Initialize(transform, CurrentInteractor.AttachmentPoint);
