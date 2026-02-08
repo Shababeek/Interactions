@@ -28,6 +28,7 @@ namespace Shababeek.Interactions
         private readonly Subject<VRButtonState> _onThumb = new();
         private readonly CompositeDisposable _disposables = new();
         private IDisposable _hoverSubscriber, _activationSubscriber, _thumbSubscriber;
+        private XRButton _actualSelectionButton;
 
         /// <summary>
         /// Attachment point transform for held objects.
@@ -212,9 +213,22 @@ namespace Shababeek.Interactions
                     break;
                 case VRButtonState.Down:
                     if (currentInteractable.CurrentState == InteractionState.Hovering)
+                    {
+                        if (currentInteractable.SelectionButton == XRButton.Any)
+                            DetectSelectionButton();
                         Select();
+                    }
                     break;
             }
+        }
+
+        private void DetectSelectionButton()
+        {
+            var xrNode = _hand.HandIdentifier == HandIdentifier.Left ? XRNode.LeftHand : XRNode.RightHand;
+            var device = InputDevices.GetDeviceAtXRNode(xrNode);
+            if (!device.isValid) return;
+            device.TryGetFeatureValue(CommonUsages.gripButton, out bool gripPressed);
+            _actualSelectionButton = gripPressed ? XRButton.Grip : XRButton.Trigger;
         }
 
         private void HandleActivation(VRButtonState state)
@@ -272,7 +286,9 @@ namespace Shababeek.Interactions
                 (XRButton.Any, ButtonMappingType.Selection) => _hand.OnAnyButtonStateChange,
                 (XRButton.Trigger, ButtonMappingType.Activation) => _hand.OnGripButtonStateChange,
                 (XRButton.Grip, ButtonMappingType.Activation) => _hand.OnTriggerTriggerButtonStateChange,
-                (XRButton.Any, ButtonMappingType.Activation) => _hand.OnThumbButtonStateChange,
+                (XRButton.Any, ButtonMappingType.Activation) => _actualSelectionButton == XRButton.Grip
+                    ? _hand.OnTriggerTriggerButtonStateChange
+                    : _hand.OnGripButtonStateChange,
                 _ => null
             };
         }

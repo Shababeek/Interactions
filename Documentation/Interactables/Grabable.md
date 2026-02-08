@@ -91,11 +91,13 @@ Your object is now grabbable with default settings! Press Play and try grabbing 
 - **What it does:** The controller button that grabs/releases the object
 - **Default:** Grip
 - **Options:**
-  - **Grip:** Side grip button (recommended for grab interactions)
-  - **Trigger:** Index finger trigger
+  - **Grip:** Side grip button (recommended for grab interactions). Use button is Trigger.
+  - **Trigger:** Index finger trigger. Use button is Grip.
+  - **Any:** Either Grip or Trigger can grab the object. The use button is whichever button was **not** used for grabbing (e.g. grab with Grip → use with Trigger, and vice versa).
 - **When to change:**
   - Use **Grip** for picking up objects (feels natural)
   - Use **Trigger** if grip is used for small objects(pins, pebbles, ...) or for other mechanics like dragging a slingshot string
+  - Use **Any** when you want the player to grab with whichever button feels natural
 
 
 > 💡 **Best Practice:** Keep Grab on **Grip** unless the object real-life counterpart is usually held with indexFinger/Thumb.
@@ -143,13 +145,20 @@ Events let you trigger actions when the object is grabbed, released, or used.
   - Hide grab hint
 
 ##### e. On Use Started / On Use Ended
-- **When it fires:** When the **Trigger** button is pressed/released while holding
+- **When it fires:** When the secondary button is pressed/released while holding (Trigger if grabbed with Grip, Grip if grabbed with Trigger)
 - **Common uses:**
   - Fire a weapon
   - Turn on a flashlight
   - Activate a tool's function
   - Open a phone screen
 
+##### f. On Thumb Pressed / On Thumb Released
+- **When it fires:** When a thumb button (A/B) is pressed/released while holding the object
+- **Common uses:**
+  - Cycle through modes on a tool
+  - Toggle a laser pointer
+  - Switch weapon fire mode
+  - Activate a secondary function
 
 ---
 
