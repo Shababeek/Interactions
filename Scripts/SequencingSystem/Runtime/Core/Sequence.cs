@@ -104,6 +104,31 @@ namespace Shababeek.Sequencing
         }
 
         /// <summary>
+        /// Goes back to the previous step in the sequence.
+        /// </summary>
+        public void GoToPreviousStep()
+        {
+            if (currentStepIndex <= 0) return;
+            steps[currentStepIndex].Raise(SequenceStatus.Inactive);
+            currentStepIndex--;
+            steps[currentStepIndex].Begin();
+        }
+
+        /// <summary>
+        /// Resets the sequence to its initial state so it can be started again.
+        /// </summary>
+        public void Reset()
+        {
+            foreach (var step in steps)
+            {
+                step.Raise(SequenceStatus.Inactive);
+            }
+            currentStepIndex = 0;
+            status = SequenceStatus.Inactive;
+            initialized = false;
+        }
+
+        /// <summary>
         /// Initializes the sequence by creating an empty steps list.
         /// </summary>
         public void Init() => steps = new List<Step>();
