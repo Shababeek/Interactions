@@ -25,7 +25,8 @@
 > **Goal:** Create a container for player stats with variables and events
 > **Time:** ~3 minutes
 
-![Creating a Variable Container](../Images/variable-container-create.gif)
+<!-- TODO: Add variable-container-create.gif -->
+*Creating a variable container and adding variables with default values*
 
 1. **Create the Container:**
    - Right-click in Project > **Create > Shababeek > Scriptable System > Variables > Variable Container**
@@ -71,7 +72,8 @@
 
 ## Inspector Reference
 
-![Variable Container Inspector](../Images/variable-container-inspector.png)
+<!-- TODO: Add variable-container-inspector.png -->
+*Variable container inspector showing variables and events sections*
 
 ### Variables Section
 
@@ -570,7 +572,7 @@ Calling `Get<T>()` every frame is wasteful — cache references in Start/Awake.
 - [Scriptable Variables](ScriptableVariables.md) — Individual variable types
 - [Scriptable System Window](ScriptableSystemWindow.md) — Debug and monitoring tool
 - [Binders](Binders.md) — Connect variables to components
-- [Game Events](GameEvents.md) — Event system documentation
+- *Game Events (coming soon)* — Event system documentation
 - [Quick Start Guide](../GettingStarted/QuickStart.md) — Basic setup
 
 ---

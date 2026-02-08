@@ -40,7 +40,8 @@ An **Action** defines the condition for completing a step. Examples: wait for in
 
 > **Goal:** Create a "Pick up the tool" tutorial step
 
-![Sequence Tutorial](../Images/sequence-tutorial.gif)
+<!-- TODO: Add sequence-tutorial.gif -->
+*Step-by-step sequence showing welcome, gaze, interaction, and completion steps*
 
 ```
 Sequence: "Tool Tutorial"
@@ -366,7 +367,7 @@ Sequences are ScriptableObjects. Clone them if runtime changes are needed.
 
 ## Related Documentation
 
-- [Socket System](SocketSystem.md) — Validate insertions
+- [Socket System](../SocketSystem/SocketSystem.md) — Validate insertions
 - [Feedback System](FeedbackSystem.md) — Add feedback to steps
 - [Grabable](../Interactables/Grabable.md) — Interaction detection
 - [Quick Start Guide](../GettingStarted/QuickStart.md) — Basic setup

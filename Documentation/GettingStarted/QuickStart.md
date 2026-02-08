@@ -192,7 +192,7 @@ When you created your grabbable cube, a PoseConstrainer was automatically added.
 1. Select your Grabbable Cube
 2. Find the **PoseConstrainer** component in the Inspector
 
-![PoseConstrainer Inspector](../Images/pose-constrainer-inspector-labeled.png)
+![PoseConstrainer Inspector](../Images/Quick_Start/PoseConstrainer%20Inspector%20with%20labeled%20sections.png)
 
 #### Configure Constraint Type
 The **Constraint Type** determines how hands behave:
@@ -232,7 +232,7 @@ Pinky: Locked=true, Min=0.8 (curled)
 Thumb: Locked=false, Min=0.3, Max=0.7 (partially curled)
 ```
 
-![Hand Pose Before/After](../Images/hand-pose-before-after.png)
+<!-- Image not yet available: hand-pose-before-after.png -->
 
 #### Enable Smooth Transitions (Optional)
 For a more polished feel:
@@ -263,7 +263,7 @@ Levers rotate around a single axis — perfect for throttles, gear shifts, or po
 1. Select your Lever object
 2. **Add Component > Shababeek > Interactions > Interactables > Lever Interactable**
 
-![Lever Interactable Inspector](../Images/lever-interactable-inspector.png)
+![Lever Interactable Inspector](../Images/Quick_Start/lever-interactable-inspector.png)
 
 #### Configure Lever Settings
 
@@ -306,7 +306,7 @@ Physical buttons that respond to finger presses — great for control panels.
 2. **Add Component > VRButton**
 3. Add a **Box Collider** and check **Is Trigger**
 
-![VRButton Inspector](../Images/vrbutton-inspector-quickstart.png)
+![VRButton Inspector](../Images/Quick_Start/vrbutton-inspector-quickstart.png)
 
 #### Configure Button Settings
 
@@ -350,7 +350,7 @@ Drawers slide along a linear path — perfect for desk drawers, sliding doors, o
 1. Select **DrawerContainer**
 2. **Add Component > Shababeek > Interactions > Interactables > Drawer Interactable**
 
-![Drawer Interactable Inspector](../Images/drawer-interactable-inspector.png)
+![Drawer Interactable Inspector](../Images/Quick_Start/drawer-interactable-inspector.png)
 
 #### Configure Drawer Settings
 

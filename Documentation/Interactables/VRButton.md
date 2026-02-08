@@ -29,7 +29,8 @@ The **VRButton** component creates a physical button that responds to trigger co
 
 > **Goal:** Create a button that plays a sound when pressed
 
-![VRButton Press](../Images/vrbutton-press.gif)
+<!-- TODO: Add vrbutton-press.gif -->
+*VRButton Press animation showing button press and release cycle*
 
 1. Create a button model with a pressable cap
 2. Add VRButton component
@@ -40,7 +41,7 @@ The **VRButton** component creates a physical button that responds to trigger co
 
 ## Inspector Reference
 
-![VRButton Inspector](../Images/vrbutton-inspector-labeled.png)
+![VRButton Inspector](../Images/VR_Button/vrbutton-inspector-labeled.png)
 
 ### Events
 
@@ -186,7 +187,7 @@ Button (empty)
 3. Drag target object (e.g., AudioSource, Light, etc.)
 4. Select the method to call
 
-![VRButton Event Wiring](../Images/vrbutton-event-wiring.png)
+![VRButton Event Wiring](../Images/VR_Button/vrbutton-event-wiring.png)
 
 ---
 
@@ -269,7 +270,7 @@ public class KeypadManager : MonoBehaviour
 
 4. Wire each button's **On Click** to KeypadManager.AddDigit() with appropriate parameter
 
-![VRButton Keypad](../Images/vrbutton-keypad.png)
+![VRButton Keypad](../Images/VR_Button/vrbutton-keypad_1.png)
 
 ---
 

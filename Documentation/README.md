@@ -44,7 +44,7 @@ Components that detect and perform interactions (typically on hands).
 
 | Component | Description | Use Case |
 |-----------|-------------|----------|
-| **[Hand](Interactors/Hand.md)** | Full VR hand with poses | Main player hands |
+| **Hand** *(coming soon)* | Full VR hand with poses | Main player hands |
 | **[TriggerInteractor](Interactors/Interactors.md#trigger-interactor)** | Proximity-based detection | Close-range grabbing |
 | **[RaycastInteractor](Interactors/Interactors.md#raycast-interactor)** | Ray-based selection | Distant object selection |
 
@@ -109,14 +109,15 @@ Each component manual follows a consistent structure:
 5. **Troubleshooting** — Common issues and solutions
 6. **Scripting API** — Code examples (brief)
 
-### Screenshot Placeholders
-Throughout the documentation, you'll see placeholders like:
+### Missing Images
+Throughout the documentation, missing images are marked with HTML comments like:
 
 ```
-[PLACEHOLDER_SCREENSHOT: Description of needed image]
+<!-- TODO: Add filename.gif -->
+*Description of needed image*
 ```
 
-These indicate where screenshots or GIFs should be added to improve clarity.
+See [ImagesTodo.md](ImagesTodo.md) for a complete tracking list of all needed images and their current status.
 
 ---
 
@@ -153,4 +154,4 @@ These indicate where screenshots or GIFs should be added to improve clarity.
 
 ---
 
-**Last Updated:** January 2026
+**Last Updated:** February 2026

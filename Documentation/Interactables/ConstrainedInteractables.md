@@ -32,11 +32,12 @@ All constrained interactables share common features:
 
 The Lever rotates around a single axis within defined angle limits. As you move the grabbed lever, it outputs a normalized value (0-1) representing its position between minimum and maximum angles.
 
-![Lever Interaction](../Images/lever-interaction.gif)
+<!-- TODO: Add lever-interaction.gif -->
+*Lever Interaction animation showing lever rotating through its range of motion*
 
 ## Inspector Reference
 
-![Lever Inspector](../Images/lever-inspector.png)
+![Lever Inspector](../Images/Constrained_Interactables/lever-inspector.png)
 
 ### Settings
 
@@ -134,11 +135,12 @@ public class ThrottleController : MonoBehaviour
 
 The Drawer slides along a linear path between a start and end position. Perfect for desk drawers, sliding doors, or any sliding mechanism.
 
-![Drawer Interaction](../Images/drawer-interaction.gif)
+<!-- TODO: Add drawer-interaction.gif -->
+*Drawer Interaction animation showing drawer sliding open and closed*
 
 ## Inspector Reference
 
-![Drawer Inspector](../Images/drawer-inspector.png)
+![Drawer Inspector](../Images/Quick_Start/drawer-interactable-inspector.png)
 
 ### Settings
 
@@ -215,11 +217,12 @@ public class DrawerContents : MonoBehaviour
 
 The Joystick rotates around two axes simultaneously, outputting X and Y values. Perfect for flight controls, vehicle steering, or any two-dimensional input.
 
-![Joystick Interaction](../Images/joystick-interaction.gif)
+<!-- TODO: Add joystick-interaction.gif -->
+*Joystick Interaction animation showing joystick tilting on two axes*
 
 ## Inspector Reference
 
-![Joystick Inspector](../Images/joystick-inspector.png)
+![Joystick Inspector](../Images/Constrained_Interactables/joystick-inspector.png)
 
 ### Settings
 
@@ -301,11 +304,12 @@ public class AircraftControls : MonoBehaviour
 
 The Wheel rotates continuously around a single axis. Unlike Lever which has angle limits, Wheel can spin indefinitely, tracking total rotation.
 
-![Wheel Interaction](../Images/wheel-interaction.gif)
+<!-- TODO: Add wheel-interaction.gif -->
+*Wheel Interaction animation showing wheel rotating continuously*
 
 ## Inspector Reference
 
-![Wheel Inspector](../Images/wheel-inspector.png)
+![Wheel Inspector](../Images/Constrained_Interactables/wheel-inspector.png)
 
 ### Settings
 
@@ -385,11 +389,12 @@ public class ValveController : MonoBehaviour
 
 The Dial rotates between discrete positions (steps), snapping to the nearest step when released. Unlike Wheel which outputs continuous rotation, Dial outputs an integer step index.
 
-![Dial Interaction](../Images/dial-interaction.gif)
+<!-- TODO: Add dial-interaction.gif -->
+*Dial Interaction animation showing dial rotating and snapping to discrete positions*
 
 ## Inspector Reference
 
-![Dial Inspector](../Images/dial-inspector.png)
+![Dial Inspector](../Images/Constrained_Interactables/dial-inspector.png)
 
 ### Settings
 

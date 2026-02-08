@@ -26,7 +26,8 @@ The **Throwable** component enhances Grabable objects with realistic throw physi
 
 > **Goal:** Create a ball you can throw
 
-![Throwable Arc](../Images/throwable-arc.gif)
+<!-- TODO: Add throwable-arc.gif -->
+*Throwable arc demonstration*
 
 1. Create a sphere with Rigidbody
 2. Add Grabable component
@@ -37,7 +38,7 @@ The **Throwable** component enhances Grabable objects with realistic throw physi
 
 ## Inspector Reference
 
-![Throwable Inspector](../Images/throwable-inspector.png)
+![Throwable Inspector](../Images/Throwable/throwable-inspector.png)
 
 ### Physics Settings
 
@@ -242,7 +243,8 @@ Wire Grabable's **On Deselected** to Grenade.Arm()
 
 The trail will appear when thrown and moving fast.
 
-![Throwable Trail](../Images/throwable-trail.png)
+<!-- TODO: Add throwable-trail.png -->
+*Throwable trail demonstration*
 
 ---
 

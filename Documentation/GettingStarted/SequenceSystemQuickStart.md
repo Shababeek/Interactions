@@ -45,7 +45,7 @@ The **Sequence System** manages ordered, multi-step processes like tutorials, qu
 3. Rename steps by clicking the name field
 4. Drag to reorder
 
-![Sequence Inspector with Steps](../Images/sequence-inspector-steps.png)
+![Sequence Inspector with Steps](../Images/Quick_Start/sequence-inspector-steps.png)
 
 ### Step 3: Add to Scene
 

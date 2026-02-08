@@ -20,7 +20,7 @@ A comprehensive Unity package for building advanced VR/AR and 3D interactions wi
 - Comprehensive editor tools with real-time preview
 - UniRx integration for reactive programming
 - Clear separation of concerns
-- Hand Poses are totally independed of VR SDKs allowing for on non-XR games
+- Hand Poses are totally independent of VR SDKs allowing for on non-XR games
 
 ### **Designer Friendly**
 - Visual editor tools with interactive scene view
@@ -65,7 +65,7 @@ A comprehensive Unity package for building advanced VR/AR and 3D interactions wi
 
 ```csharp
 1. Create a GameObject (e.g., Cube)
-2. Right click in the hirarchy -> Shababeek-> Covert To Grabbable
+2. Right click in the hierarchy -> Shababeek-> Convert To Grabbable
 3. Ensure it has a Collider
 4. Press Play and grab it with your VR controllers!
 ```
@@ -78,25 +78,25 @@ A comprehensive Unity package for building advanced VR/AR and 3D interactions wi
 
 ### 🎓 Getting Started
 - **[Quick Start Guide](Documentation/GettingStarted/QuickStart.md)** - 10-minute guide from install to first interaction
-- **[Component Overview](Documentation/ComponentOverview.md)** - Catalog of all components
-- **[Core Concepts](Documentation/UserManual.md)** - System architecture and design principles
+- **[Component Overview](Documentation/README.md)** - Catalog of all components
+- **[Core Concepts](UserManual.md)** - System architecture and design principles
 
 ### 📘 Component Manuals
-- **[Grabable](Documentation/Components/Grabable.md)** - Pick up and throw objects
-- **[Switch](Documentation/Interactables.md#switch)** - Toggle switches and buttons
-- **[Hand System](Documentation/Hand.md)** - Hand models and pose configuration
-- **[Feedback System](Documentation/FeedbackSystem.md)** - Haptics, audio, and visuals
-- **[More components...](Documentation/ComponentReference.md)**
+- **[Grabable](Documentation/Interactables/Grabable.md)** - Pick up and throw objects
+- **[Switch](Documentation/Interactables/Switch.md)** - Toggle switches and buttons
+- **[Hand System](Documentation/Interactors/Interactors.md)** - Hand models and pose configuration
+- **[Feedback System](Documentation/Systems/FeedbackSystem.md)** - Haptics, audio, and visuals
+- **[More components...](Documentation/README.md)**
 
 ### 🛠️ Advanced Topics
-- **[Custom Interactables](Documentation/UserManual.md#customization--extensibility)** - Create your own components
-- **[Scriptable System](Documentation/ScriptableVariable.md)** - Variables and events
-- **[Sequencing](Documentation/UserManual.md)** - Tutorials and quests
-- **[Hand Poses](Documentation/HandDataAndPoses.md)** - Import and configure hands
+- **[Custom Interactables](UserManual.md#customization--extensibility)** - Create your own components
+- **[Scriptable System](Documentation/ScriptableSystem/ScriptableVariables.md)** - Variables and events
+- **[Sequencing](Documentation/Systems/SequencingSystem.md)** - Tutorials and quests
+- **[Hand Poses](Documentation/PoseSystem/PoseConstrainer.md)** - Import and configure hands
 
 ### 💻 For Developers
-- **[Scripting Reference](Documentation/ScriptingReference.md)** - Complete API documentation
-- **[Component Reference](Documentation/ComponentReference.md)** - All components indexed
+- **[Scripting Reference](Documentation/README.md)** - Complete API documentation
+- **[Component Reference](Documentation/README.md)** - All components indexed
 
 ---
 
@@ -165,7 +165,7 @@ Additional functionality:
 // 4. Grab flashlight and press Trigger to turn on/off
 ```
 
-**📚 More examples:** [Component Manuals](Documentation/ComponentReference.md)
+**📚 More examples:** [Component Manuals](Documentation/README.md)
 
 ---
 
@@ -208,16 +208,23 @@ Additional functionality:
 Shababeek Interactions/
 ├── Scripts/
 │   ├── InteractionSystem/      # Core interaction components
-│   ├── SequencingSystem/        # Tutorial/quest system
-│   ├── Core/                    # Scriptable variables & events
-│   └── Utility/                 # Helper utilities
-├── Documentation/               # Complete documentation
-│   ├── GettingStarted/
-│   ├── Components/
-│   ├── Templates/
-│   └── Screenshots/
-├── Examples/                    # Sample scenes
-└── Prefabs/                     # Ready-to-use prefabs
+│   ├── SequencingSystem/       # Tutorial/quest system
+│   ├── Core/                   # Scriptable variables & events
+│   └── Utility/                # Helper utilities
+├── Documentation/              # Complete documentation
+│   ├── GettingStarted/         # Quick start guides
+│   ├── Interactables/          # Component documentation
+│   ├── Interactors/            # Interactor documentation
+│   ├── Systems/                # System documentation
+│   ├── PoseSystem/             # Pose constrainer docs
+│   ├── SocketSystem/           # Socket system docs
+│   ├── ScriptableSystem/       # Scriptable system docs
+│   ├── Tutorials/              # Video script tutorials
+│   └── Images/                 # Documentation images
+├── EditorResources/            # Editor icons and assets
+├── Resources/                  # Runtime resources
+├── Plugins/                    # Third-party plugins
+└── Data/                       # Configuration data
 ```
 
 ---
@@ -231,13 +238,13 @@ We welcome contributions! Here's how you can help:
 3. **Feature Requests** - Share your ideas
 4. **Pull Requests** - Submit improvements
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+For contribution guidelines, please reach out to the team at Ahmadabobakr@gmail.com
 
 ---
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE.md) file for details.
 
 ---
 
@@ -275,7 +282,7 @@ Special thanks to all contributors and the Unity VR community.
 
 **Need help?** → [Documentation](Documentation/README.md)
 
-**Want to contribute?** → [Contributing Guidelines](CONTRIBUTING.md)
+**Want to contribute?** → [Contact the Team](mailto:Ahmadabobakr@gmail.com)
 
 ---
 

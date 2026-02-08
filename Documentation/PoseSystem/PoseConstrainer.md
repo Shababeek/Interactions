@@ -40,7 +40,7 @@ You typically **configure** PoseConstrainer rather than add it manually.
 
 ## Inspector Reference
 
-![PoseConstrainer Inspector](../Images/pose-constrainer-inspector-full.png)
+![PoseConstrainer Inspector](../Images/Pose_Constrainer/pose-constrainer-inspector-full.png)
 
 ### Constraint Configuration
 
@@ -57,7 +57,8 @@ Controls how hands behave during interaction.
 
 **Visual Example:**
 
-![Pose Mode Comparison](../Images/pose-mode-comparison.gif)
+<!-- TODO: Add pose-mode-comparison.gif -->
+*Comparison of Constrained, FreeHand, and HideHand modes*
 
 ---
 
@@ -93,7 +94,7 @@ How fast the hand moves to the target position (only visible when Smooth Transit
 
 Pose Constraints define how each finger behaves when holding the object. There are separate settings for **Left** and **Right** hands.
 
-![Pose Constraints Section](../Images/pose-constraints-section.png)
+![Pose Constraints Section](../Images/Pose_Constrainer/pose-constraints-section.png)
 
 #### Target Pose Index
 Which base pose to use from the HandData asset.
@@ -145,7 +146,7 @@ The actual finger position interpolates between Min and Max based on controller 
 
 Defines where each hand appears relative to the object when grabbed. Separate settings for **Left** and **Right** hands.
 
-![Hand Positioning Section](../Images/pose-hand-positioning.png)
+![Hand Positioning Section](../Images/Pose_Constrainer/pose-hand-positioning.png)
 
 #### Position Offset
 Local position offset from the object's transform origin.
@@ -219,7 +220,8 @@ Pinky:  Locked=true, Min=0.9 (tightly curled)
 3. Check if grip looks natural
 4. Adjust and repeat until satisfied
 
-![Hammer Grip Configuration](../Images/pose-hammer-grip.gif)
+<!-- TODO: Add pose-hammer-grip.gif -->
+*Example of a hammer power grip with tightly curled fingers*
 
 ✅ **Result:** A hammer with a natural-looking power grip!
 
@@ -241,7 +243,8 @@ Pinky:  Locked=true, Min=0.8 (curled)
 
 This creates a pose where the index finger stays extended while other fingers grip the object.
 
-![Wand Pointing Pose](../Images/pose-wand-pointing.png)
+<!-- TODO: Add pose-wand-pointing.png -->
+*Wand pointing pose example*
 
 ---
 
@@ -313,7 +316,8 @@ That's it! When the player grabs the orb, their hand model will become invisible
    - **10-15**: Natural, balanced (recommended)
    - **20+**: Quick, snappy grabs
 
-![Grab Transition Comparison](../Images/pose-grab-transition.gif)
+<!-- TODO: Add pose-grab-transition.gif -->
+*Smooth hand animation transitioning to grab position*
 
 ---
 
@@ -480,7 +484,7 @@ float constrainedValue = indexFinger.GetConstrainedValue(inputValue);
 
 - [Grabable](../Interactables/Grabable.md) — Uses PoseConstrainer for hand grips
 - [Constrained Interactables](../Interactables/ConstrainedInteractables.md) — Lever, Drawer, etc.
-- [Hand System](../Interactors/Hand.md) — Hand components and animation
+- *Hand System (coming soon)* — Hand components and animation
 - [Quick Start Guide](../GettingStarted/QuickStart.md) — Basic PoseConstrainer setup
 
 ---

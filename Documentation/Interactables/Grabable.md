@@ -27,7 +27,8 @@ Perfect for creating tools, weapons, toys, or any object your player needs to pi
 
 > **Goal:** Make a cube you can pick up and throw
 
-![Grabable Select and Throw](../Images/grabable-select-throw.gif)
+<!-- TODO: Add grabable-select-throw.gif -->
+*Grabable select and throw demonstration*
 
 This example shows a basic grabbable Object. The player can pick it up, move it around, and throw it. You'll learn the essential settings needed for any grabbable object.
 
@@ -199,7 +200,8 @@ These fields show the object's state while in Play mode. You can't edit them.
 ![ThrowableComponent.png](../Images/ThrowableComponent.png)
 #### ✅ Result
 
-![Grabable Play Mode](../Images/grabable-playmode.gif)
+<!-- TODO: Add grabable-playmode.gif -->
+*Grabable play mode demonstration*
 
 Press Play! Put on your VR headset, reach for the cube, and press the **Grip** button. You can now move it around and throw it by releasing grip while moving your hand!
 
@@ -230,7 +232,8 @@ Press Play! Put on your VR headset, reach for the cube, and press the **Grip** b
 
 
 #### ✅ Result
-![Grabable Audio Feedback](../Images/grabable-audio-feedback.png)
+<!-- TODO: Add grabable-audio-feedback.png -->
+*Grabable audio feedback demonstration*
 
 Now your object plays a sound when grabbed and released!
 
@@ -276,7 +279,8 @@ These settings make throwing feel good:
 
 
 #### ✅ Result
-![Grabable Throw Trail](../Images/grabable-throw-trail.gif)
+<!-- TODO: Add grabable-throw-trail.gif -->
+*Grabable throw trail demonstration*
 
 Your object now throws realistically! The Grabable automatically calculates release velocity from your hand's movement.
 
@@ -326,7 +330,8 @@ public class FlashlightToggle : MonoBehaviour
 
 
 #### ✅ Result
-![Grabable Flashlight Toggle](../Images/grabable-flashlight-toggle.gif)
+<!-- TODO: Add grabable-flashlight-toggle.gif -->
+*Grabable flashlight toggle demonstration*
 
 Grab the flashlight (Grip), then press **Trigger** to turn it on/off!
 
@@ -440,7 +445,7 @@ public class GrabableExample : MonoBehaviour
 }
 ```
 
-For complete API documentation, see [ScriptingReference.md](../ScriptingReference/Readme.md).
+For complete API documentation, see *Scripting Reference (coming soon)*.
 
 ---
 
@@ -475,15 +480,15 @@ When you grab an object:
 - [Readme.md](Readme.md) - A list of a all interactables including grab objects
 - [Throwable](Throwable.md) - Advanced throwing mechanics
 - [PoseConstrainer](../PoseSystem/PoseConstrainer.md) - Hand pose configuration
-- [Socket](../SocketSystem/Readme.md) - Object placement and snapping
+- [Socket](../SocketSystem/SocketSystem.md) - Object placement and snapping
 - [Getting Started Guide](../GettingStarted/QuickStart.md) - Your first grabbable object
-- [Video: Creating Grabbable Objects](link-to-video)
+- *Video: Creating Grabbable Objects (coming soon)*
 
 ---
 
 ## Feedback
 
-Found an issue with this documentation? Have a suggestion? [Submit feedback here](link-to-feedback)
+Found an issue with this documentation? Have a suggestion? *Submit feedback via GitHub Issues*
 
 ---
 

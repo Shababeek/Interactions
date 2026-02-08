@@ -47,7 +47,7 @@ Once assigned, all hands  and interactables automatically use this configuration
 
 #### Hand Data
 
-**Field**: Hand Data [HandData Asset](HandDataAndPoses.md)
+**Field**: Hand Data *HandData Asset (see HandData documentation)*
 **Purpose**: References the hand models, poses, and finger Masks.
 **Required**: Yes (system won't work without it)
 
@@ -57,7 +57,7 @@ Once assigned, all hands  and interactables automatically use this configuration
 - Contains finger animation data and avatar masks
 
 **Setup:**
-Follow instructions in  [HandData Documentation](HandDataAndPoses.md)
+Follow instructions in the *HandData Documentation (coming soon)*
 
 **Troubleshooting:**
 -  **"Hands not showing"**  Check HandData is assigned and has prefabs
@@ -104,7 +104,8 @@ Layers prevent unwanted collisions (like hands colliding with themselves), this 
  -  LeftHand cannot collide with LeftHand
  -  RightHand cannot collide with RightHand
 
-![PhysicsLayerMatrix.png](../Images/PhysicsLayerMatrix.png)
+<!-- TODO: Add PhysicsLayerMatrix.png -->
+*Physics Layer Matrix configuration*
 
 **Note:** The Setup Wizard can configure this automatically!
 

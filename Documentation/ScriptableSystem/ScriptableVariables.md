@@ -48,7 +48,8 @@ The **Scriptable Variables System** provides reactive, asset-based data containe
 > **Goal:** Create a health system that updates UI automatically
 > **Time:** ~5 minutes
 
-![Creating Health Variable and UI Connection](../Images/scriptable-variable-health-ui.gif)
+<!-- TODO: Add scriptable-variable-health-ui.gif -->
+*Creating a health variable and connecting it to UI for automatic updates*
 
 1. **Create the Variable:**
    - Right-click in Project > **Create > Shababeek > Scriptable System > Variables > IntVariable**

@@ -38,7 +38,8 @@ The **Feedback System** provides unified feedback management for interactions. I
 
 > **Goal:** Object highlights when hovered and vibrates when grabbed
 
-![Feedback Highlight and Haptic](../Images/feedback-highlight-haptic.gif)
+<!-- TODO: Add feedback-highlight-haptic.gif -->
+*Object highlights when hovered and vibrates when grabbed*
 
 1. Add Feedback System to any interactable
 2. Add Material Feedback → Configure hover color
@@ -48,7 +49,8 @@ The **Feedback System** provides unified feedback management for interactions. I
 
 ## Inspector Reference
 
-![Feedback Inspector](../Images/feedback-inspector-expanded.png)
+<!-- TODO: Add feedback-inspector-expanded.png -->
+*Expanded feedback system inspector showing all feedback types*
 
 ### Feedback Configuration
 
@@ -71,7 +73,7 @@ Each feedback entry shows:
 
 Changes material colors in response to interaction events.
 
-![Material Feedback Settings](../Images/feedback-material-settings.png)
+![Material Feedback Settings](../Images/Feedback_System/feedback-material-settings.png)
 
 ### Settings
 
@@ -126,7 +128,7 @@ Lower values = subtle effect; Higher values = stronger effect.
 
 Triggers Animator parameters based on interaction events.
 
-![Animation Feedback Settings](../Images/feedback-animation-settings.png)
+![Animation Feedback Settings](../Images/Feedback_System/feedback-animation-settings.png)
 
 ### Settings
 
@@ -180,7 +182,7 @@ States:
 - Selected (transition on Selected trigger)
 ```
 
-![Animator Controller Example](../Images/feedback-animator-controller.png)
+![Animator Controller Example](../Images/Feedback_System/feedback-animator-controller.png)
 
 ---
 
@@ -188,7 +190,7 @@ States:
 
 Sends vibration impulses to VR controllers.
 
-![Haptic Feedback Settings](../Images/feedback-haptic-settings.png)
+![Haptic Feedback Settings](../Images/Feedback_System/feedback-haptic-settings.png)
 
 ### Settings
 
@@ -236,7 +238,7 @@ Strong feedback for triggering actions.
 
 Enables or disables GameObjects based on interaction events.
 
-![Object Toggle Feedback Settings](../Images/feedback-object-toggle-settings.png)
+![Object Toggle Feedback Settings](../Images/Feedback_System/feedback-object-toggle-settings.png)
 
 ### Settings
 
@@ -267,7 +269,7 @@ Array of GameObjects to enable when activated (disabled when not activated).
 
 Animates object scale in response to interaction events.
 
-![Scale Feedback Settings](../Images/feedback-scale-settings.png)
+![Scale Feedback Settings](../Images/Feedback_System/feedback-scale-settings.png)
 
 ### Settings
 
@@ -314,7 +316,7 @@ Scale multiplier when activated.
 
 Plays particle effects for interaction events.
 
-![Particle Feedback Settings](../Images/feedback-particle-settings.png)
+![Particle Feedback Settings](../Images/Feedback_System/feedback-particle-settings.png)
 
 ### Settings
 
@@ -356,7 +358,7 @@ ParticleSystem to play when activated.
 
 Fires UnityEvents for maximum flexibility.
 
-![Unity Event Feedback Settings](../Images/feedback-unityevent-settings.png)
+![Unity Event Feedback Settings](../Images/Feedback_System/feedback-unityevent-settings.png)
 
 ### Settings
 
@@ -394,7 +396,7 @@ UnityEvent invoked when activated.
 
 Plays sound effects for interaction events.
 
-![Audio Feedback Settings](../Images/feedback-audio-settings.png)
+![Audio Feedback Settings](../Images/Feedback_System/feedback-audio-settings.png)
 
 ### Settings
 

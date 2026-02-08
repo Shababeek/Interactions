@@ -33,7 +33,7 @@ The **TriggerInteractor** uses sphere-based detection (Physics.OverlapSphere) to
 
 ## Inspector Reference
 
-![Trigger Interactor Inspector](../Images/trigger-interactor-inspector.png)
+![Trigger Interactor Inspector](../Images/Interactors/trigger-interactor-inspector.png)
 
 ### Settings
 
@@ -98,7 +98,7 @@ In Scene view, TriggerInteractor shows:
 - **Blue line:** Offset from transform to detection center
 - **Blue dot:** Detection center point
 
-![Trigger Interactor Gizmos](../Images/trigger-interactor-gizmos.png)
+![Trigger Interactor Gizmos](../Images/Interactors/trigger-interactor-gizmos.png)
 
 ---
 
@@ -121,7 +121,7 @@ The **RaycastInteractor** projects a ray from a specified origin point to detect
 
 ## Inspector Reference
 
-![Raycast Interactor Inspector](../Images/raycast-interactor-inspector.png)
+![Raycast Interactor Inspector](../Images/Interactors/raycast-interactor-inspector.png)
 
 ### Raycast Settings
 
@@ -309,7 +309,7 @@ Both interactors draw helpful gizmos. Select them in Scene view to see detection
 
 ## Related Documentation
 
-- [Hand System](Hand.md) — Hand components
+- *Hand System (coming soon)* — Hand components
 - [Grabable](../Interactables/Grabable.md) — What interactors detect
 - [PoseConstrainer](../PoseSystem/PoseConstrainer.md) — Hand positioning
 - [Config](../Core/config.md) — Layer configuration

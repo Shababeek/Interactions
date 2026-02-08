@@ -28,7 +28,8 @@ The **Switch** component creates a physical toggle switch that responds to trigg
 
 > **Goal:** Create a light switch that toggles a room light
 
-![Switch Toggle](../Images/switch-toggle.gif)
+<!-- TODO: Add switch-toggle.gif -->
+*Switch Toggle animation showing switch moving between on and off positions*
 
 1. Create a switch model with a pivot point
 2. Add Switch component
@@ -39,7 +40,7 @@ The **Switch** component creates a physical toggle switch that responds to trigg
 
 ## Inspector Reference
 
-![Switch Inspector](../Images/switch-inspector-labeled.png)
+![Switch Inspector](../Images/Switch/switch-inspector-labeled.png)
 
 ### Events
 
@@ -232,7 +233,8 @@ LightSwitch (empty)
 
 Repeat for **On Down** with the checkbox unchecked.
 
-![Switch Event Wiring](../Images/switch-event-wiring.png)
+<!-- TODO: Add switch-event-wiring.png -->
+*Switch Event Wiring diagram showing how to connect switch events to light components*
 
 ---
 
