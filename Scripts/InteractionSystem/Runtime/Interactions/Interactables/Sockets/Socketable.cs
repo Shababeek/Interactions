@@ -44,7 +44,10 @@ namespace Shababeek.Interactions
         private TransformTweenable _returnTweenable;
         private bool _isReturning = false;
         private readonly Collider[] _overlapResults = new Collider[3];
-        public Transform SocketTransform => _socketTransform ;
+        /// <summary>
+        /// Gets the transform of the socket this object is currently inserted into.
+        /// </summary>
+        public Transform SocketTransform => _socketTransform;
 
         /// <summary>
         /// Gets whether the object is currently socketed.
@@ -125,11 +128,11 @@ namespace Shababeek.Interactions
         private void Update()
         {
             DetectSockets();
-            HandeIndicator();
+            HandleIndicator();
             DebugKeyHandling();
         }
 
-        private void HandeIndicator()
+        private void HandleIndicator()
         {
             if (!isSocketed && socket != null && socket.CanSocket())
             {
@@ -347,7 +350,7 @@ namespace Shababeek.Interactions
             ReturnWithTween();
         }
 
-        public void ReturToOriginalState()
+        public void ReturnToOriginalState()
         {
             if (isSocketed && socket != null)
             {
