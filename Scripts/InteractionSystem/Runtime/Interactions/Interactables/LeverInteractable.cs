@@ -17,7 +17,7 @@ namespace Shababeek.Interactions
     /// </summary>
     public class LeverInteractable : ConstrainedInteractableBase
     {
-        [SerializeField] public RotationAxis rotationAxis = RotationAxis.Right;
+        [SerializeField] public RotationAxis rotationAxis = RotationAxis.Forward;
         [Tooltip("Rotation angle range in degrees (min, max)")]
         [SerializeField] private Vector2 angleRange = new Vector2(-40f, 40f);
         

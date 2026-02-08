@@ -17,7 +17,7 @@ namespace Shababeek.Interactions.Editors
         private const float LeverARMLength = 0.4f;
         private const float LeverHandleRadius = 0.08f;
         private const float LeverHandleHeight = 0.15f;
-        
+
         // Drawer - A box that slides in and out
         private const float DrawerFrameWidth = 0.6f;
         private const float DrawerFrameHeight = 0.3f;
@@ -29,19 +29,19 @@ namespace Shababeek.Interactions.Editors
         private const float DrawerHandleWidth = 0.15f;
         private const float DrawerHandleHeight = 0.05f;
         private const float DrawerHandleDepth = 0.05f;
-        
+
         private const float JoystickBaseRadius = 0.3f;
         private const float JoystickBaseHeight = 0.1f;
         private const float JoystickBodyHeight = 0.15f;
         private const float JoystickBarrelRadius = 0.05f;
         private const float JoystickBarrelLength = 0.4f;
-        
+
         private const float ButtonScale = 0.5f;
         private const float ButtonHeight = 0.25f;
         private const float ButtonYOffset = 0.5f;
         private const float ButtonTriggerY = 0.2f;
         private const float ButtonBodyScale = 0.2f;
-        
+
         // Switch - A toggle switch with a flat base and small lever
         private const float SwitchPanelWidth = 0.2f;
         private const float SwitchPanelHeight = 0.02f;
@@ -51,43 +51,51 @@ namespace Shababeek.Interactions.Editors
         private const float SwitchToggleDepth = 0.04f;
         private const float SwitchToggleY = 0.025f;
 
+        // Wheel - A rotatable wheel/valve
+        private const float WheelOuterRadius = 0.25f;
+        private const float WheelInnerRadius = 0.20f;
+        private const float WheelDepth = 0.03f;
+        private const float WheelSpokeWidth = 0.04f;
+        private const float WheelHubRadius = 0.05f;
+
         // ========== CREATE MENU ==========
-        
+
         [MenuItem("GameObject/Shababeek/Create/Lever", priority = 2)]
         public static void CreateLever()
         {
             GameObject leverObject = new GameObject("Lever");
-            
+            ParentToSelection(leverObject);
+
             // Create static base
             var baseObj = GameObject.CreatePrimitive(PrimitiveType.Cylinder).transform;
             baseObj.name = "Base";
             baseObj.localScale = new Vector3(LeverBaseRadius, LeverBaseHeight, LeverBaseRadius);
             baseObj.localPosition = Vector3.zero;
-            baseObj.localRotation = Quaternion.Euler(90, 0, 0);
             baseObj.parent = leverObject.transform;
-            
-            // Create moving parts (arm and handle) - oriented vertically
+
+            // Create moving parts (arm and handle) - arm extends along Y
             GameObject movingParts = new GameObject("MovingParts");
             movingParts.transform.parent = leverObject.transform;
             movingParts.transform.localPosition = new Vector3(0, LeverBaseHeight, 0);
-            
+
             var arm = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
             arm.name = "Arm";
             arm.localScale = new Vector3(LeverARMWidth, LeverARMLength, LeverARMHeight);
             arm.localPosition = new Vector3(0, LeverARMLength / 2, 0);
             arm.parent = movingParts.transform;
-            
+
             var handle = GameObject.CreatePrimitive(PrimitiveType.Cylinder).transform;
             handle.name = "Handle";
             handle.localScale = new Vector3(LeverHandleRadius, LeverHandleHeight, LeverHandleRadius);
             handle.localPosition = new Vector3(0, LeverARMLength, 0);
             handle.parent = movingParts.transform;
-            
+
             // Initialize the constrained interactable with only the moving parts
             var leverTransform = leverObject.transform;
             InitializeConstrainedInteractable<LeverInteractable>(leverTransform, movingParts);
-            
+
             Selection.activeGameObject = leverObject;
+            Undo.RegisterCreatedObjectUndo(leverObject, "Create Lever");
         }
 
         [MenuItem("GameObject/Shababeek/Create/Lever", true)]
@@ -100,58 +108,60 @@ namespace Shababeek.Interactions.Editors
         public static void CreateDrawer()
         {
             GameObject drawerObject = new GameObject("Drawer");
-            
+            ParentToSelection(drawerObject);
+
             // Create static frame
             var frame = new GameObject("Frame").transform;
             frame.parent = drawerObject.transform;
             frame.localPosition = Vector3.zero;
-            
+
             var frameBottom = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
             frameBottom.name = "Bottom";
             frameBottom.localScale = new Vector3(DrawerFrameWidth, DrawerFrameThickness, DrawerFrameDepth);
             frameBottom.localPosition = Vector3.zero;
             frameBottom.parent = frame;
-            
+
             var frameLeft = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
             frameLeft.name = "Left";
             frameLeft.localScale = new Vector3(DrawerFrameThickness, DrawerFrameHeight, DrawerFrameDepth);
             frameLeft.localPosition = new Vector3(-DrawerFrameWidth / 2 + DrawerFrameThickness / 2, DrawerFrameHeight / 2, 0);
             frameLeft.parent = frame;
-            
+
             var frameRight = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
             frameRight.name = "Right";
             frameRight.localScale = new Vector3(DrawerFrameThickness, DrawerFrameHeight, DrawerFrameDepth);
             frameRight.localPosition = new Vector3(DrawerFrameWidth / 2 - DrawerFrameThickness / 2, DrawerFrameHeight / 2, 0);
             frameRight.parent = frame;
-            
+
             var frameTop = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
             frameTop.name = "Top";
             frameTop.localScale = new Vector3(DrawerFrameWidth, DrawerFrameThickness, DrawerFrameDepth);
             frameTop.localPosition = new Vector3(0, DrawerFrameHeight, 0);
             frameTop.parent = frame;
-            
+
             // Create moving parts (drawer box and handle)
             GameObject movingParts = new GameObject("MovingParts");
             movingParts.transform.parent = drawerObject.transform;
             movingParts.transform.localPosition = new Vector3(0, DrawerFrameHeight / 2, 0);
-            
+
             var box = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
             box.name = "DrawerBox";
             box.localScale = new Vector3(DrawerBoxWidth, DrawerBoxHeight, DrawerBoxDepth);
             box.localPosition = Vector3.zero;
             box.parent = movingParts.transform;
-            
+
             var handle = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
             handle.name = "Handle";
             handle.localScale = new Vector3(DrawerHandleWidth, DrawerHandleHeight, DrawerHandleDepth);
             handle.localPosition = new Vector3(0, 0, DrawerBoxDepth / 2 + DrawerHandleDepth / 2);
             handle.parent = box;
-            
+
             // Initialize the constrained interactable with only the moving parts
             var drawerTransform = drawerObject.transform;
             InitializeConstrainedInteractable<DrawerInteractable>(drawerTransform, movingParts);
-            
+
             Selection.activeGameObject = drawerObject;
+            Undo.RegisterCreatedObjectUndo(drawerObject, "Create Drawer");
         }
 
         [MenuItem("GameObject/Shababeek/Create/Drawer", true)]
@@ -164,36 +174,38 @@ namespace Shababeek.Interactions.Editors
         public static void CreateJoystick()
         {
             GameObject joystickObject = new GameObject("Joystick");
-            
+            ParentToSelection(joystickObject);
+
             // Create static base
             var baseObj = GameObject.CreatePrimitive(PrimitiveType.Cylinder).transform;
             baseObj.name = "Base";
             baseObj.localScale = new Vector3(JoystickBaseRadius, JoystickBaseHeight, JoystickBaseRadius);
             baseObj.localPosition = Vector3.zero;
             baseObj.parent = joystickObject.transform;
-            
+
             // Create moving parts (stick and knob)
             GameObject movingParts = new GameObject("MovingParts");
             movingParts.transform.parent = joystickObject.transform;
             movingParts.transform.localPosition = Vector3.zero;
-            
+
             var stick = GameObject.CreatePrimitive(PrimitiveType.Cylinder).transform;
             stick.name = "Stick";
             stick.localScale = new Vector3(JoystickBarrelRadius, JoystickBarrelLength, JoystickBarrelRadius);
             stick.localPosition = new Vector3(0, JoystickBarrelLength, 0);
             stick.parent = movingParts.transform;
-            
+
             var knob = GameObject.CreatePrimitive(PrimitiveType.Sphere).transform;
             knob.name = "Knob";
             knob.localScale = Vector3.one * JoystickBodyHeight;
             knob.localPosition = new Vector3(0, JoystickBarrelLength * 2, 0);
             knob.parent = movingParts.transform;
-            
+
             // Initialize the constrained interactable with only the moving parts
             var joystickTransform = joystickObject.transform;
             InitializeConstrainedInteractable<JoystickInteractable>(joystickTransform, movingParts);
-            
+
             Selection.activeGameObject = joystickObject;
+            Undo.RegisterCreatedObjectUndo(joystickObject, "Create Joystick");
         }
 
         [MenuItem("GameObject/Shababeek/Create/Joystick", true)]
@@ -202,11 +214,78 @@ namespace Shababeek.Interactions.Editors
             return ValidateRequiredComponents();
         }
 
-        [MenuItem("GameObject/Shababeek/Create/Button", priority = 5)]
+        [MenuItem("GameObject/Shababeek/Create/Wheel", priority = 5)]
+        public static void CreateWheel()
+        {
+            GameObject wheelObject = new GameObject("Wheel");
+            ParentToSelection(wheelObject);
+
+            // Create moving parts (the whole wheel rotates)
+            GameObject movingParts = new GameObject("MovingParts");
+            movingParts.transform.parent = wheelObject.transform;
+            movingParts.transform.localPosition = Vector3.zero;
+
+            // Hub (center)
+            var hub = GameObject.CreatePrimitive(PrimitiveType.Cylinder).transform;
+            hub.name = "Hub";
+            hub.localScale = new Vector3(WheelHubRadius * 2, WheelDepth, WheelHubRadius * 2);
+            hub.localPosition = Vector3.zero;
+            hub.localRotation = Quaternion.Euler(90, 0, 0);
+            hub.parent = movingParts.transform;
+
+            // Create 3 spokes at 120 degree intervals
+            for (int i = 0; i < 3; i++)
+            {
+                float angle = i * 120f;
+                var spoke = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
+                spoke.name = $"Spoke_{i}";
+                float spokeLength = WheelOuterRadius - WheelHubRadius;
+                spoke.localScale = new Vector3(WheelSpokeWidth, WheelDepth, spokeLength);
+                float centerOffset = WheelHubRadius + spokeLength / 2;
+                spoke.localPosition = Quaternion.Euler(0, 0, angle) * new Vector3(0, centerOffset, 0);
+                spoke.localRotation = Quaternion.Euler(0, 0, angle);
+                spoke.parent = movingParts.transform;
+            }
+
+            // Outer rim approximated with 8 cubes forming an octagon
+            int rimSegments = 8;
+            float segmentAngle = 360f / rimSegments;
+            float rimLength = 2 * WheelOuterRadius * Mathf.Sin(Mathf.PI / rimSegments);
+            for (int i = 0; i < rimSegments; i++)
+            {
+                float angle = i * segmentAngle;
+                var segment = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
+                segment.name = $"Rim_{i}";
+                segment.localScale = new Vector3(rimLength, WheelDepth, WheelSpokeWidth);
+                float rad = angle * Mathf.Deg2Rad;
+                segment.localPosition = new Vector3(
+                    Mathf.Sin(rad) * WheelOuterRadius,
+                    Mathf.Cos(rad) * WheelOuterRadius,
+                    0);
+                segment.localRotation = Quaternion.Euler(0, 0, -angle);
+                segment.parent = movingParts.transform;
+            }
+
+            var wheelTransform = wheelObject.transform;
+            InitializeConstrainedInteractable<WheelInteractable>(wheelTransform, movingParts);
+
+            Selection.activeGameObject = wheelObject;
+            Undo.RegisterCreatedObjectUndo(wheelObject, "Create Wheel");
+        }
+
+        [MenuItem("GameObject/Shababeek/Create/Wheel", true)]
+        private static bool ValidateCreateWheel()
+        {
+            return ValidateRequiredComponents();
+        }
+
+        [MenuItem("GameObject/Shababeek/Create/Button", priority = 6)]
         public static void CreateButton()
         {
             GameObject buttonObject = CreateButtonGeometry();
+            ParentToSelection(buttonObject);
             Selection.activeGameObject = buttonObject;
+            Undo.RegisterCreatedObjectUndo(buttonObject, "Create Button");
         }
 
         [MenuItem("GameObject/Shababeek/Create/Button", true)]
@@ -215,11 +294,13 @@ namespace Shababeek.Interactions.Editors
             return ValidateRequiredComponents();
         }
 
-        [MenuItem("GameObject/Shababeek/Create/Switch", priority = 6)]
+        [MenuItem("GameObject/Shababeek/Create/Switch", priority = 7)]
         public static void CreateSwitch()
         {
             GameObject switchObject = CreateSwitchGeometry();
+            ParentToSelection(switchObject);
             Selection.activeGameObject = switchObject;
+            Undo.RegisterCreatedObjectUndo(switchObject, "Create Switch");
         }
 
         [MenuItem("GameObject/Shababeek/Create/Switch", true)]
@@ -245,8 +326,8 @@ namespace Shababeek.Interactions.Editors
                 Debug.LogWarning("Object already has a Grabable component.");
                 return;
             }
-            
-            obj.AddComponent<Grabable>();
+
+            Undo.AddComponent<Grabable>(obj);
             Selection.activeGameObject = obj;
         }
 
@@ -271,12 +352,12 @@ namespace Shababeek.Interactions.Editors
                 Debug.LogWarning("Object already has a Throwable component.");
                 return;
             }
-            
+
             if (!obj.GetComponent<Rigidbody>())
-                obj.AddComponent<Rigidbody>().isKinematic = true;
+                Undo.AddComponent<Rigidbody>(obj).isKinematic = true;
             if (!obj.GetComponent<Grabable>())
-                obj.AddComponent<Grabable>();
-            obj.AddComponent<Throwable>();
+                Undo.AddComponent<Grabable>(obj);
+            Undo.AddComponent<Throwable>(obj);
             Selection.activeGameObject = obj;
         }
 
@@ -289,114 +370,72 @@ namespace Shababeek.Interactions.Editors
         [MenuItem("GameObject/Shababeek/Make Into/Lever", priority = 102)]
         public static void MakeIntoLever()
         {
-            GameObject selectedObject = Selection.activeGameObject;
-            if (selectedObject == null)
-            {
-                Debug.LogWarning("No object selected. Please select an object to convert into a lever.");
-                return;
-            }
-            
-            if (IsInteractable(selectedObject))
-            {
-                Debug.LogError("Object is already interactable");
-                return;
-            }
-
-            var leverObject = new GameObject("Lever").transform;
-            leverObject.transform.position = selectedObject.transform.position;
-            InitializeConstrainedInteractable<LeverInteractable>(leverObject, selectedObject);
-            Selection.activeGameObject = leverObject.gameObject;
+            MakeIntoConstrainedInteractable<LeverInteractable>("Lever");
         }
 
         [MenuItem("GameObject/Shababeek/Make Into/Lever", true)]
         private static bool ValidateMakeIntoLever()
         {
-            if (!ValidateRequiredComponents()) return false;
-            var selectedObject = Selection.activeGameObject;
-            return selectedObject != null && !IsInteractable(selectedObject);
+            return ValidateMakeIntoConstrained();
         }
 
         [MenuItem("GameObject/Shababeek/Make Into/Drawer", priority = 103)]
         public static void MakeIntoDrawer()
         {
-            GameObject selectedObject = Selection.activeGameObject;
-            if (selectedObject == null)
-            {
-                Debug.LogWarning("No object selected. Please select an object to convert into a drawer.");
-                return;
-            }
-            
-            if (IsInteractable(selectedObject))
-            {
-                Debug.LogError("Object is already interactable");
-                return;
-            }
-
-            var drawerObject = new GameObject("Drawer").transform;
-            drawerObject.transform.position = selectedObject.transform.position;
-            InitializeConstrainedInteractable<DrawerInteractable>(drawerObject, selectedObject);
-            Selection.activeGameObject = drawerObject.gameObject;
+            MakeIntoConstrainedInteractable<DrawerInteractable>("Drawer");
         }
 
         [MenuItem("GameObject/Shababeek/Make Into/Drawer", true)]
         private static bool ValidateMakeIntoDrawer()
         {
-            if (!ValidateRequiredComponents()) return false;
-            var selectedObject = Selection.activeGameObject;
-            return selectedObject != null && !IsInteractable(selectedObject);
+            return ValidateMakeIntoConstrained();
         }
 
         [MenuItem("GameObject/Shababeek/Make Into/Joystick", priority = 104)]
         public static void MakeIntoJoystick()
         {
-            GameObject selectedObject = Selection.activeGameObject;
-            if (selectedObject == null)
-            {
-                Debug.LogWarning("No object selected. Please select an object to convert into a joystick.");
-                return;
-            }
-            
-            if (IsInteractable(selectedObject))
-            {
-                Debug.LogError("Object is already interactable");
-                return;
-            }
-
-            var joystickObject = new GameObject("Joystick").transform;
-            joystickObject.transform.position = selectedObject.transform.position;
-            InitializeConstrainedInteractable<JoystickInteractable>(joystickObject, selectedObject);
-            Selection.activeGameObject = joystickObject.gameObject;
+            MakeIntoConstrainedInteractable<JoystickInteractable>("Joystick");
         }
 
         [MenuItem("GameObject/Shababeek/Make Into/Joystick", true)]
         private static bool ValidateMakeIntoJoystick()
         {
-            if (!ValidateRequiredComponents()) return false;
-            var selectedObject = Selection.activeGameObject;
-            return selectedObject != null && !IsInteractable(selectedObject);
+            return ValidateMakeIntoConstrained();
         }
-        
+
+        [MenuItem("GameObject/Shababeek/Make Into/Wheel", priority = 105)]
+        public static void MakeIntoWheel()
+        {
+            MakeIntoConstrainedInteractable<WheelInteractable>("Wheel");
+        }
+
+        [MenuItem("GameObject/Shababeek/Make Into/Wheel", true)]
+        private static bool ValidateMakeIntoWheel()
+        {
+            return ValidateMakeIntoConstrained();
+        }
+
         // ========== SCENE INITIALIZATION ==========
-        
+
         [MenuItem("GameObject/Shababeek/Initialize CameraRig", priority = 0)]
         [MenuItem("Shababeek/Initialize Scene", priority = 0)]
         public static void InitializeScene()
         {
             Debug.Log("Initializing Shababeek XR Scene...");
-            
+
             // Clean up existing cameras and rigs
             DestroyOldRigAndCamera();
-            
+
             // Load and instantiate the CameraRig prefab
             var cameraRig = Resources.Load<CameraRig>("CameraRig");
             if (cameraRig != null)
             {
                 var instantiatedRig = Instantiate<CameraRig>(cameraRig);
                 Resources.UnloadAsset(cameraRig);
-                
+
                 // Select the new camera rig in the hierarchy
                 Selection.activeGameObject = instantiatedRig.gameObject;
-                
+
                 Debug.Log("Scene initialized successfully! CameraRig has been created and selected.");
                 Debug.Log("Note: All previous cameras have been removed to prevent conflicts with XR setup.");
             }
@@ -419,12 +458,12 @@ namespace Shababeek.Interactions.Editors
         {
             // First, destroy any existing CameraRig
             var rig = Object.FindFirstObjectByType<CameraRig>();
-            if (rig) 
+            if (rig)
             {
                 Object.DestroyImmediate(rig.gameObject);
                 Debug.Log("Destroyed existing CameraRig");
             }
-            
+
             // Destroy all cameras in the scene to ensure clean setup
             var cameras = Object.FindObjectsByType<Camera>(FindObjectsSortMode.None);
             foreach (var camera in cameras)
@@ -433,15 +472,66 @@ namespace Shababeek.Interactions.Editors
                 Debug.Log($"Destroying camera: {camera.name} (Tag: {camera.tag})");
                 Object.DestroyImmediate(camera.gameObject);
             }
-            
+
             if (cameras.Length > 0)
             {
                 Debug.Log($"Destroyed {cameras.Length} camera(s) to prepare for XR setup");
             }
         }
 
+        // ========== SHARED HELPERS ==========
+
+        /// <summary>
+        /// Parents a newly created object to the current selection at local origin.
+        /// If nothing is selected, the object stays at world origin.
+        /// </summary>
+        private static void ParentToSelection(GameObject obj)
+        {
+            var selected = Selection.activeTransform;
+            if (selected != null)
+            {
+                obj.transform.SetParent(selected, false);
+            }
+            obj.transform.localPosition = Vector3.zero;
+            obj.transform.localRotation = Quaternion.identity;
+        }
+
+        /// <summary>
+        /// Shared logic for all "Make Into" constrained interactable menu items.
+        /// </summary>
+        private static void MakeIntoConstrainedInteractable<T>(string typeName) where T : ConstrainedInteractableBase
+        {
+            GameObject selectedObject = Selection.activeGameObject;
+            if (selectedObject == null)
+            {
+                Debug.LogWarning($"No object selected. Please select an object to convert into a {typeName}.");
+                return;
+            }
+
+            if (IsInteractable(selectedObject))
+            {
+                Debug.LogError("Object is already interactable");
+                return;
+            }
+
+            var wrapperObject = new GameObject(typeName).transform;
+            wrapperObject.transform.position = selectedObject.transform.position;
+            InitializeConstrainedInteractable<T>(wrapperObject, selectedObject);
+            Undo.RegisterCreatedObjectUndo(wrapperObject.gameObject, $"Make Into {typeName}");
+            Selection.activeGameObject = wrapperObject.gameObject;
+        }
+
+        /// <summary>
+        /// Shared validation for all "Make Into" constrained interactable menu items.
+        /// </summary>
+        private static bool ValidateMakeIntoConstrained()
+        {
+            if (!ValidateRequiredComponents()) return false;
+            var selectedObject = Selection.activeGameObject;
+            return selectedObject != null && !IsInteractable(selectedObject);
+        }
+
         // ========== GEOMETRY CREATION HELPERS ==========
-        // These are only used for "Make Into" functions now
 
         private static T InitializeConstrainedInteractable<T>(Transform parentTransform, GameObject movingParts) where T : ConstrainedInteractableBase
         {
@@ -450,7 +540,7 @@ namespace Shababeek.Interactions.Editors
                 var constrainedInteractable = parentTransform.gameObject.AddComponent<T>();
                 var interactableObject = InitializeInteractableObject(movingParts.transform);
                 interactableObject.parent = parentTransform;
-                if (constrainedInteractable.InteractableObject )
+                if (constrainedInteractable.InteractableObject)
                     DestroyImmediate(constrainedInteractable.InteractableObject.gameObject);
                 constrainedInteractable.InteractableObject = interactableObject;
                 constrainedInteractable.ValidateAndCreateHierarchy();
@@ -463,121 +553,61 @@ namespace Shababeek.Interactions.Editors
             }
         }
 
-        private static GameObject CreateDrawerGeometry()
-        {
-            // This is now only used for "Make Into" - creates just the moving parts
-            GameObject movingParts = new GameObject("Drawer");
-            
-            var box = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
-            box.name = "DrawerBox";
-            box.localScale = new Vector3(DrawerBoxWidth, DrawerBoxHeight, DrawerBoxDepth);
-            box.localPosition = Vector3.zero;
-            box.parent = movingParts.transform;
-            
-            var handle = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
-            handle.name = "Handle";
-            handle.localScale = new Vector3(DrawerHandleWidth, DrawerHandleHeight, DrawerHandleDepth);
-            handle.localPosition = new Vector3(0, 0, DrawerBoxDepth / 2 + DrawerHandleDepth / 2);
-            handle.parent = box;
-            
-            return movingParts;
-        }
-
-        private static GameObject CreateJoystickGeometry()
-        {
-            // This is now only used for "Make Into" - creates just the moving parts
-            GameObject movingParts = new GameObject("Joystick");
-            
-            var stick = GameObject.CreatePrimitive(PrimitiveType.Cylinder).transform;
-            stick.name = "Stick";
-            stick.localScale = new Vector3(JoystickBarrelRadius, JoystickBarrelLength, JoystickBarrelRadius);
-            stick.localPosition = new Vector3(0, JoystickBarrelLength, 0);
-            stick.parent = movingParts.transform;
-            
-            var knob = GameObject.CreatePrimitive(PrimitiveType.Sphere).transform;
-            knob.name = "Knob";
-            knob.localScale = Vector3.one * JoystickBodyHeight;
-            knob.localPosition = new Vector3(0, JoystickBarrelLength * 2, 0);
-            knob.parent = movingParts.transform;
-            
-            return movingParts;
-        }
-
-        private static GameObject CreateLeverGeometry()
-        {
-            // This is now only used for "Make Into" - creates just the moving parts
-            GameObject movingParts = new GameObject("Lever");
-            
-            var arm = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
-            arm.name = "Arm";
-            arm.localScale = new Vector3(LeverARMWidth, LeverARMLength, LeverARMHeight);
-            arm.localPosition = new Vector3(0, LeverARMLength / 2, 0);
-            arm.parent = movingParts.transform;
-            
-            var handle = GameObject.CreatePrimitive(PrimitiveType.Cylinder).transform;
-            handle.name = "Handle";
-            handle.localScale = new Vector3(LeverHandleRadius, LeverHandleHeight, LeverHandleRadius);
-            handle.localPosition = new Vector3(0, LeverARMLength, 0);
-            handle.parent = movingParts.transform;
-            
-            return movingParts;
-        }
-        
         private static GameObject CreateButtonGeometry()
         {
             var buttonObject = GameObject.CreatePrimitive(PrimitiveType.Cylinder).transform;
             var buttonBody = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
-            
+
             buttonBody.name = "Button";
-            
+
             // Set up the button body
             var trigger = buttonBody.gameObject.AddComponent<BoxCollider>();
             trigger.center = Vector3.up * ButtonTriggerY;
             trigger.isTrigger = true;
-            
+
             // Set up the button object
             buttonObject.transform.parent = buttonBody.transform;
             buttonObject.localScale = new Vector3(ButtonScale, ButtonHeight, ButtonScale);
             buttonObject.localPosition = Vector3.up * ButtonYOffset;
-            
+
             // Add the VRButton component
             var button = buttonBody.gameObject.AddComponent<VRButton>();
             button.Button = buttonObject.transform;
-            
+
             // Scale the button body
             buttonBody.localScale = Vector3.one * ButtonBodyScale;
-            
+
             return buttonBody.gameObject;
         }
-        
+
         private static GameObject CreateSwitchGeometry()
         {
             GameObject switchObject = new GameObject("Switch");
-            
+
             // Panel/base (flat surface the switch sits on)
             var panel = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
             panel.name = "Panel";
             panel.localScale = new Vector3(SwitchPanelWidth, SwitchPanelHeight, SwitchPanelDepth);
             panel.localPosition = Vector3.zero;
             panel.parent = switchObject.transform;
-            
+
             // Toggle switch (small rectangular piece that flips)
             var toggle = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
             toggle.name = "Toggle";
             toggle.localScale = new Vector3(SwitchToggleWidth, SwitchToggleHeight, SwitchToggleDepth);
             toggle.localPosition = new Vector3(0, SwitchToggleY, 0);
             toggle.parent = switchObject.transform;
-            
+
             // Add a trigger collider to the switch for interaction detection
             var trigger = switchObject.AddComponent<BoxCollider>();
             trigger.center = new Vector3(0, SwitchToggleY, 0);
             trigger.size = new Vector3(SwitchPanelWidth, SwitchToggleHeight * 3, SwitchPanelDepth);
             trigger.isTrigger = true;
-            
+
             // Add the Switch component
             var switchComponent = switchObject.AddComponent<Switch>();
             switchComponent.SwitchBody = toggle;
-            
+
             return switchObject;
         }
 
@@ -598,6 +628,7 @@ namespace Shababeek.Interactions.Editors
                 typeof(LeverInteractable),
                 typeof(DrawerInteractable),
                 typeof(JoystickInteractable),
+                typeof(WheelInteractable),
                 typeof(VRButton),
                 typeof(Switch)
             };
