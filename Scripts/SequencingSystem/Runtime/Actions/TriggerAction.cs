@@ -17,9 +17,11 @@ namespace Shababeek.Sequencing
         private void OnTriggerEnter(Collider other)
         {
             if (!_active) return;
-            if (string.IsNullOrEmpty(objectTag) || other.attachedRigidbody. CompareTag(objectTag))
+            if (string.IsNullOrEmpty(objectTag) || other.attachedRigidbody.CompareTag(objectTag))
             {
+                _active = false;
                 onTriggerEnter.Invoke();
+                CompleteStep();
             }
         }
 

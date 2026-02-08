@@ -52,7 +52,7 @@ namespace Shababeek.Sequencing
             {
                 active = false;
                 onComplete.Invoke();
-
+                CompleteStep();
             }
         }
     }
