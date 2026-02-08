@@ -21,11 +21,22 @@ All constrained interactables share common features:
 - Normalized output values (0-1 or -1 to 1)
 - Unity Events for value changes
 
+### Quick Creation Methods
+
+There are three ways to add constrained interactables to your scene:
+
+**Create with placeholder model** — Right-click in Hierarchy > **Shababeek > Create > [Lever / Drawer / Joystick / Wheel]**. This creates a complete interactable with a placeholder model, ready to test. The object is parented under the selected object at local (0,0,0), or placed at the scene root.
+
+**Convert an existing object** — Right-click on an object > **Shababeek > Make Into > [Lever / Drawer / Joystick / Wheel]**. This adds the interactable component and required PoseConstrainer to your existing object.
+
+**Add Component manually** — Select object > Add Component > search for the interactable type.
+
 ---
 
 # Lever Interactable {#lever}
 
 > **Menu Path:** Component > Shababeek > Interactions > Interactables > Lever Interactable
+> **Create Menu:** Right-click in Hierarchy > Shababeek > Create > Lever
 > **Use For:** Single-axis rotation controls
 
 ## What It Does
@@ -95,6 +106,9 @@ Fires continuously with normalized position (0-1) as lever moves.
 
 ## Quick Setup
 
+**Fastest:** Right-click in Hierarchy > **Shababeek > Create > Lever** — gives you a ready-to-test lever with placeholder model.
+
+**Manual:**
 1. Create lever model with pivot at rotation point
 2. **Add Component > Lever Interactable**
 3. Assign **Interactable Object** (the rotating part)
@@ -129,6 +143,7 @@ public class ThrottleController : MonoBehaviour
 # Drawer Interactable {#drawer}
 
 > **Menu Path:** Component > Shababeek > Interactions > Interactables > Drawer Interactable
+> **Create Menu:** Right-click in Hierarchy > Shababeek > Create > Drawer
 > **Use For:** Linear sliding movement between two points
 
 ## What It Does
@@ -178,6 +193,9 @@ Fires when drawer reaches near-fully-closed position (<5%).
 
 ## Quick Setup
 
+**Fastest:** Right-click in Hierarchy > **Shababeek > Create > Drawer** — gives you a ready-to-test drawer with placeholder model.
+
+**Manual:**
 1. Create drawer with parent container and child drawer body
 2. **Add Component > Drawer Interactable** to parent
 3. Assign **Interactable Object** (the drawer body)
@@ -211,6 +229,7 @@ public class DrawerContents : MonoBehaviour
 # Joystick Interactable {#joystick}
 
 > **Menu Path:** Component > Shababeek > Interactions > Interactables > Joystick Interactable
+> **Create Menu:** Right-click in Hierarchy > Shababeek > Create > Joystick
 > **Use For:** Two-axis rotation controls
 
 ## What It Does
@@ -261,6 +280,9 @@ Fires continuously with normalized position.
 
 ## Quick Setup
 
+**Fastest:** Right-click in Hierarchy > **Shababeek > Create > Joystick** — gives you a ready-to-test joystick with placeholder model.
+
+**Manual:**
 1. Create joystick model with pivot at base
 2. **Add Component > Joystick Interactable**
 3. Assign **Interactable Object**
@@ -298,6 +320,7 @@ public class AircraftControls : MonoBehaviour
 # Wheel Interactable {#wheel}
 
 > **Menu Path:** Component > Shababeek > Interactions > Interactables > Wheel Interactable
+> **Create Menu:** Right-click in Hierarchy > Shababeek > Create > Wheel
 > **Use For:** Continuous rotation (valves, steering wheels)
 
 ## What It Does
@@ -349,6 +372,9 @@ Fires with rotation normalized to 0-1 (based on Max Rotations, or per-revolution
 
 ## Quick Setup
 
+**Fastest:** Right-click in Hierarchy > **Shababeek > Create > Wheel** — gives you a ready-to-test wheel with placeholder model.
+
+**Manual:**
 1. Create wheel model with pivot at center
 2. **Add Component > Wheel Interactable**
 3. Assign **Interactable Object**

@@ -249,19 +249,28 @@ This makes the hand smoothly animate to the grab position instead of snapping.
 
 Now let's create some more interesting interactions beyond simple grabbing.
 
+> **Quick Tip — The Create Menu**
+> You can quickly create ready-made interactables with placeholder models via the hierarchy context menu:
+> **Right-click in Hierarchy > Shababeek > Create > [Lever / Drawer / Joystick / Wheel / Button / Switch]**
+> The object is created as a child of whatever you have selected (or at the scene root if nothing is selected) at local position (0,0,0).
+> You can also convert existing objects: **Right-click > Shababeek > Make Into > [Grabable / Throwable / Lever / Drawer / Joystick / Wheel]**
+
 ### Step 8: Create a Lever
 
 Levers rotate around a single axis — perfect for throttles, gear shifts, or power switches.
 
-#### Set Up the Lever
+#### Option A: Use the Create Menu (Recommended)
+1. Right-click in Hierarchy: **Shababeek > Create > Lever**
+2. A lever with a placeholder model is created automatically
+3. Skip ahead to **Configure Lever Settings**
+
+#### Option B: Build From Scratch
 1. **GameObject > 3D Object > Cylinder**
 2. Name it "Lever"
 3. Scale to (0.05, 0.15, 0.05) — a small rod shape
 4. Position it within reach
-
-#### Add the Lever Component
-1. Select your Lever object
-2. **Add Component > Shababeek > Interactions > Interactables > Lever Interactable**
+5. Select your Lever object
+6. **Add Component > Shababeek > Interactions > Interactables > Lever Interactable**
 
 ![Lever Interactable Inspector](../Images/Quick_Start/lever-interactable-inspector.png)
 
@@ -295,16 +304,19 @@ The lever outputs a normalized value (0 to 1) as you move it.
 
 Physical buttons that respond to finger presses — great for control panels.
 
-#### Set Up the Button
+#### Option A: Use the Create Menu (Recommended)
+1. Right-click in Hierarchy: **Shababeek > Create > Button**
+2. A button with a placeholder model is created automatically
+3. Skip ahead to **Configure Button Settings**
+
+#### Option B: Build From Scratch
 1. Create a parent object: **GameObject > Create Empty**, name it "Button"
 2. Add a child cube: **GameObject > 3D Object > Cube**, name it "ButtonTop"
 3. Scale ButtonTop to (0.1, 0.02, 0.1) — a flat button shape
 4. Position ButtonTop slightly above the parent
-
-#### Add the VRButton Component
-1. Select the **Button** parent object
-2. **Add Component > VRButton**
-3. Add a **Box Collider** and check **Is Trigger**
+5. Select the **Button** parent object
+6. **Add Component > VRButton**
+7. Add a **Box Collider** and check **Is Trigger**
 
 ![VRButton Inspector](../Images/Quick_Start/vrbutton-inspector-quickstart.png)
 
@@ -341,14 +353,17 @@ Connect these to lights, sounds, or game logic!
 
 Drawers slide along a linear path — perfect for desk drawers, sliding doors, or sliders.
 
-#### Set Up the Drawer
+#### Option A: Use the Create Menu (Recommended)
+1. Right-click in Hierarchy: **Shababeek > Create > Drawer**
+2. A drawer with a placeholder model is created automatically
+3. Skip ahead to **Configure Drawer Settings**
+
+#### Option B: Build From Scratch
 1. Create a parent: **GameObject > Create Empty**, name it "DrawerContainer"
 2. Create a child cube: **GameObject > 3D Object > Cube**, name it "DrawerBody"
 3. Scale DrawerBody to (0.3, 0.1, 0.2) — a drawer shape
-
-#### Add the Drawer Component
-1. Select **DrawerContainer**
-2. **Add Component > Shababeek > Interactions > Interactables > Drawer Interactable**
+4. Select **DrawerContainer**
+5. **Add Component > Shababeek > Interactions > Interactables > Drawer Interactable**
 
 ![Drawer Interactable Inspector](../Images/Quick_Start/drawer-interactable-inspector.png)
 
@@ -390,6 +405,14 @@ Drawers slide along a linear path — perfect for desk drawers, sliding doors, o
 | **Switch** | Trigger-based toggle | Light switches | Up/Down rotation |
 | **VRButton** | Finger press | Buttons | Press depth, cooldown |
 
+### Selection Button Modes
+
+| Mode | Selection | Use (Secondary) |
+|------|-----------|-----------------|
+| **Grip** | Grip button | Trigger button |
+| **Trigger** | Trigger button | Grip button |
+| **Any** | Either Grip or Trigger | Whichever button was not used for selection |
+
 ### PoseConstrainer Quick Settings
 
 | Constraint Type | When to Use |
@@ -406,8 +429,10 @@ Drawers slide along a linear path — perfect for desk drawers, sliding doors, o
 | **On Hover End** | Hand moves away |
 | **On Selected** | Object is grabbed |
 | **On Deselected** | Object is released |
-| **On Use Started** | Trigger pressed while holding |
-| **On Use Ended** | Trigger released while holding |
+| **On Use Started** | Secondary button pressed while holding |
+| **On Use Ended** | Secondary button released while holding |
+| **On Thumb Pressed** | Thumb button (A/B) pressed while holding |
+| **On Thumb Released** | Thumb button (A/B) released while holding |
 
 ---
 
