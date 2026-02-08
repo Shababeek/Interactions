@@ -69,13 +69,6 @@ namespace Shababeek.Interactions
 
         protected abstract void HandleReturnToOriginalPosition();
 
-
-        protected override void UseStarted()
-        {
-            // left empty to not force child interactables to implement it
-            //TODO: should not have been abstract to begin with
-        }
-
         protected override bool Select()
         {
             if (!PoseConstrainer) PoseConstrainer = GetComponent<PoseConstrainter>();
@@ -109,19 +102,6 @@ namespace Shababeek.Interactions
 
             HandleObjectDeselection();
         }
-
-        protected override void StartHover()
-        {
-            // left empty to not force child interactables to implement it
-            //TODO: should not have been abstract to begin with
-        }
-
-        protected override void EndHover()
-        {
-            // left empty to not force child interactables to implement it
-            //TODO: should not have been abstract to begin with
-        }
-
 
         protected override void ValidateInteractableObject()
         {

@@ -255,19 +255,19 @@ namespace Shababeek.Interactions
         /// Called when the secondary button is pressed while this interactable is selected.
         /// Override this method to implement custom use behavior.
         /// </summary>
-        protected abstract void UseStarted();
+        protected virtual void UseStarted() { }
 
         /// <summary>
         /// Called when an interactor starts hovering over this interactable.
         /// Override this method to implement custom hover start behavior.
         /// </summary>
-        protected abstract void StartHover();
+        protected virtual void StartHover() { }
 
         /// <summary>
         /// Called when an interactor stops hovering over this interactable.
         /// Override this method to implement custom hover end behavior.
         /// </summary>
-        protected abstract void EndHover();
+        protected virtual void EndHover() { }
 
         /// <summary>
         /// Attempts to select this interactable.
