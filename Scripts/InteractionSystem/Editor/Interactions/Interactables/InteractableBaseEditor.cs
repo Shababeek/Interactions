@@ -17,6 +17,8 @@ namespace Shababeek.Interactions.Editors
         private SerializedProperty _onHoverEndProp;
         private SerializedProperty _onUseStartedProp;
         private SerializedProperty _onUseEndedProp;
+        private SerializedProperty _onThumbPressedProp;
+        private SerializedProperty _onThumbReleasedProp;
 
         // Common read-only properties
         private SerializedProperty _isSelectedProp;
@@ -39,6 +41,8 @@ namespace Shababeek.Interactions.Editors
             _onHoverEndProp = serializedObject.FindProperty("onHoverEnd");
             _onUseStartedProp = serializedObject.FindProperty("onUseStarted");
             _onUseEndedProp = serializedObject.FindProperty("onUseEnded");
+            _onThumbPressedProp = serializedObject.FindProperty("onThumbPressed");
+            _onThumbReleasedProp = serializedObject.FindProperty("onThumbReleased");
 
             _isSelectedProp = serializedObject.FindProperty("isSelected");
             _currentInteractorProp = serializedObject.FindProperty("currentInteractor");
@@ -133,6 +137,12 @@ namespace Shababeek.Interactions.Editors
 
             if (_onUseEndedProp != null)
                 EditorGUILayout.PropertyField(_onUseEndedProp);
+
+            if (_onThumbPressedProp != null)
+                EditorGUILayout.PropertyField(_onThumbPressedProp);
+
+            if (_onThumbReleasedProp != null)
+                EditorGUILayout.PropertyField(_onThumbReleasedProp);
         }
 
         protected abstract void DrawCustomEvents();
