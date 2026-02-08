@@ -298,9 +298,19 @@ namespace Shababeek.Interactions
             }
         }
 
+        /// <summary>
+        /// Sends a haptic impulse to the VR controller associated with this interactor's hand.
+        /// </summary>
+        /// <param name="hapticAmplitude">Vibration intensity from 0 (none) to 1 (max).</param>
+        /// <param name="hapticDuration">Duration of the haptic pulse in seconds.</param>
         public void SendHapticImpulse(float hapticAmplitude, float hapticDuration)
         {
-            //TODO: Implement
+            var xrNode = _hand.HandIdentifier == HandIdentifier.Left ? XRNode.LeftHand : XRNode.RightHand;
+            var inputDevice = InputDevices.GetDeviceAtXRNode(xrNode);
+            if (inputDevice.isValid)
+            {
+                inputDevice.SendHapticImpulse(0, hapticAmplitude, hapticDuration);
+            }
         }
     }
     [System.Serializable]
