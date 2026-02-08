@@ -54,6 +54,13 @@ namespace Shababeek.Interactions.Core
         /// Observable for thumb button (A/B) state changes. Fires on either A or B press.
         /// </summary>
         public IObservable<VRButtonState> OnThumbButtonStateChange => config?[hand]?.ThumbButtonObservable;
+
+        /// <summary>
+        /// Observable that fires on any button press (trigger, grip, or thumb).
+        /// </summary>
+        public IObservable<VRButtonState> OnAnyButtonStateChange =>
+            OnTriggerTriggerButtonStateChange?.Merge(OnGripButtonStateChange);
+
         /// <summary>
         /// Finger value by finger name (0-1, where 0 is extended and 1 is curled).
         /// </summary>

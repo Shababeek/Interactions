@@ -4,6 +4,8 @@ using Shababeek.Interactions.Core;
 using UniRx;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.XR;
+using Hand = Shababeek.Interactions.Core.Hand;
 
 namespace Shababeek.Interactions
 {
@@ -160,6 +162,9 @@ namespace Shababeek.Interactions
             var buttonObservable =
                 GetButtonObservable(currentInteractable.SelectionButton, ButtonMappingType.Activation);
             _activationSubscriber = buttonObservable?.Do(_onActivate).Subscribe();
+
+            var thumbObservable = _hand.OnThumbButtonStateChange;
+            _thumbSubscriber = thumbObservable?.Do(_onThumb).Subscribe();
         }
 
         /// <summary>
@@ -264,8 +269,10 @@ namespace Shababeek.Interactions
             {
                 (XRButton.Grip, ButtonMappingType.Selection) => _hand.OnGripButtonStateChange,
                 (XRButton.Trigger, ButtonMappingType.Selection) => _hand.OnTriggerTriggerButtonStateChange,
+                (XRButton.Any, ButtonMappingType.Selection) => _hand.OnAnyButtonStateChange,
                 (XRButton.Trigger, ButtonMappingType.Activation) => _hand.OnGripButtonStateChange,
                 (XRButton.Grip, ButtonMappingType.Activation) => _hand.OnTriggerTriggerButtonStateChange,
+                (XRButton.Any, ButtonMappingType.Activation) => _hand.OnThumbButtonStateChange,
                 _ => null
             };
         }

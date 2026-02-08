@@ -5,6 +5,7 @@ namespace Shababeek.Interactions.Core
     {
         Trigger,
         Grip,
+        Any,
     }
 
     public enum VRButtonState
