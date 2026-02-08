@@ -19,9 +19,6 @@ namespace Shababeek.Interactions
     [RequireComponent(typeof(PoseConstrainter))]
     public class Grabable : InteractableBase
     {
-        [Tooltip("Whether to hide the hand model when this object is grabbed.")]
-        [SerializeField] protected bool hideHand;//TODO: remove and rely on PoseConstrainter instead
-        
         [Tooltip("The tweener component used for smooth grab animations. Auto-added if not present., only add if you want to the same tweener across multiple tweenables")]
         [SerializeField] private VariableTweener tweener;
         
