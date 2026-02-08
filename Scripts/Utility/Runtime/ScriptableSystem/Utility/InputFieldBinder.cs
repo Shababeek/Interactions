@@ -8,7 +8,7 @@ namespace Shababeek.Interactions
     /// <summary>
     /// Binds a TextVariable to a TMP_InputField with two-way synchronization.
     /// </summary>
-    [AddComponentMenu("Shababeek/Interactions/Binders/Input Field Binder")]
+    [AddComponentMenu("Shababeek/ScriptableSystem/Binders/Input Field Binder")]
     public class InputFieldBinder : MonoBehaviour
     {
         [Header("Variable")]
@@ -26,7 +26,7 @@ namespace Shababeek.Interactions
 
         private void OnEnable()
         {
-            if (textVariable == null || inputField == null)
+            if (textVariable is null || inputField == null)
                 return;
 
             disposables = new CompositeDisposable();

@@ -8,7 +8,7 @@ namespace Shababeek.Interactions
     /// <summary>
     /// Binds a FloatVariable to a ScrollRect's normalized scroll position with two-way synchronization.
     /// </summary>
-    [AddComponentMenu("Shababeek/Interactions/Binders/ScrollRect Binder")]
+    [AddComponentMenu("Shababeek/ScriptableSystem/Binders/ScrollRect Binder")]
     public class ScrollRectBinder : MonoBehaviour
     {
         [Header("Variable")]

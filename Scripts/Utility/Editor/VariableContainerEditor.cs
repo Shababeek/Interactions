@@ -21,34 +21,72 @@ namespace Shababeek.Utilities.Editors
         // Cached serialized objects for sub-assets
         private readonly Dictionary<UnityEngine.Object, SerializedObject> _serializedCache = new();
 
-        // Hardcoded list of variable types - simple and reliable
-        private static readonly (Type type, string displayName, string category)[] VariableTypes = new[]
+        // Built-in variable types with known categories
+        private static readonly Dictionary<Type, (string displayName, string category)> BuiltInTypes = new()
         {
             // Primitives
-            (typeof(IntVariable), "Int", "Primitives"),
-            (typeof(FloatVariable), "Float", "Primitives"),
-            (typeof(BoolVariable), "Bool", "Primitives"),
-            (typeof(TextVariable), "Text", "Primitives"),
+            { typeof(IntVariable), ("Int", "Primitives") },
+            { typeof(FloatVariable), ("Float", "Primitives") },
+            { typeof(BoolVariable), ("Bool", "Primitives") },
+            { typeof(TextVariable), ("Text", "Primitives") },
 
             // Vectors
-            (typeof(Vector2Variable), "Vector2", "Vectors"),
-            (typeof(Vector2IntVariable), "Vector2Int", "Vectors"),
-            (typeof(Vector3Variable), "Vector3", "Vectors"),
-            (typeof(QuaternionVariable), "Quaternion", "Vectors"),
+            { typeof(Vector2Variable), ("Vector2", "Vectors") },
+            { typeof(Vector2IntVariable), ("Vector2Int", "Vectors") },
+            { typeof(Vector3Variable), ("Vector3", "Vectors") },
+            { typeof(QuaternionVariable), ("Quaternion", "Vectors") },
 
             // Graphics
-            (typeof(ColorVariable), "Color", "Graphics"),
-            (typeof(GradientVariable), "Gradient", "Graphics"),
-            (typeof(AnimationCurveVariable), "AnimationCurve", "Graphics"),
+            { typeof(ColorVariable), ("Color", "Graphics") },
+            { typeof(GradientVariable), ("Gradient", "Graphics") },
+            { typeof(AnimationCurveVariable), ("AnimationCurve", "Graphics") },
 
             // References
-            (typeof(GameObjectVariable), "GameObject", "References"),
-            (typeof(TransformVariable), "Transform", "References"),
-            (typeof(AudioClipVariable), "AudioClip", "References"),
+            { typeof(GameObjectVariable), ("GameObject", "References") },
+            { typeof(TransformVariable), ("Transform", "References") },
+            { typeof(AudioClipVariable), ("AudioClip", "References") },
 
             // Other
-            (typeof(LayerMaskVariable), "LayerMask", "Other"),
+            { typeof(LayerMaskVariable), ("LayerMask", "Other") },
         };
+
+        // Cached list of all discovered variable types (built-in + external)
+        private static List<(Type type, string displayName, string category)> _allVariableTypes;
+
+        private static List<(Type type, string displayName, string category)> AllVariableTypes
+        {
+            get
+            {
+                if (_allVariableTypes == null)
+                    RefreshVariableTypes();
+                return _allVariableTypes;
+            }
+        }
+
+        private static void RefreshVariableTypes()
+        {
+            _allVariableTypes = new List<(Type, string, string)>();
+
+            // Add built-in types first in their known categories
+            foreach (var kvp in BuiltInTypes)
+            {
+                _allVariableTypes.Add((kvp.Key, kvp.Value.displayName, kvp.Value.category));
+            }
+
+            // Discover all concrete ScriptableVariable subclasses via TypeCache
+            var discoveredTypes = TypeCache.GetTypesDerivedFrom<ScriptableVariable>();
+            foreach (var type in discoveredTypes)
+            {
+                if (type.IsAbstract || type.IsGenericType) continue;
+                if (BuiltInTypes.ContainsKey(type)) continue;
+
+                string displayName = type.Name;
+                if (displayName.EndsWith("Variable"))
+                    displayName = displayName.Substring(0, displayName.Length - 8);
+
+                _allVariableTypes.Add((type, displayName, "Custom"));
+            }
+        }
 
         private void OnEnable()
         {
@@ -219,18 +257,8 @@ namespace Shababeek.Utilities.Editors
         {
             var menu = new GenericMenu();
 
-            // Group by category
-            string lastCategory = null;
-            foreach (var (type, displayName, category) in VariableTypes)
+            foreach (var (type, displayName, category) in AllVariableTypes)
             {
-                // Add separator between categories
-                if (lastCategory != null && lastCategory != category)
-                {
-                    menu.AddSeparator("");
-                }
-                lastCategory = category;
-
-                // Capture for closure
                 Type capturedType = type;
                 string capturedName = displayName;
 
@@ -345,13 +373,9 @@ namespace Shababeek.Utilities.Editors
 
         private string GetTypeName(Type type)
         {
-            // Look up in our hardcoded list first
-            foreach (var (t, displayName, _) in VariableTypes)
-            {
-                if (t == type) return displayName;
-            }
+            if (BuiltInTypes.TryGetValue(type, out var info))
+                return info.displayName;
 
-            // Fallback: remove "Variable" suffix
             string name = type.Name;
             return name.EndsWith("Variable") ? name.Substring(0, name.Length - 8) : name;
         }

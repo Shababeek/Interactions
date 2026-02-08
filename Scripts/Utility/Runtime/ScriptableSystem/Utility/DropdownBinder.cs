@@ -8,7 +8,7 @@ namespace Shababeek.Interactions
     /// <summary>
     /// Binds an IntVariable to a TMP_Dropdown with two-way synchronization.
     /// </summary>
-    [AddComponentMenu("Shababeek/Interactions/Binders/Dropdown Binder")]
+    [AddComponentMenu("Shababeek/ScriptableSystem/Binders/Dropdown Binder")]
     public class DropdownBinder : MonoBehaviour
     {
         [Header("Variable")]
