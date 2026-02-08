@@ -146,9 +146,7 @@ namespace Shababeek.Interactions.Editors
                 new GUIContent("Angular Damping", "Angular damping for hand physics"));
 
             EditorGUILayout.Space();
-
-            // Hand Following Settings Section
-            DrawHandFollowingSection();
+            
 
             EditorGUILayout.Space();
 
@@ -339,15 +337,7 @@ namespace Shababeek.Interactions.Editors
             EditorGUILayout.LabelField($"Angular Damping: {_angularDampingProp.floatValue}");
             EditorGUILayout.EndVertical();
         }
-
-
-        private void DrawHandFollowingSection()
-        {
-            EditorGUILayout.LabelField("Hand Following Settings", EditorStyles.boldLabel);
-
-            EditorGUILayout.PropertyField(_followerPresetProp,
-                new GUIContent("Follower Preset", "Preset configuration for physics hand following behavior"));
-        }
+        
         
     }
 }
