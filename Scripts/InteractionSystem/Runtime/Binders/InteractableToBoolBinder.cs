@@ -34,6 +34,10 @@ namespace Shababeek.Interactions.Binders
         [Tooltip("BoolVariable set to true when use starts, false when use ends.")]
         [SerializeField] private BoolVariable usedVariable;
 
+        [Header("Thumb State")]
+        [Tooltip("BoolVariable set to true when thumb button (A/B) is pressed, false when released.")]
+        [SerializeField] private BoolVariable thumbVariable;
+
         [Header("Options")]
         [Tooltip("Reset all variables to false on disable.")]
         [SerializeField] private bool resetOnDisable = true;
@@ -85,6 +89,18 @@ namespace Shababeek.Interactions.Binders
                     .Subscribe(_ => usedVariable.Value = false)
                     .AddTo(_disposable);
             }
+
+            // Thumb events
+            if (thumbVariable != null)
+            {
+                _interactable.OnThumbPressed
+                    .Subscribe(_ => thumbVariable.Value = true)
+                    .AddTo(_disposable);
+
+                _interactable.OnThumbReleased
+                    .Subscribe(_ => thumbVariable.Value = false)
+                    .AddTo(_disposable);
+            }
         }
 
         private void OnDisable()
@@ -96,6 +112,7 @@ namespace Shababeek.Interactions.Binders
                 if (hoveredVariable != null) hoveredVariable.Value = false;
                 if (selectedVariable != null) selectedVariable.Value = false;
                 if (usedVariable != null) usedVariable.Value = false;
+                if (thumbVariable != null) thumbVariable.Value = false;
             }
         }
 
@@ -113,5 +130,10 @@ namespace Shababeek.Interactions.Binders
         /// Gets whether the interactable is currently being used.
         /// </summary>
         public bool IsUsed => usedVariable != null && usedVariable.Value;
+
+        /// <summary>
+        /// Gets whether the thumb button is currently pressed.
+        /// </summary>
+        public bool IsThumbPressed => thumbVariable != null && thumbVariable.Value;
     }
 }

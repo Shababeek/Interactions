@@ -42,6 +42,13 @@ namespace Shababeek.Interactions.Binders
         [Tooltip("GameEvent raised when use ends.")]
         [SerializeField] private GameEvent onUseEndEvent;
 
+        [Header("Thumb Events")]
+        [Tooltip("GameEvent raised when thumb button (A/B) is pressed while selected.")]
+        [SerializeField] private GameEvent onThumbPressedEvent;
+
+        [Tooltip("GameEvent raised when thumb button (A/B) is released while selected.")]
+        [SerializeField] private GameEvent onThumbReleasedEvent;
+
         private InteractableBase _interactable;
         private CompositeDisposable _disposable;
 
@@ -96,6 +103,21 @@ namespace Shababeek.Interactions.Binders
             {
                 _interactable.OnUseEnded
                     .Subscribe(_ => onUseEndEvent.Raise())
+                    .AddTo(_disposable);
+            }
+
+            // Thumb events
+            if (onThumbPressedEvent != null)
+            {
+                _interactable.OnThumbPressed
+                    .Subscribe(_ => onThumbPressedEvent.Raise())
+                    .AddTo(_disposable);
+            }
+
+            if (onThumbReleasedEvent != null)
+            {
+                _interactable.OnThumbReleased
+                    .Subscribe(_ => onThumbReleasedEvent.Raise())
                     .AddTo(_disposable);
             }
         }
