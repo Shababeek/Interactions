@@ -23,8 +23,9 @@ namespace Shababeek.Interactions
         private Transform _attachmentPoint;
         private readonly Subject<VRButtonState> _onInteractionStateChanged = new();
         private readonly Subject<VRButtonState> _onActivate = new();
+        private readonly Subject<VRButtonState> _onThumb = new();
         private readonly CompositeDisposable _disposables = new();
-        private IDisposable _hoverSubscriber, _activationSubscriber;
+        private IDisposable _hoverSubscriber, _activationSubscriber, _thumbSubscriber;
 
         /// <summary>
         /// Attachment point transform for held objects.
@@ -75,6 +76,11 @@ namespace Shababeek.Interactions
 
             _onActivate
                 .Do(HandleActivation)
+                .Subscribe()
+                .AddTo(_disposables);
+
+            _onThumb
+                .Do(HandleThumbButton)
                 .Subscribe()
                 .AddTo(_disposables);
         }
@@ -164,6 +170,7 @@ namespace Shababeek.Interactions
             isInteracting = false;
             DisposeActivationSubscription();
             DisposeHoverSubscription();
+            DisposeThumbSubscription();
             currentInteractable.OnStateChanged(InteractionState.None, this);
             StartHover();
             EndHover();
@@ -231,6 +238,26 @@ namespace Shababeek.Interactions
             _activationSubscriber = null;
         }
 
+        private void DisposeThumbSubscription()
+        {
+            _thumbSubscriber?.Dispose();
+            _thumbSubscriber = null;
+        }
+
+        private void HandleThumbButton(VRButtonState state)
+        {
+            if (currentInteractable == null) return;
+            switch (state)
+            {
+                case VRButtonState.Down:
+                    currentInteractable.ThumbPress(this);
+                    break;
+                case VRButtonState.Up:
+                    currentInteractable.ThumbRelease(this);
+                    break;
+            }
+        }
+
         private IObservable<VRButtonState> GetButtonObservable(XRButton button, ButtonMappingType mappingType)
         {
             return (button, mappingType) switch
@@ -255,6 +282,7 @@ namespace Shababeek.Interactions
             _disposables?.Dispose();
             DisposeHoverSubscription();
             DisposeActivationSubscription();
+            DisposeThumbSubscription();
         }
 
         public void Release(InteractableBase interactableBase)

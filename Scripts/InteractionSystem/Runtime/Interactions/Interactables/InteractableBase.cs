@@ -49,6 +49,12 @@ namespace Shababeek.Interactions
         [Tooltip("Event raised when the secondary button is released while selected.")]
         [SerializeField] private InteractorUnityEvent onUseEnded;
 
+        [Tooltip("Event raised when a thumb button (A/B) is pressed while this interactable is selected.")]
+        [SerializeField] private InteractorUnityEvent onThumbPressed;
+
+        [Tooltip("Event raised when a thumb button (A/B) is released while this interactable is selected.")]
+        [SerializeField] private InteractorUnityEvent onThumbReleased;
+
         [Header("Runtime State")]
         [Tooltip("Indicates whether this interactable is currently selected.")]
         [SerializeField][ReadOnly] private bool isSelected;
@@ -117,6 +123,16 @@ namespace Shababeek.Interactions
         /// </summary>
         /// <value>An observable that emits the interactor that deactivated this object.</value>
         public IObservable<InteractorBase> OnUseEnded => onUseEnded.AsObservable();
+
+        /// <summary>
+        /// Observable that fires when a thumb button (A/B) is pressed while this interactable is selected.
+        /// </summary>
+        public IObservable<InteractorBase> OnThumbPressed => onThumbPressed.AsObservable();
+
+        /// <summary>
+        /// Observable that fires when a thumb button (A/B) is released while this interactable is selected.
+        /// </summary>
+        public IObservable<InteractorBase> OnThumbReleased => onThumbReleased.AsObservable();
 
         /// <summary>
         /// The button that triggers selection of this interactable.
@@ -329,6 +345,44 @@ namespace Shababeek.Interactions
                 UseEnded();
             }
         }
+
+        /// <summary>
+        /// Called when a thumb button (A/B) is pressed while this interactable is selected.
+        /// </summary>
+        /// <param name="interactorBase">The interactor holding this object.</param>
+        public void ThumbPress(InteractorBase interactorBase)
+        {
+            if (this.currentState == InteractionState.Selected)
+            {
+                onThumbPressed.Invoke(currentInteractor);
+                ThumbPressed();
+            }
+        }
+
+        /// <summary>
+        /// Called when a thumb button (A/B) is released while this interactable is selected.
+        /// </summary>
+        /// <param name="interactorBase">The interactor holding this object.</param>
+        public void ThumbRelease(InteractorBase interactorBase)
+        {
+            if (this.currentState == InteractionState.Selected)
+            {
+                onThumbReleased.Invoke(currentInteractor);
+                ThumbReleased();
+            }
+        }
+
+        /// <summary>
+        /// Called when a thumb button is pressed while this interactable is selected.
+        /// Override this method to implement custom thumb press behavior.
+        /// </summary>
+        protected virtual void ThumbPressed() { }
+
+        /// <summary>
+        /// Called when a thumb button is released while this interactable is selected.
+        /// Override this method to implement custom thumb release behavior.
+        /// </summary>
+        protected virtual void ThumbReleased() { }
 
         protected virtual void Reset()
         {

@@ -1,6 +1,7 @@
 using System;
 using Shababeek.Interactions.Animations;
 using Shababeek.Interactions.Animations.Constraints;
+using UniRx;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -48,7 +49,11 @@ namespace Shababeek.Interactions.Core
         /// Observable for grip button state changes.
         /// </summary>
         public IObservable<VRButtonState> OnGripButtonStateChange => config?[hand]?.GripObservable;
-        
+
+        /// <summary>
+        /// Observable for thumb button (A/B) state changes. Fires on either A or B press.
+        /// </summary>
+        public IObservable<VRButtonState> OnThumbButtonStateChange => config?[hand]?.ThumbButtonObservable;
         /// <summary>
         /// Finger value by finger name (0-1, where 0 is extended and 1 is curled).
         /// </summary>
