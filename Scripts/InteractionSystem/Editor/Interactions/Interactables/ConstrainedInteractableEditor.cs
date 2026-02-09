@@ -25,8 +25,24 @@ namespace Shababeek.Interactions.Editors
         
         
 
+        private void DrawNonUniformScaleWarning()
+        {
+            var targetTransform = ((Component)target).transform;
+            var scale = targetTransform.localScale;
+            if (!Mathf.Approximately(scale.x, scale.y) || !Mathf.Approximately(scale.y, scale.z))
+            {
+                EditorGUILayout.HelpBox(
+                    "Non-uniform scale detected. Constrained interactables require uniform scaling " +
+                    "(e.g. 2,2,2 not 2,1,3) for correct hand positioning and visuals. " +
+                    "Apply non-uniform proportions to child meshes instead.",
+                    MessageType.Warning);
+            }
+        }
+
         protected override void DrawCustomProperties()
         {
+            DrawNonUniformScaleWarning();
+
             if (_interactableObjectProp != null)
                 EditorGUILayout.PropertyField(_interactableObjectProp, new GUIContent("Interactable Object", "The object that will be moved by the drawer"));
             if (_snapDistanceProp != null)

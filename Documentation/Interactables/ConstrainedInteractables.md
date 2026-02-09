@@ -21,6 +21,9 @@ All constrained interactables share common features:
 - Normalized output values (0-1 or -1 to 1)
 - Unity Events for value changes
 
+> **Important: Uniform Scale Required**
+> All constrained interactables must use **uniform scaling** (e.g. `(2, 2, 2)`, not `(2, 1, 3)`). Non-uniform scale causes the ScaleCompensator, fake hand positioning, and interactable object visuals to behave incorrectly. If you need non-uniform proportions, apply them to child meshes rather than the interactable's root transform. Non-uniform scale support is on the roadmap.
+
 ### Quick Creation Methods
 
 There are three ways to add constrained interactables to your scene:
