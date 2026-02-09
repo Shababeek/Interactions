@@ -180,6 +180,17 @@ namespace Shababeek.Sequencing.Editors
         {
             serializedObject.Update();
 
+            // Graph view button
+            var prevBgColor = GUI.backgroundColor;
+            GUI.backgroundColor = new Color(0.6f, 0.85f, 1f);
+            if (GUILayout.Button("Open Graph View", GUILayout.Height(28)))
+            {
+                BranchingSequenceGraphWindow.Open(_sequence);
+            }
+
+            GUI.backgroundColor = prevBgColor;
+            EditorGUILayout.Space(4);
+
             // Core properties
             EditorGUILayout.PropertyField(serializedObject.FindProperty("pitch"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("volume"));

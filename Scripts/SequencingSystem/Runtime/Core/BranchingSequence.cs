@@ -8,6 +8,13 @@ using UnityEngine;
 
 namespace Shababeek.Sequencing
 {
+    [Serializable]
+    internal class StepNodePosition
+    {
+        public Step step;
+        public Vector2 position;
+    }
+
     /// <summary>
     /// A sequence that supports conditional branching between steps.
     /// Steps are connected via transitions that evaluate ScriptableVariable conditions.
@@ -15,6 +22,9 @@ namespace Shababeek.Sequencing
     [CreateAssetMenu(menuName = "Shababeek/Sequencing/BranchingSequence")]
     public class BranchingSequence : SequenceNode
     {
+        [HideInInspector]
+        [SerializeField] internal List<StepNodePosition> nodePositions = new();
+
         [Tooltip("Audio pitch multiplier for the sequence (0.1 to 2.0).")]
         [SerializeField, Range(0.1f, 2)] internal float pitch = 1;
 
@@ -214,6 +224,27 @@ namespace Shababeek.Sequencing
         {
             allSteps = new List<Step>();
             transitionGroups = new List<StepTransitionGroup>();
+        }
+
+        internal Vector2 GetStepPosition(Step step)
+        {
+            if (nodePositions == null) return new Vector2(float.NaN, float.NaN);
+            foreach (var np in nodePositions)
+                if (np.step == step) return np.position;
+            return new Vector2(float.NaN, float.NaN);
+        }
+
+        internal void SetStepPosition(Step step, Vector2 position)
+        {
+            nodePositions ??= new List<StepNodePosition>();
+            foreach (var np in nodePositions)
+            {
+                if (np.step != step) continue;
+                np.position = position;
+                return;
+            }
+
+            nodePositions.Add(new StepNodePosition { step = step, position = position });
         }
     }
 }
