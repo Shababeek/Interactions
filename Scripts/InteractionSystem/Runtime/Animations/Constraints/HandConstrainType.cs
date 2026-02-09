@@ -18,6 +18,12 @@ namespace Shababeek.Interactions.Animations.Constraints
         /// <summary>
         /// Applies specific pose constraints to the hand.
         /// </summary>
-        Constrained
+        Constrained,
+
+        /// <summary>
+        /// Supports multiple grab points, each with its own pose constraints and positioning.
+        /// The nearest point is selected automatically when grabbed.
+        /// </summary>
+        MultiPoint
     }
 } 

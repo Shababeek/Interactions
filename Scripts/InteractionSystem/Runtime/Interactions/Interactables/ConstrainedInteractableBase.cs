@@ -23,6 +23,8 @@ namespace Shababeek.Interactions
         private Hand _leftFakeHand;
         private Hand _rightFakeHand;
         private Hand _currentFakeHand;
+        private Transform _leftFakeHandWrapper;
+        private Transform _rightFakeHandWrapper;
         private float _transitionProgress = 0f;
         private Vector3 _startPosition;
         private Quaternion _startRotation;
@@ -47,7 +49,8 @@ namespace Shababeek.Interactions
             {
                 _transitionProgress += Time.deltaTime * PoseConstrainer.TransitionSpeed;
                 var t = Mathf.Clamp01(_transitionProgress);
-                _currentFakeHand.transform.localPosition = Vector3.Lerp(_startPosition, _targetPosition, t);
+                // Position on wrapper (in InteractableObject's space), rotation on hand (in uniform wrapper space)
+                _currentFakeHand.transform.parent.localPosition = Vector3.Lerp(_startPosition, _targetPosition, t);
                 _currentFakeHand.transform.localRotation = Quaternion.Lerp(_startRotation, _targetRotation, t);
 
                 if (t >= 1f)
@@ -73,16 +76,19 @@ namespace Shababeek.Interactions
         {
             if (!PoseConstrainer) PoseConstrainer = GetComponent<PoseConstrainter>();
             var handIdentifier = CurrentInteractor.HandIdentifier;
-            if (PoseConstrainer.ConstraintType == HandConstrainType.Constrained)
+            Vector3 interactionPoint = CurrentInteractor.GetInteractionPoint();
+
+            if (PoseConstrainer.ConstraintType == HandConstrainType.Constrained ||
+                PoseConstrainer.ConstraintType == HandConstrainType.MultiPoint)
             {
                 _currentFakeHand = GetOrCreateFakeHand(handIdentifier);
-                PoseConstrainer.ApplyConstraints(_currentFakeHand);
+                PoseConstrainer.ApplyConstraints(_currentFakeHand, interactionPoint);
                 CurrentInteractor.ToggleHandModel(false);
                 PositionFakeHand(_currentFakeHand.transform, handIdentifier);
             }
             else
             {
-                PoseConstrainer.ApplyConstraints(CurrentInteractor.Hand);
+                PoseConstrainer.ApplyConstraints(CurrentInteractor.Hand, interactionPoint);
             }
 
             HandleObjectMovement(CurrentInteractor.transform.position);
@@ -185,10 +191,32 @@ namespace Shababeek.Interactions
                 ? handData.LeftHandPrefab
                 : handData.RightHandPrefab).GetComponent<Hand>();
             var fakeHand = Instantiate(handPrefab);
+
+            // Create a scale-compensation wrapper so the hand rotation isn't skewed
+            // by non-uniform parent scale. Position goes on the wrapper (in the parent's
+            // skewed space — fine for position), rotation goes on the hand (in the
+            // wrapper's uniform space — no shearing).
+            var wrapper = new GameObject($"FakeHandWrapper_{handIdentifier}").transform;
+            wrapper.SetParent(InteractableObject, false);
+            wrapper.localRotation = Quaternion.identity;
+
+            var parentScale = InteractableObject.lossyScale;
+            wrapper.localScale = new Vector3(
+                1f / parentScale.x,
+                1f / parentScale.y,
+                1f / parentScale.z
+            );
+
             var fakeHandTransform = fakeHand.transform;
-            fakeHandTransform.SetParent(InteractableObject, false);
-            fakeHandTransform.localRotation = CurrentInteractor.transform.rotation;
-            fakeHandTransform.localPosition = CurrentInteractor.transform.position;
+            fakeHandTransform.SetParent(wrapper, false);
+            fakeHandTransform.localScale = Vector3.one;
+            fakeHandTransform.localPosition = Vector3.zero;
+            fakeHandTransform.localRotation = Quaternion.identity;
+
+            if (handIdentifier == HandIdentifier.Left)
+                _leftFakeHandWrapper = wrapper;
+            else
+                _rightFakeHandWrapper = wrapper;
 
             fakeHand.name = $"FakeHand_{handData.name}_{handIdentifier}";
             return fakeHand;
@@ -199,6 +227,8 @@ namespace Shababeek.Interactions
             if (!fakeHand || !PoseConstrainer) return;
 
             var positioning = PoseConstrainer.GetTargetHandTransform(handIdentifier);
+            var wrapper = fakeHand.parent;
+
             if (PoseConstrainer.UseSmoothTransitions)
             {
                 _startPosition = interactableObject.InverseTransformPoint(CurrentInteractor.transform.position);
@@ -210,7 +240,9 @@ namespace Shababeek.Interactions
             }
             else
             {
-                fakeHand.localPosition = positioning.position;
+                // Position on wrapper (in InteractableObject's space)
+                wrapper.localPosition = positioning.position;
+                // Rotation on hand (in wrapper's uniform space — no skewing)
                 fakeHand.localRotation = positioning.rotation;
                 _isTransitioning = false;
             }
@@ -233,12 +265,18 @@ namespace Shababeek.Interactions
         {
             if (_leftFakeHand)
             {
-                DestroyImmediate(_leftFakeHand.gameObject);
+                if (_leftFakeHandWrapper) DestroyImmediate(_leftFakeHandWrapper.gameObject);
+                else DestroyImmediate(_leftFakeHand.gameObject);
+                _leftFakeHand = null;
+                _leftFakeHandWrapper = null;
             }
 
             if (_rightFakeHand)
             {
-                DestroyImmediate(_rightFakeHand.gameObject);
+                if (_rightFakeHandWrapper) DestroyImmediate(_rightFakeHandWrapper.gameObject);
+                else DestroyImmediate(_rightFakeHand.gameObject);
+                _rightFakeHand = null;
+                _rightFakeHandWrapper = null;
             }
         }
 

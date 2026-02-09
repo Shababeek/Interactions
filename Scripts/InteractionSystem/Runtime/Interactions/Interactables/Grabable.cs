@@ -55,9 +55,10 @@ namespace Shababeek.Interactions
         /// <returns>False to allow the grab to proceed normally</returns>
         protected override bool Select()
         {
-            // Apply pose constraints and visibility control
-            _poseConstrainter.ApplyConstraints(CurrentInteractor.Hand);
-            
+            // Apply pose constraints with interaction point for nearest grab point selection
+            Vector3 interactionPoint = CurrentInteractor.GetInteractionPoint();
+            _poseConstrainter.ApplyConstraints(CurrentInteractor.Hand, interactionPoint);
+
             _grabStrategy.Initialize(CurrentInteractor);
             InitializeAttachmentPointTransform();
             MoveObjectToPosition(() => _grabStrategy.Grab(this, CurrentInteractor));
@@ -104,9 +105,14 @@ namespace Shababeek.Interactions
         {
             var (handLocalPosition, handLocalRotation) = CurrentInteractor.Hand.HandIdentifier == HandIdentifier.Left ?
                 GetLeftHandTarget() : GetRightHandTarget();
-            
+
+            // Hand offsets are in ConstraintTransform local space which is scaled by the
+            // interactable's own scale. Convert to world scale for the attachment point.
+            Vector3 constraintScale = _poseConstrainter.ConstraintTransform.lossyScale;
+            Vector3 scaledHandPosition = Vector3.Scale(handLocalPosition, constraintScale);
+
             Quaternion objectRotation = Quaternion.Inverse(handLocalRotation);
-            Vector3 objectPosition = objectRotation * (-handLocalPosition);
+            Vector3 objectPosition = objectRotation * (-scaledHandPosition);
 
             CurrentInteractor.AttachmentPoint.localPosition = objectPosition;
             CurrentInteractor.AttachmentPoint.localRotation = objectRotation;
