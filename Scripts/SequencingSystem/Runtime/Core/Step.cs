@@ -38,7 +38,7 @@ namespace Shababeek.Sequencing
         
         [Tooltip("Custom pitch for this step's audio (0.1 to 2.0).")]
         [SerializeField] [Range(0.1f, 2)] private float pitch;
-        private Sequence _parentSequence;
+        private SequenceNode _parentSequence;
         private bool _finished = false;
 
         /// <summary>
@@ -85,13 +85,13 @@ namespace Shababeek.Sequencing
         }
 
         /// <summary>
-        /// Initializes the step with its parent sequence.
+        /// Initializes the step with its parent sequence node.
         /// </summary>
-        public void Initialize(Sequence sequence)
+        public void Initialize(SequenceNode parent)
         {
             _finished = false;
             status = SequenceStatus.Inactive;
-            _parentSequence = sequence;
+            _parentSequence = parent;
         }
 
         private async void CheckAudioCompletion()
@@ -111,7 +111,7 @@ namespace Shababeek.Sequencing
 
         private void Complete()
         {
-            audioObject.pitch = _parentSequence.pitch;
+            audioObject.pitch = _parentSequence.SequencePitch;
             StepStatus = SequenceStatus.Completed;
             _parentSequence.CompleteStep(this);
         }

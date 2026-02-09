@@ -16,6 +16,8 @@ namespace Shababeek.Sequencing
     {
         [Tooltip("Audio pitch multiplier for the sequence (0.1 to 2.0).")]
         [SerializeField, Range(0.1f, 2)] internal float pitch = 1;
+
+        internal override float SequencePitch => pitch;
         
         [Tooltip("Audio volume level for the sequence (0 to 1).")]
         [SerializeField, Range(0, 1)] private float volume = .5f;
@@ -79,7 +81,7 @@ namespace Shababeek.Sequencing
             Raise(SequenceStatus.Started);
         }
 
-        internal void CompleteStep(Step step)
+        internal override void CompleteStep(Step step)
         {
             if (steps[currentStepIndex] != step) return;
             currentStepIndex++;

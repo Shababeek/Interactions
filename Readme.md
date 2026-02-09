@@ -270,10 +270,6 @@ Special thanks to all contributors and the Unity VR community.
 
 - [ ] Video tutorial series
 - [ ] More example scenes
-- [ ] Enhanced physics interactions
-- [ ] Multiplayer support
-- [ ] Migrate from UniRX to R3
-- [ ] Additional hand models
 
 
 ---
