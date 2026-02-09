@@ -22,7 +22,6 @@ namespace Shababeek.Interactions
     /// </summary>
     public abstract class InteractableBase : MonoBehaviour
     {
-        //TODO: Replace abstract methods with event subscriptions
         [Header("Interaction Settings")]
         [Tooltip("Specifies which hands can interact with this object (Left, Right, or Both).")]
         [SerializeField] private InteractionHand interactionHand = (InteractionHand.Left | InteractionHand.Right);

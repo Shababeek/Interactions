@@ -77,6 +77,14 @@ namespace Shababeek.Interactions
             return firstCollider ? firstCollider.ClosestPoint(transform.position) : interactable.transform.position;
         }
 
+        /// <summary>
+        /// Returns the trigger detection sphere center as the interaction point.
+        /// </summary>
+        public override Vector3 GetInteractionPoint()
+        {
+            return transform.TransformPoint(detectionOffset);
+        }
+
 
         private void OnDrawGizmosSelected()
         {

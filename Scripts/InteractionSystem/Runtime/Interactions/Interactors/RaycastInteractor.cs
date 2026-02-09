@@ -185,6 +185,14 @@ namespace Shababeek.Interactions
         {
             raycastLayerMask = layerMask;
         }
+
+        /// <summary>
+        /// Returns the raycast hit point, or ray origin if not hitting.
+        /// </summary>
+        public override Vector3 GetInteractionPoint()
+        {
+            return isHitting ? hitPoint : (raycastOrigin ? raycastOrigin.position : transform.position);
+        }
         
 
         private void OnDrawGizmosSelected()

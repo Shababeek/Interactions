@@ -68,6 +68,15 @@ namespace Shababeek.Interactions
             _hand.ToggleRenderer(enable);
         }
 
+        /// <summary>
+        /// World position where this interactor contacts or targets interactables.
+        /// Override in subclasses to provide interactor-specific contact points.
+        /// </summary>
+        public virtual Vector3 GetInteractionPoint()
+        {
+            return _hand.transform.position;
+        }
+
         private void Awake()
         {
             GetDependencies();
