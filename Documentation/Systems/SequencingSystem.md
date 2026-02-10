@@ -365,6 +365,101 @@ Sequences are ScriptableObjects. Clone them if runtime changes are needed.
 
 ---
 
+---
+
+## Branching Sequences
+
+BranchingSequence extends the linear model with conditional transitions. Instead of a fixed step order, each step can branch to different steps based on ScriptableVariable conditions.
+
+### Creating a BranchingSequence
+
+Right-click in Project > **Create > Shababeek > Sequencing > BranchingSequence**
+
+### BranchingSequence Settings
+
+| Setting | Description |
+|---------|-------------|
+| **Pitch** | Audio pitch multiplier (0.1-2.0) |
+| **Volume** | Audio volume level (0-1) |
+| **Entry Step** | The first step to execute |
+| **Steps** | All steps in the branching sequence |
+
+### Transitions
+
+Each step can have multiple outgoing transitions evaluated top-to-bottom. First matching condition wins.
+
+| Setting | Description |
+|---------|-------------|
+| **Label** | Descriptive name shown in the editor and graph |
+| **Condition Variable** | ScriptableVariable to evaluate (empty = unconditional) |
+| **Comparison** | Equals, NotEquals, GreaterThan, LessThan, GreaterOrEqual, LessOrEqual |
+| **Target Value** | Type-specific value to compare against |
+| **Target Step** | Step to transition to (empty = end sequence) |
+| **Transition Event** | Optional GameEvent raised when taken |
+
+### Supported Variable Types
+
+| Type | Comparisons |
+|------|------------|
+| **BoolVariable** | Equals, NotEquals |
+| **IntVariable** | All 6 comparison operators |
+| **FloatVariable** | All 6 comparison operators |
+| **TextVariable** | Equals, NotEquals |
+
+---
+
+## Graph View
+
+The Branching Sequence Graph View provides a visual node-based editor for BranchingSequence assets, accessible from the inspector via the **Open Graph View** button.
+
+### Visual Elements
+
+| Element | Description |
+|---------|-------------|
+| **Step Nodes** | Draggable nodes with input/output ports |
+| **Entry Badge** | Green title bar with "ENTRY" badge on the entry step |
+| **Audio Info** | Audio clip name displayed on nodes with audio |
+| **Green Edges** | Unconditional (default) transitions |
+| **Blue Edges** | Conditional transitions |
+| **Edge Tooltips** | Hover to see condition details |
+
+### Toolbar Actions
+
+| Button | Action |
+|--------|--------|
+| **Sequence Name** | Click to select the asset in Project |
+| **Frame All** | Fit all nodes into view |
+| **Auto Layout** | BFS-based layered arrangement |
+| **Refresh** | Rebuild graph from asset data |
+
+### Transition Detail Panel
+
+Select a transition edge to reveal an editable detail panel on the right side of the graph. Edit the label, condition variable, comparison, target value, target step, and event directly from the graph.
+
+### Runtime Visualization
+
+During Play mode the graph provides live feedback:
+
+| Visual | Meaning |
+|--------|---------|
+| **Yellow border** | Currently executing step |
+| **Green edge** | Transition condition is met |
+| **Red edge** | Transition condition is not met |
+| **Panel status** | Shows checkmark or cross for selected transition |
+
+### Interactions
+
+| Action | Effect |
+|--------|--------|
+| **Drag node** | Reposition (saved to asset) |
+| **Drag port-to-port** | Create new transition |
+| **Select edge + Delete** | Remove transition |
+| **Double-click node** | Ping and select Step asset |
+| **Scroll wheel** | Zoom |
+| **Middle-mouse drag** | Pan |
+
+---
+
 ## Related Documentation
 
 - [Socket System](../SocketSystem/SocketSystem.md) — Validate insertions
@@ -374,5 +469,5 @@ Sequences are ScriptableObjects. Clone them if runtime changes are needed.
 
 ---
 
-**Last Updated:** January 2026
-**Component Version:** 1.0.0
+**Last Updated:** February 2026
+**Component Version:** 1.1.0

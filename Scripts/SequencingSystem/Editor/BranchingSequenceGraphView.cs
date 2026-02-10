@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -17,6 +18,26 @@ namespace Shababeek.Sequencing.Editors
 
         private static readonly Color UnconditionalEdgeColor = new(0.5f, 0.85f, 0.5f);
         private static readonly Color ConditionalEdgeColor = new(0.4f, 0.65f, 1f);
+        private static readonly Color ConditionMetColor = new(0.2f, 0.85f, 0.2f);
+        private static readonly Color ConditionNotMetColor = new(0.85f, 0.25f, 0.25f);
+
+        /// <summary>
+        /// Fired when a transition edge is selected. Provides the transition and its source step.
+        /// </summary>
+        public Action<StepTransition, Step> OnTransitionSelected;
+
+        /// <summary>
+        /// Fired when a step node is selected.
+        /// </summary>
+        public Action<Step> OnStepSelected;
+
+        /// <summary>
+        /// Fired when the selection is cleared.
+        /// </summary>
+        public Action OnSelectionCleared;
+
+        private Edge _lastSelectedEdge;
+        private StepNode _lastSelectedNode;
 
         public BranchingSequenceGraphView(BranchingSequence sequence)
         {
@@ -34,6 +55,8 @@ namespace Shababeek.Sequencing.Editors
             style.flexGrow = 1;
 
             graphViewChanged = OnGraphViewChanged;
+
+            schedule.Execute(PollSelection).Every(100);
         }
 
         /// <summary>
@@ -119,6 +142,68 @@ namespace Shababeek.Sequencing.Editors
                 kvp.Value.SetHighlight(kvp.Key == currentStep);
         }
 
+        /// <summary>
+        /// Evaluates all transition conditions and colors edges green (met) or red (not met).
+        /// </summary>
+        public void UpdateRuntimeEdgeColors()
+        {
+            graphElements.ForEach(element =>
+            {
+                if (element is not Edge edge || edge.userData is not EdgeData data) return;
+
+                bool conditionMet;
+                try
+                {
+                    conditionMet = data.Transition.Evaluate();
+                }
+                catch
+                {
+                    conditionMet = false;
+                }
+
+                var color = conditionMet ? ConditionMetColor : ConditionNotMetColor;
+                ApplyEdgeColor(edge, color);
+            });
+        }
+
+        /// <summary>
+        /// Resets edge colors to the default edit-mode scheme (green=unconditional, blue=conditional).
+        /// </summary>
+        public void ResetEdgeColors()
+        {
+            graphElements.ForEach(element =>
+            {
+                if (element is not Edge edge || edge.userData is not EdgeData data) return;
+
+                bool isUnconditional = data.Transition.condition?.Variable == null;
+                var color = isUnconditional ? UnconditionalEdgeColor : ConditionalEdgeColor;
+                ApplyEdgeColor(edge, color);
+            });
+        }
+
+        /// <summary>
+        /// Updates the tooltip on a specific transition's edge after editing.
+        /// </summary>
+        public void UpdateEdgeForTransition(StepTransition transition)
+        {
+            graphElements.ForEach(element =>
+            {
+                if (element is not Edge edge || edge.userData is not EdgeData data) return;
+                if (data.Transition != transition) return;
+
+                edge.tooltip = BuildTransitionTooltip(transition);
+
+                if (!Application.isPlaying)
+                {
+                    bool isUnconditional = transition.condition?.Variable == null;
+                    var color = isUnconditional ? UnconditionalEdgeColor : ConditionalEdgeColor;
+                    ApplyEdgeColor(edge, color);
+                }
+            });
+        }
+
+        #region Graph Construction
+
         private GraphViewChange OnGraphViewChanged(GraphViewChange change)
         {
             HandleMovedElements(change);
@@ -194,6 +279,8 @@ namespace Shababeek.Sequencing.Editors
         private void ClearGraph()
         {
             _nodeMap.Clear();
+            _lastSelectedEdge = null;
+            _lastSelectedNode = null;
             DeleteElements(graphElements.ToList());
         }
 
@@ -261,15 +348,51 @@ namespace Shababeek.Sequencing.Editors
             }
         }
 
+        #endregion
+
+        #region Selection Tracking
+
+        private void PollSelection()
+        {
+            Edge selectedEdge = null;
+            StepNode selectedNode = null;
+
+            foreach (var sel in selection)
+            {
+                if (sel is Edge edge) { selectedEdge = edge; break; }
+                if (sel is StepNode node) { selectedNode = node; break; }
+            }
+
+            // Edges take priority over nodes
+            if (selectedEdge != _lastSelectedEdge || selectedNode != _lastSelectedNode)
+            {
+                _lastSelectedEdge = selectedEdge;
+                _lastSelectedNode = selectedNode;
+
+                if (selectedEdge?.userData is EdgeData data)
+                    OnTransitionSelected?.Invoke(data.Transition, data.FromStep);
+                else if (selectedNode != null)
+                    OnStepSelected?.Invoke(selectedNode.Step);
+                else
+                    OnSelectionCleared?.Invoke();
+            }
+        }
+
+        #endregion
+
+        #region Edge Helpers
+
+        private static void ApplyEdgeColor(Edge edge, Color color)
+        {
+            if (edge.edgeControl == null) return;
+            edge.edgeControl.inputColor = color;
+            edge.edgeControl.outputColor = color;
+        }
+
         private void ScheduleEdgeColorUpdate(Edge edge, bool isUnconditional)
         {
             var color = isUnconditional ? UnconditionalEdgeColor : ConditionalEdgeColor;
-            edge.schedule.Execute(() =>
-            {
-                if (edge.edgeControl == null) return;
-                edge.edgeControl.inputColor = color;
-                edge.edgeControl.outputColor = color;
-            });
+            edge.schedule.Execute(() => ApplyEdgeColor(edge, color));
         }
 
         private static string BuildTransitionTooltip(StepTransition transition)
@@ -285,6 +408,10 @@ namespace Shababeek.Sequencing.Editors
             string prefix = string.IsNullOrEmpty(transition.label) ? "" : $"{transition.label}: ";
             return $"{prefix}{c.Variable.name} {c.Comparison} ?";
         }
+
+        #endregion
+
+        #region Layout Helpers
 
         private StepTransitionGroup FindOrCreateTransitionGroup(Step step)
         {
@@ -356,7 +483,9 @@ namespace Shababeek.Sequencing.Editors
             return groups;
         }
 
-        private class EdgeData
+        #endregion
+
+        internal class EdgeData
         {
             public Step FromStep;
             public StepTransition Transition;

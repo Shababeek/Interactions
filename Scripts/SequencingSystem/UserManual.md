@@ -7,11 +7,13 @@ The Sequencing System provides a framework for creating ordered sequences of ste
 ## Table of Contents
 
 1. [Core Concepts](#core-concepts)
-2. [Creating Sequences](#creating-sequences)
-3. [Steps and Actions](#steps-and-actions)
-4. [Action Types](#action-types)
-5. [Event Listeners](#event-listeners)
-6. [Best Practices](#best-practices)
+2. [Branching Sequences](#branching-sequences)
+3. [Graph View](#graph-view)
+4. [Creating Sequences](#creating-sequences)
+5. [Steps and Actions](#steps-and-actions)
+6. [Action Types](#action-types)
+7. [Event Listeners](#event-listeners)
+8. [Best Practices](#best-practices)
 
 ---
 
@@ -38,6 +40,89 @@ A **Step** represents a single stage in a sequence. Each step can:
 - Detecting a gesture
 - Waiting for a timer
 - Monitoring variable values
+
+---
+
+## Branching Sequences
+
+A **BranchingSequence** extends the linear sequence model with conditional transitions between steps. Instead of progressing through steps in a fixed order, each step can branch to different next steps based on ScriptableVariable conditions.
+
+### Creating a BranchingSequence
+
+1. Right-click in the Project window
+2. Select `Create → Shababeek → Sequencing → BranchingSequence`
+3. Name your sequence (e.g., "DialogueBranching")
+
+### Key Concepts
+
+**Entry Step:** The first step to execute when the sequence begins. Set via the step list in the inspector.
+
+**StepTransition:** Defines a conditional path from one step to another. Each transition has:
+- **Condition:** A ScriptableVariable evaluated against a target value (or unconditional if no variable is set)
+- **Target Step:** The step to transition to when the condition is met
+- **Label:** A descriptive name for the transition
+- **Transition Event:** An optional GameEvent raised when the transition is taken
+
+**BranchCondition:** Evaluates a ScriptableVariable using comparison operators (Equals, NotEquals, GreaterThan, LessThan, GreaterOrEqual, LessOrEqual). Supports BoolVariable, IntVariable, FloatVariable, and TextVariable.
+
+**StepTransitionGroup:** Groups all transitions originating from a single step. Transitions are evaluated top-to-bottom; the first matching condition wins.
+
+### Configuring Transitions
+
+1. Select a BranchingSequence asset in the inspector
+2. Add steps using the Steps list
+3. Select a step to reveal its transitions panel
+4. Click **+ Add Transition** to create transition paths
+5. Configure the condition variable, comparison, and target step
+6. Leave the variable empty for an unconditional (default) transition
+
+### Branching Example
+```
+Entry → Step: "Ask Question"
+  ├─ Transition: answerVar == "A" → Step: "Correct!"
+  ├─ Transition: answerVar == "B" → Step: "Hint"
+  └─ Transition: (unconditional)  → Step: "Try Again"
+```
+
+---
+
+## Graph View
+
+The **Branching Sequence Graph View** provides a visual node-based editor for BranchingSequence assets. It opens in a dedicated EditorWindow and displays steps as draggable nodes connected by transition edges.
+
+### Opening the Graph View
+
+Click the **Open Graph View** button at the top of any BranchingSequence inspector.
+
+### Graph Features
+
+**Nodes:** Each step appears as a node with an input port (left) and output port (right). The entry step has a green title bar with an "ENTRY" badge. Steps with audio clips show the clip name below the title.
+
+**Edges:** Transitions between steps are shown as colored connections:
+- **Green edges:** Unconditional (default) transitions
+- **Blue edges:** Conditional transitions
+- Hover over an edge to see its condition details in a tooltip
+
+**Edge Creation:** Drag from an output port to an input port to create a new unconditional transition. Configure the condition in the detail panel.
+
+**Edge Deletion:** Select an edge and press Delete to remove a transition.
+
+**Transition Detail Panel:** A panel on the right side of the graph window shows editable details for the selected transition edge: label, condition variable, comparison operator, target value, target step, and transition event.
+
+### Toolbar
+
+- **Frame All:** Fit all nodes into view
+- **Auto Layout:** Automatically arrange nodes in a left-to-right layered layout using BFS
+- **Refresh:** Rebuild the graph from the asset data
+
+### Runtime Visualization
+
+During Play mode, the graph provides live feedback:
+- The **current step** is highlighted with a yellow border
+- Transition edges are colored **green** (condition met) or **red** (condition not met) based on live ScriptableVariable evaluation
+- The detail panel shows a runtime status indicator for the selected transition
+
+Node positions are saved to the BranchingSequence asset and persist between sessions. Double-click a node to ping and select the corresponding Step asset.
 
 ---
 
