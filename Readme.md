@@ -268,8 +268,49 @@ Special thanks to all contributors and the Unity VR community.
 
 ## 🗺️ Roadmap
 
+### Interaction System
+- [ ] Two-handed grab support
+- [ ] Grab transition smoothing (lerp from world to grab position)
+- [ ] Distance grab / force pull (gravity gloves style)
+- [ ] SliderInteractable (mixing board fader with snap points)
+- [ ] HingeInteractable (physics-driven doors/lids)
+- [ ] VRButton/Switch unification under InteractableBase lifecycle
+- [ ] Minimum throw velocity threshold for Throwable
+
+### Hand Presence
+- [ ] Additional hand models
+- [ ] Hand gesture recognition (fist, point, open)
+
+### Data Flow & Binders
+- [ ] Computed Variables (derived values like HealthPercent = Health / MaxHealth)
+- [ ] Conditional Binders (enable/disable based on BoolVariable)
+- [ ] Tween Binders (animated transitions between values)
+- [ ] Binder Presets (reusable ScriptableObject configurations)
+- [ ] NavMeshAgent, Cinemachine, Joint, AudioMixer binders
+
+### Sequencing System
+- [ ] Sequence branching (if/else flow based on variables)
+- [ ] Parallel step execution
+- [ ] SubSequence nesting
+- [ ] VariableConditionAction (wait for variable value)
+
+### Editor Tooling
+- [ ] Visual sequence editor (node-graph or timeline view)
+- [ ] Feedback preview without Play mode
+- [ ] Binder setup wizard
+- [ ] Variable connection visualizer
+
+### Architecture
+- [ ] UniRx to R3 migration (adapter layer for gradual transition)
+- [ ] Extract common binder base class
+- [ ] Assembly definition restructuring (Core + Interactables + Binders)
+- [ ] Unit test suite
+
+### Platform & Distribution
+- [ ] Unity Asset Store publishing
 - [ ] Video tutorial series
 - [ ] More example scenes
+- [ ] Multiplayer / variable networking support
 
 
 ---
