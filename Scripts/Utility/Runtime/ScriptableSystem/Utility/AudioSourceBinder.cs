@@ -1,74 +1,133 @@
+using System.Collections.Generic;
+using UniRx;
 using UnityEngine;
 
 namespace Shababeek.Utilities
 {
-    /// <summary>
-    /// Binds an AudioVariable to an AudioSource component for configuration.
-    /// </summary>
     [RequireComponent(typeof(AudioSource))]
     [AddComponentMenu(menuName: "Shababeek/Scriptable System/Audio Source Binder")]
     public class AudioSourceBinder : MonoBehaviour
     {
-        [Tooltip("The AudioVariable to bind to the AudioSource.")]
-        [SerializeField] private AudioVariable audioVariable;
+        [SerializeField] private List<AudioVariable> audioVariables = new List<AudioVariable>();
 
         private AudioSource _audioSource;
+        private CompositeDisposable _disposable;
+        private AudioVariable _currentLoopingAudio;
 
         private void Awake()
         {
             _audioSource = GetComponent<AudioSource>();
-
             if (_audioSource == null)
             {
                 Debug.LogError($"AudioSource component not found on {gameObject.name}");
-                return;
             }
+        }
 
-            // Store playOnAwake setting before binding
-            bool shouldPlayOnAwake = _audioSource.playOnAwake;
+        private void OnEnable()
+        {
+            if (_audioSource == null) return;
 
-            BindAudioSettings();
+            _disposable = new CompositeDisposable();
 
-            // Manually play if playOnAwake was enabled, since binding happens after AudioSource's Awake
-            if (shouldPlayOnAwake && _audioSource.clip != null)
+            foreach (var audioVariable in audioVariables)
             {
+                if (audioVariable != null)
+                {
+                    audioVariable.OnAudioRaised
+                        .Subscribe(raisedAudio => PlayAudio(raisedAudio))
+                        .AddTo(_disposable);
+
+                    audioVariable.OnAudioStopped
+                        .Subscribe(stoppedAudio => StopAudio(stoppedAudio))
+                        .AddTo(_disposable);
+
+                    audioVariable.OnPitchChanged
+                        .Subscribe(newPitch => UpdatePitch(audioVariable, newPitch))
+                        .AddTo(_disposable);
+                }
+            }
+        }
+
+        private void OnDisable()
+        {
+            _disposable?.Dispose();
+            _currentLoopingAudio = null;
+        }
+
+        private void PlayAudio(AudioVariable audioVariable)
+        {
+            if (audioVariable == null || audioVariable.Clip == null) return;
+
+            if (audioVariable.Loop)
+            {
+                // If already playing this audio, don't restart
+                if (_currentLoopingAudio == audioVariable && _audioSource.isPlaying)
+                    return;
+
+                // Stop different loop if playing
+                if (_currentLoopingAudio != null && _currentLoopingAudio != audioVariable)
+                {
+                    _audioSource.Stop();
+                }
+
+                _currentLoopingAudio = audioVariable;
+                _audioSource.clip = audioVariable.Clip;
+                _audioSource.volume = audioVariable.Volume;
+                _audioSource.pitch = audioVariable.Pitch;
+                _audioSource.loop = true;
                 _audioSource.Play();
             }
-        }
-
-        /// <summary>
-        /// Applies the AudioVariable settings to the AudioSource.
-        /// </summary>
-        private void BindAudioSettings()
-        {
-            if (audioVariable == null)
+            else
             {
-                Debug.LogWarning($"AudioVariable is not assigned on {gameObject.name}");
-                return;
-            }
-
-            _audioSource.clip = audioVariable.Clip;
-            _audioSource.volume = audioVariable.Volume;
-            _audioSource.pitch = audioVariable.Pitch;
-            _audioSource.loop = audioVariable.Loop;
-        }
-
-        /// <summary>
-        /// Rebinds the audio settings. Useful if you change the AudioVariable at runtime.
-        /// </summary>
-        public void RefreshBinding()
-        {
-            BindAudioSettings();
-        }
-
-#if UNITY_EDITOR
-        private void OnValidate()
-        {
-            if (Application.isPlaying && _audioSource != null)
-            {
-                BindAudioSettings();
+                _audioSource.PlayOneShot(audioVariable.Clip, audioVariable.Volume);
             }
         }
-#endif
+
+        private void StopAudio(AudioVariable audioVariable)
+        {
+            if (audioVariable == null) return;
+
+            if (_currentLoopingAudio == audioVariable && _audioSource.isPlaying)
+            {
+                _audioSource.Stop();
+                _currentLoopingAudio = null;
+            }
+        }
+
+        private void UpdatePitch(AudioVariable audioVariable, float newPitch)
+        {
+            // Only update pitch if this is the currently playing loop
+            if (_currentLoopingAudio == audioVariable && _audioSource.isPlaying)
+            {
+                _audioSource.pitch = newPitch;
+            }
+        }
+
+        public void AddAudioVariable(AudioVariable audioVariable)
+        {
+            if (audioVariable == null || audioVariables.Contains(audioVariable)) return;
+
+            audioVariables.Add(audioVariable);
+
+            if (_disposable != null && !_disposable.IsDisposed)
+            {
+                audioVariable.OnAudioRaised
+                    .Subscribe(raisedAudio => PlayAudio(raisedAudio))
+                    .AddTo(_disposable);
+
+                audioVariable.OnAudioStopped
+                    .Subscribe(stoppedAudio => StopAudio(stoppedAudio))
+                    .AddTo(_disposable);
+
+                audioVariable.OnPitchChanged
+                    .Subscribe(newPitch => UpdatePitch(audioVariable, newPitch))
+                    .AddTo(_disposable);
+            }
+        }
+
+        public void RemoveAudioVariable(AudioVariable audioVariable)
+        {
+            audioVariables.Remove(audioVariable);
+        }
     }
 }

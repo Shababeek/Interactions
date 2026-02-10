@@ -1,43 +1,71 @@
+using System;
+using UniRx;
 using UnityEngine;
 
 namespace Shababeek.Utilities
 {
-    /// <summary>
-    /// Scriptable variable that stores audio configuration data.
-    /// </summary>
     [CreateAssetMenu(menuName = "Shababeek/Scriptable System/Variables/AudioVariable")]
-    public class AudioVariable : ScriptableObject
+    public class AudioVariable : GameEvent
     {
-        [Tooltip("The audio clip to play.")]
         [SerializeField] private AudioClip clip;
-
-        [Tooltip("The volume of the audio (0 to 1).")]
-        [SerializeField] [Range(0f, 1f)] private float volume = 1f;
-
-        [Tooltip("The pitch of the audio.")]
-        [SerializeField] [Range(-3f, 3f)] private float pitch = 1f;
-
-        [Tooltip("Should the audio loop?")]
+        [SerializeField][Range(0f, 1f)] private float volume = 1f;
+        [SerializeField][Range(-3f, 3f)] private float pitch = 1f;
         [SerializeField] private bool loop = false;
 
-        /// <summary>
-        /// Gets the audio clip.
-        /// </summary>
+        private Subject<AudioVariable> _onAudioRaised;
+        private Subject<AudioVariable> _onAudioStopped;
+        private Subject<float> _onPitchChanged;
+
+        public IObservable<AudioVariable> OnAudioRaised
+        {
+            get
+            {
+                if (_onAudioRaised == null)
+                    _onAudioRaised = new Subject<AudioVariable>();
+                return _onAudioRaised;
+            }
+        }
+
+        public IObservable<AudioVariable> OnAudioStopped
+        {
+            get
+            {
+                if (_onAudioStopped == null)
+                    _onAudioStopped = new Subject<AudioVariable>();
+                return _onAudioStopped;
+            }
+        }
+
+        public IObservable<float> OnPitchChanged
+        {
+            get
+            {
+                if (_onPitchChanged == null)
+                    _onPitchChanged = new Subject<float>();
+                return _onPitchChanged;
+            }
+        }
+
         public AudioClip Clip => clip;
-
-        /// <summary>
-        /// Gets the volume value.
-        /// </summary>
         public float Volume => volume;
-
-        /// <summary>
-        /// Gets the pitch value.
-        /// </summary>
         public float Pitch => pitch;
-
-        /// <summary>
-        /// Gets whether the audio should loop.
-        /// </summary>
         public bool Loop => loop;
+
+        public override void Raise()
+        {
+            base.Raise();
+            _onAudioRaised?.OnNext(this);
+        }
+
+        public void Stop()
+        {
+            _onAudioStopped?.OnNext(this);
+        }
+
+        public void SetPitch(float newPitch)
+        {
+            pitch = Mathf.Clamp(newPitch, -3f, 3f);
+            _onPitchChanged?.OnNext(pitch);
+        }
     }
 }
