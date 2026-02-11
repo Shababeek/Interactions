@@ -8,6 +8,12 @@ namespace Shababeek.Utilities
     [AddComponentMenu(menuName: "Shababeek/Scriptable System/Audio Source Binder")]
     public class AudioSourceBinder : MonoBehaviour
     {
+        [Header("Binding Mode (Legacy)")]
+        [Tooltip("Binds this AudioVariable's settings to the AudioSource. Play manually via audioSource.Play()")]
+        [SerializeField] private AudioVariable audioVariable;
+
+        [Header("Event Mode (Auto-Play)")]
+        [Tooltip("These AudioVariables play automatically when raised")]
         [SerializeField] private List<AudioVariable> audioVariables = new List<AudioVariable>();
 
         private AudioSource _audioSource;
@@ -20,6 +26,13 @@ namespace Shababeek.Utilities
             if (_audioSource == null)
             {
                 Debug.LogError($"AudioSource component not found on {gameObject.name}");
+                return;
+            }
+
+            // Binding mode - configure AudioSource with audioVariable settings
+            if (audioVariable != null)
+            {
+                BindAudioSettings();
             }
         }
 
@@ -29,20 +42,21 @@ namespace Shababeek.Utilities
 
             _disposable = new CompositeDisposable();
 
-            foreach (var audioVariable in audioVariables)
+            // Event mode - subscribe to event AudioVariables
+            foreach (var eventAudioVariable in audioVariables)
             {
-                if (audioVariable != null)
+                if (eventAudioVariable != null)
                 {
-                    audioVariable.OnAudioRaised
+                    eventAudioVariable.OnAudioRaised
                         .Subscribe(raisedAudio => PlayAudio(raisedAudio))
                         .AddTo(_disposable);
 
-                    audioVariable.OnAudioStopped
+                    eventAudioVariable.OnAudioStopped
                         .Subscribe(stoppedAudio => StopAudio(stoppedAudio))
                         .AddTo(_disposable);
 
-                    audioVariable.OnPitchChanged
-                        .Subscribe(newPitch => UpdatePitch(audioVariable, newPitch))
+                    eventAudioVariable.OnPitchChanged
+                        .Subscribe(newPitch => UpdatePitch(eventAudioVariable, newPitch))
                         .AddTo(_disposable);
                 }
             }
@@ -54,80 +68,112 @@ namespace Shababeek.Utilities
             _currentLoopingAudio = null;
         }
 
-        private void PlayAudio(AudioVariable audioVariable)
+        /// <summary>
+        /// Applies the bound AudioVariable settings to the AudioSource (Binding mode).
+        /// </summary>
+        private void BindAudioSettings()
         {
-            if (audioVariable == null || audioVariable.Clip == null) return;
-
-            if (audioVariable.Loop)
+            if (audioVariable == null)
             {
-                // If already playing this audio, don't restart
-                if (_currentLoopingAudio == audioVariable && _audioSource.isPlaying)
+                Debug.LogWarning($"AudioVariable is not assigned on {gameObject.name}");
+                return;
+            }
+
+            _audioSource.clip = audioVariable.Clip;
+            _audioSource.volume = audioVariable.Volume;
+            _audioSource.pitch = audioVariable.Pitch;
+            _audioSource.loop = audioVariable.Loop;
+        }
+
+        /// <summary>
+        /// Rebinds the audio settings. Useful if you change the AudioVariable at runtime.
+        /// </summary>
+        public void RefreshBinding()
+        {
+            BindAudioSettings();
+        }
+
+        private void PlayAudio(AudioVariable eventAudioVariable)
+        {
+            if (eventAudioVariable == null || eventAudioVariable.Clip == null) return;
+
+            if (eventAudioVariable.Loop)
+            {
+                if (_currentLoopingAudio == eventAudioVariable && _audioSource.isPlaying)
                     return;
 
-                // Stop different loop if playing
-                if (_currentLoopingAudio != null && _currentLoopingAudio != audioVariable)
+                if (_currentLoopingAudio != null && _currentLoopingAudio != eventAudioVariable)
                 {
                     _audioSource.Stop();
                 }
 
-                _currentLoopingAudio = audioVariable;
-                _audioSource.clip = audioVariable.Clip;
-                _audioSource.volume = audioVariable.Volume;
-                _audioSource.pitch = audioVariable.Pitch;
+                _currentLoopingAudio = eventAudioVariable;
+                _audioSource.clip = eventAudioVariable.Clip;
+                _audioSource.volume = eventAudioVariable.Volume;
+                _audioSource.pitch = eventAudioVariable.Pitch;
                 _audioSource.loop = true;
                 _audioSource.Play();
             }
             else
             {
-                _audioSource.PlayOneShot(audioVariable.Clip, audioVariable.Volume);
+                _audioSource.PlayOneShot(eventAudioVariable.Clip, eventAudioVariable.Volume);
             }
         }
 
-        private void StopAudio(AudioVariable audioVariable)
+        private void StopAudio(AudioVariable eventAudioVariable)
         {
-            if (audioVariable == null) return;
+            if (eventAudioVariable == null) return;
 
-            if (_currentLoopingAudio == audioVariable && _audioSource.isPlaying)
+            if (_currentLoopingAudio == eventAudioVariable && _audioSource.isPlaying)
             {
                 _audioSource.Stop();
                 _currentLoopingAudio = null;
             }
         }
 
-        private void UpdatePitch(AudioVariable audioVariable, float newPitch)
+        private void UpdatePitch(AudioVariable eventAudioVariable, float newPitch)
         {
-            // Only update pitch if this is the currently playing loop
-            if (_currentLoopingAudio == audioVariable && _audioSource.isPlaying)
+            if (_currentLoopingAudio == eventAudioVariable && _audioSource.isPlaying)
             {
                 _audioSource.pitch = newPitch;
             }
         }
 
-        public void AddAudioVariable(AudioVariable audioVariable)
+        public void AddAudioVariable(AudioVariable eventAudioVariable)
         {
-            if (audioVariable == null || audioVariables.Contains(audioVariable)) return;
+            if (eventAudioVariable == null || audioVariables.Contains(eventAudioVariable)) return;
 
-            audioVariables.Add(audioVariable);
+            audioVariables.Add(eventAudioVariable);
 
             if (_disposable != null && !_disposable.IsDisposed)
             {
-                audioVariable.OnAudioRaised
+                eventAudioVariable.OnAudioRaised
                     .Subscribe(raisedAudio => PlayAudio(raisedAudio))
                     .AddTo(_disposable);
 
-                audioVariable.OnAudioStopped
+                eventAudioVariable.OnAudioStopped
                     .Subscribe(stoppedAudio => StopAudio(stoppedAudio))
                     .AddTo(_disposable);
 
-                audioVariable.OnPitchChanged
-                    .Subscribe(newPitch => UpdatePitch(audioVariable, newPitch))
+                eventAudioVariable.OnPitchChanged
+                    .Subscribe(newPitch => UpdatePitch(eventAudioVariable, newPitch))
                     .AddTo(_disposable);
             }
         }
 
-        public void RemoveAudioVariable(AudioVariable audioVariable)
+        public void RemoveAudioVariable(AudioVariable eventAudioVariable)
         {
-            audioVariables.Remove(audioVariable);
+            audioVariables.Remove(eventAudioVariable);
         }
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            if (Application.isPlaying && _audioSource != null && audioVariable != null)
+            {
+                BindAudioSettings();
+            }
+        }
+#endif
     }
 }
