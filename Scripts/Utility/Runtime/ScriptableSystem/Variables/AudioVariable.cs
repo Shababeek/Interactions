@@ -15,6 +15,7 @@ namespace Shababeek.Utilities
         private Subject<AudioVariable> _onAudioRaised;
         private Subject<AudioVariable> _onAudioStopped;
         private Subject<float> _onPitchChanged;
+        private Subject<(AudioVariable, Vector3)> _onAudioRaisedWithPosition;
 
         public IObservable<AudioVariable> OnAudioRaised
         {
@@ -46,6 +47,16 @@ namespace Shababeek.Utilities
             }
         }
 
+        public IObservable<(AudioVariable audioVariable, Vector3 position)> OnAudioRaisedWithPosition
+        {
+            get
+            {
+                if (_onAudioRaisedWithPosition == null)
+                    _onAudioRaisedWithPosition = new Subject<(AudioVariable, Vector3)>();
+                return _onAudioRaisedWithPosition;
+            }
+        }
+
         public AudioClip Clip => clip;
         public float Volume => volume;
         public float Pitch => pitch;
@@ -55,6 +66,15 @@ namespace Shababeek.Utilities
         {
             base.Raise();
             _onAudioRaised?.OnNext(this);
+        }
+
+        /// <summary>
+        /// Raises the audio event with a specific position for spatial audio.
+        /// </summary>
+        public void Raise(Vector3 position)
+        {
+            base.Raise();
+            _onAudioRaisedWithPosition?.OnNext((this, position));
         }
 
         public void Stop()
