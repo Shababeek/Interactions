@@ -274,38 +274,34 @@ Special thanks to all contributors and the Unity VR community.
 - [ ] Distance grab / force pull (gravity gloves style)
 - [ ] SliderInteractable (mixing board fader with snap points)
 - [ ] HingeInteractable (physics-driven doors/lids)
-- [ ] VRButton/Switch unification under InteractableBase lifecycle
-- [ ] Minimum throw velocity threshold for Throwable
+- [ ] VRButton/Switch unification under InteractableBase lifecycle( will require big change to archticture) so it's low prioirty for now
 
 ### Hand Presence
-- [ ] Additional hand models
-- [ ] Hand gesture recognition (fist, point, open)
+- [ ] Hand gesture recognition (fist, point, open), while some version of this already exsisit it's really outdated and does not tie to the new binding/sequence system
 
 ### Data Flow & Binders
-- [ ] Computed Variables (derived values like HealthPercent = Health / MaxHealth)
+- [ ] Computed Variables (derived values like HealthPercent = Health / MaxHealth) 
 - [ ] Conditional Binders (enable/disable based on BoolVariable)
-- [ ] Tween Binders (animated transitions between values)
+- [ ] Tween Binders (Lerp Based on variable, Animation Curves based on variables, etc)
 - [ ] Binder Presets (reusable ScriptableObject configurations)
 - [ ] NavMeshAgent, Cinemachine, Joint, AudioMixer binders
 
 ### Sequencing System
 - [ ] Sequence branching (if/else flow based on variables)
 - [ ] Parallel step execution
-- [ ] SubSequence nesting
-- [ ] VariableConditionAction (wait for variable value)
+- [ ] VariableConditionAction ( it exsisted in version 2.0 but had to remove after the 3.0 archticture change)
 
 ### Editor Tooling
-- [ ] Visual sequence editor (node-graph or timeline view)
+- [x] Visual sequence editor (node-graph or timeline view)
 - [ ] Feedback preview without Play mode
-- [ ] Binder setup wizard
-- [ ] Variable connection visualizer
+- [ ] Binder setup wizard ( creating a group of variables and binding them in one go)
+- [x] Variable connection visualizer 
 
 ### Architecture
-- [ ] UniRx to R3 migration (adapter layer for gradual transition)
+- [ ] UniRx to R3 migration (adapter layer for gradual transition is being implemented)
 - [ ] Extract common binder base class
-- [ ] Assembly definition restructuring (Core + Interactables + Binders)
-- [ ] Unit test suite
-
+- [ ] Assembly definition restructuring ( move the utilites to a new package)
+- [ ] Unit test suite 
 ### Platform & Distribution
 - [ ] Unity Asset Store publishing
 - [ ] Video tutorial series
