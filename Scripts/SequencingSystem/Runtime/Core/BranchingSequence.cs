@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using Shababeek.Utilities;
+using Shababeek.ReactiveVars;
 using UnityEngine;
 
 [assembly: InternalsVisibleTo("Shababeek.Sequencing.Editor")]

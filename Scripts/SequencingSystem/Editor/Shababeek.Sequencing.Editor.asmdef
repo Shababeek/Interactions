@@ -5,7 +5,7 @@
         "Shababeek.Sequencing",
         "Shababeek.Interactions",
         "UniRx",
-        "Shababeek.Utility"
+        "Shababeek.ReactiveVars"
     ],
     "includePlatforms": [
         "Editor"

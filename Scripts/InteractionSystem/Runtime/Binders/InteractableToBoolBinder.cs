@@ -1,7 +1,7 @@
 using UniRx;
 using UnityEngine;
 using Shababeek.Interactions;
-using Shababeek.Utilities;
+using Shababeek.ReactiveVars;
 
 namespace Shababeek.Interactions.Binders
 {

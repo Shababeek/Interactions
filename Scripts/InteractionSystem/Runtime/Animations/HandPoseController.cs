@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Shababeek.Utilities;
+using Shababeek.ReactiveVars;
 using Shababeek.Interactions.Core;
 using UnityEngine;
 using UnityEngine.Animations;

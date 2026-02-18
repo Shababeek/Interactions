@@ -1,4 +1,4 @@
-using Shababeek.Utilities;
+using Shababeek.ReactiveVars;
 using Shababeek.Interactions;
 using Shababeek.Interactions.Core;
 using UnityEngine;

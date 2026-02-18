@@ -4,8 +4,8 @@
     "references": [
         "Shababeek.Interactions",
         "UniRx",
-        "Shababeek.Utility",
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "Shababeek.ReactiveVars"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

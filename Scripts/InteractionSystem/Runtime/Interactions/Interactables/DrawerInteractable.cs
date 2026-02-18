@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.Events;
-using Shababeek.Utilities;
+using Shababeek.ReactiveVars;
 using UniRx;
 
 namespace Shababeek.Interactions

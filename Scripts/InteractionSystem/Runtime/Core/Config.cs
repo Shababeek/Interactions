@@ -1,6 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
-using Shababeek.Utilities;
+using Shababeek.ReactiveVars;
 using Shababeek.Interactions.Animations;
 using UnityEngine;
 using UnityEngine.InputSystem;

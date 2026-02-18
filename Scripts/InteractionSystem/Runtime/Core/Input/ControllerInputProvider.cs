@@ -3,7 +3,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.XR;
-using Shababeek.Utilities;
+using Shababeek.ReactiveVars;
 
 namespace Shababeek.Interactions.Core
 {

@@ -1,6 +1,6 @@
 using UniRx;
 using UnityEngine;
-using Shababeek.Utilities;
+using Shababeek.ReactiveVars;
 
 namespace Shababeek.Interactions
 {

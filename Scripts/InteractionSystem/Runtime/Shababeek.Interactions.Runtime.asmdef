@@ -4,8 +4,8 @@
     "references": [
         "UniRx",
         "Unity.InputSystem",
-        "Shababeek.Utility",
-        "Unity.XR.Hands"
+        "Unity.XR.Hands",
+        "Shababeek.ReactiveVars"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
