@@ -1,11 +1,10 @@
 {
-    "name": "Shababeek.Sequencing",
+    "name": "Shababeek.Sequencing.Interactions",
     "rootNamespace": "Shababeek.Sequencing",
     "references": [
         "Shababeek.Interactions",
-        "UniRx",
-        "Unity.InputSystem",
-        "Shababeek.ReactiveVars"
+        "Shababeek.ReactiveVars",
+        "UniRx"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
