@@ -1,0 +1,27 @@
+{
+    "name": "Shababeek.Interactions.Editor.Tests",
+    "rootNamespace": "Shababeek.Interactions.Tests",
+    "references": [
+        "Shababeek.Interactions",
+        "Shababeek.ReactiveVars",
+        "UniRx",
+        "Unity.InputSystem",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

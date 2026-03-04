@@ -7,6 +7,8 @@ using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 
 [assembly: InternalsVisibleTo("Shababeek.Interactions.Editor")]
+[assembly: InternalsVisibleTo("Shababeek.Interactions.Editor.Tests")]
+[assembly: InternalsVisibleTo("Shababeek.Interactions.Runtime.Tests")]
 
 namespace Shababeek.Interactions.Core
 {
