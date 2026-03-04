@@ -315,7 +315,7 @@ namespace Shababeek.Interactions
             var handID = (int)hand;
             var valid = (int)interactionHand;
             var useableHand = (valid & handID) != 0;
-            return useableHand && enabled;
+            return useableHand && enabled && gameObject.activeInHierarchy;
         }
 
         /// <summary>
