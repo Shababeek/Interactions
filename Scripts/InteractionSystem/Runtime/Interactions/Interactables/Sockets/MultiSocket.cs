@@ -80,7 +80,7 @@ namespace Shababeek.Interactions
             }
             
 
-            public override Transform Insert(Socketable socketable)
+            internal override Transform Insert(Socketable socketable)
             {
                 var socket = GetSocket();
                 var pivotInfo = GetPivotForSocketable(socketable);

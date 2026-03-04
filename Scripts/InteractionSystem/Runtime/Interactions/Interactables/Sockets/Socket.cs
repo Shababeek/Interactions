@@ -14,7 +14,7 @@ namespace Shababeek.Interactions
         [SerializeField] Transform pivot;
         public override Transform Pivot => pivot ? pivot : transform;
 
-        public override Transform Insert(Socketable socketable)
+        internal override Transform Insert(Socketable socketable)
         {
             current = socketable;
             return base.Insert(socketable);

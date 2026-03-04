@@ -64,7 +64,7 @@ namespace Shababeek.Interactions
             return (Pivot.position, Pivot.rotation);
         }
 
-        public override Transform Insert(Socketable socketable)
+        internal override Transform Insert(Socketable socketable)
         {
             var targetSocket = FindBestSocketForPosition(socketable.transform.position);
             if (targetSocket != null)

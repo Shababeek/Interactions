@@ -103,7 +103,7 @@ namespace Shababeek.Interactions
             return (transform.TransformPoint(scaledOffset), transform.rotation * Quaternion.Euler(pivotRotationOffset));
         }
 
-        public override Transform Insert(Socketable socketable)
+        internal override Transform Insert(Socketable socketable)
         {
             var closestPivot = FindClosestAvailableSlot(socketable.transform.position);
             if (closestPivot == null) return null;
@@ -115,7 +115,6 @@ namespace Shababeek.Interactions
 
         public override void Remove(Socketable socketable)
         {
-            Debug.Log(socketable);
             var pivotTransform = socketable.SocketTransform;
             if (pivotTransform != null && _occupiedSlots.ContainsKey(pivotTransform))
             {

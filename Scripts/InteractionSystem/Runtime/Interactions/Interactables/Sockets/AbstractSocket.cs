@@ -67,16 +67,16 @@ namespace Shababeek.Interactions
         }
 
         /// <summary>
-        /// Called when a socketable object is inserted into the socket.
+        /// Inserts a socketable into this socket. Called internally by Socketable.
         /// </summary>
-        public virtual Transform Insert(Socketable socketable)
+        internal virtual Transform Insert(Socketable socketable)
         {
             onSocketConnected.Invoke(socketable);
             return Pivot;
         }
 
         /// <summary>
-        /// Called when a socketable object is removed from the socket.
+        /// Removes a socketable from this socket. Called internally by Socketable.
         /// </summary>
         public virtual void Remove(Socketable socketable)
         {
@@ -87,17 +87,5 @@ namespace Shababeek.Interactions
         /// Checks if the socket can accept a new socketable object.
         /// </summary>
         public abstract bool CanSocket();
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="socketable"> the socketable to insert</param>
-        /// <returns>true if socketed false otherwise</returns>
-        public virtual Transform Socket(Socketable socketable)
-        {
-            if (!CanSocket()) return null;
-            var t =Insert(socketable);
-            return t;
-        }
     }
 }
