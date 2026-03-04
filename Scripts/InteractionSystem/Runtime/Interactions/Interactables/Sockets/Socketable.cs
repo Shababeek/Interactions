@@ -21,7 +21,7 @@ namespace Shababeek.Interactions
         [SerializeField] private float returnDuration = 0.5f;
         [SerializeField] private KeyCode debugKey = KeyCode.P;
         [SerializeField] private Transform indicator;
-        [SerializeField] private SocketEvent onSocketed;
+        [SerializeField] private SocketEvent onSocketed = new();
 
         [Header("Socket Detection")] [SerializeField]
         private float detectionRadius = 0.5f;

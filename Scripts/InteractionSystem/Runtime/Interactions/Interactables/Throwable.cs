@@ -36,19 +36,13 @@ namespace Shababeek.Interactions
         
         [Tooltip("Multiplier applied to the calculated angular velocity. Controls how much the object spins when thrown.")]
         [SerializeField] private float angularVelocityMultiplier = 1f;
-        
+
         [Header("Events")]
-        [Tooltip("Event raised when the object is thrown, providing the final throw velocity.")]
-        [SerializeField] private Vector3UnityEvent onThrowEnd;
+        [SerializeField] private Vector3UnityEvent onThrowEnd = new();
 
         [Header("Debug")]
-        [Tooltip("Indicates whether the object is currently being held and tracked for throwing.")]
         [ReadOnly] [SerializeField] private bool isBeingThrown = false;
-        
-        [Tooltip("The current velocity of the object during tracking.")]
         [ReadOnly] [SerializeField] private Vector3 currentVelocity = Vector3.zero;
-        
-        [Tooltip("The final velocity applied when the object was last thrown.")]
         [ReadOnly] [SerializeField] private Vector3 lastThrowVelocity = Vector3.zero;
 
         private Grabable _grabable;

@@ -203,12 +203,12 @@ namespace Shababeek.Interactions
 
         private static int GetBiggestAxe(Vector3 direction)
         {
-            if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y))
+            if (Mathf.Abs(direction.x) >= Mathf.Abs(direction.y))
             {
-                return Mathf.Abs(direction.x) > Mathf.Abs(direction.z) ? 0 : 2;
+                return Mathf.Abs(direction.x) >= Mathf.Abs(direction.z) ? 0 : 2;
             }
 
-            return Mathf.Abs(direction.y) > Mathf.Abs(direction.z) ? 1 : 2;
+            return Mathf.Abs(direction.y) >= Mathf.Abs(direction.z) ? 1 : 2;
         }
 
         private void UpdateValue(Vector3 position)
