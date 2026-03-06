@@ -18,19 +18,24 @@ namespace Shababeek.Interactions.Core
         [Tooltip("Check for controller device connection to determine if active.")]
         [SerializeField] private bool useDeviceDetection = true;
 
+        [Tooltip("Input action for thumb curl value.")]
         [SerializeField]private InputAction _thumbAction;
+        [Tooltip("Input action for index finger curl value.")]
         [SerializeField]private InputAction _indexAction;
+        [Tooltip("Input action for middle finger curl value.")]
         [SerializeField]private InputAction _middleAction;
+        [Tooltip("Input action for ring finger curl value.")]
         [SerializeField]private InputAction _ringAction;
+        [Tooltip("Input action for pinky finger curl value.")]
         [SerializeField]private InputAction _pinkyAction;
 
         private bool _controllerConnected = false;
         private XRController _controllerDevice;
-        
+
         // Cached position/rotation for efficiency
-        [SerializeField]private Vector3 _position = Vector3.zero;
-        [SerializeField]private Quaternion _rotation = Quaternion.identity;
-        [SerializeField]private uint _trackingState = 0;
+        private Vector3 _position = Vector3.zero;
+        private Quaternion _rotation = Quaternion.identity;
+        private uint _trackingState = 0;
         
         // Retry controller detection if not found
         private float _lastControllerCheckTime = 0f;

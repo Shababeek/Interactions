@@ -12,10 +12,14 @@ namespace Shababeek.Interactions.Core
         private readonly Action<Exception> onExceptionRaised;
         private readonly Action<VRButtonState> onButtonStateChanged;
 
+        /// <summary>Called when observation is complete.</summary>
         public void OnCompleted() => onComplete();
+        /// <summary>Called when an error occurs during observation.</summary>
         public void OnError(Exception error) => onExceptionRaised(error);
+        /// <summary>Called when button state changes.</summary>
         public void OnNext(VRButtonState vrButtonState) => onButtonStateChanged(vrButtonState);
 
+        /// <summary>Initializes the XR button observer with callback actions.</summary>
         public XRButtonObserver(Action<VRButtonState> onButtonStateChanged, Action onComplete, Action<Exception> onExceptionRaised)
         {
             this.onComplete = onComplete;

@@ -35,7 +35,8 @@ namespace Shababeek.Interactions.Core
         /// </summary>
         public PoseConstrains  Constrains { set; }
 
+        /// <summary>Gets the hand data associated with this poseable object.</summary>
         HandData HandData { get;}
     }
-    
+
 }

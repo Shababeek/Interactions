@@ -58,18 +58,18 @@ Higher-level systems that add functionality.
 | **Pose Constrainer** | Controls hand poses during interactions | **[PoseConstrainer](PoseSystem/PoseConstrainer.md)** |
 | **Feedback System** | Haptic, audio, visual, scale, particle feedback | **[Feedback](Systems/FeedbackSystem.md)** |
 | **Socket System** | Object placement and snapping | **[Sockets](SocketSystem/SocketSystem.md)** |
-| **Sequencing System** | Tutorials and guided workflows | **[Sequencing](Systems/SequencingSystem.md)** |
 
-### 🔗 Scriptable System
-Decoupled variable-based architecture for data flow.
+### 🔗 Integration with ReactiveVars
+Connect interactions to the external data flow system.
+
+The Shababeek Interaction System integrates with the **com.shababeek.reactivevars** package to enable reactive programming and sequencing. This document covers the interaction-specific components only.
 
 | Document | Description |
 |----------|-------------|
-| **[Scriptable Variables](ScriptableSystem/ScriptableVariables.md)** | Variables, events, and references |
-| **[Variable Container](ScriptableSystem/VariableContainer.md)** | Group variables as sub-assets |
-| **[Binders](ScriptableSystem/Binders.md)** | Connect variables to components |
-| **[Scriptable System Window](ScriptableSystem/ScriptableSystemWindow.md)** | Editor tool for debugging and monitoring |
-| **[Designer Guide](GettingStarted/ScriptableSystemForDesigners.md)** | No-code workflows |
+| **[Interaction Binders](ScriptableSystem/Binders.md)** | Connect interactables and sockets to reactive variables |
+| **[Interaction Sequences](Systems/SequencingSystem.md)** | Tutorials using interaction-specific sequence actions |
+
+For complete documentation on the ReactiveVars system (Scriptable Variables, Game Events, Sequencing System core, and generic binders), visit the **com.shababeek.reactivevars** package documentation.
 
 ---
 
@@ -145,13 +145,10 @@ See [ImagesTodo.md](ImagesTodo.md) for a complete tracking list of all needed im
 | PoseConstrainer | ✅ Complete |
 | Feedback System | ✅ Complete (v1.1 - added Scale, Particle, Toggle, UnityEvent) |
 | Socket System | ✅ Complete (v1.1 - added Socket Binders) |
-| Sequencing System | ✅ Complete |
+| Interaction Binders | ✅ Complete (v1.5 - interaction-specific only) |
+| Interaction Sequences | ✅ Complete (v1.5 - interaction-specific actions only) |
 | Interactors | ✅ Complete |
-| Scriptable Variables | ✅ Complete |
-| Variable Container | ✅ Complete |
-| Binders | ✅ Complete (v1.3 - added Speed, Scale, Material, Socket binders) |
-| Scriptable System Window | ✅ Complete |
 
 ---
 
-**Last Updated:** February 2026
+**Last Updated:** March 2026

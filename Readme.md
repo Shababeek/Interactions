@@ -36,9 +36,8 @@ A comprehensive Unity package for building advanced VR/AR and 3D interactions wi
 - 📦 **Pre-built Components** - Buttons, switches, levers, joysticks, drawers, and more
 - 🎨 **Feedback System** - Haptic, audio, and visual feedback out of the box
 - 🔧 **Designer-Friendly** - Inspector-focused workflow with tooltips and validation
-- 📊 **Data Flow System** - Scriptable variables and events for decoupled architecture
-- 🎬 **Sequencing System** - Built-in tutorial and quest system
 - 🔌 **Socket System** - Object placement and snapping
+- 🔗 **Reactive Architecture** - Powered by the ReactiveVars companion package
 
 ---
 
@@ -90,9 +89,9 @@ A comprehensive Unity package for building advanced VR/AR and 3D interactions wi
 
 ### 🛠️ Advanced Topics
 - **[Custom Interactables](UserManual.md#customization--extensibility)** - Create your own components
-- **[Scriptable System](Documentation/ScriptableSystem/ScriptableVariables.md)** - Variables and events
-- **[Sequencing](Documentation/Systems/SequencingSystem.md)** - Tutorials and quests
 - **[Hand Poses](Documentation/PoseSystem/PoseConstrainer.md)** - Import and configure hands
+- **[Interaction Binders](Documentation/ScriptableSystem/Binders.md)** - Connect interactions to reactive variables
+- **[Interaction Sequences](Documentation/Systems/SequencingSystem.md)** - Tutorials using interaction-specific actions
 
 ### 💻 For Developers
 - **[Scripting Reference](Documentation/README.md)** - Complete API documentation
@@ -130,9 +129,6 @@ Additional functionality:
 | System | Description |
 |--------|-------------|
 | **Feedback System** | Haptic, audio, and visual feedback |
-| **Scriptable Variables** | Observable shared data |
-| **Game Events** | Decoupled event communication |
-| **Sequences** | Tutorial and quest system |
 | **Sockets** | Object placement and snapping |
 
 ---
@@ -197,6 +193,7 @@ Additional functionality:
 - **Dependencies:**
     - Unity Input System (1.0.0+)
     - UniRx (included)
+    - **com.shababeek.reactivevars** (required for data flow, events, and sequencing)
 - **Platforms:** PC VR, Quest, PSVR, and all Unity-supported VR platforms
 - **XR Plugin:** OpenXR recommended, Oculus works but not fully tested
 
@@ -208,8 +205,6 @@ Additional functionality:
 Shababeek Interactions/
 ├── Scripts/
 │   ├── InteractionSystem/      # Core interaction components
-│   ├── SequencingSystem/       # Tutorial/quest system
-│   ├── Core/                   # Scriptable variables & events
 │   └── Utility/                # Helper utilities
 ├── Documentation/              # Complete documentation
 │   ├── GettingStarted/         # Quick start guides
@@ -218,7 +213,7 @@ Shababeek Interactions/
 │   ├── Systems/                # System documentation
 │   ├── PoseSystem/             # Pose constrainer docs
 │   ├── SocketSystem/           # Socket system docs
-│   ├── ScriptableSystem/       # Scriptable system docs
+│   ├── ScriptableSystem/       # Interaction binders docs
 │   ├── Tutorials/              # Video script tutorials
 │   └── Images/                 # Documentation images
 ├── EditorResources/            # Editor icons and assets
@@ -226,6 +221,8 @@ Shababeek Interactions/
 ├── Plugins/                    # Third-party plugins
 └── Data/                       # Configuration data
 ```
+
+**Note:** This package depends on **com.shababeek.reactivevars** for the Data Flow System (Scriptable Variables, Game Events, and Sequencing System core features). See the ReactiveVars package for complete documentation on those systems.
 
 ---
 
@@ -279,17 +276,6 @@ Special thanks to all contributors and the Unity VR community.
 ### Hand Presence
 - [ ] Hand gesture recognition (fist, point, open), while some version of this already exsisit it's really outdated and does not tie to the new binding/sequence system
 
-### Data Flow & Binders
-- [ ] Computed Variables (derived values like HealthPercent = Health / MaxHealth) 
-- [ ] Conditional Binders (enable/disable based on BoolVariable)
-- [ ] Tween Binders (Lerp Based on variable, Animation Curves based on variables, etc)
-- [ ] Binder Presets (reusable ScriptableObject configurations)
-- [ ] NavMeshAgent, Cinemachine, Joint, AudioMixer binders
-
-### Sequencing System
-- [ ] Sequence branching (if/else flow based on variables)
-- [ ] Parallel step execution
-- [ ] VariableConditionAction ( it exsisted in version 2.0 but had to remove after the 3.0 archticture change)
 
 ### Editor Tooling
 - [x] Visual sequence editor (node-graph or timeline view)

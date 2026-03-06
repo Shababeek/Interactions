@@ -19,14 +19,20 @@ namespace Shababeek.Interactions
     public class JoystickInteractable : ConstrainedInteractableBase
     {
         [Header("Joystick Settings")]
-        [Tooltip("should be where the height at which the hand will hold the object")]
+        [Tooltip("Height at which the hand will hold the joystick during interaction.")]
         [SerializeField] private float projectionPlaneHeight = 0.3f;
-        
+
+        [Tooltip("Method used to project hand position onto rotation plane.")]
         [SerializeField] private JoystickProjectionMethod projectionMethod = JoystickProjectionMethod.DirectionProjection;
-        
+
         [Header("Rotation Limits")]
+        [Tooltip("X-axis (pitch) rotation range in degrees. x=minimum, y=maximum.")]
         [SerializeField] private Vector2 xRotationRange = new Vector2(-45f, 45f);
+
+        [Tooltip("Z-axis (yaw) rotation range in degrees. x=minimum, y=maximum.")]
         [SerializeField] private Vector2 zRotationRange = new Vector2(-45f, 45f);
+
+        [Tooltip("Event invoked whenever the joystick rotation changes, passing the normalized rotation vector.")]
         [SerializeField] private Vector2UnityEvent onRotationChanged = new();
 
         [Header("Debug")]

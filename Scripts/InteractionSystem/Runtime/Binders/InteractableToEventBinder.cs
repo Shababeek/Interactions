@@ -5,9 +5,7 @@ using Shababeek.ReactiveVars;
 
 namespace Shababeek.Interactions.Binders
 {
-    /// <summary>
-    /// Binds interactable events to GameEvents.
-    /// </summary>
+    /// <summary>Binds interactable events to GameEvents.</summary>
     /// <remarks>
     /// Fires scriptable GameEvents when interactable state changes.
     /// Allows decoupled event handling through the scriptable event system.

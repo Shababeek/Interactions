@@ -7,9 +7,7 @@ using UnityEngine;
 
 namespace Shababeek.Interactions
 {
-    /// <summary>
-    /// Positioning data for a hand relative to an interactable.
-    /// </summary>
+    /// <summary>Positioning data for a hand relative to an interactable.</summary>
     [System.Serializable]
     public struct HandPositioning
     {
@@ -19,24 +17,18 @@ namespace Shababeek.Interactions
         [Tooltip("Rotation offset for the hand relative to the interactable.")]
         public Vector3 rotationOffset;
 
-        /// <summary>
-        /// Initializes a new hand positioning with the specified position and rotation offsets.
-        /// </summary>
+        /// <summary>Initializes a new hand positioning with the specified position and rotation offsets.</summary>
         public HandPositioning(Vector3 position, Vector3 rotation)
         {
             positionOffset = position;
             rotationOffset = rotation;
         }
 
-        /// <summary>
-        /// Zero hand positioning (no offset).
-        /// </summary>
+        /// <summary>Zero hand positioning (no offset).</summary>
         public static HandPositioning Zero => new HandPositioning(Vector3.zero, Vector3.zero);
     }
 
-    /// <summary>
-    /// A single grab point with per-hand positioning and pose constraints.
-    /// </summary>
+    /// <summary>A single grab point with per-hand positioning and pose constraints.</summary>
     [System.Serializable]
     public class GrabPoint
     {
@@ -62,9 +54,7 @@ namespace Shababeek.Interactions
         public HandPositioning rightHandPositioning = HandPositioning.Zero;
     }
     
-    /// <summary>
-    /// Constrains hand poses during interactions.
-    /// </summary>
+    /// <summary>Constrains hand poses during interactions.</summary>
     [AddComponentMenu("Shababeek/Interactions/Pose Constrainer")]
     public class PoseConstrainter : MonoBehaviour, IPoseConstrainer
     {
@@ -103,28 +93,20 @@ namespace Shababeek.Interactions
         private InteractableBase _interactableBase;
         private int _activeGrabPointIndex = -1;
 
-        /// <summary>
-        /// Parent transform for this constraint system.
-        /// </summary>
+        /// <summary>Gets or sets the parent transform for this constraint system.</summary>
         public Transform Parent
         {
             get => parent == null ? transform : parent;
             set => parent = value;
         }
 
-        /// <summary>
-        /// List of grab points for MultiPoint mode.
-        /// </summary>
+        /// <summary>Gets the list of grab points for MultiPoint mode.</summary>
         public IReadOnlyList<GrabPoint> GrabPoints => grabPoints;
 
-        /// <summary>
-        /// Index of the currently active grab point (-1 if none).
-        /// </summary>
+        /// <summary>Gets the index of the currently active grab point (-1 if none).</summary>
         public int ActiveGrabPointIndex => _activeGrabPointIndex;
-        
-        /// <summary>
-        /// Transform used for pose calculations. References the scale compensator if available.
-        /// </summary>
+
+        /// <summary>Gets the transform used for pose calculations.</summary>
         public Transform ConstraintTransform
         {
             get
@@ -135,9 +117,7 @@ namespace Shababeek.Interactions
             }
         }
 
-        /// <summary>
-        /// Pose constraints for the left hand. Returns active grab point constraints when in MultiPoint mode.
-        /// </summary>
+        /// <summary>Gets pose constraints for the left hand.</summary>
         public PoseConstrains LeftPoseConstrains
         {
             get
@@ -148,9 +128,7 @@ namespace Shababeek.Interactions
             }
         }
 
-        /// <summary>
-        /// Pose constraints for the right hand. Returns active grab point constraints when in MultiPoint mode.
-        /// </summary>
+        /// <summary>Gets pose constraints for the right hand.</summary>
         public PoseConstrains RightPoseConstrains
         {
             get
@@ -161,32 +139,19 @@ namespace Shababeek.Interactions
             }
         }
         
-        /// <summary>
-        /// Whether this transform has changed since the last frame.
-        /// </summary>
+        /// <summary>Gets whether this transform has changed since the last frame.</summary>
         public bool HasChanged => transform.hasChanged;
-        
-        /// <summary>
-        /// Type of constraint to apply during interaction.
-        /// </summary>
+
+        /// <summary>Gets the type of constraint to apply during interaction.</summary>
         public HandConstrainType ConstraintType => constraintType;
-        
-        /// <summary>
-        /// Whether to use smooth transitions when positioning hands.
-        /// </summary>
+
+        /// <summary>Gets whether to use smooth transitions when positioning hands.</summary>
         public bool UseSmoothTransitions => useSmoothTransitions;
-        
-        /// <summary>
-        /// Speed of smooth transitions.
-        /// </summary>
+
+        /// <summary>Gets the speed of smooth transitions.</summary>
         public float TransitionSpeed => transitionSpeed;
         
-        /// <summary>
-        /// Applies pose constraints to the hand.
-        /// In MultiPoint mode, uses the interaction point to find the nearest grab point.
-        /// </summary>
-        /// <param name="hand">The hand to constrain.</param>
-        /// <param name="interactionPoint">World position where the interactor contacted the object. Used in MultiPoint mode to select nearest grab point. Falls back to hand position if null.</param>
+        /// <summary>Applies pose constraints to a hand using an interaction point for MultiPoint mode.</summary>
         public void ApplyConstraints(Hand hand, Vector3? interactionPoint )
         {
             switch (constraintType)
@@ -215,9 +180,7 @@ namespace Shababeek.Interactions
             ApplyConstraints(interactor, null);
         }
 
-        /// <summary>
-        /// Removes pose constraints and restores hand visibility.
-        /// </summary>
+        /// <summary>Removes pose constraints and restores hand visibility.</summary>
         public void RemoveConstraints(Hand hand)
         {
             hand.Unconstrain(this);
@@ -225,9 +188,7 @@ namespace Shababeek.Interactions
             _activeGrabPointIndex = -1;
         }
         
-        /// <summary>
-        /// Target position and rotation for the specified hand in local coordinates.
-        /// </summary>
+        /// <summary>Gets target position and rotation for the specified hand in local coordinates.</summary>
         public (Vector3 position, Quaternion rotation) GetTargetHandTransform(HandIdentifier handIdentifier)
         {
             var positioning = GetActiveHandPositioning(handIdentifier);
@@ -262,11 +223,13 @@ namespace Shababeek.Interactions
             }
             return nearest;
         }
+        /// <summary>Updates hand pivot positions.</summary>
         public void UpdatePivots()
         {
             // This method is no longer needed as pivotParent is removed
         }
-        
+
+        /// <summary>Initializes the pose constrainer.</summary>
         public void Initialize()
         {
             UpdatePivots();

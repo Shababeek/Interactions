@@ -13,13 +13,20 @@ namespace Shababeek.Interactions
     [CreateAssetMenu(menuName = "Shababeek/Interactions/Interactables/DrawerInteractable")]
     public class DrawerInteractable : ConstrainedInteractableBase
     {
-        [Header("Drawer/Slider Settings")] [SerializeField]
-        private Vector3 localStart = Vector3.zero;
+        [Header("Drawer/Slider Settings")]
+        [Tooltip("Local space position when the drawer is closed.")]
+        [SerializeField] private Vector3 localStart = Vector3.zero;
 
+        [Tooltip("Local space position when the drawer is fully opened.")]
         [SerializeField] private Vector3 localEnd = Vector3.forward;
 
+        [Tooltip("Event invoked when the drawer reaches the open position.")]
         [SerializeField] private UnityEvent onOpened;
+
+        [Tooltip("Event invoked when the drawer reaches the closed position.")]
         [SerializeField] private UnityEvent onClosed;
+
+        [Tooltip("Event invoked when the drawer position changes, passing normalized position (0-1).")]
         [SerializeField] private FloatUnityEvent onMoved;
 
         [Header("Debug")] [ReadOnly, SerializeField]

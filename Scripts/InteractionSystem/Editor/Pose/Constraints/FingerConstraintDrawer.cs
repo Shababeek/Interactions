@@ -7,7 +7,6 @@ using UnityEditor;
 namespace Shababeek.Interactions.Editors
 {
     [CustomPropertyDrawer(typeof(FingerConstraints))]
-    //TODO : refactor
     public class FingerConstraintDrawer : PropertyDrawer
     {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)

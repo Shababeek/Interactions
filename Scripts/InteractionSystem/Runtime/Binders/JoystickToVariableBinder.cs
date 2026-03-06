@@ -4,24 +4,30 @@ using UnityEngine;
 
 namespace Shababeek.Interactions
 {
-    /// <summary>
-    /// Binds a JoystickInteractable's output to scriptable variables.
-    /// </summary>
+    /// <summary>Binds a JoystickInteractable's output to scriptable variables.</summary>
     [AddComponentMenu("Shababeek/Interactions/Binders/Joystick To Variable Binder")]
     public class JoystickToVariableBinder : MonoBehaviour
     {
         [Header("Source")]
+        [Tooltip("The joystick interactable to bind from.")]
         [SerializeField] private JoystickInteractable joystick;
 
         [Header("Output Variables")]
+        [Tooltip("Vector2 variable to receive the joystick rotation.")]
         [SerializeField] private Vector2Variable vector2Output;
+        [Tooltip("Float variable to receive the X axis value.")]
         [SerializeField] private FloatVariable xOutput;
+        [Tooltip("Float variable to receive the Y axis value.")]
         [SerializeField] private FloatVariable yOutput;
 
         [Header("Settings")]
+        [Tooltip("Invert the X axis output.")]
         [SerializeField] private bool invertX = false;
+        [Tooltip("Invert the Y axis output.")]
         [SerializeField] private bool invertY = false;
+        [Tooltip("Deadzone threshold before output is registered.")]
         [SerializeField] private float deadzone = 0.1f;
+        [Tooltip("Multiplier applied to the output values.")]
         [SerializeField] private float outputMultiplier = 1f;
 
         private CompositeDisposable _disposable;

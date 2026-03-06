@@ -19,15 +19,21 @@ namespace Shababeek.Interactions
     public class WheelInteractable : ConstrainedInteractableBase
     {
         [Header("Wheel Settings")]
+        [Tooltip("How the hand and wheel interact during grab.")]
         [SerializeField] private WheelGrabMode grabMode = WheelGrabMode.ObjectFollowsHand;
+
+        [Tooltip("The axis around which the wheel rotates.")]
         [SerializeField] private RotationAxis rotationAxis = RotationAxis.Forward;
 
         [Header("Rotation Limits")]
-        [Tooltip("Maximum rotations in each direction (0.5 = half turn, 1 = full turn)")]
+        [Tooltip("Maximum rotations in each direction (0.5 = half turn, 1 = full turn).")]
         [SerializeField] private float maxRotations = 1f;
-        
+
         [Header("Events")]
+        [Tooltip("Event invoked when wheel rotation angle changes, passing the angle in degrees.")]
         [SerializeField] private FloatUnityEvent onAngleChanged = new();
+
+        [Tooltip("Event invoked when normalized rotation value changes (0-1).")]
         [SerializeField] private FloatUnityEvent onNormalizedChanged = new();
 
         [Header("Debug")]

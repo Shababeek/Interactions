@@ -3,12 +3,18 @@ using System.Collections.Generic;
 using UnityEngine;
 namespace Shababeek
 {
+    /// <summary>Visualizes rig bones with colored gizmo lines in the scene editor.</summary>
     public class RigVisualizer : MonoBehaviour
     {
+        /// <summary>Child rig visualizers for this bone.</summary>
         [HideInInspector] public RigVisualizer[] children;
+        /// <summary>Gizmo color for this bone.</summary>
         [HideInInspector] public Color color = Color.red;
+        /// <summary>GameObject reference for this bone.</summary>
         [HideInInspector] public GameObject bone;
+        /// <summary>Root rig visualizer in the hierarchy.</summary>
         [HideInInspector] public RigVisualizer root ;
+        /// <summary>Currently selected rig visualizer.</summary>
         [HideInInspector] public static RigVisualizer selected;
         void OnDrawGizmos()
         {
@@ -36,6 +42,7 @@ namespace Shababeek
             }
 
         }
+        /// <summary>Initializes the rig visualizer hierarchy.</summary>
         public void Init()
         {
             if (!transform.parent||!(transform.parent.GetComponent < RigVisualizer>()) )
@@ -43,7 +50,6 @@ namespace Shababeek
                 root = this;
             }
             children = new RigVisualizer[transform.childCount];
-            Debug.Log(children.Length);
             for (int i = 0; i < children.Length; i++)
             {
                 var child = transform.GetChild(i);

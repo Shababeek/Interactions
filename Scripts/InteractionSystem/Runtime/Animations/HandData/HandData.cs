@@ -6,31 +6,27 @@ using UnityEngine;
 namespace Shababeek.Interactions.Animations
 {
     
-    /// <summary>
-    /// Container for avatar masks for each finger.
-    /// </summary>
+    /// <summary>Container for avatar masks for each finger.</summary>
     [System.Serializable]
     public class HandAvatarMaskContainer
     {
         [Header("Finger Avatar Masks")]
         [Tooltip("Avatar mask for the thumb finger.")]
         [SerializeField] private AvatarMask thumb;
-        
+
         [Tooltip("Avatar mask for the index finger.")]
         [SerializeField] private AvatarMask index;
-        
+
         [Tooltip("Avatar mask for the middle finger.")]
         [SerializeField] private AvatarMask middle;
-        
+
         [Tooltip("Avatar mask for the ring finger.")]
         [SerializeField] private AvatarMask ring;
-        
+
         [Tooltip("Avatar mask for the pinky finger.")]
         [SerializeField] private AvatarMask pinky;
 
-        /// <summary>
-        /// Avatar mask by numeric index (0=Thumb, 1=Index, 2=Middle, 3=Ring, 4=Pinky).
-        /// </summary>
+        /// <summary>Gets avatar mask by numeric index (0=Thumb, 1=Index, 2=Middle, 3=Ring, 4=Pinky).</summary>
         public AvatarMask this[int i]
         {
             get
@@ -50,9 +46,7 @@ namespace Shababeek.Interactions.Animations
         }
     }
 
-    /// <summary>
-    /// Hand pose data, avatar masks, and prefab references.
-    /// </summary>
+    /// <summary>Hand pose data, avatar masks, and prefab references.</summary>
     [CreateAssetMenu(menuName = "Shababeek/Interactions/Hand Data")]
     public class HandData : ScriptableObject, IAvatarMaskIndexer
     {
@@ -90,24 +84,16 @@ namespace Shababeek.Interactions.Animations
         /// <inheritdoc/>
         public AvatarMask this[FingerName i] => handAvatarMaskContainer[(int)i];
         
-        /// <summary>
-        /// Default pose for this hand.
-        /// </summary>
+        /// <summary>Gets the default pose for this hand.</summary>
         public PoseData DefaultPose => defaultPose;
-        
-        /// <summary>
-        /// Left hand prefab.
-        /// </summary>
+
+        /// <summary>Gets the left hand prefab.</summary>
         public HandPoseController LeftHandPrefab => leftHandPrefab;
-        
-        /// <summary>
-        /// Right hand prefab.
-        /// </summary>
+
+        /// <summary>Gets the right hand prefab.</summary>
         public HandPoseController RightHandPrefab => rightHandPrefab;
 
-        /// <summary>
-        /// Array of all poses (default pose at index 0, followed by custom poses).
-        /// </summary>
+        /// <summary>Gets the array of all poses (default pose at index 0, followed by custom poses).</summary>
         public PoseData[] Poses
         {
             get
@@ -174,14 +160,10 @@ namespace Shababeek.Interactions.Animations
             return isValid;
         }
 
-        /// <summary>
-        /// Description of this hand data asset.
-        /// </summary>
+        /// <summary>Gets the description of this hand data asset.</summary>
         public string Description => description;
 
-        /// <summary>
-        /// Invalidates the cached poses array.
-        /// </summary>
+        /// <summary>Invalidates the cached poses array.</summary>
         public void InvalidatePoseCache()
         {
             posesArray = null;
@@ -192,25 +174,20 @@ namespace Shababeek.Interactions.Animations
             InvalidatePoseCache();
         }
 
+        /// <summary>Gets all avatar masks as an array.</summary>
         public AvatarMask[] GetAvatarMasks()
         {
             return new []{this[0],this[1],this[2],this[3],this[4]};
         }
     }
 
-    /// <summary>
-    /// Interface for accessing avatar masks by index.
-    /// </summary>
+    /// <summary>Interface for accessing avatar masks by index.</summary>
     public interface IAvatarMaskIndexer
     {
-        /// <summary>
-        /// Avatar mask by numeric index.
-        /// </summary>
+        /// <summary>Gets avatar mask by numeric index.</summary>
         public AvatarMask this[int i] { get; }
 
-        /// <summary>
-        /// Avatar mask by finger name.
-        /// </summary>
+        /// <summary>Gets avatar mask by finger name.</summary>
         public AvatarMask this[FingerName i] { get; }
     }
 }

@@ -9,8 +9,10 @@ namespace Shababeek.Interactions
     /// </summary>
     public class Socket : AbstractSocket
     {
+        [Tooltip("The socketable object currently in this socket.")]
         [ReadOnly] [SerializeField] private Socketable current;
 
+        [Tooltip("Transform defining where the socketable object should be positioned when inserted.")]
         [SerializeField] Transform pivot;
         public override Transform Pivot => pivot ? pivot : transform;
 

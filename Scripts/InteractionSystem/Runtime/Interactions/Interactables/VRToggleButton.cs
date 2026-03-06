@@ -14,20 +14,30 @@ namespace Shababeek.Interactions
     [AddComponentMenu("Shababeek/Interactions/Interactables/VRToggleButton")]
     public class VRToggleButton : MonoBehaviour
     {
-        [Header("Events")] 
+        [Header("Events")]
+        [Tooltip("Event invoked whenever the button toggles (on or off).")]
         [SerializeField] private UnityEvent onToggled = new();
 
+        [Tooltip("Event invoked when the button toggles on.")]
         [SerializeField] private UnityEvent onToggledOn = new();
 
-        [SerializeField] private UnityEvent onToggledOff=new();
+        [Tooltip("Event invoked when the button toggles off.")]
+        [SerializeField] private UnityEvent onToggledOff = new();
 
         [Header("Button Configuration")]
         [Tooltip("The transform of the button visual that moves during press animation.")]
         [SerializeField] private Transform button;
 
+        [Tooltip("Position of the button when not pressed.")]
         [SerializeField] private Vector3 normalPosition = new Vector3(0, .5f, 0);
+
+        [Tooltip("Position of the button when fully pressed.")]
         [SerializeField] private Vector3 pressedPosition = new Vector3(0, .2f, 0);
+
+        [Tooltip("Speed of button press/release animation.")]
         [SerializeField] private float pressSpeed = 10;
+
+        [Tooltip("Minimum time in seconds between successive toggle actions.")]
         [SerializeField] private float coolDownTime = .4f;
 
         [Tooltip("Only filter colliders whose name contains this string. Leave empty to accept all.")]

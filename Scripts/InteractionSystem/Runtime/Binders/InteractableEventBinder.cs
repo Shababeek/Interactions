@@ -4,30 +4,38 @@ using UnityEngine;
 
 namespace Shababeek.Interactions
 {
-    /// <summary>
-    /// Binds interactable interaction events to GameEvents and variables.
-    /// </summary>
+    /// <summary>Binds interactable interaction events to GameEvents and variables.</summary>
     [AddComponentMenu("Shababeek/Interactions/Binders/Interactable Event Binder")]
     public class InteractableEventBinder : MonoBehaviour
     {
         [Header("Source")]
+        [Tooltip("The interactable to bind from.")]
         [SerializeField] private InteractableBase interactable;
 
         [Header("Selection Events")]
+        [Tooltip("GameEvent raised when the interactable is selected.")]
         [SerializeField] private GameEvent onSelectedEvent;
+        [Tooltip("GameEvent raised when the interactable is deselected.")]
         [SerializeField] private GameEvent onDeselectedEvent;
 
         [Header("Hover Events")]
+        [Tooltip("GameEvent raised when hover starts.")]
         [SerializeField] private GameEvent onHoverStartEvent;
+        [Tooltip("GameEvent raised when hover ends.")]
         [SerializeField] private GameEvent onHoverEndEvent;
 
         [Header("Use Events")]
+        [Tooltip("GameEvent raised when use starts.")]
         [SerializeField] private GameEvent onUseStartEvent;
+        [Tooltip("GameEvent raised when use ends.")]
         [SerializeField] private GameEvent onUseEndEvent;
 
         [Header("State Variables")]
+        [Tooltip("Bool variable tracking if the interactable is selected.")]
         [SerializeField] private BoolVariable isSelectedVariable;
+        [Tooltip("Bool variable tracking if the interactable is hovered.")]
         [SerializeField] private BoolVariable isHoveredVariable;
+        [Tooltip("Bool variable tracking if the interactable is being used.")]
         [SerializeField] private BoolVariable isUsingVariable;
 
         private CompositeDisposable _disposable;

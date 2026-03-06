@@ -46,8 +46,9 @@ namespace Shababeek.Interactions.Core
         #endregion
         
         [Header("VR Mode")]
+        [Tooltip("Current VR mode (RoomScale or Seated).")]
         [SerializeField] private VRMode vrMode = VRMode.RoomScale;
-        
+
         [Header("Player Representation")]
         [Tooltip("Radius of the player cylinder representation")]
         [SerializeField] private float playerRadius = defaultPlayerRadius;
@@ -150,21 +151,33 @@ namespace Shababeek.Interactions.Core
         #endregion
         
         #region Public Setters (for editor)
-        
+
+        /// <summary>Sets the play area width.</summary>
         public void SetPlayAreaWidth(float value) => playAreaWidth = value;
+        /// <summary>Sets the play area depth.</summary>
         public void SetPlayAreaDepth(float value) => playAreaDepth = value;
+        /// <summary>Sets the minimum seated optimal distance.</summary>
         public void SetSeatedOptimalMin(float value) => seatedOptimalMin = value;
+        /// <summary>Sets the maximum seated optimal distance.</summary>
         public void SetSeatedOptimalMax(float value) => seatedOptimalMax = value;
+        /// <summary>Sets the maximum seated extended reach distance.</summary>
         public void SetSeatedExtendedMax(float value) => seatedExtendedMax = value;
+        /// <summary>Sets the maximum seated reach distance.</summary>
         public void SetSeatedMaximumMax(float value) => seatedMaximumMax = value;
+        /// <summary>Sets the room-scale at-edge maximum distance.</summary>
         public void SetRoomScaleAtEdgeMax(float value) => roomScaleAtEdgeMax = value;
+        /// <summary>Sets the room-scale extended maximum distance.</summary>
         public void SetRoomScaleExtendedMax(float value) => roomScaleExtendedMax = value;
+        /// <summary>Sets the room-scale maximum reach distance.</summary>
         public void SetRoomScaleMaximumMax(float value) => roomScaleMaximumMax = value;
+        /// <summary>Sets whether to show play area bounds.</summary>
         public void SetShowPlayAreaBounds(bool value) => showPlayAreaBounds = value;
+        /// <summary>Sets the seated arc angle.</summary>
         public void SetSeatedArcAngle(float value) => seatedArcAngle = value;
-        
+
         #endregion
-        
+
+        /// <summary>Gets the camera rig component.</summary>
         public CameraRig GetCameraRig()
         {
             if (_cameraRig == null)
@@ -174,6 +187,7 @@ namespace Shababeek.Interactions.Core
             return _cameraRig;
         }
         
+        /// <summary>Gets the head position in world space.</summary>
         public Vector3 GetHeadPosition()
         {
             if (_cameraRig == null) _cameraRig = GetComponent<CameraRig>();
@@ -186,20 +200,20 @@ namespace Shababeek.Interactions.Core
             return _cameraRig.transform.position + new Vector3(0, _cameraRig.CameraHeight, 0);
         }
         
+        /// <summary>Gets the player height in world units.</summary>
         public float GetPlayerHeight()
         {
             if (_cameraRig == null) _cameraRig = GetComponent<CameraRig>();
             return _cameraRig != null ? _cameraRig.CameraHeight : defaultStandingHeight;
         }
         
+        /// <summary>Converts a percentage of player height to world units.</summary>
         public float GetHeightFromPercent(float percent)
         {
             return GetPlayerHeight() * (percent / 100f);
         }
         
-        /// <summary>
-        /// Applies preset values based on VR mode.
-        /// </summary>
+        /// <summary>Applies preset values based on VR mode.</summary>
         public void ApplyVRModePreset()
         {
             switch (vrMode)
@@ -249,11 +263,14 @@ namespace Shababeek.Interactions.Core
         }
     }
     
+    /// <summary>VR mode configuration.</summary>
     public enum VRMode
     {
+        /// <summary>Standing/walking VR with play area bounds.</summary>
         [Tooltip("Standing/walking VR with play area bounds")]
         RoomScale,
-        
+
+        /// <summary>Seated VR experience.</summary>
         [Tooltip("Seated VR experience")]
         Seated
     }

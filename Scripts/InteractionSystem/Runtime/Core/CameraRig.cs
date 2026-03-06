@@ -5,6 +5,7 @@ using System.Collections.Generic;
 
 namespace Shababeek.Interactions.Core
 {
+    /// <summary>Specifies a layer assignment for a target transform.</summary>
     [System.Serializable]
     public struct LayerAssignment
     {
@@ -433,15 +434,21 @@ namespace Shababeek.Interactions.Core
 
     #region Enums
 
+    /// <summary>Type of hand tracking system to use.</summary>
     public enum InteractionSystemType
     {
+        /// <summary>Transform-based hand tracking (kinematic).</summary>
         TransformBased,
+        /// <summary>Physics-based hand tracking (dynamic rigidbody).</summary>
         PhysicsBased
     }
 
+    /// <summary>Type of interactor to use for hand interactions.</summary>
     public enum HandInteractorType
     {
+        /// <summary>Trigger-based interactor for direct collisions.</summary>
         Trigger,
+        /// <summary>Ray-based interactor for distance interactions.</summary>
         Ray
     }
 

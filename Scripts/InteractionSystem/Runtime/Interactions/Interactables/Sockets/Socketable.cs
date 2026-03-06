@@ -14,24 +14,38 @@ namespace Shababeek.Interactions
     [RequireComponent(typeof(VariableTweener))]
     public class Socketable : MonoBehaviour
     {
-        [Tooltip("Whether the object should return to its socket when deselected.")] [SerializeField]
-        private bool shouldReturnToLastSocket = true;
+        [Tooltip("Whether the object should return to its socket when deselected.")]
+        [SerializeField] private bool shouldReturnToLastSocket = true;
 
+        [Tooltip("Whether to use smooth animation when returning to socket.")]
         [SerializeField] private bool useSmoothReturn = true;
+
+        [Tooltip("Duration in seconds for the return animation.")]
         [SerializeField] private float returnDuration = 0.5f;
+
+        [Tooltip("Debug key to manually trigger socket return.")]
         [SerializeField] private KeyCode debugKey = KeyCode.P;
+
+        [Tooltip("Optional visual indicator transform to show socket positions.")]
         [SerializeField] private Transform indicator;
+
+        [Tooltip("Event invoked when the object is socketed or unsocketed.")]
         [SerializeField] private SocketEvent onSocketed = new();
 
-        [Header("Socket Detection")] [SerializeField]
-        private float detectionRadius = 0.5f;
+        [Header("Socket Detection")]
+        [Tooltip("Radius of the detection sphere for finding nearby sockets.")]
+        [SerializeField] private float detectionRadius = 0.5f;
 
+        [Tooltip("Offset from this object's position for socket detection sphere.")]
         [SerializeField] private Vector3 detectionOffset = Vector3.zero;
 
+        [Tooltip("Layer mask to filter which objects are considered sockets.")]
         [SerializeField] private LayerMask socketLayerMask = -1;
 
+        [Tooltip("The socket this object is currently inserted into.")]
         [ReadOnly] [SerializeField] private AbstractSocket socket;
 
+        [Tooltip("Whether this object is currently in a socket.")]
         [ReadOnly] [SerializeField] private bool isSocketed = false;
 
         private Transform _initialParent;

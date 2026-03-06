@@ -253,9 +253,8 @@ namespace Shababeek.Interactions.Editors
                         throw new System.InvalidOperationException("Selected HandData asset is not properly configured. Please check the console for details.");
                     }
                 }
-                
-                // TODO: Add logic for creating a new hand step
-                // This would involve adding additional steps to the wizard for hand creation workflow
+
+                // Future enhancement: Additional steps could be added to the wizard for hand creation workflow
             }
             catch (System.Exception e)
             {

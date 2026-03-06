@@ -12,10 +12,17 @@ namespace Shababeek.Interactions
     [Serializable]
     public abstract class AbstractSocket : MonoBehaviour
     {
-        [SerializeField] private UnityEvent<Socketable> onSocketConnected=new();
-        [SerializeField] private UnityEvent<Socketable> onSocketDisconnected=new();
-        [SerializeField] private UnityEvent<Socketable> onHoverStart=new();
-        [SerializeField] private UnityEvent<Socketable> onHoverEnd=new();
+        [Tooltip("Event invoked when a socketable object is successfully connected to this socket.")]
+        [SerializeField] private UnityEvent<Socketable> onSocketConnected = new();
+
+        [Tooltip("Event invoked when a socketable object is disconnected from this socket.")]
+        [SerializeField] private UnityEvent<Socketable> onSocketDisconnected = new();
+
+        [Tooltip("Event invoked when a socketable object starts hovering near this socket.")]
+        [SerializeField] private UnityEvent<Socketable> onHoverStart = new();
+
+        [Tooltip("Event invoked when a socketable object stops hovering near this socket.")]
+        [SerializeField] private UnityEvent<Socketable> onHoverEnd = new();
 
         /// <summary>
         /// The pivot transform where socketable objects will be positioned.

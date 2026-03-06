@@ -12,10 +12,13 @@ namespace Shababeek.Interactions
     [RequireComponent(typeof(PoseConstrainter))]
     public abstract class ConstrainedInteractableBase : InteractableBase
     {
-        [Tooltip("Transform representing the object that will be manipulated during interaction.")] 
+        [Tooltip("Transform representing the object that will be manipulated during interaction.")]
         [SerializeField] protected Transform interactableObject;
 
+        [Tooltip("Whether to automatically return the object to its original position when deselected.")]
         [SerializeField] protected bool returnWhenDeselected;
+
+        [Tooltip("Speed at which the object returns to its original position.")]
         [SerializeField] protected float returnSpeed;
         protected bool IsReturning = false;
         protected PoseConstrainter PoseConstrainer;
@@ -123,7 +126,6 @@ namespace Shababeek.Interactions
                 else
                 {
                     // Reference exists but in wrong location - move it
-                    Debug.Log($"Moving interactableObject into ScaleCompensator for {gameObject.name}", this);
                     interactableObject.SetParent(_scaleCompensator, true);
                     return;
                 }
@@ -141,7 +143,6 @@ namespace Shababeek.Interactions
             var wrongLocation = transform.Find("interactableObject");
             if (wrongLocation != null)
             {
-                Debug.Log($"Moving interactableObject into ScaleCompensator for {gameObject.name}", this);
                 wrongLocation.SetParent(_scaleCompensator, true);
                 interactableObject = wrongLocation;
                 return;
@@ -312,8 +313,8 @@ namespace Shababeek.Interactions
                 }
             }
             catch (Exception e)
-            { 
-                // TODO handle exception
+            {
+                Debug.LogException(e);
             }
         }
     }

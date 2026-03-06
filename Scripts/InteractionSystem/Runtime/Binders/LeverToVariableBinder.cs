@@ -4,21 +4,24 @@ using UnityEngine;
 
 namespace Shababeek.Interactions
 {
-    /// <summary>
-    /// Binds a LeverInteractable's output to scriptable variables.
-    /// </summary>
+    /// <summary>Binds a LeverInteractable's output to scriptable variables.</summary>
     [AddComponentMenu("Shababeek/Interactions/Binders/Lever To Variable Binder")]
     public class LeverToVariableBinder : MonoBehaviour
     {
         [Header("Source")]
+        [Tooltip("The lever interactable to bind from.")]
         [SerializeField] private LeverInteractable lever;
 
         [Header("Output Variables")]
+        [Tooltip("Float variable to receive the normalized lever position (0-1).")]
         [SerializeField] private FloatVariable normalizedOutput;
+        [Tooltip("Float variable to receive the lever angle in degrees.")]
         [SerializeField] private FloatVariable angleOutput;
 
         [Header("Settings")]
+        [Tooltip("Invert the output values.")]
         [SerializeField] private bool invertOutput = false;
+        [Tooltip("Multiplier applied to the output values.")]
         [SerializeField] private float outputMultiplier = 1f;
 
         private CompositeDisposable _disposable;

@@ -38,6 +38,7 @@ namespace Shababeek.Interactions
         [SerializeField] private float angularVelocityMultiplier = 1f;
 
         [Header("Events")]
+        [Tooltip("Event invoked when the object is thrown, passing the throw velocity vector.")]
         [SerializeField] private Vector3UnityEvent onThrowEnd = new();
 
         [Header("Debug")]

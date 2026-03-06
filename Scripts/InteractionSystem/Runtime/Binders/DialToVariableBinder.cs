@@ -121,9 +121,7 @@ namespace Shababeek.Interactions
             }
         }
 
-        /// <summary>
-        /// Sets the dial to match the current step variable value.
-        /// </summary>
+        /// <summary>Sets the dial to match the current step variable value.</summary>
         public void SyncDialToVariable()
         {
             if (stepVariable != null)

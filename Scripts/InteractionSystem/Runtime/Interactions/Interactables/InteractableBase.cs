@@ -488,7 +488,6 @@ namespace Shababeek.Interactions
             var wrongLocation = transform.Find("interactableObject");
             if (wrongLocation != null)
             {
-                Debug.Log($"Moving interactableObject into ScaleCompensator for {gameObject.name}", this);
                 wrongLocation.SetParent(_scaleCompensator, true);
                 return;
             }

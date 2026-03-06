@@ -4,9 +4,7 @@ using UnityEngine;
 
 namespace Shababeek.Interactions
 {
-    /// <summary>
-    /// Binds socket states to BoolVariables.
-    /// </summary>
+    /// <summary>Binds socket states to BoolVariables.</summary>
     /// <remarks>
     /// Tracks whether a socket is occupied, hovering, etc. through the scriptable variable system.
     ///
@@ -78,20 +76,14 @@ namespace Shababeek.Interactions
             }
         }
 
-        /// <summary>
-        /// Gets whether the socket is currently occupied.
-        /// </summary>
+        /// <summary>Gets whether the socket is currently occupied.</summary>
         public bool IsOccupied => isOccupiedVariable != null && isOccupiedVariable.Value;
 
-        /// <summary>
-        /// Gets whether a socketable is hovering near the socket.
-        /// </summary>
+        /// <summary>Gets whether a socketable is hovering near the socket.</summary>
         public bool IsHovering => isHoveringVariable != null && isHoveringVariable.Value;
     }
 
-    /// <summary>
-    /// Binds socket events to GameEvents.
-    /// </summary>
+    /// <summary>Binds socket events to GameEvents.</summary>
     /// <remarks>
     /// Fires scriptable GameEvents when socket state changes.
     ///
@@ -164,9 +156,7 @@ namespace Shababeek.Interactions
         }
     }
 
-    /// <summary>
-    /// Binds socketable states to BoolVariables.
-    /// </summary>
+    /// <summary>Binds socketable states to BoolVariables.</summary>
     /// <remarks>
     /// Tracks whether a socketable object is currently socketed.
     ///
@@ -244,20 +234,14 @@ namespace Shababeek.Interactions
             }
         }
 
-        /// <summary>
-        /// Gets whether the socketable is currently socketed.
-        /// </summary>
+        /// <summary>Gets whether the socketable is currently socketed.</summary>
         public bool IsSocketed => isSocketedVariable != null && isSocketedVariable.Value;
 
-        /// <summary>
-        /// Gets whether the socketable is near a valid socket.
-        /// </summary>
+        /// <summary>Gets whether the socketable is near a valid socket.</summary>
         public bool IsNearSocket => isNearSocketVariable != null && isNearSocketVariable.Value;
     }
 
-    /// <summary>
-    /// Binds socketable events to GameEvents.
-    /// </summary>
+    /// <summary>Binds socketable events to GameEvents.</summary>
     [AddComponentMenu("Shababeek/Scriptable System/Socketable To Event Binder")]
     [RequireComponent(typeof(Socketable))]
     public class SocketableToEventBinder : MonoBehaviour

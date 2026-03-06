@@ -116,24 +116,16 @@ namespace Shababeek.Interactions.Binders
             }
         }
 
-        /// <summary>
-        /// Gets whether the interactable is currently hovered.
-        /// </summary>
+        /// <summary>Gets whether the interactable is currently hovered.</summary>
         public bool IsHovered => hoveredVariable != null && hoveredVariable.Value;
 
-        /// <summary>
-        /// Gets whether the interactable is currently selected.
-        /// </summary>
+        /// <summary>Gets whether the interactable is currently selected.</summary>
         public bool IsSelected => selectedVariable != null && selectedVariable.Value;
 
-        /// <summary>
-        /// Gets whether the interactable is currently being used.
-        /// </summary>
+        /// <summary>Gets whether the interactable is currently being used.</summary>
         public bool IsUsed => usedVariable != null && usedVariable.Value;
 
-        /// <summary>
-        /// Gets whether the thumb button is currently pressed.
-        /// </summary>
+        /// <summary>Gets whether the thumb button is currently pressed.</summary>
         public bool IsThumbPressed => thumbVariable != null && thumbVariable.Value;
     }
 }

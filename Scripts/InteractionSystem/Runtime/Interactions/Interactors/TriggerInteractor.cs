@@ -12,11 +12,19 @@ namespace Shababeek.Interactions
     [AddComponentMenu("Shababeek/Interactions/Interactors/Trigger Interactor")]
     public class TriggerInteractor : InteractorBase
     {
+        [Tooltip("Radius of the detection sphere for finding nearby interactables.")]
         [SerializeField] private float detectionRadius = 0.1f;
+
+        [Tooltip("Offset from this interactor's position for the detection sphere center.")]
         [SerializeField] private Vector3 detectionOffset = Vector3.zero;
+
+        [Tooltip("Layer mask to filter which objects are considered interactable.")]
         [SerializeField] private LayerMask interactableLayerMask = -1;
+
+        [Tooltip("Minimum time interval in seconds between detection sphere checks.")]
         [SerializeField] private float distanceCheckInterval = 0.05f;
 
+        [Tooltip("Array of colliders found by the detection sphere.")]
         [ReadOnly] [SerializeField] private Collider[] overlapResults = new Collider[10];
         private float _timeSinceLastColliderUpdate = 0;                                    
 

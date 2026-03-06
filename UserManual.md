@@ -15,11 +15,11 @@ The Shababeek Interaction System is a Unity package for building advanced, desig
 4. Play the scene and interact with objects using your VR controllers or input devices.
 
 ## Core Concepts
-- **Scriptable Variables & Events:** Use ScriptableObjects to store and observe data and events.
 - **Interactables:** Objects that can be grabbed, activated, or manipulated.
 - **Interactors:** Components (e.g., hands, raycasters) that interact with interactables.
 - **Hand Presence:** The system is designed around natural hand-object interactions.
 - **Feedback System:** Add haptic, audio, or visual feedback to any interaction.
+- **Reactive Architecture:** This package integrates with the **com.shababeek.reactivevars** package for data flow, reactive variables, and sequencing systems.
 
 ## Creating Interactables
 1. Add an `InteractableBase`-derived component (e.g., `Grabable`, `Switch`) to your GameObject.
@@ -30,7 +30,7 @@ The Shababeek Interaction System is a Unity package for building advanced, desig
 - **Add new interactables:** Inherit from `InteractableBase` and implement required methods.
 - **Add new interactors:** Inherit from `InteractorBase` for custom input or interaction logic.
 - **Extend feedback:** Use or extend the `FeedbackSystem` for custom responses.
-- **Scriptable System:** Use or create new ScriptableVariables and GameEvents for decoupled logic.
+- **Reactive Logic:** Use the ReactiveVars package (ScriptableVariables, GameEvents, Binders) to create decoupled systems without additional code.
 
 ## Troubleshooting
 - Ensure all required layers and input settings are configured in the Config asset.

@@ -19,18 +19,35 @@ namespace Shababeek.Interactions
     [AddComponentMenu(menuName: "Shababeek/Interactions/Interactables/VRButton")]
     public class VRButton : MonoBehaviour
     {
-        [SerializeField] private UnityEvent onClick = new(); 
+        [Tooltip("Event invoked when the button is clicked (pressed and released).")]
+        [SerializeField] private UnityEvent onClick = new();
+
+        [Tooltip("Event invoked when the button is pressed down.")]
         [SerializeField] private UnityEvent onButtonDown = new();
+
+        [Tooltip("Event invoked when the button is released.")]
         [SerializeField] private UnityEvent onButtonUp = new();
 
         [Tooltip("The transform of the button visual element that moves during press.")]
         [SerializeField] private Transform button;
+
+        [Tooltip("Position of the button when not pressed.")]
         [SerializeField] private Vector3 normalPosition = new Vector3(0, .5f, 0);
+
+        [Tooltip("Position of the button when fully pressed.")]
         [SerializeField] private Vector3 pressedPosition = new Vector3(0, .2f, 0);
+
+        [Tooltip("Whether the button is currently in a pressed state.")]
         [SerializeField] private bool isClicked;
+
+        [Tooltip("Speed of button press animation.")]
         [SerializeField] private float pressSpeed = 10;
+
+        [Tooltip("Minimum time in seconds between successive button presses.")]
         [SerializeField] private float coolDownTime = .2f;
-        [SerializeField] private  string maskName="tip";
+
+        [Tooltip("Name substring to identify the pressing collider.")]
+        [SerializeField] private string maskName = "tip";
 
         private float _coolDownTimer = 0;
         private float t = 0;

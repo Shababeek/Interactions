@@ -71,6 +71,7 @@ namespace Shababeek.Interactions.Core
         /// </summary>
         public float this[int index] => config?[hand]?[index] ?? 0f;
         
+        /// <summary>Sets the global configuration for this hand.</summary>
         internal Config Config
         {
             set => config = value;

@@ -180,11 +180,14 @@ namespace Shababeek.Interactions.Core
         /// </summary>
         public TrackingType InputType => inputType;
 
+        /// <summary>Gets input actions for the left hand.</summary>
         public HandInputActions LeftHandActions => leftHandActions;
+        /// <summary>Gets input actions for the right hand.</summary>
         public HandInputActions RightHandActions => rightHandActions;
 
         #endregion
 
+        /// <summary>Gets hand input provider by hand identifier.</summary>
         public IHandInputProvider this[HandIdentifier hand] =>
             hand switch
             {
@@ -194,10 +197,8 @@ namespace Shababeek.Interactions.Core
             };
 
         #region Public Methods
-/// <summary>
-/// Sets the input provider for a specific hand at runtime.
-/// </summary>
-public void SetHandProvider(HandIdentifier hand, IHandInputProvider provider)
+        /// <summary>Sets the input provider for a specific hand at runtime.</summary>
+        public void SetHandProvider(HandIdentifier hand, IHandInputProvider provider)
 {
     if (hand == HandIdentifier.Left)
     {
@@ -220,13 +221,18 @@ public void SetHandProvider(HandIdentifier hand, IHandInputProvider provider)
         public struct HandInputActions
         {
             [Header("Finger Actions")]
+            [Tooltip("Input action reference for the thumb.")]
             [SerializeField] private InputActionReference thumbAction;
+            [Tooltip("Input action reference for the index finger.")]
             [SerializeField] private InputActionReference indexAction;
+            [Tooltip("Input action reference for the middle finger.")]
             [SerializeField] private InputActionReference middleAction;
+            [Tooltip("Input action reference for the ring finger.")]
             [SerializeField] private InputActionReference ringAction;
+            [Tooltip("Input action reference for the pinky finger.")]
             [SerializeField] private InputActionReference pinkyAction;
 
-
+            /// <summary>Gets the input action for the thumb.</summary>
             public InputAction ThumbAction => thumbAction?.action;
 
             /// <summary>

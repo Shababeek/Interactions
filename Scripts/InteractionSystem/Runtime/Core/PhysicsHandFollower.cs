@@ -9,8 +9,11 @@ namespace Shababeek.Interactions.Core
     [RequireComponent(typeof(Rigidbody))]
     public class PhysicsHandFollower : MonoBehaviour
     {
+        [Tooltip("The VR controller transform to follow.")]
         [SerializeField] private Transform target;
+        [Tooltip("Speed multiplier for position-based hand movement.")]
         [SerializeField] private float followSpeed = 60;
+        [Tooltip("Speed multiplier for rotation-based hand movement.")]
         [SerializeField] private float rotationSpeed = 40f;
 
         private Rigidbody _rb;

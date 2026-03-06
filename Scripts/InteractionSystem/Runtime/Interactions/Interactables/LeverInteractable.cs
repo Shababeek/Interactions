@@ -17,12 +17,16 @@ namespace Shababeek.Interactions
     /// </summary>
     public class LeverInteractable : ConstrainedInteractableBase
     {
+        [Tooltip("The axis around which the lever rotates.")]
         [SerializeField] public RotationAxis rotationAxis = RotationAxis.Forward;
-        [Tooltip("Rotation angle range in degrees (min, max)")]
+
+        [Tooltip("Rotation angle range in degrees (x=minimum, y=maximum).")]
         [SerializeField] private Vector2 angleRange = new Vector2(-40f, 40f);
-        
-        [Tooltip("Reference distance for angle calculation (affects sensitivity) should be around the same height as the grab point")]
+
+        [Tooltip("Reference distance for angle calculation (affects sensitivity). Should be around the same height as the grab point.")]
         [SerializeField] private float projectionDistance = 0.3f;
+
+        [Tooltip("Event invoked when the lever position changes, passing normalized angle value.")]
         [SerializeField] private FloatUnityEvent onLeverChanged = new();
 
         [Header("Debug")]
@@ -64,7 +68,8 @@ namespace Shababeek.Interactions
         }
         protected override void HandleObjectDeselection()
         {
-            _returnTimer = 0f; //TODO: Snap to nearest step if stepped movement is implemented
+            _returnTimer = 0f;
+            // Step snapping could be implemented here if stepped movement feature is added
         }
         private void CalculateAndApplyRotation(Vector3 handWorldPosition)
         {

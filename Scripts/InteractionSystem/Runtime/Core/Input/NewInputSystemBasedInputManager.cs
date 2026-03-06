@@ -7,9 +7,12 @@ namespace Shababeek.Interactions.Core
     /// </summary>
     internal class NewInputSystemBasedInputManager : InputManagerBase
     {
+        [Tooltip("Input actions for the left hand.")]
         [SerializeField]private Config.HandInputActions leftHandActions;
+        [Tooltip("Input actions for the right hand.")]
         [SerializeField]private Config.HandInputActions rightHandActions;
 
+        /// <summary>Initializes the input manager with action mappings for both hands.</summary>
         public void Initialize(Config.HandInputActions leftHandActions, Config.HandInputActions rightHandActions)
         {
             this.leftHandActions = leftHandActions;

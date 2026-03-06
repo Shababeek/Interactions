@@ -9,8 +9,11 @@ namespace Shababeek.Interactions.Core
     [AddComponentMenu("Shababeek/Interactions/Hand Pivot Updater")]
     public class HandPivotUpdater : MonoBehaviour
     {
+        [Tooltip("Configuration containing hand input providers.")]
         [SerializeField] private Config config;
+        [Tooltip("Transform representing the left hand pivot point.")]
         [SerializeField] private Transform leftHandPivot;
+        [Tooltip("Transform representing the right hand pivot point.")]
         [SerializeField] private Transform rightHandPivot;
 
         private void LateUpdate()
@@ -32,6 +35,7 @@ namespace Shababeek.Interactions.Core
                 pivot.localRotation = provider.Rotation;
         }
 
+        /// <summary>Initializes the hand pivot updater with configuration and transforms.</summary>
         public void Initialize(Config configRef, Transform leftPivot, Transform rightPivot)
         {
             config = configRef;
