@@ -263,8 +263,7 @@ Step: "GrabAnyObject"
 ## Next Steps
 
 - [Sequence System Reference](../Systems/SequencingSystem.md) — Full documentation
-- [Actions Reference](../Systems/SequenceActions.md) — All action types
-- [Interaction System](../Systems/InteractionSystem.md) — For interaction-based steps
+- [Interaction-Specific Actions](../Systems/SequencingSystem.md) — All action types for interactions
 
 ---
 

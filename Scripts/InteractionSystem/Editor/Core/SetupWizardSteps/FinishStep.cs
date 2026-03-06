@@ -195,7 +195,7 @@ namespace Shababeek.Interactions.Editors
             // Useful buttons
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("Open Documentation"))
-                Application.OpenURL("https://github.com/Shababeek/Interactions/tree/master/Assets/Shababeek/Documentation");
+                Application.OpenURL("https://github.com/Shababeek/Interactions/tree/master/Documentation");
 
             if (wizard.ConfigAsset != null && GUILayout.Button("Select Config Asset"))
             {

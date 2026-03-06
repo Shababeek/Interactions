@@ -767,10 +767,7 @@ You can make Config a prefab asset for reuse across projects:
 
 ## Related Documentation
 
-- **[Setup Wizard](SetupWizard.md)** - Automated configuration tool
-- **[HandData & Poses](../PoseSystem/readme.md)** - Setting up hand models
-- **[CameraRig](CameraRig.md)** - VR camera setup
-- **[Input System](InputSystem.md)** - Controller input configuration
+- **[HandData & Poses](../PoseSystem/PoseConstrainer.md)** - Setting up hand models and poses
 - **[Quick Start Guide](../GettingStarted/QuickStart.md)** - First-time setup
 
 ---

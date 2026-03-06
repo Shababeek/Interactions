@@ -351,7 +351,7 @@ These actions integrate seamlessly with all Interaction System components:
 - **[Interaction System Overview](../../UserManual.md)** — System architecture
 - **[Constrained Interactables](../Interactables/ConstrainedInteractables.md)** — Lever, Wheel, Dial, Drawer, Joystick
 - **[Socket System](../SocketSystem/SocketSystem.md)** — Socket and Socketable components
-- **[Interaction Binders](Binders.md)** — Connecting interactions to reactive variables
+- **[Interaction Binders](../ScriptableSystem/Binders.md)** — Connecting interactions to reactive variables
 - **[Feedback System](FeedbackSystem.md)** — Adding haptics and audio to sequences
 - **[ReactiveVars Package](https://github.com/Shababeek/ReactiveVars)** — Core Sequencing System, Sequence, Step, SequenceBehaviour, BranchingSequence
 

@@ -192,7 +192,7 @@ When you created your grabbable cube, a PoseConstrainer was automatically added.
 1. Select your Grabbable Cube
 2. Find the **PoseConstrainer** component in the Inspector
 
-![PoseConstrainer Inspector](../Images/Quick_Start/PoseConstrainer%20Inspector%20with%20labeled%20sections.png)
+![PoseConstrainer Inspector](../Images/Quick_Start/PoseConstrainer_Inspector_with_labeled_sections.png)
 
 #### Configure Constraint Type
 The **Constraint Type** determines how hands behave:

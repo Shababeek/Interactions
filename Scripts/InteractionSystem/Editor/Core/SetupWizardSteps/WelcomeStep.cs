@@ -83,7 +83,7 @@ namespace Shababeek.Interactions.Editors
 
             EditorGUILayout.Space();
             if (GUILayout.Button("Open Documentation"))
-                Application.OpenURL("https://github.com/Shababeek/Interactions/tree/master/Assets/Shababeek/Documentation");
+                Application.OpenURL("https://github.com/Shababeek/Interactions/tree/master/Documentation");
         }
 
         public void OnStepEnter(ShababeekSetupWizard wizard)

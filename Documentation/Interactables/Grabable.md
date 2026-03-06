@@ -486,7 +486,6 @@ When you grab an object:
 
 ## Related Topics
 
-- [Readme.md](Readme.md) - A list of a all interactables including grab objects
 - [Throwable](Throwable.md) - Advanced throwing mechanics
 - [PoseConstrainer](../PoseSystem/PoseConstrainer.md) - Hand pose configuration
 - [Socket](../SocketSystem/SocketSystem.md) - Object placement and snapping

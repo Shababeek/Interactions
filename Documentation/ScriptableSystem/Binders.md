@@ -318,7 +318,7 @@ Simplified version focusing only on GameEvents.
 - **[Socket System](../SocketSystem/SocketSystem.md)** — Socket and Socketable components
 - **[Constrained Interactables](../Interactables/ConstrainedInteractables.md)** — Lever, Wheel, Dial, Joystick, Drawer
 - **[ReactiveVars Package](https://github.com/Shababeek/ReactiveVars)** — Complete documentation on variables, events, and generic binders
-- **[Interaction Sequences](SequencingSystem.md)** — Using binders with tutorials
+- **[Interaction Sequences](../Systems/SequencingSystem.md)** — Using binders with tutorials
 
 ---
 
