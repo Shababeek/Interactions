@@ -12,6 +12,9 @@ namespace Shababeek.Interactions
     [Serializable]
     public abstract class AbstractSocket : MonoBehaviour
     {
+        [Tooltip("Categories this socket will accept. Leave empty (Nothing) to accept any Socketable (legacy behavior).")]
+        [SerializeField] private SocketMask acceptedCategories;
+
         [Tooltip("Event invoked when a socketable object is successfully connected to this socket.")]
         [SerializeField] private UnityEvent<Socketable> onSocketConnected = new();
 
@@ -94,5 +97,16 @@ namespace Shababeek.Interactions
         /// Checks if the socket can accept a new socketable object.
         /// </summary>
         public abstract bool CanSocket();
+
+        /// <summary>
+        /// Returns true if this socket accepts the given socketable based on its category bitmask.
+        /// An empty acceptedCategories mask (0) accepts anything (legacy behavior).
+        /// </summary>
+        public virtual bool Accepts(Socketable socketable)
+        {
+            if (acceptedCategories.IsEmpty) return true;
+            if (socketable == null) return false;
+            return acceptedCategories.Overlaps(socketable.Category);
+        }
     }
 }

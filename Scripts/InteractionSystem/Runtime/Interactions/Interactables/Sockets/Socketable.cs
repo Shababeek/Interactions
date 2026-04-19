@@ -39,8 +39,14 @@ namespace Shababeek.Interactions
         [Tooltip("Offset from this object's position for socket detection sphere.")]
         [SerializeField] private Vector3 detectionOffset = Vector3.zero;
 
-        [Tooltip("Layer mask to filter which objects are considered sockets.")]
+        [Tooltip("Which matching strategy gates socket attachment. LayerMask is legacy; Category is layer-independent and recommended for grabbed objects.")]
+        [SerializeField] private SocketMatchMode matchMode = SocketMatchMode.LayerMask;
+
+        [Tooltip("LEGACY. Layer mask used only when Match Mode is LayerMask. Breaks when the grabbed object's layer changes to Hand — prefer Category mode.")]
         [SerializeField] private LayerMask socketLayerMask = -1;
+
+        [Tooltip("Category bitmask used only when Match Mode is Category. Matched against AbstractSocket.acceptedCategories via bitwise AND. Layer-independent.")]
+        [SerializeField] private SocketMask category;
 
         [Tooltip("The socket this object is currently inserted into.")]
         [ReadOnly] [SerializeField] private AbstractSocket socket;
@@ -80,6 +86,11 @@ namespace Shababeek.Interactions
         /// Gets the currently detected socket.
         /// </summary>
         public AbstractSocket CurrentSocket => socket;
+
+        /// <summary>
+        /// Category bitmask used to match with compatible sockets.
+        /// </summary>
+        public SocketMask Category => category;
 
         /// <summary>
         /// Gets whether the object is currently returning to its original position.
@@ -195,7 +206,9 @@ namespace Shababeek.Interactions
             isSocketed = false;
             transform.parent = null;
             if (!shouldReturnToLastSocket) return;
-            if (_lastSocket != null)
+            bool canReuseLast = _lastSocket != null && _lastSocket.CanSocket()
+                && (matchMode != SocketMatchMode.Category || _lastSocket.Accepts(this));
+            if (canReuseLast)
                 Insert(_lastSocket);
             else
                 ReturnToParent();
@@ -266,9 +279,12 @@ namespace Shababeek.Interactions
             // Calculate world position of detection sphere center with local offset
             Vector3 detectionCenter = transform.TransformPoint(detectionOffset);
 
+            // Category mode ignores layers entirely (so grabbed-to-Hand-layer objects still detect sockets).
+            int mask = matchMode == SocketMatchMode.Category ? ~0 : socketLayerMask.value;
+
             // Use OverlapSphereNonAlloc to detect nearby sockets (avoids GC allocation)
             int hitCount =
-                Physics.OverlapSphereNonAlloc(detectionCenter, detectionRadius, _overlapResults, socketLayerMask);
+                Physics.OverlapSphereNonAlloc(detectionCenter, detectionRadius, _overlapResults, mask);
 
             AbstractSocket closestSocket = null;
             float closestDistance = float.MaxValue;
@@ -279,6 +295,7 @@ namespace Shababeek.Interactions
                 var col = _overlapResults[i];
                 var detectedSocket = col.GetComponent<AbstractSocket>();
                 if (detectedSocket == null || !detectedSocket.CanSocket()) continue;
+                if (matchMode == SocketMatchMode.Category && !detectedSocket.Accepts(this)) continue;
 
                 float distance = Vector3.Distance(detectionCenter, col.transform.position);
                 if (distance < closestDistance)
