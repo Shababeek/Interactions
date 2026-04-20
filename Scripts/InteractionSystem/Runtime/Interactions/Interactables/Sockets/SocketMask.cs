@@ -5,7 +5,7 @@ namespace Shababeek.Interactions
 {
     /// <summary>
     /// 32-bit category bitmask used to match <see cref="Socketable"/>s with <see cref="AbstractSocket"/>s,
-    /// independent of GameObject physics layers. Category names are defined in <see cref="SocketCategoryRegistry"/>.
+    /// independent of GameObject physics layers. Bit names are defined in <see cref="SocketMaskRegistry"/>.
     /// </summary>
     [Serializable]
     public struct SocketMask : IEquatable<SocketMask>

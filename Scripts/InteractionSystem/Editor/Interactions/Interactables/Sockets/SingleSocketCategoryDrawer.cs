@@ -8,28 +8,28 @@ namespace Shababeek.Interactions.Editors
     public class SingleSocketCategoryDrawer : PropertyDrawer
     {
         private const string DefaultDir = "Assets/_Shababeek/Hands/InteractionSystem";
-        private const string DefaultAssetName = "SocketCategoryRegistry.asset";
+        private const string DefaultAssetName = "SocketMaskRegistry.asset";
         private const int AnyIndex = -1;
 
-        private static SocketCategoryRegistry _cached;
+        private static SocketMaskRegistry _cached;
         private static double _lastLookup;
 
-        private static SocketCategoryRegistry GetRegistry()
+        private static SocketMaskRegistry GetRegistry()
         {
             if (_cached != null) return _cached;
             if (EditorApplication.timeSinceStartup - _lastLookup < 2.0) return _cached;
             _lastLookup = EditorApplication.timeSinceStartup;
 
-            var guids = AssetDatabase.FindAssets("t:SocketCategoryRegistry");
+            var guids = AssetDatabase.FindAssets("t:SocketMaskRegistry");
             if (guids != null && guids.Length > 0)
             {
-                _cached = AssetDatabase.LoadAssetAtPath<SocketCategoryRegistry>(
+                _cached = AssetDatabase.LoadAssetAtPath<SocketMaskRegistry>(
                     AssetDatabase.GUIDToAssetPath(guids[0]));
             }
             return _cached;
         }
 
-        private static SocketCategoryRegistry CreateRegistry()
+        private static SocketMaskRegistry CreateRegistry()
         {
             var dir = DefaultDir;
             if (!AssetDatabase.IsValidFolder(dir))
@@ -37,7 +37,7 @@ namespace Shababeek.Interactions.Editors
                 dir = "Assets";
             }
             var path = AssetDatabase.GenerateUniqueAssetPath(Path.Combine(dir, DefaultAssetName).Replace('\\', '/'));
-            var asset = ScriptableObject.CreateInstance<SocketCategoryRegistry>();
+            var asset = ScriptableObject.CreateInstance<SocketMaskRegistry>();
             AssetDatabase.CreateAsset(asset, path);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();

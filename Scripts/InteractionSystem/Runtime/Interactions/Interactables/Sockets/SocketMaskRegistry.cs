@@ -3,11 +3,11 @@ using UnityEngine;
 namespace Shababeek.Interactions
 {
     /// <summary>
-    /// Central registry of socket category names (up to 32). Acts like Unity's TagManager for sockets.
-    /// One asset per project; the <see cref="SocketMask"/> property drawer resolves it via AssetDatabase.
+    /// Central registry of socket mask bit names (up to 32). Acts like Unity's TagManager for sockets.
+    /// Assigned on <see cref="Core.Config"/> so the whole project shares one source of truth.
     /// </summary>
-    [CreateAssetMenu(fileName = "SocketCategoryRegistry", menuName = "Shababeek/Interactions/Socket Category Registry", order = 0)]
-    public class SocketCategoryRegistry : ScriptableObject
+    [CreateAssetMenu(fileName = "SocketMaskRegistry", menuName = "Shababeek/Interactions/Socket Mask Registry", order = 0)]
+    public class SocketMaskRegistry : ScriptableObject
     {
         public const int MaxCategories = 32;
 
@@ -30,7 +30,7 @@ namespace Shababeek.Interactions
             for (int i = 0; i < MaxCategories; i++)
             {
                 var n = GetName(i);
-                arr[i] = string.IsNullOrEmpty(n) ? $"<Category {i}>" : n;
+                arr[i] = string.IsNullOrEmpty(n) ? $"<Mask {i}>" : n;
             }
             return arr;
         }

@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 44faed9b30e3dd14d9465b3ab317bfa4, type: 3}
-  m_Name: SocketCategoryRegistry
-  m_EditorClassIdentifier: Shababeek.Interactions::Shababeek.Interactions.SocketCategoryRegistry
+  m_Name: SocketMaskRegistry
+  m_EditorClassIdentifier: Shababeek.Interactions::Shababeek.Interactions.SocketMaskRegistry
   names:
-  - Test
   - test
-  - 
-  - 
+  - test1
+  - test2
+  - test3
   - 
   - 
   - 
