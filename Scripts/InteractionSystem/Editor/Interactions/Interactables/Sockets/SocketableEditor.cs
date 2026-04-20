@@ -18,8 +18,7 @@ namespace Shababeek.Interactions.Editors
         private SerializedProperty detectionRadiusProp;
         private SerializedProperty detectionOffsetProp;
         private SerializedProperty socketLayerMaskProp;
-        private SerializedProperty categoryProp;
-        private SerializedProperty matchModeProp;
+        private SerializedProperty socketableMaskProp;
 
         private SerializedProperty socketProp;
         private SerializedProperty isSocketedProp;
@@ -40,8 +39,7 @@ namespace Shababeek.Interactions.Editors
             detectionRadiusProp = serializedObject.FindProperty("detectionRadius");
             detectionOffsetProp = serializedObject.FindProperty("detectionOffset");
             socketLayerMaskProp = serializedObject.FindProperty("socketLayerMask");
-            categoryProp = serializedObject.FindProperty("category");
-            matchModeProp = serializedObject.FindProperty("matchMode");
+            socketableMaskProp = serializedObject.FindProperty("socketableMask");
 
             socketProp = serializedObject.FindProperty("socket");
             isSocketedProp = serializedObject.FindProperty("isSocketed");
@@ -86,23 +84,10 @@ namespace Shababeek.Interactions.Editors
                 new GUIContent("Detection Radius", "Radius of the detection sphere for finding nearby sockets"));
             EditorGUILayout.PropertyField(detectionOffsetProp,
                 new GUIContent("Detection Offset", "Local space offset for the detection sphere center"));
-            EditorGUILayout.PropertyField(matchModeProp,
-                new GUIContent("Match Mode", "LayerMask = legacy physics-layer filtering. Category = bitmask match via AbstractSocket.Accepts (recommended for grabbed objects)."));
-
-            var mode = (SocketMatchMode)matchModeProp.enumValueIndex;
-            EditorGUI.indentLevel++;
-            if (mode == SocketMatchMode.LayerMask)
-            {
-                EditorGUILayout.HelpBox("LayerMask mode is legacy. When the grabbed object's layer changes (e.g. to Hand), detection can break. Switch to Category for layer-independent matching.", MessageType.Warning);
-                EditorGUILayout.PropertyField(socketLayerMaskProp,
-                    new GUIContent("Socket Layer Mask", "Legacy. Physics layers considered as sockets."));
-            }
-            else
-            {
-                EditorGUILayout.PropertyField(categoryProp,
-                    new GUIContent("Category", "Bitmask matched against AbstractSocket.acceptedCategories via (a & b) != 0."));
-            }
-            EditorGUI.indentLevel--;
+            EditorGUILayout.PropertyField(socketLayerMaskProp,
+                new GUIContent("Socket Layer Mask", "Physics layers scanned during socket detection. Narrows the OverlapSphere query before category matching."));
+            EditorGUILayout.PropertyField(socketableMaskProp,
+                new GUIContent("Socketable Mask", "Categories this socketable belongs to. Matched against each socket's accepted mask via bitwise AND."));
             EditorGUILayout.Space();
 
             EditorGUILayout.LabelField("Events", EditorStyles.boldLabel);

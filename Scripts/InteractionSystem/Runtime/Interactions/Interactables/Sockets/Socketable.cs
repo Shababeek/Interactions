@@ -3,6 +3,7 @@ using Shababeek.ReactiveVars;
 using UniRx;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Serialization;
 
 namespace Shababeek.Interactions
 {
@@ -39,14 +40,12 @@ namespace Shababeek.Interactions
         [Tooltip("Offset from this object's position for socket detection sphere.")]
         [SerializeField] private Vector3 detectionOffset = Vector3.zero;
 
-        [Tooltip("Which matching strategy gates socket attachment. LayerMask is legacy; Category is layer-independent and recommended for grabbed objects.")]
-        [SerializeField] private SocketMatchMode matchMode = SocketMatchMode.LayerMask;
-
-        [Tooltip("LEGACY. Layer mask used only when Match Mode is LayerMask. Breaks when the grabbed object's layer changes to Hand — prefer Category mode.")]
+        [Tooltip("Physics layers scanned during socket detection. Combined with Socketable Mask — both must match.")]
         [SerializeField] private LayerMask socketLayerMask = -1;
 
-        [Tooltip("Category bitmask used only when Match Mode is Category. Matched against AbstractSocket.acceptedCategories via bitwise AND. Layer-independent.")]
-        [SerializeField] private SocketMask category;
+        [Tooltip("Bitmask of categories this socketable belongs to. Matched against each socket's accepted mask via bitwise AND. Default is everything.")]
+        [FormerlySerializedAs("category")]
+        [SerializeField] private SocketMask socketableMask = SocketMask.FromInt(~0);
 
         [Tooltip("The socket this object is currently inserted into.")]
         [ReadOnly] [SerializeField] private AbstractSocket socket;
@@ -88,9 +87,9 @@ namespace Shababeek.Interactions
         public AbstractSocket CurrentSocket => socket;
 
         /// <summary>
-        /// Category bitmask used to match with compatible sockets.
+        /// Bitmask of categories this socketable belongs to. Matched against each socket's accepted mask.
         /// </summary>
-        public SocketMask Category => category;
+        public SocketMask SocketableMask => socketableMask;
 
         /// <summary>
         /// Gets whether the object is currently returning to its original position.
@@ -206,8 +205,7 @@ namespace Shababeek.Interactions
             isSocketed = false;
             transform.parent = null;
             if (!shouldReturnToLastSocket) return;
-            bool canReuseLast = _lastSocket != null && _lastSocket.CanSocket()
-                && (matchMode != SocketMatchMode.Category || _lastSocket.Accepts(this));
+            bool canReuseLast = _lastSocket != null && _lastSocket.CanSocket() && _lastSocket.CanSocket(this);
             if (canReuseLast)
                 Insert(_lastSocket);
             else
@@ -279,12 +277,9 @@ namespace Shababeek.Interactions
             // Calculate world position of detection sphere center with local offset
             Vector3 detectionCenter = transform.TransformPoint(detectionOffset);
 
-            // Category mode ignores layers entirely (so grabbed-to-Hand-layer objects still detect sockets).
-            int mask = matchMode == SocketMatchMode.Category ? ~0 : socketLayerMask.value;
-
-            // Use OverlapSphereNonAlloc to detect nearby sockets (avoids GC allocation)
+            // Physics layer mask narrows the overlap query; category mask gates the match below.
             int hitCount =
-                Physics.OverlapSphereNonAlloc(detectionCenter, detectionRadius, _overlapResults, mask);
+                Physics.OverlapSphereNonAlloc(detectionCenter, detectionRadius, _overlapResults, socketLayerMask.value);
 
             AbstractSocket closestSocket = null;
             float closestDistance = float.MaxValue;
@@ -295,7 +290,7 @@ namespace Shababeek.Interactions
                 var col = _overlapResults[i];
                 var detectedSocket = col.GetComponent<AbstractSocket>();
                 if (detectedSocket == null || !detectedSocket.CanSocket()) continue;
-                if (matchMode == SocketMatchMode.Category && !detectedSocket.Accepts(this)) continue;
+                if (!detectedSocket.CanSocket(this)) continue;
 
                 float distance = Vector3.Distance(detectionCenter, col.transform.position);
                 if (distance < closestDistance)

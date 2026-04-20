@@ -100,13 +100,13 @@ namespace Shababeek.Interactions
 
         /// <summary>
         /// Returns true if this socket accepts the given socketable based on its category bitmask.
-        /// An empty acceptedCategories mask (0) accepts anything (legacy behavior).
+        /// An empty acceptedCategories mask (0) accepts anything.
         /// </summary>
-        public virtual bool Accepts(Socketable socketable)
+        public virtual bool CanSocket(Socketable socketable)
         {
             if (acceptedCategories.IsEmpty) return true;
             if (socketable == null) return false;
-            return acceptedCategories.Overlaps(socketable.Category);
+            return acceptedCategories.Overlaps(socketable.SocketableMask);
         }
     }
 }

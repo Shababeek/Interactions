@@ -13,6 +13,10 @@ namespace Shababeek.Interactions
     /// </summary>
     public class ShiftingRackSocket : AbstractSocket
     {
+        [Header("Category")]
+        [Tooltip("Single category this rack accepts. Empty (Nothing) accepts any Socketable. Socketables can belong to multiple categories; the rack matches if the socketable's mask contains this bit.")]
+        [SerializeField, SingleSocketCategory] private SocketMask requiredCategory;
+
         [Header("Rack Layout")]
         [Tooltip("Total number of slots in the rack.")]
         [SerializeField, Min(1)] private int slotCount = 6;
@@ -104,6 +108,13 @@ namespace Shababeek.Interactions
         }
 
         public override bool CanSocket() => _occupants.Count < slotCount;
+
+        public override bool CanSocket(Socketable socketable)
+        {
+            if (requiredCategory.IsEmpty) return true;
+            if (socketable == null) return false;
+            return requiredCategory.Overlaps(socketable.SocketableMask);
+        }
 
         public override void StartHovering(Socketable socketable)
         {
