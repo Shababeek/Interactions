@@ -269,6 +269,13 @@ namespace Shababeek.Interactions.Core
             if (rightHandPivot != null)
                 ChangeLayerRecursive(rightHandPivot, config.RightHandLayer);
 
+            // Hands are spawned under the rig root, so the player-layer recursion above overwrites
+            // their hand layers. Reapply the hand layers to the spawned hand hierarchies.
+            if (_leftPoseController != null)
+                ChangeLayerRecursive(_leftPoseController.transform, config.LeftHandLayer);
+            if (_rightPoseController != null)
+                ChangeLayerRecursive(_rightPoseController.transform, config.RightHandLayer);
+
             if (customLayerAssignments != null)
             {
                 foreach (var assignment in customLayerAssignments)
@@ -314,9 +321,15 @@ namespace Shababeek.Interactions.Core
             InitializeHands();
 
             if (_rightPoseController != null)
+            {
                 InitializeKinematicRigidbody(_rightPoseController.gameObject);
+                AttachKinematicFollower(_rightPoseController.gameObject, rightHandPivot);
+            }
             if (_leftPoseController != null)
+            {
                 InitializeKinematicRigidbody(_leftPoseController.gameObject);
+                AttachKinematicFollower(_leftPoseController.gameObject, leftHandPivot);
+            }
         }
 
         private void InitializePhysicsBasedHands()
@@ -395,15 +408,26 @@ namespace Shababeek.Interactions.Core
             //follower.ApplySettings(config.FollowerSettings);
         }
 
+        private void AttachKinematicFollower(GameObject hand, Transform target)
+        {
+            if (hand == null || target == null) return;
+
+            var follower = hand.GetComponent<KinematicHandFollower>();
+            if (follower == null) follower = hand.AddComponent<KinematicHandFollower>();
+            follower.Target = target;
+        }
+
         private HandPoseController InitializeHand(HandPoseController handPrefab, Transform handPivot,
             HandIdentifier handIdentifier, HandInteractorType interactorType)
         {
             if (handPrefab == null || handPivot == null) return null;
 
-            var hand = Instantiate(handPrefab, handPivot);
+            // Hands are spawned directly under the CameraRig root rather than inside the pivot so
+            // that a single humanoid skeleton can own the whole hand hierarchy. The hand's world
+            // transform is synced to the pivot by PhysicsHandFollower or KinematicHandFollower.
+            var hand = Instantiate(handPrefab, transform);
             var handTransform = hand.transform;
-            handTransform.localPosition = Vector3.zero;
-            handTransform.localRotation = Quaternion.identity;
+            handTransform.SetPositionAndRotation(handPivot.position, handPivot.rotation);
 
             var handGameObject = hand.gameObject;
             var handController = handGameObject.GetComponent<Hand>();
@@ -411,6 +435,11 @@ namespace Shababeek.Interactions.Core
 
             handController.HandIdentifier = handIdentifier;
             handController.Config = config;
+
+            // Mirror the side onto the pose controller so muscle-based pin-bone resolution picks
+            // the matching humanoid bone (LeftHand vs RightHand). Finger muscle writes are
+            // side-agnostic; only the pin side depends on this.
+            hand.Hand = handIdentifier;
 
             if (interactorType == HandInteractorType.Trigger)
             {

@@ -46,6 +46,15 @@ namespace Shababeek.Interactions.Animations
         }
     }
 
+    /// <summary>Selects which pose system HandPoseController uses to drive the fingers.</summary>
+    public enum HandPoseSystem
+    {
+        /// <summary>Legacy per-finger AvatarMask system. Requires masks authored against the hand's skeleton; does not support animation retargeting.</summary>
+        LegacyBoneBased = 0,
+        /// <summary>Humanoid muscle-space system. Reads muscle values from humanoid clips and drives finger muscles directly; supports animation retargeting.</summary>
+        MuscleBased = 1,
+    }
+
     /// <summary>Hand pose data, avatar masks, and prefab references.</summary>
     [CreateAssetMenu(menuName = "Shababeek/Interactions/Hand Data")]
     public class HandData : ScriptableObject, IAvatarMaskIndexer
@@ -53,11 +62,15 @@ namespace Shababeek.Interactions.Animations
         [Header("Visual Preview")]
         [Tooltip("Preview image for this hand, shown in setup wizard and UI.")]
         public Texture2D previewSprite;
-        
+
         [Header("Description")]
         [Tooltip("Description of this hand data asset for organization purposes.")]
         [SerializeField] private string description;
-        
+
+        [Header("Pose System")]
+        [Tooltip("Which pose system to drive the fingers with. LegacyBoneBased uses per-finger AvatarMasks on a custom skeleton. MuscleBased reads humanoid muscle values from clips and requires a Humanoid rig; it supports animation retargeting but ignores the AvatarMasks below.")]
+        [SerializeField] private HandPoseSystem poseSystem = HandPoseSystem.LegacyBoneBased;
+
         [Header("Hand Prefabs")]
         [Tooltip("The left hand prefab must have HandAnimationController Script attached")]
         [HideInInspector] [SerializeField] private HandPoseController leftHandPrefab;
@@ -84,6 +97,9 @@ namespace Shababeek.Interactions.Animations
         /// <inheritdoc/>
         public AvatarMask this[FingerName i] => handAvatarMaskContainer[(int)i];
         
+        /// <summary>Which pose system HandPoseController should drive the fingers with. Legacy paths keep working by default; switch to MuscleBased to opt into humanoid retargeting.</summary>
+        public HandPoseSystem PoseSystem => poseSystem;
+
         /// <summary>Gets the default pose for this hand.</summary>
         public PoseData DefaultPose => defaultPose;
 
@@ -132,7 +148,8 @@ namespace Shababeek.Interactions.Animations
         private bool ValidatePose(PoseData pose, string poseName)
         {
             bool isValid = true;
-            
+            bool muscleBased = poseSystem == HandPoseSystem.MuscleBased;
+
             // Static poses only need the open clip
             if (pose.Type == PoseData.PoseType.Static)
             {
@@ -142,21 +159,29 @@ namespace Shababeek.Interactions.Animations
                     isValid = false;
                 }
             }
-            // Dynamic poses need both clips
+            // Dynamic poses need both clips, except in muscle-based mode where both-null falls
+            // back to a procedural open/close default.
             else if (pose.Type == PoseData.PoseType.Dynamic)
             {
-                if (pose.OpenAnimationClip == null)
+                bool openMissing = pose.OpenAnimationClip == null;
+                bool closedMissing = pose.ClosedAnimationClip == null;
+                bool useProceduralFallback = muscleBased && openMissing && closedMissing;
+
+                if (!useProceduralFallback)
                 {
-                    Debug.LogWarning($"[HandData] {poseName} in {name} is missing OpenAnimationClip. This pose will be skipped.", this);
-                    isValid = false;
-                }
-                if (pose.ClosedAnimationClip == null)
-                {
-                    Debug.LogWarning($"[HandData] {poseName} in {name} is missing ClosedAnimationClip. This pose will be skipped.", this);
-                    isValid = false;
+                    if (openMissing)
+                    {
+                        Debug.LogWarning($"[HandData] {poseName} in {name} is missing OpenAnimationClip. This pose will be skipped.", this);
+                        isValid = false;
+                    }
+                    if (closedMissing)
+                    {
+                        Debug.LogWarning($"[HandData] {poseName} in {name} is missing ClosedAnimationClip. This pose will be skipped.", this);
+                        isValid = false;
+                    }
                 }
             }
-            
+
             return isValid;
         }
 

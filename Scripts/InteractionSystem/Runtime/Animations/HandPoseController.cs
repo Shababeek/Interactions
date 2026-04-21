@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Shababeek.ReactiveVars;
 using Shababeek.Interactions.Core;
 using UnityEngine;
@@ -8,25 +8,22 @@ using UnityEngine.Playables;
 namespace Shababeek.Interactions.Animations
 {
     /// <summary>
-    /// Controls the pose and finger animations of a VR hand using Unity's Playable Graph system.
-    /// This component manages hand pose transitions, finger curl values, and constraint application
-    /// through a sophisticated animation mixing system that supports both static and dynamic poses.
+    /// Drives hand pose and finger curls. In play mode it polls the sibling Hand; in edit mode it
+    /// reads the serialized fingers array. Muscle-based mode drives both hands' finger muscles off
+    /// the same weights and pins the chain from hips to the selected Hand bone at the animator root.
     /// </summary>
-    /// <remarks>
-    /// The HandPoseController implements the IPoseable interface and works with HandData to manage
-    /// multiple pose states. It uses Unity's Playable Graph API for efficient animation blending
-    /// and supports both static poses (pre-defined animations) and dynamic poses (real-time finger control).
-    /// The system automatically applies pose constraints and updates finger values based on input data.
-    /// </remarks>
     [RequireComponent(typeof(VariableTweener))]
     [AddComponentMenu("Shababeek/Interactions/Animations/Hand Pose Controller")]
+    [ExecuteAlways]
     public class HandPoseController : MonoBehaviour, IPoseable
     {
         [Header("Hand Configuration")]
         [HideInInspector] [SerializeField] [Tooltip("The HandData asset containing all pose definitions and finger configurations.")]
         private HandData handData;
 
- 
+        [Tooltip("Which hand this controller represents. Used only to pick the pin bone in muscle-based mode; finger muscles are driven on both hands regardless.")]
+        [SerializeField] private HandIdentifier hand = HandIdentifier.Left;
+
         [Range(0, 1)] [HideInInspector] [SerializeField]
         private float[] fingers = new float[5];
 
@@ -38,42 +35,31 @@ namespace Shababeek.Interactions.Animations
         private Animator _animator;
         PlayableGraph _graph;
         private PoseConstrains _constrains = PoseConstrains.Free;
+        private HumanPoseHandler _humanPoseHandler;
+        private HumanPose _humanPose;
+        private Transform[] _pinChainTopDown;
+        private HandPoseSystem _activePoseSystem = HandPoseSystem.LegacyBoneBased;
 
-        /// <summary>
-        /// Indexer that provides access to finger values by finger name.
-        /// Allows getting and setting individual finger curl values (0 = extended, 1 = curled).
-        /// </summary>
-        /// <param name="index">The finger to access (Thumb, Index, Middle, Ring, Pinky).</param>
-        /// <returns>The current curl value for the specified finger.</returns>
-        /// <value>The curl value to set for the specified finger.</value>
+        /// <summary>Finger curl value (0 = extended, 1 = curled) by finger name.</summary>
         public float this[FingerName index]
         {
             get => this[(int)index];
             set => this[(int)index] = value;
         }
-        
-        /// <summary>
-        /// Indexer that provides access to finger values by numeric index.
-        /// Allows getting and setting individual finger curl values (0 = extended, 1 = curled).
-        /// </summary>
-        /// <param name="index">The finger index (0=Thumb, 1=Index, 2=Middle, 3=Ring, 4=Pinky).</param>
-        /// <returns>The current curl value for the specified finger.</returns>
-        /// <value>The curl value to set for the specified finger.</value>
+
+        /// <summary>Finger curl value (0 = extended, 1 = curled) by index (0=Thumb..4=Pinky).</summary>
         public float this[int index]
         {
             get => fingers[index];
             set
             {
                 fingers[index] = value;
+                if (_poses == null || currentPoseIndex < 0 || currentPoseIndex >= _poses.Count) return;
                 _poses[currentPoseIndex][index] = value;
             }
         }
 
-        /// <summary>
-        /// Sets the current pose index for the hand animation system.
-        /// This determines which pose from the HandData is currently active.
-        /// </summary>
-        /// <value>The index of the pose to activate.</value>
+        /// <summary>Sets the active pose index, clamped to the HandData pose range.</summary>
         public int Pose
         {
             set
@@ -96,33 +82,26 @@ namespace Shababeek.Interactions.Animations
                 }
             }
         }
-        
-        /// <summary>
-        /// Sets the pose constraints that limit finger movement and curl values.
-        /// Constraints are applied to each finger individually and can restrict movement
-        /// based on interaction requirements or physical limitations.
-        /// </summary>
-        /// <value>The pose constraints to apply to the hand.</value>
+
+        /// <summary>Pose constraints applied to the polled Hand each Update in play mode.</summary>
         public PoseConstrains Constrains
         {
             set => _constrains = value;
         }
 
-        /// <summary>
-        /// Gets or sets the current pose index with proper animation blending.
-        /// When setting a new pose, the system smoothly transitions between poses
-        /// by adjusting the animation mixer weights and updating finger values.
-        /// </summary>
-        /// <value>The index of the currently active pose.</value>
-        /// <returns>The index of the currently active pose.</returns>
+        /// <summary>Active pose index; setter blends mixer weights and pushes finger values.</summary>
         public int CurrentPoseIndex
         {
             get => currentPoseIndex;
             set
             {
-                _handMixer.SetInputWeight(currentPoseIndex, 0);
-                _handMixer.SetInputWeight(value, 1);
+                if (_handMixer.IsValid())
+                {
+                    _handMixer.SetInputWeight(currentPoseIndex, 0);
+                    _handMixer.SetInputWeight(value, 1);
+                }
                 currentPoseIndex = value;
+                if (_poses == null || value < 0 || value >= _poses.Count) return;
                 for (int finger = 0; finger < fingers.Length; finger++)
                 {
                     _poses[value][finger] = fingers[finger];
@@ -130,50 +109,32 @@ namespace Shababeek.Interactions.Animations
             }
         }
 
-        /// <summary>
-        /// Gets or sets the HandData object that contains all pose definitions and finger configurations.
-        /// HandData defines the available poses, their types (static or dynamic), and finger joint mappings.
-        /// </summary>
-        /// <value>The HandData object containing pose definitions.</value>
-        /// <returns>The HandData object containing pose definitions.</returns>
+        /// <summary>HandData asset driving this controller.</summary>
         public HandData HandData
         {
             get => handData;
             set => handData = value;
         }
 
-        /// <summary>
-        /// Gets the Playable Graph used for animation management.
-        /// The graph contains all animation playables and manages the animation system's execution.
-        /// </summary>
-        /// <returns>The Playable Graph instance.</returns>
+        /// <summary>Which hand this controller represents; picks the pin bone in muscle-based mode.</summary>
+        public HandIdentifier Hand
+        {
+            get => hand;
+            set => hand = value;
+        }
+
+        /// <summary>Underlying Playable Graph (legacy mode) or sentinel graph (muscle mode).</summary>
         public PlayableGraph Graph => _graph;
-        
-        /// <summary>
-        /// Gets the list of all available poses for this hand.
-        /// Each pose can be either static (pre-defined animation) or dynamic (real-time control).
-        /// </summary>
-        /// <returns>A list of all pose instances.</returns>
+
+        /// <summary>All poses built from HandData.</summary>
         public List<IPose> Poses => _poses;
 
         public void Start()
         {
             Initialize();
         }
-        
-        /// <summary>
-        /// Initializes the hand pose controller and sets up the animation system.
-        /// This method creates the Playable Graph, initializes poses, and establishes
-        /// the connection between the animation system and the hand's animator component.
-        /// </summary>
-        /// <remarks>
-        /// The initialization process includes:
-        /// 1. Validating that HandData is assigned
-        /// 2. Getting required component dependencies
-        /// 3. Creating the Playable Graph and animation mixer
-        /// 4. Initializing all poses from HandData
-        /// 5. Starting the animation graph
-        /// </remarks>
+
+        /// <summary>Builds the pose graph and wires it to the hand's Animator. Safe to call repeatedly.</summary>
         public void Initialize()
         {
             if (!handData)
@@ -199,8 +160,16 @@ namespace Shababeek.Interactions.Animations
 
         private void InitializeGraph()
         {
-            CreateGraphAndSetItsOutputs();
-            InitializePoses();
+            _activePoseSystem = handData.PoseSystem;
+            if (_activePoseSystem == HandPoseSystem.MuscleBased)
+            {
+                InitializeMuscleBasedSystem();
+            }
+            else
+            {
+                CreateGraphAndSetItsOutputs();
+                InitializePoses();
+            }
             _graph.Play();
         }
 
@@ -219,6 +188,84 @@ namespace Shababeek.Interactions.Animations
             for (int i = 0; i < handData.Poses.Length; i++)
             {
                 CreateAndConnectPose(i, handData.Poses[i]);
+            }
+        }
+
+        private void InitializeMuscleBasedSystem()
+        {
+            if (_animator == null || _animator.avatar == null || !_animator.avatar.isHuman)
+            {
+                Debug.LogError($"[HandPoseController] MuscleBased pose system on {gameObject.name} requires a Humanoid Avatar on the Animator.", this);
+                _graph = PlayableGraph.Create(this.name);
+                _poses = new List<IPose>();
+                return;
+            }
+
+            _graph = PlayableGraph.Create(this.name);
+            _graph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);
+
+            DisposeHumanPoseHandler();
+            _humanPoseHandler = new HumanPoseHandler(_animator.avatar, _animator.transform);
+            _humanPose = new HumanPose();
+
+            var pinSide = hand == HandIdentifier.None ? HandIdentifier.Left : hand;
+            var handHumanBone = pinSide == HandIdentifier.Right ? HumanBodyBones.RightHand : HumanBodyBones.LeftHand;
+            var handBone = _animator.GetBoneTransform(handHumanBone);
+            if (handBone == null)
+            {
+                Debug.LogWarning($"[HandPoseController] Could not resolve {handHumanBone} on the humanoid avatar of {gameObject.name}.", this);
+            }
+            _pinChainTopDown = BuildPinChainTopDown(handBone, _animator.transform);
+
+            _poses = new List<IPose>(handData.Poses.Length);
+            for (int i = 0; i < handData.Poses.Length; i++)
+            {
+                var data = handData.Poses[i];
+                _poses.Add(CreateMuscleBasedPose(data));
+            }
+        }
+
+        private IPose CreateMuscleBasedPose(PoseData data)
+        {
+            bool hasOpenClip = data.OpenAnimationClip != null;
+            bool hasClosedClip = data.ClosedAnimationClip != null;
+
+            if (data.Type == PoseData.PoseType.Dynamic)
+            {
+                if (!hasOpenClip && !hasClosedClip)
+                    return new MuscleBasedProceduralDynamicPose(data.Name);
+                return new MuscleBasedDynamicPose(data, _animator);
+            }
+
+            return new MuscleBasedStaticPose(data, _animator);
+        }
+
+        private void ApplyMuscleWrites()
+        {
+            if (_humanPoseHandler == null || _poses == null || _poses.Count == 0) return;
+            if (currentPoseIndex < 0 || currentPoseIndex >= _poses.Count) return;
+
+            // Read the live pose so any upstream muscle writer passes through; we only overwrite
+            // finger muscles. PinHandToAnimatorRoot resets the hips-through-hand chain each frame,
+            // so any body-position drift from Get/Set is overwritten there.
+            _humanPoseHandler.GetHumanPose(ref _humanPose);
+
+            switch (_poses[currentPoseIndex])
+            {
+                case MuscleBasedDynamicPose dyn: dyn.WriteTo(ref _humanPose); break;
+                case MuscleBasedProceduralDynamicPose procDyn: procDyn.WriteTo(ref _humanPose); break;
+                case MuscleBasedStaticPose stat: stat.WriteTo(ref _humanPose); break;
+            }
+
+            _humanPoseHandler.SetHumanPose(ref _humanPose);
+        }
+
+        private void DisposeHumanPoseHandler()
+        {
+            if (_humanPoseHandler != null)
+            {
+                _humanPoseHandler.Dispose();
+                _humanPoseHandler = null;
             }
         }
 
@@ -246,18 +293,21 @@ namespace Shababeek.Interactions.Animations
         private void Update()
         {
             UpdateGraphVariables();
-            UpdateFingersFromHand();
+            if (Application.isPlaying) PullFingersFromHand();
         }
 
-        /// <summary>
-        /// Updates the animation graph variables and evaluates the current pose.
-        /// This method ensures the Playable Graph is valid, updates finger values,
-        /// and evaluates the animation system to apply the current pose.
-        /// </summary>
-        /// <remarks>
-        /// If the graph becomes invalid (e.g., after domain reload), it automatically reinitializes.
-        /// This method also ensures that finger values are properly synchronized with the current pose.
-        /// </remarks>
+        private void PullFingersFromHand()
+        {
+            if (_hand == null || handData == null || handData.Poses == null || handData.Poses.Length == 0) return;
+
+            Pose = _constrains[0].pose;
+            for (int i = 0; i < 5; i++)
+            {
+                this[i] = _constrains[i].constraints.GetConstrainedValue(_hand[i]);
+            }
+        }
+
+        /// <summary>Pushes inspector finger values into the active pose and evaluates the graph. Muscle writes happen in LateUpdate.</summary>
         public void UpdateGraphVariables()
         {
             if (!_graph.IsValid())
@@ -276,34 +326,41 @@ namespace Shababeek.Interactions.Animations
             _graph.Evaluate();
         }
 
-        /// <summary>
-        /// Updates finger values from the hand input system and applies constraints.
-        /// This method reads finger values from the Hand component and applies any
-        /// pose constraints to limit the finger movement based on interaction requirements.
-        /// </summary>
-        /// <remarks>
-        /// The method iterates through all five fingers and applies constraints to each finger
-        /// individually, ensuring that finger movement is properly limited when constraints are active.
-        /// </remarks>
-        private void UpdateFingersFromHand()
+        private void LateUpdate()
         {
-            if (_hand == null)
-            {
-                return;
-            }
+            if (_activePoseSystem != HandPoseSystem.MuscleBased) return;
+            if (!_graph.IsValid()) return;
+            ApplyMuscleWrites();
+            PinHandToAnimatorRoot();
+        }
 
-            var pose = _constrains[0].pose;
-            if (pose < 0 || pose >= handData.Poses.Length)
-            {
-                Debug.LogWarning($"[HandPoseController] Constraint references invalid pose index {pose} on {gameObject.name}. Valid range: 0-{handData.Poses.Length - 1}. Using pose 0.", this);
-                pose = 0;
-            }
+        private void PinHandToAnimatorRoot()
+        {
+            if (_animator == null || _pinChainTopDown == null || _pinChainTopDown.Length == 0) return;
 
-            Pose = pose;
-            for (var i = 0; i < 5; i++)
+            // Walk top-down so each child write computes against an already-pinned parent and the
+            // whole arm chain collapses to the animator root with zero local offsets.
+            var root = _animator.transform;
+            for (int i = 0; i < _pinChainTopDown.Length; i++)
             {
-                this[i] = _constrains[i].constraints.GetConstrainedValue(_hand[i]);
+                var bone = _pinChainTopDown[i];
+                if (bone == null) continue;
+                bone.SetPositionAndRotation(root.position, root.rotation);
             }
+        }
+
+        private static Transform[] BuildPinChainTopDown(Transform pinBone, Transform animatorRoot)
+        {
+            if (pinBone == null || animatorRoot == null) return System.Array.Empty<Transform>();
+
+            var stack = new Stack<Transform>();
+            var cursor = pinBone;
+            while (cursor != null && cursor != animatorRoot)
+            {
+                stack.Push(cursor);
+                cursor = cursor.parent;
+            }
+            return stack.ToArray();
         }
 
         private void DisposeGraph()
@@ -317,6 +374,7 @@ namespace Shababeek.Interactions.Animations
         private void OnDestroy()
         {
             DisposeGraph();
+            DisposeHumanPoseHandler();
         }
     }
 }
