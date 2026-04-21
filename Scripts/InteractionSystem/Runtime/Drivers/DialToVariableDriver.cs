@@ -4,9 +4,7 @@ using Shababeek.ReactiveVars;
 
 namespace Shababeek.Interactions
 {
-    /// <summary>
-    /// Writes a DialInteractable's step output to scriptable variables and events.</summary>
-    /// </summary>
+    /// <summary>Writes a DialInteractable's step output to scriptable variables and events.</summary>
     [AddComponentMenu("Shababeek/Interactions/Drivers/Dial To Variable Driver")]
     [RequireComponent(typeof(DialInteractable))]
     public class DialToVariableDriver : MonoBehaviour
@@ -76,7 +74,7 @@ namespace Shababeek.Interactions
             if (normalizedVariable != null) normalizedVariable.Value = _dial.NormalizedValue;
         }
 
-        /// <summary>Forces the dial to match the current value of the bound step variable.</summary>
+        /// <summary>Forces the dial to match the current value of the step variable.</summary>
         public void SyncDialToVariable()
         {
             if (stepVariable != null) _dial.SetStep(stepVariable.Value);

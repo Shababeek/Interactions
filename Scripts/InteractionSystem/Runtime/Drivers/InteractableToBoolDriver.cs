@@ -1,3 +1,4 @@
+using System;
 using UniRx;
 using UnityEngine;
 using Shababeek.Interactions;
@@ -54,53 +55,10 @@ namespace Shababeek.Interactions.Drivers
         {
             _disposable = new CompositeDisposable();
 
-            // Hover events
-            if (hoveredVariable != null)
-            {
-                _interactable.OnHoverStarted
-                    .Subscribe(_ => hoveredVariable.Value = true)
-                    .AddTo(_disposable);
-
-                _interactable.OnHoverEnded
-                    .Subscribe(_ => hoveredVariable.Value = false)
-                    .AddTo(_disposable);
-            }
-
-            // Selection events
-            if (selectedVariable != null)
-            {
-                _interactable.OnSelected
-                    .Subscribe(_ => selectedVariable.Value = true)
-                    .AddTo(_disposable);
-
-                _interactable.OnDeselected
-                    .Subscribe(_ => selectedVariable.Value = false)
-                    .AddTo(_disposable);
-            }
-
-            // Use events
-            if (usedVariable != null)
-            {
-                _interactable.OnUseStarted
-                    .Subscribe(_ => usedVariable.Value = true)
-                    .AddTo(_disposable);
-
-                _interactable.OnUseEnded
-                    .Subscribe(_ => usedVariable.Value = false)
-                    .AddTo(_disposable);
-            }
-
-            // Thumb events
-            if (thumbVariable != null)
-            {
-                _interactable.OnThumbPressed
-                    .Subscribe(_ => thumbVariable.Value = true)
-                    .AddTo(_disposable);
-
-                _interactable.OnThumbReleased
-                    .Subscribe(_ => thumbVariable.Value = false)
-                    .AddTo(_disposable);
-            }
+            BindPair(_interactable.OnHoverStarted,  _interactable.OnHoverEnded,    hoveredVariable);
+            BindPair(_interactable.OnSelected,      _interactable.OnDeselected,    selectedVariable);
+            BindPair(_interactable.OnUseStarted,    _interactable.OnUseEnded,      usedVariable);
+            BindPair(_interactable.OnThumbPressed,  _interactable.OnThumbReleased, thumbVariable);
         }
 
         private void OnDisable()
@@ -114,6 +72,13 @@ namespace Shababeek.Interactions.Drivers
                 if (usedVariable != null) usedVariable.Value = false;
                 if (thumbVariable != null) thumbVariable.Value = false;
             }
+        }
+
+        private void BindPair<TOn, TOff>(IObservable<TOn> onEvent, IObservable<TOff> offEvent, BoolVariable variable)
+        {
+            if (variable == null) return;
+            onEvent.Subscribe(_ => variable.Value = true).AddTo(_disposable);
+            offEvent.Subscribe(_ => variable.Value = false).AddTo(_disposable);
         }
 
         /// <summary>Gets whether the interactable is currently hovered.</summary>

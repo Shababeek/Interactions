@@ -9,7 +9,7 @@ namespace Shababeek.Interactions
     public class JoystickToVariableDriver : MonoBehaviour
     {
         [Header("Source")]
-        [Tooltip("The joystick interactable to bind from.")]
+        [Tooltip("Source joystick interactable.")]
         [SerializeField] private JoystickInteractable joystick;
 
         [Header("Output Variables")]
@@ -48,26 +48,15 @@ namespace Shababeek.Interactions
 
         private void OnRotationChanged(Vector2 rotation)
         {
-            // Apply deadzone
             if (rotation.magnitude < deadzone)
                 rotation = Vector2.zero;
 
-            // Apply inversion
-            float x = invertX ? -rotation.x : rotation.x;
-            float y = invertY ? -rotation.y : rotation.y;
+            float x = (invertX ? -rotation.x : rotation.x) * outputMultiplier;
+            float y = (invertY ? -rotation.y : rotation.y) * outputMultiplier;
 
-            // Apply multiplier
-            x *= outputMultiplier;
-            y *= outputMultiplier;
-
-            if (vector2Output != null)
-                vector2Output.Value = new Vector2(x, y);
-
-            if (xOutput != null)
-                xOutput.Value = x;
-
-            if (yOutput != null)
-                yOutput.Value = y;
+            if (vector2Output != null) vector2Output.Value = new Vector2(x, y);
+            if (xOutput != null) xOutput.Value = x;
+            if (yOutput != null) yOutput.Value = y;
         }
     }
 }

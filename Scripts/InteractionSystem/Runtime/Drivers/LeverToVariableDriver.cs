@@ -9,7 +9,7 @@ namespace Shababeek.Interactions
     public class LeverToVariableDriver : MonoBehaviour
     {
         [Header("Source")]
-        [Tooltip("The lever interactable to bind from.")]
+        [Tooltip("Source lever interactable.")]
         [SerializeField] private LeverInteractable lever;
 
         [Header("Output Variables")]
@@ -33,6 +33,8 @@ namespace Shababeek.Interactions
 
             _disposable = new CompositeDisposable();
 
+            OnLeverChanged(lever.CurrentNormalizedAngle);
+
             lever.OnLeverChanged
                 .Subscribe(OnLeverChanged)
                 .AddTo(_disposable);
@@ -42,14 +44,13 @@ namespace Shababeek.Interactions
 
         private void OnLeverChanged(float normalizedValue)
         {
-            float value = invertOutput ? (1f - normalizedValue) : normalizedValue;
-            value *= outputMultiplier;
+            float sign = invertOutput ? -1f : 1f;
 
             if (normalizedOutput != null)
-                normalizedOutput.Value = value;
+                normalizedOutput.Value = (invertOutput ? (1f - normalizedValue) : normalizedValue) * outputMultiplier;
 
             if (angleOutput != null)
-                angleOutput.Value = lever.CurrentAngle * (invertOutput ? -1f : 1f);
+                angleOutput.Value = lever.CurrentAngle * sign * outputMultiplier;
         }
     }
 }

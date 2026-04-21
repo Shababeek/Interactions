@@ -1,3 +1,4 @@
+using System;
 using Shababeek.ReactiveVars;
 using UniRx;
 using UnityEngine;
@@ -9,7 +10,7 @@ namespace Shababeek.Interactions
     public class InteractableEventDriver : MonoBehaviour
     {
         [Header("Source")]
-        [Tooltip("The interactable to bind from.")]
+        [Tooltip("Source interactable.")]
         [SerializeField] private InteractableBase interactable;
 
         [Header("Selection Events")]
@@ -47,58 +48,23 @@ namespace Shababeek.Interactions
 
             _disposable = new CompositeDisposable();
 
-            // Selection
-            interactable.OnSelected
-                .Subscribe(_ =>
-                {
-                    onSelectedEvent?.Raise();
-                    if (isSelectedVariable != null) isSelectedVariable.Value = true;
-                })
-                .AddTo(_disposable);
-
-            interactable.OnDeselected
-                .Subscribe(_ =>
-                {
-                    onDeselectedEvent?.Raise();
-                    if (isSelectedVariable != null) isSelectedVariable.Value = false;
-                })
-                .AddTo(_disposable);
-
-            // Hover
-            interactable.OnHoverStarted
-                .Subscribe(_ =>
-                {
-                    onHoverStartEvent?.Raise();
-                    if (isHoveredVariable != null) isHoveredVariable.Value = true;
-                })
-                .AddTo(_disposable);
-
-            interactable.OnHoverEnded
-                .Subscribe(_ =>
-                {
-                    onHoverEndEvent?.Raise();
-                    if (isHoveredVariable != null) isHoveredVariable.Value = false;
-                })
-                .AddTo(_disposable);
-
-            // Use
-            interactable.OnUseStarted
-                .Subscribe(_ =>
-                {
-                    onUseStartEvent?.Raise();
-                    if (isUsingVariable != null) isUsingVariable.Value = true;
-                })
-                .AddTo(_disposable);
-
-            interactable.OnUseEnded
-                .Subscribe(_ =>
-                {
-                    onUseEndEvent?.Raise();
-                    if (isUsingVariable != null) isUsingVariable.Value = false;
-                })
-                .AddTo(_disposable);
+            Bind(interactable.OnSelected,      onSelectedEvent,    isSelectedVariable, true);
+            Bind(interactable.OnDeselected,    onDeselectedEvent,  isSelectedVariable, false);
+            Bind(interactable.OnHoverStarted,  onHoverStartEvent,  isHoveredVariable,  true);
+            Bind(interactable.OnHoverEnded,    onHoverEndEvent,    isHoveredVariable,  false);
+            Bind(interactable.OnUseStarted,    onUseStartEvent,    isUsingVariable,    true);
+            Bind(interactable.OnUseEnded,      onUseEndEvent,      isUsingVariable,    false);
         }
 
         private void OnDisable() => _disposable?.Dispose();
+
+        private void Bind<T>(IObservable<T> source, GameEvent evt, BoolVariable state, bool value)
+        {
+            source.Subscribe(_ =>
+            {
+                evt?.Raise();
+                if (state != null) state.Value = value;
+            }).AddTo(_disposable);
+        }
     }
 }

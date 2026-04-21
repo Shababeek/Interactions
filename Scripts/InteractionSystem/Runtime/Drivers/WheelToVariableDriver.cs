@@ -9,7 +9,7 @@ namespace Shababeek.Interactions
     public class WheelToVariableDriver : MonoBehaviour
     {
         [Header("Source")]
-        [Tooltip("The wheel interactable to bind from.")]
+        [Tooltip("Source wheel interactable.")]
         [SerializeField] private WheelInteractable wheel;
 
         [Header("Output Variables")]
@@ -32,6 +32,9 @@ namespace Shababeek.Interactions
             if (wheel == null) return;
 
             _disposable = new CompositeDisposable();
+
+            OnNormalizedChanged(wheel.NormalizedValue);
+            OnAngleChanged(wheel.CurrentAngle);
 
             wheel.OnNormalizedChanged
                 .Subscribe(OnNormalizedChanged)

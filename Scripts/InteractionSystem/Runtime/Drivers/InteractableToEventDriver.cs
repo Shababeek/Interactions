@@ -1,3 +1,4 @@
+using System;
 using UniRx;
 using UnityEngine;
 using Shababeek.Interactions;
@@ -59,70 +60,22 @@ namespace Shababeek.Interactions.Drivers
         {
             _disposable = new CompositeDisposable();
 
-            // Hover events
-            if (onHoverStartEvent != null)
-            {
-                _interactable.OnHoverStarted
-                    .Subscribe(_ => onHoverStartEvent.Raise())
-                    .AddTo(_disposable);
-            }
-
-            if (onHoverEndEvent != null)
-            {
-                _interactable.OnHoverEnded
-                    .Subscribe(_ => onHoverEndEvent.Raise())
-                    .AddTo(_disposable);
-            }
-
-            // Selection events
-            if (onSelectedEvent != null)
-            {
-                _interactable.OnSelected
-                    .Subscribe(_ => onSelectedEvent.Raise())
-                    .AddTo(_disposable);
-            }
-
-            if (onDeselectedEvent != null)
-            {
-                _interactable.OnDeselected
-                    .Subscribe(_ => onDeselectedEvent.Raise())
-                    .AddTo(_disposable);
-            }
-
-            // Use events
-            if (onUseStartEvent != null)
-            {
-                _interactable.OnUseStarted
-                    .Subscribe(_ => onUseStartEvent.Raise())
-                    .AddTo(_disposable);
-            }
-
-            if (onUseEndEvent != null)
-            {
-                _interactable.OnUseEnded
-                    .Subscribe(_ => onUseEndEvent.Raise())
-                    .AddTo(_disposable);
-            }
-
-            // Thumb events
-            if (onThumbPressedEvent != null)
-            {
-                _interactable.OnThumbPressed
-                    .Subscribe(_ => onThumbPressedEvent.Raise())
-                    .AddTo(_disposable);
-            }
-
-            if (onThumbReleasedEvent != null)
-            {
-                _interactable.OnThumbReleased
-                    .Subscribe(_ => onThumbReleasedEvent.Raise())
-                    .AddTo(_disposable);
-            }
+            Raise(_interactable.OnHoverStarted,   onHoverStartEvent);
+            Raise(_interactable.OnHoverEnded,     onHoverEndEvent);
+            Raise(_interactable.OnSelected,       onSelectedEvent);
+            Raise(_interactable.OnDeselected,     onDeselectedEvent);
+            Raise(_interactable.OnUseStarted,     onUseStartEvent);
+            Raise(_interactable.OnUseEnded,       onUseEndEvent);
+            Raise(_interactable.OnThumbPressed,   onThumbPressedEvent);
+            Raise(_interactable.OnThumbReleased,  onThumbReleasedEvent);
         }
 
-        private void OnDisable()
+        private void OnDisable() => _disposable?.Dispose();
+
+        private void Raise<T>(IObservable<T> source, GameEvent evt)
         {
-            _disposable?.Dispose();
+            if (evt == null) return;
+            source.Subscribe(_ => evt.Raise()).AddTo(_disposable);
         }
     }
 }

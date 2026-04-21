@@ -90,7 +90,7 @@ A comprehensive Unity package for building advanced VR/AR and 3D interactions wi
 ### 🛠️ Advanced Topics
 - **[Custom Interactables](UserManual.md#customization--extensibility)** - Create your own components
 - **[Hand Poses](Documentation/PoseSystem/PoseConstrainer.md)** - Import and configure hands
-- **[Interaction Binders](Documentation/ScriptableSystem/Binders.md)** - Connect interactions to reactive variables
+- **[Interaction Drivers](Documentation/ScriptableSystem/Drivers.md)** - Connect interactions to reactive variables
 - **[Interaction Sequences](Documentation/Systems/SequencingSystem.md)** - Tutorials using interaction-specific actions
 
 ### 💻 For Developers

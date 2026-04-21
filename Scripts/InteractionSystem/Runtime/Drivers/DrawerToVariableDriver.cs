@@ -9,7 +9,7 @@ namespace Shababeek.Interactions
     public class DrawerToVariableDriver : MonoBehaviour
     {
         [Header("Source")]
-        [Tooltip("The drawer interactable to bind from.")]
+        [Tooltip("Source drawer interactable.")]
         [SerializeField] private DrawerInteractable drawer;
 
         [Header("Output Variables")]
@@ -43,13 +43,15 @@ namespace Shababeek.Interactions
                 .Subscribe(OnMoved)
                 .AddTo(_disposable);
 
-            drawer.OnOpened
-                .Subscribe(_ => OnOpened())
-                .AddTo(_disposable);
+            if (onOpenedEvent != null)
+                drawer.OnOpened
+                    .Subscribe(_ => onOpenedEvent.Raise())
+                    .AddTo(_disposable);
 
-            drawer.OnClosed
-                .Subscribe(_ => OnClosed())
-                .AddTo(_disposable);
+            if (onClosedEvent != null)
+                drawer.OnClosed
+                    .Subscribe(_ => onClosedEvent.Raise())
+                    .AddTo(_disposable);
         }
 
         private void OnDisable() => _disposable?.Dispose();
@@ -58,21 +60,8 @@ namespace Shababeek.Interactions
         {
             float value = invertOutput ? (1f - normalizedPosition) : normalizedPosition;
 
-            if (positionOutput != null)
-                positionOutput.Value = value;
-
-            if (isOpenOutput != null)
-                isOpenOutput.Value = value >= openThreshold;
-        }
-
-        private void OnOpened()
-        {
-            onOpenedEvent?.Raise();
-        }
-
-        private void OnClosed()
-        {
-            onClosedEvent?.Raise();
+            if (positionOutput != null) positionOutput.Value = value;
+            if (isOpenOutput != null) isOpenOutput.Value = value >= openThreshold;
         }
     }
 }

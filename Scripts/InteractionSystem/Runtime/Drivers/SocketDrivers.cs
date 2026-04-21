@@ -1,3 +1,4 @@
+using System;
 using Shababeek.ReactiveVars;
 using UniRx;
 using UnityEngine;
@@ -40,29 +41,8 @@ namespace Shababeek.Interactions
         {
             _disposable = new CompositeDisposable();
 
-            // Socket connected/disconnected
-            if (isOccupiedVariable != null)
-            {
-                _socket.OnSocketConnected
-                    .Subscribe(_ => isOccupiedVariable.Value = true)
-                    .AddTo(_disposable);
-
-                _socket.OnSocketDisconnected
-                    .Subscribe(_ => isOccupiedVariable.Value = false)
-                    .AddTo(_disposable);
-            }
-
-            // Hover events
-            if (isHoveringVariable != null)
-            {
-                _socket.OnHoverStart
-                    .Subscribe(_ => isHoveringVariable.Value = true)
-                    .AddTo(_disposable);
-
-                _socket.OnHoverEnd
-                    .Subscribe(_ => isHoveringVariable.Value = false)
-                    .AddTo(_disposable);
-            }
+            BindPair(_socket.OnSocketConnected, _socket.OnSocketDisconnected, isOccupiedVariable);
+            BindPair(_socket.OnHoverStart,      _socket.OnHoverEnd,           isHoveringVariable);
         }
 
         private void OnDisable()
@@ -74,6 +54,13 @@ namespace Shababeek.Interactions
                 if (isOccupiedVariable != null) isOccupiedVariable.Value = false;
                 if (isHoveringVariable != null) isHoveringVariable.Value = false;
             }
+        }
+
+        private void BindPair<TOn, TOff>(IObservable<TOn> onEvent, IObservable<TOff> offEvent, BoolVariable variable)
+        {
+            if (variable == null) return;
+            onEvent.Subscribe(_ => variable.Value = true).AddTo(_disposable);
+            offEvent.Subscribe(_ => variable.Value = false).AddTo(_disposable);
         }
 
         /// <summary>Gets whether the socket is currently occupied.</summary>
@@ -121,38 +108,18 @@ namespace Shababeek.Interactions
         {
             _disposable = new CompositeDisposable();
 
-            if (onSocketedEvent != null)
-            {
-                _socket.OnSocketConnected
-                    .Subscribe(_ => onSocketedEvent.Raise())
-                    .AddTo(_disposable);
-            }
-
-            if (onUnsocketedEvent != null)
-            {
-                _socket.OnSocketDisconnected
-                    .Subscribe(_ => onUnsocketedEvent.Raise())
-                    .AddTo(_disposable);
-            }
-
-            if (onHoverStartEvent != null)
-            {
-                _socket.OnHoverStart
-                    .Subscribe(_ => onHoverStartEvent.Raise())
-                    .AddTo(_disposable);
-            }
-
-            if (onHoverEndEvent != null)
-            {
-                _socket.OnHoverEnd
-                    .Subscribe(_ => onHoverEndEvent.Raise())
-                    .AddTo(_disposable);
-            }
+            Raise(_socket.OnSocketConnected,    onSocketedEvent);
+            Raise(_socket.OnSocketDisconnected, onUnsocketedEvent);
+            Raise(_socket.OnHoverStart,         onHoverStartEvent);
+            Raise(_socket.OnHoverEnd,           onHoverEndEvent);
         }
 
-        private void OnDisable()
+        private void OnDisable() => _disposable?.Dispose();
+
+        private void Raise<T>(IObservable<T> source, GameEvent evt)
         {
-            _disposable?.Dispose();
+            if (evt == null) return;
+            source.Subscribe(_ => evt.Raise()).AddTo(_disposable);
         }
     }
 
@@ -198,7 +165,6 @@ namespace Shababeek.Interactions
                     .Subscribe(_ => isSocketedVariable.Value = true)
                     .AddTo(_disposable);
 
-                // Also track when unsocketed via grabbing
                 var interactable = GetComponent<InteractableBase>();
                 if (interactable != null)
                 {
@@ -212,14 +178,12 @@ namespace Shababeek.Interactions
 
         private void Update()
         {
-            // Update near socket state each frame
-            if (isNearSocketVariable != null)
+            if (isNearSocketVariable == null) return;
+
+            bool nearSocket = _socketable.CurrentSocket != null && _socketable.CurrentSocket.CanSocket();
+            if (isNearSocketVariable.Value != nearSocket)
             {
-                bool nearSocket = _socketable.CurrentSocket != null && _socketable.CurrentSocket.CanSocket();
-                if (isNearSocketVariable.Value != nearSocket)
-                {
-                    isNearSocketVariable.Value = nearSocket;
-                }
+                isNearSocketVariable.Value = nearSocket;
             }
         }
 
@@ -270,9 +234,6 @@ namespace Shababeek.Interactions
             }
         }
 
-        private void OnDisable()
-        {
-            _disposable?.Dispose();
-        }
+        private void OnDisable() => _disposable?.Dispose();
     }
 }
