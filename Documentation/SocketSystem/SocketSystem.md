@@ -538,17 +538,17 @@ The Socket System integrates with the Scriptable System through dedicated binder
 
 | Binder | Attached To | Purpose |
 |--------|-------------|---------|
-| **SocketToBoolBinder** | Socket | Track if socket has an object |
-| **SocketToEventBinder** | Socket | Fire events on insert/remove |
-| **SocketableToBoolBinder** | Socketable | Track if object is socketed |
-| **SocketableToEventBinder** | Socketable | Fire events on socket/unsocket |
+| **SocketToBoolDriver** | Socket | Track if socket has an object |
+| **SocketToEventDriver** | Socket | Fire events on insert/remove |
+| **SocketableToBoolDriver** | Socketable | Track if object is socketed |
+| **SocketableToEventDriver** | Socketable | Fire events on socket/unsocket |
 
 ### Socket To Bool Binder
 
 Attach to a Socket to expose its state as a BoolVariable.
 
 ```
-Socket (with SocketToBoolBinder)
+Socket (with SocketToBoolDriver)
 ├── Has Object Variable → true when filled
 ├── On Inserted Event → fires when object inserted
 └── On Removed Event → fires when object removed
@@ -561,7 +561,7 @@ Socket (with SocketToBoolBinder)
 Attach to a Socketable object to track its socketed state.
 
 ```
-Key (with SocketableToBoolBinder)
+Key (with SocketableToBoolDriver)
 ├── Is Socketed Variable → true when in socket
 ├── On Socketed Event → fires when inserted
 └── On Unsocketed Event → fires when removed
@@ -571,18 +571,18 @@ Key (with SocketableToBoolBinder)
 
 ### Example: Puzzle with All Slots Filled
 
-1. Create 3 sockets, each with `SocketToBoolBinder`
+1. Create 3 sockets, each with `SocketToBoolDriver`
 2. Assign each to a different `BoolVariable` (Slot1Filled, Slot2Filled, Slot3Filled)
 3. Create a `BoolComposite` that ANDs all three
 4. Use result to trigger puzzle completion
 
 ### Example: Battery Installation Feedback
 
-1. Add `SocketableToBoolBinder` to battery
+1. Add `SocketableToBoolDriver` to battery
 2. Assign `IsInstalledVariable` BoolVariable
 3. Use `BoolToggleBinder` to enable device when `IsInstalledVariable = true`
 
-See [Binders Documentation](../ScriptableSystem/Binders.md) for full binder reference.
+See [Binders Documentation](../ScriptableSystem/Drivers.md) for full binder reference.
 
 ---
 
@@ -591,7 +591,7 @@ See [Binders Documentation](../ScriptableSystem/Binders.md) for full binder refe
 - [Grabable](../Interactables/Grabable.md) — Making objects grabbable
 - [Feedback System](../Systems/FeedbackSystem.md) — Adding snap feedback
 - [Sequencing System](../Systems/SequencingSystem.md) — Validating socket sequences
-- [Binders](../ScriptableSystem/Binders.md) — Socket binder details
+- [Binders](../ScriptableSystem/Drivers.md) — Socket binder details
 - [Quick Start Guide](../GettingStarted/QuickStart.md) — Basic setup
 
 ---

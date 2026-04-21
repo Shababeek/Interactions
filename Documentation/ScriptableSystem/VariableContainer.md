@@ -571,7 +571,7 @@ Calling `Get<T>()` every frame is wasteful — cache references in Start/Awake.
 
 - [Scriptable Variables](ScriptableVariables.md) — Individual variable types
 - [Scriptable System Window](ScriptableSystemWindow.md) — Debug and monitoring tool
-- [Binders](Binders.md) — Connect variables to components
+- [Drivers](Drivers.md) — Connect variables to components
 - *Game Events (coming soon)* — Event system documentation
 - [Quick Start Guide](../GettingStarted/QuickStart.md) — Basic setup
 

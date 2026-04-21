@@ -555,7 +555,7 @@ public class CombinationLock : MonoBehaviour
 
 ## Binder Integration
 
-Use **DialToVariableBinder** to connect dial output to the Scriptable System:
+Use **DialToVariableDriver** to connect dial output to the Scriptable System:
 
 ```csharp
 // Dial outputs:

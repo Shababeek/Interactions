@@ -225,7 +225,7 @@ A cooldown prevents excessive refreshes during rapid changes.
 
 - [Scriptable Variables](ScriptableVariables.md) — Creating and using variables
 - [Variable Container](VariableContainer.md) — Grouping variables together
-- [Binders](Binders.md) — Connecting variables to components
+- [Drivers](Drivers.md) — Connecting variables to components
 
 ---
 

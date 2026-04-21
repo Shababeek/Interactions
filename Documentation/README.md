@@ -66,7 +66,7 @@ The Shababeek Interaction System integrates with the **com.shababeek.reactivevar
 
 | Document | Description |
 |----------|-------------|
-| **[Interaction Binders](ScriptableSystem/Binders.md)** | Connect interactables and sockets to reactive variables |
+| **[Interaction Drivers](ScriptableSystem/Drivers.md)** | Connect interactables and sockets to reactive variables |
 | **[Interaction Sequences](Systems/SequencingSystem.md)** | Tutorials using interaction-specific sequence actions |
 
 For complete documentation on the ReactiveVars system (Scriptable Variables, Game Events, Sequencing System core, and generic binders), visit the **com.shababeek.reactivevars** package documentation.
@@ -145,7 +145,7 @@ See [ImagesTodo.md](ImagesTodo.md) for a complete tracking list of all needed im
 | PoseConstrainer | ✅ Complete |
 | Feedback System | ✅ Complete (v1.1 - added Scale, Particle, Toggle, UnityEvent) |
 | Socket System | ✅ Complete (v1.1 - added Socket Binders) |
-| Interaction Binders | ✅ Complete (v1.5 - interaction-specific only) |
+| Interaction Drivers | ✅ Complete (v1.5 - interaction-specific only) |
 | Interaction Sequences | ✅ Complete (v1.5 - interaction-specific actions only) |
 | Interactors | ✅ Complete |
 
