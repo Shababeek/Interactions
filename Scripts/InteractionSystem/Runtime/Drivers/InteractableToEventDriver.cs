@@ -3,9 +3,9 @@ using UnityEngine;
 using Shababeek.Interactions;
 using Shababeek.ReactiveVars;
 
-namespace Shababeek.Interactions.Binders
+namespace Shababeek.Interactions.Drivers
 {
-    /// <summary>Binds interactable events to GameEvents.</summary>
+    /// <summary>Raises GameEvents in response to interactable events.</summary>
     /// <remarks>
     /// Fires scriptable GameEvents when interactable state changes.
     /// Allows decoupled event handling through the scriptable event system.
@@ -15,9 +15,9 @@ namespace Shababeek.Interactions.Binders
     /// - Playing effects through event listeners
     /// - Updating UI/analytics when interactions occur
     /// </remarks>
-    [AddComponentMenu("Shababeek/Scriptable System/Interactable To Event Binder")]
+    [AddComponentMenu("Shababeek/Interactions/Drivers/Interactable To Event Driver")]
     [RequireComponent(typeof(InteractableBase))]
-    public class InteractableToEventBinder : MonoBehaviour
+    public class InteractableToEventDriver : MonoBehaviour
     {
         [Header("Hover Events")]
         [Tooltip("GameEvent raised when hover starts.")]

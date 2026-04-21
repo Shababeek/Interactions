@@ -3,10 +3,10 @@ using UnityEngine;
 using Shababeek.Interactions;
 using Shababeek.ReactiveVars;
 
-namespace Shababeek.Interactions.Binders
+namespace Shababeek.Interactions.Drivers
 {
     /// <summary>
-    /// Binds interactable states (Hovered, Selected, Used) to BoolVariables.
+    /// Writes interactable states (Hovered, Selected, Used) to BoolVariables.
     /// </summary>
     /// <remarks>
     /// Allows decoupled state tracking of interactables through the scriptable variable system.
@@ -18,9 +18,9 @@ namespace Shababeek.Interactions.Binders
     /// - Triggering effects when objects are hovered
     /// - Analytics tracking of interactions
     /// </remarks>
-    [AddComponentMenu("Shababeek/Scriptable System/Interactable To Bool Binder")]
+    [AddComponentMenu("Shababeek/Interactions/Drivers/Interactable To Bool Driver")]
     [RequireComponent(typeof(InteractableBase))]
-    public class InteractableToBoolBinder : MonoBehaviour
+    public class InteractableToBoolDriver : MonoBehaviour
     {
         [Header("Hover State")]
         [Tooltip("BoolVariable set to true when hovered, false when not.")]

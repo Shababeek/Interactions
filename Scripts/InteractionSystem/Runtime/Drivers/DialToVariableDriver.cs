@@ -5,11 +5,11 @@ using Shababeek.ReactiveVars;
 namespace Shababeek.Interactions
 {
     /// <summary>
-    /// Binds a DialInteractable's step output to scriptable variables and events.
+    /// Writes a DialInteractable's step output to scriptable variables and events.</summary>
     /// </summary>
-    [AddComponentMenu("Shababeek/Interactions/Binders/Dial To Variable Binder")]
+    [AddComponentMenu("Shababeek/Interactions/Drivers/Dial To Variable Driver")]
     [RequireComponent(typeof(DialInteractable))]
-    public class DialToVariableBinder : MonoBehaviour
+    public class DialToVariableDriver : MonoBehaviour
     {
         [Header("Variable Outputs")]
         [Tooltip("IntVariable that receives the current step index (0-based).")]

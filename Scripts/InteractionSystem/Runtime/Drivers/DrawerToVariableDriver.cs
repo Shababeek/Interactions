@@ -4,9 +4,9 @@ using UnityEngine;
 
 namespace Shababeek.Interactions
 {
-    /// <summary>Binds a DrawerInteractable's output to scriptable variables and events.</summary>
-    [AddComponentMenu("Shababeek/Interactions/Binders/Drawer To Variable Binder")]
-    public class DrawerToVariableBinder : MonoBehaviour
+    /// <summary>Writes a DrawerInteractable's output to scriptable variables and events.</summary>
+    [AddComponentMenu("Shababeek/Interactions/Drivers/Drawer To Variable Driver")]
+    public class DrawerToVariableDriver : MonoBehaviour
     {
         [Header("Source")]
         [Tooltip("The drawer interactable to bind from.")]

@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Shababeek.Interactions
 {
-    /// <summary>Binds socket states to BoolVariables.</summary>
+    /// <summary>Writes socket states to BoolVariables.</summary>
     /// <remarks>
     /// Tracks whether a socket is occupied, hovering, etc. through the scriptable variable system.
     ///
@@ -13,9 +13,9 @@ namespace Shababeek.Interactions
     /// - Enabling features when socket is filled
     /// - Puzzle mechanics requiring specific socket states
     /// </remarks>
-    [AddComponentMenu("Shababeek/Scriptable System/Socket To Bool Binder")]
+    [AddComponentMenu("Shababeek/Interactions/Drivers/Socket To Bool Driver")]
     [RequireComponent(typeof(AbstractSocket))]
-    public class SocketToBoolBinder : MonoBehaviour
+    public class SocketToBoolDriver : MonoBehaviour
     {
         [Header("Socket State Variables")]
         [Tooltip("BoolVariable set to true when socket has an object, false when empty.")]
@@ -83,7 +83,7 @@ namespace Shababeek.Interactions
         public bool IsHovering => isHoveringVariable != null && isHoveringVariable.Value;
     }
 
-    /// <summary>Binds socket events to GameEvents.</summary>
+    /// <summary>Raises GameEvents in response to socket events.</summary>
     /// <remarks>
     /// Fires scriptable GameEvents when socket state changes.
     ///
@@ -92,9 +92,9 @@ namespace Shababeek.Interactions
     /// - Sound/visual feedback on socket operations
     /// - Game logic triggered by socket completion
     /// </remarks>
-    [AddComponentMenu("Shababeek/Scriptable System/Socket To Event Binder")]
+    [AddComponentMenu("Shababeek/Interactions/Drivers/Socket To Event Driver")]
     [RequireComponent(typeof(AbstractSocket))]
-    public class SocketToEventBinder : MonoBehaviour
+    public class SocketToEventDriver : MonoBehaviour
     {
         [Header("Socket Events")]
         [Tooltip("GameEvent raised when an object is socketed.")]
@@ -156,7 +156,7 @@ namespace Shababeek.Interactions
         }
     }
 
-    /// <summary>Binds socketable states to BoolVariables.</summary>
+    /// <summary>Writes socketable states to BoolVariables.</summary>
     /// <remarks>
     /// Tracks whether a socketable object is currently socketed.
     ///
@@ -165,9 +165,9 @@ namespace Shababeek.Interactions
     /// - Preventing certain actions while socketed
     /// - Visual feedback on socketable state
     /// </remarks>
-    [AddComponentMenu("Shababeek/Scriptable System/Socketable To Bool Binder")]
+    [AddComponentMenu("Shababeek/Interactions/Drivers/Socketable To Bool Driver")]
     [RequireComponent(typeof(Socketable))]
-    public class SocketableToBoolBinder : MonoBehaviour
+    public class SocketableToBoolDriver : MonoBehaviour
     {
         [Header("Socketable State Variables")]
         [Tooltip("BoolVariable set to true when this object is socketed.")]
@@ -241,10 +241,10 @@ namespace Shababeek.Interactions
         public bool IsNearSocket => isNearSocketVariable != null && isNearSocketVariable.Value;
     }
 
-    /// <summary>Binds socketable events to GameEvents.</summary>
-    [AddComponentMenu("Shababeek/Scriptable System/Socketable To Event Binder")]
+    /// <summary>Raises GameEvents in response to socketable events.</summary>
+    [AddComponentMenu("Shababeek/Interactions/Drivers/Socketable To Event Driver")]
     [RequireComponent(typeof(Socketable))]
-    public class SocketableToEventBinder : MonoBehaviour
+    public class SocketableToEventDriver : MonoBehaviour
     {
         [Header("Socketable Events")]
         [Tooltip("GameEvent raised when this object is socketed.")]

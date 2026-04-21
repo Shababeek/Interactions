@@ -4,9 +4,9 @@ using UnityEngine;
 
 namespace Shababeek.Interactions
 {
-    /// <summary>Binds interactable interaction events to GameEvents and variables.</summary>
-    [AddComponentMenu("Shababeek/Interactions/Binders/Interactable Event Binder")]
-    public class InteractableEventBinder : MonoBehaviour
+    /// <summary>Writes interactable interaction events into GameEvents and variables.</summary>
+    [AddComponentMenu("Shababeek/Interactions/Drivers/Interactable Event Driver")]
+    public class InteractableEventDriver : MonoBehaviour
     {
         [Header("Source")]
         [Tooltip("The interactable to bind from.")]

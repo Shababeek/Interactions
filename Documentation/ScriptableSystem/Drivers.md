@@ -1,7 +1,7 @@
-# Interaction Binders — Connect Interactions to Reactive Variables
+# Interaction Drivers — Connect Interactions to Reactive Variables
 
 > **Quick Reference**
-> **Menu Path:** Component > Shababeek > Scriptable System > [BinderName]
+> **Menu Path:** Component > Shababeek > Interactions > Drivers > [DriverName]
 > **Use For:** Connecting interactables and sockets to the reactive variable system
 > **Requires:** com.shababeek.reactivevars package, ScriptableVariable
 
@@ -9,7 +9,7 @@
 
 ## What It Does
 
-These binders connect VR interaction system outputs (levers, wheels, buttons, sockets, etc.) to the ScriptableVariable and GameEvent system from the **com.shababeek.reactivevars** package. When an interaction occurs, the binder automatically updates reactive variables and fires events.
+These drivers connect VR interaction system outputs (levers, wheels, buttons, sockets, etc.) to the ScriptableVariable and GameEvent system from the **com.shababeek.reactivevars** package. When an interaction occurs, the driver automatically updates reactive variables and fires events.
 
 This enables:
 - Tutorial systems that respond to interactions
@@ -17,17 +17,17 @@ This enables:
 - Game logic triggered by socket insertions
 - Complex sequences coordinated through reactive variables
 
-**For a complete list of generic binders** (Transform, Physics, UI, Animator, Light, Camera, etc.), see the **com.shababeek.reactivevars** package documentation.
+**For a complete list of generic drivers** (Transform, Physics, UI, Animator, Light, Camera, etc.), see the **com.shababeek.reactivevars** package documentation.
 
 ---
 
-## Interactable-to-Variable Binders
+## Interactable-to-Variable Drivers
 
-These binders connect constrained interactables (rotatable/movable objects) to numeric variables.
+These drivers connect constrained interactables (rotatable/movable objects) to numeric variables.
 
-### Lever To Variable Binder
+### Lever To Variable Driver
 
-Binds a LeverInteractable's output to float variables.
+Writes a LeverInteractable's output to float variables.
 
 | Setting | Description |
 |---------|-------------|
@@ -41,9 +41,9 @@ Binds a LeverInteractable's output to float variables.
 
 ---
 
-### Wheel To Variable Binder
+### Wheel To Variable Driver
 
-Binds a WheelInteractable's output to float variables.
+Writes a WheelInteractable's output to float variables.
 
 | Setting | Description |
 |---------|-------------|
@@ -57,9 +57,9 @@ Binds a WheelInteractable's output to float variables.
 
 ---
 
-### Dial To Variable Binder
+### Dial To Variable Driver
 
-Binds a DialInteractable's discrete step output to variables and events.
+Writes a DialInteractable's discrete step output to variables and events.
 
 | Setting | Description |
 |---------|-------------|
@@ -83,9 +83,9 @@ Binds a DialInteractable's discrete step output to variables and events.
 
 ---
 
-### Joystick To Variable Binder
+### Joystick To Variable Driver
 
-Binds a JoystickInteractable's output to Vector2 or separate float variables.
+Writes a JoystickInteractable's output to Vector2 or separate float variables.
 
 | Setting | Description |
 |---------|-------------|
@@ -101,9 +101,9 @@ Binds a JoystickInteractable's output to Vector2 or separate float variables.
 
 ---
 
-### Drawer To Variable Binder
+### Drawer To Variable Driver
 
-Binds a DrawerInteractable's output to variables and events.
+Writes a DrawerInteractable's output to variables and events.
 
 | Setting | Description |
 |---------|-------------|
@@ -119,13 +119,13 @@ Binds a DrawerInteractable's output to variables and events.
 
 ---
 
-## Generic Interactable Binders
+## Generic Interactable Drivers
 
-These binders work with any InteractableBase-derived component.
+These drivers work with any InteractableBase-derived component.
 
-### Interactable Event Binder
+### Interactable Event Driver
 
-Binds any InteractableBase's interaction events to GameEvents and BoolVariables.
+Writes any InteractableBase's interaction events to GameEvents and BoolVariables.
 
 | Setting | Description |
 |---------|-------------|
@@ -147,9 +147,9 @@ Binds any InteractableBase's interaction events to GameEvents and BoolVariables.
 
 ---
 
-### Interactable To Bool Binder
+### Interactable To Bool Driver
 
-Simplified binder focusing only on BoolVariables for interaction states.
+Simplified driver, writing only on BoolVariables for interaction states.
 
 | Setting | Description |
 |---------|-------------|
@@ -166,9 +166,9 @@ Simplified binder focusing only on BoolVariables for interaction states.
 
 ---
 
-### Interactable To Event Binder
+### Interactable To Event Driver
 
-Simplified binder focusing only on GameEvents for interaction events.
+Simplified driver, writing only on GameEvents for interaction events.
 
 | Setting | Description |
 |---------|-------------|
@@ -187,13 +187,13 @@ Simplified binder focusing only on GameEvents for interaction events.
 
 ---
 
-## Socket Binders
+## Socket Drivers
 
-These binders connect Socket System events to the reactive variable system.
+These drivers connect Socket System events to the reactive variable system.
 
-### Socket To Bool Binder
+### Socket To Bool Driver
 
-Binds a Socket's state to BoolVariables and GameEvents.
+Writes a Socket's state to BoolVariables and GameEvents.
 
 | Setting | Description |
 |---------|-------------|
@@ -209,7 +209,7 @@ Binds a Socket's state to BoolVariables and GameEvents.
 
 ---
 
-### Socket To Event Binder
+### Socket To Event Driver
 
 Simplified version focusing only on GameEvents.
 
@@ -221,9 +221,9 @@ Simplified version focusing only on GameEvents.
 
 ---
 
-### Socketable To Bool Binder
+### Socketable To Bool Driver
 
-Binds a Socketable object's state to BoolVariable.
+Writes a Socketable object's state to BoolVariable.
 
 | Setting | Description |
 |---------|-------------|
@@ -239,7 +239,7 @@ Binds a Socketable object's state to BoolVariable.
 
 ---
 
-### Socketable To Event Binder
+### Socketable To Event Driver
 
 Simplified version focusing only on GameEvents.
 
@@ -256,8 +256,8 @@ Simplified version focusing only on GameEvents.
 ### Tutorial with Variable Feedback
 
 1. Create a FloatVariable "LeverPosition"
-2. Add **LeverToVariableBinder** to your lever
-3. Create a UI progress bar bound to "LeverPosition" (using a generic binder from ReactiveVars)
+2. Add **LeverToVariableDriver** to your lever
+3. Create a UI progress bar bound to "LeverPosition" (using a generic driver from ReactiveVars)
 4. Create a Sequence that advances when "LeverPosition" reaches 1.0
 
 ---
@@ -265,7 +265,7 @@ Simplified version focusing only on GameEvents.
 ### Puzzle Lock System
 
 1. Create IntVariables for each dial: "Dial1", "Dial2", "Dial3"
-2. Add **DialToVariableBinder** to each dial
+2. Add **DialToVariableDriver** to each dial
 3. Create a Sequence that checks if all dials match target values
 4. When all match, unlock the door
 
@@ -274,7 +274,7 @@ Simplified version focusing only on GameEvents.
 ### Drawer Auto-Close Detection
 
 1. Create a BoolVariable "DrawerOpen"
-2. Add **DrawerToVariableBinder** to the drawer
+2. Add **DrawerToVariableDriver** to the drawer
 3. Bind UI element visibility to "DrawerOpen"
 4. Create sound effect triggered by "OnClosed" event
 
@@ -286,15 +286,15 @@ Simplified version focusing only on GameEvents.
 
 💡 **Use angle outputs** for calculations and constraints.
 
-💡 **Interactable Event Binder** is the most versatile — use it for any interactable.
+💡 **Interactable Event Driver** is the most versatile — use it for any interactable.
 
-💡 **Socket binders** work great with puzzle mechanics — check HasObject to validate solutions.
+💡 **Socket drivers** work great with puzzle mechanics — check HasObject to validate solutions.
 
 💡 **Per-step dial events** enable combo-lock patterns without custom code.
 
 💡 **Invert Output** simplifies reversed controls (e.g., lever up = close instead of open).
 
-⚠️ **Variable Types Must Match** — Ensure FloatVariable, IntVariable, etc. match the binder output type.
+⚠️ **Variable Types Must Match** — Ensure FloatVariable, IntVariable, etc. match the driver output type.
 
 ⚠️ **Deadzone Tuning** — For joysticks, adjust deadzone if input feels too sensitive.
 
@@ -317,8 +317,8 @@ Simplified version focusing only on GameEvents.
 - **[Interaction System Overview](../../UserManual.md)** — Core concepts
 - **[Socket System](../SocketSystem/SocketSystem.md)** — Socket and Socketable components
 - **[Constrained Interactables](../Interactables/ConstrainedInteractables.md)** — Lever, Wheel, Dial, Joystick, Drawer
-- **[ReactiveVars Package](https://github.com/Shababeek/ReactiveVars)** — Complete documentation on variables, events, and generic binders
-- **[Interaction Sequences](../Systems/SequencingSystem.md)** — Using binders with tutorials
+- **[ReactiveVars Package](https://github.com/Shababeek/ReactiveVars)** — Complete documentation on variables, events, and generic drivers
+- **[Interaction Sequences](../Systems/SequencingSystem.md)** — Using drivers with tutorials
 
 ---
 

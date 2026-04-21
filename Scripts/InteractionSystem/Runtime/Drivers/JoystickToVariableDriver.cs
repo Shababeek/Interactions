@@ -4,9 +4,9 @@ using UnityEngine;
 
 namespace Shababeek.Interactions
 {
-    /// <summary>Binds a JoystickInteractable's output to scriptable variables.</summary>
-    [AddComponentMenu("Shababeek/Interactions/Binders/Joystick To Variable Binder")]
-    public class JoystickToVariableBinder : MonoBehaviour
+    /// <summary>Writes a JoystickInteractable's output to scriptable variables.</summary>
+    [AddComponentMenu("Shababeek/Interactions/Drivers/Joystick To Variable Driver")]
+    public class JoystickToVariableDriver : MonoBehaviour
     {
         [Header("Source")]
         [Tooltip("The joystick interactable to bind from.")]
