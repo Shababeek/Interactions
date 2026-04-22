@@ -175,8 +175,8 @@ namespace Shababeek.Interactions
         {
             return rotationAxis switch
             {
-                RotationAxis.Right => Vector3.right,
-                RotationAxis.Up => Vector3.up,
+                RotationAxis.Right => -Vector3.right,
+                RotationAxis.Up => -Vector3.up,
                 _ => Vector3.forward
             };
         }
