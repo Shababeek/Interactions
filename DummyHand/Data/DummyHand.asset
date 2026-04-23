@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f2489db449460543b6d0d4f8e8d4715, type: 3}
+  m_Name: DummyHand
+  m_EditorClassIdentifier: 
+  previewSprite: {fileID: 2800000, guid: 8f482cac5f7c340c092ec99681fba13f, type: 3}
+  description: realstic bussines women hand with a functional watch on the left hand
+  poseSystem: 0
+  leftHandPrefab: {fileID: 5394817275799713210, guid: ac518c71ea2de4357bb961f0373860f4, type: 3}
+  rightHandPrefab: {fileID: 6087291423523637430, guid: ce6bcbb212bad42259b39c8b63b5e944, type: 3}
+  defaultPose:
+    open: {fileID: 7400000, guid: 9d9709920c9f04e9ea2be9a70ab741ec, type: 2}
+    closed: {fileID: 7400000, guid: b6bc6626382e64418ab1a60c7f56bbb6, type: 2}
+    name: Default
+    type: 0
+  poses: []
+  handAvatarMaskContainer:
+    thumb: {fileID: 31900000, guid: 9d312d50a2ccc4a9caef894808b1defd, type: 2}
+    index: {fileID: 31900000, guid: 8ccc3c96eb5b44d5ab9a3ebc813ba7db, type: 2}
+    middle: {fileID: 31900000, guid: 93f868c079ef246a283031b606663e0d, type: 2}
+    ring: {fileID: 31900000, guid: 2917263495d504cd3867c68f785c7c15, type: 2}
+    pinky: {fileID: 31900000, guid: 10a6a9274a7e94e3e8d07f095034e247, type: 2}
