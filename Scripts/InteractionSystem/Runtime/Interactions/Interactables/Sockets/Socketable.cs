@@ -62,7 +62,7 @@ namespace Shababeek.Interactions
         private VariableTweener _tweener;
         private TransformTweenable _returnTweenable;
         private bool _isReturning = false;
-        private readonly Collider[] _overlapResults = new Collider[3];
+        private readonly Collider[] _overlapResults = new Collider[13];
         /// <summary>
         /// Gets the transform of the socket this object is currently inserted into.
         /// </summary>
@@ -288,6 +288,7 @@ namespace Shababeek.Interactions
             for (int i = 0; i < hitCount; i++)
             {
                 var col = _overlapResults[i];
+                if (col == null) continue;
                 var detectedSocket = col.GetComponent<AbstractSocket>();
                 if (detectedSocket == null || !detectedSocket.CanSocket()) continue;
                 if (!detectedSocket.CanSocket(this)) continue;
