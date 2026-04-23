@@ -37,7 +37,11 @@ namespace Shababeek.Interactions.Animations
         private PoseConstrains _constrains = PoseConstrains.Free;
         private HumanPoseHandler _humanPoseHandler;
         private HumanPose _humanPose;
+        private Vector3 _baseBodyPosition;
+        private Quaternion _baseBodyRotation = Quaternion.identity;
         private Transform[] _pinChainTopDown;
+        private Transform[] _bonePositionLocks;
+        private Vector3[] _bonePositionLockRestValues;
         private HandPoseSystem _activePoseSystem = HandPoseSystem.LegacyBoneBased;
 
         /// <summary>Finger curl value (0 = extended, 1 = curled) by finger name.</summary>
@@ -208,6 +212,14 @@ namespace Shababeek.Interactions.Animations
             _humanPoseHandler = new HumanPoseHandler(_animator.avatar, _animator.transform);
             _humanPose = new HumanPose();
 
+            // SetHumanPose writes the avatar's T-pose bone localPositions every frame. Cache the
+            // scene's rest-pose localPositions now so LockBonePositions can reassert them and keep
+            // SetHumanPose from stretching bones that were modeled differently from the avatar T-pose.
+            _humanPoseHandler.GetHumanPose(ref _humanPose);
+            _baseBodyPosition = _humanPose.bodyPosition;
+            _baseBodyRotation = _humanPose.bodyRotation;
+            CacheBonePositionLocks();
+
             var pinSide = hand == HandIdentifier.None ? HandIdentifier.Left : hand;
             var handHumanBone = pinSide == HandIdentifier.Right ? HumanBodyBones.RightHand : HumanBodyBones.LeftHand;
             var handBone = _animator.GetBoneTransform(handHumanBone);
@@ -246,8 +258,8 @@ namespace Shababeek.Interactions.Animations
             if (currentPoseIndex < 0 || currentPoseIndex >= _poses.Count) return;
 
             // Read the live pose so any upstream muscle writer passes through; we only overwrite
-            // finger muscles. PinHandToAnimatorRoot resets the hips-through-hand chain each frame,
-            // so any body-position drift from Get/Set is overwritten there.
+            // finger muscles. Body position/rotation are re-pinned to the captured baseline so
+            // the Get/Set roundtrip doesn't let the hips drift across frames.
             _humanPoseHandler.GetHumanPose(ref _humanPose);
 
             switch (_poses[currentPoseIndex])
@@ -257,7 +269,37 @@ namespace Shababeek.Interactions.Animations
                 case MuscleBasedStaticPose stat: stat.WriteTo(ref _humanPose); break;
             }
 
+            _humanPose.bodyPosition = _baseBodyPosition;
+            _humanPose.bodyRotation = _baseBodyRotation;
+
             _humanPoseHandler.SetHumanPose(ref _humanPose);
+            LockBonePositions();
+        }
+
+        private void CacheBonePositionLocks()
+        {
+            var bones = new List<Transform>((int)HumanBodyBones.LastBone);
+            var positions = new List<Vector3>((int)HumanBodyBones.LastBone);
+            for (int b = 0; b < (int)HumanBodyBones.LastBone; b++)
+            {
+                var t = _animator.GetBoneTransform((HumanBodyBones)b);
+                if (t == null) continue;
+                bones.Add(t);
+                positions.Add(t.localPosition);
+            }
+            _bonePositionLocks = bones.ToArray();
+            _bonePositionLockRestValues = positions.ToArray();
+        }
+
+        private void LockBonePositions()
+        {
+            if (_bonePositionLocks == null) return;
+            for (int i = 0; i < _bonePositionLocks.Length; i++)
+            {
+                var bone = _bonePositionLocks[i];
+                if (bone == null) continue;
+                bone.localPosition = _bonePositionLockRestValues[i];
+            }
         }
 
         private void DisposeHumanPoseHandler()
