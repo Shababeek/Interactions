@@ -97,6 +97,36 @@ namespace Shababeek.Interactions
             SyncRackRootScale();
         }
 
+        /// <summary>
+        /// Rebuilds the rack with a new slot count. Only safe when the rack is empty
+        /// (<see cref="FilledCount"/> == 0). Intended for runtime capacity changes.
+        /// </summary>
+        public void Reconfigure(int newSlotCount)
+        {
+            if (newSlotCount < 1) newSlotCount = 1;
+            if (_occupants.Count > 0)
+            {
+                Debug.LogWarning($"[ShiftingRackSocket] Reconfigure called with {_occupants.Count} occupants; aborting.");
+                return;
+            }
+            slotCount = newSlotCount;
+            if (_rackRoot != null)
+            {
+                Destroy(_rackRoot.gameObject);
+                _rackRoot = null;
+            }
+            BuildRackRoot();
+            BuildSlots();
+            if (highlightPrefab != null)
+            {
+                if (_highlightInstance != null) Destroy(_highlightInstance.gameObject);
+                _highlightInstance = Instantiate(highlightPrefab, _rackRoot);
+                _highlightInstance.localRotation = Quaternion.identity;
+                NeutralizeHighlight(_highlightInstance);
+                _highlightInstance.gameObject.SetActive(false);
+            }
+        }
+
         private void SyncRackRootScale()
         {
             if (_rackRoot == null) return;
@@ -139,6 +169,7 @@ namespace Shababeek.Interactions
 
         public override (Vector3 position, Quaternion rotation) GetPivotForSocketable(Socketable socketable)
         {
+            AdoptAsHoverIfNeeded(socketable);
             if (_hovering == socketable && _hoverIndex >= 0)
             {
                 RefreshHoverIndex(socketable);
@@ -149,11 +180,33 @@ namespace Shababeek.Interactions
             return (fallback.position, fallback.rotation);
         }
 
+        // Socketable.DetectSockets only fires StartHovering when the closest socket changes.
+        // A tape grabbed from inside this rack keeps us as its CurrentSocket, so StartHovering
+        // never re-fires and _hovering stays null. Adopt it on demand so highlight, shift,
+        // and insert-index logic all work during rearrange.
+        private void AdoptAsHoverIfNeeded(Socketable socketable)
+        {
+            if (socketable == null || _hovering == socketable) return;
+            if (_hovering != null) return;
+            if (socketable.IsSocketed) return;
+            if (socketable.CurrentSocket != this) return;
+            if (!CanSocket() || !CanSocket(socketable)) return;
+            _hovering = socketable;
+            RefreshHoverIndex(socketable, silent: true);
+            ShowHighlight();
+            onSlotHighlighted.Invoke(_hoverIndex);
+        }
+
         internal override Transform Insert(Socketable socketable)
         {
             if (!CanSocket()) return null;
 
-            var insertAt = _hovering == socketable && _hoverIndex >= 0 ? _hoverIndex : _occupants.Count;
+            AdoptAsHoverIfNeeded(socketable);
+            int insertAt;
+            if (_hovering == socketable && _hoverIndex >= 0)
+                insertAt = _hoverIndex;
+            else
+                insertAt = ComputeInsertIndex(socketable.transform.position);
             insertAt = Mathf.Clamp(insertAt, 0, _occupants.Count);
 
             var carrier = new GameObject($"Carrier_{socketable.name}").transform;
