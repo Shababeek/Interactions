@@ -27,10 +27,12 @@ namespace Shababeek.Interactions
         [SerializeField]
         private InteractionHand interactionHand = (InteractionHand.Left | InteractionHand.Right);
 
-        [Tooltip("The button that triggers selection of this interactable (Grip or Trigger).")] [SerializeField]
+        [Tooltip("The button that triggers selection of this interactable (Grip or Trigger).")]
+        [SerializeField]
         private XRButton selectionButton = XRButton.Grip;
 
-        [Header("Interaction Events")] [SerializeField]
+        [Header("Interaction Events")]
+        [SerializeField]
         public InteractorUnityEvent onSelected = new();
 
         [SerializeField] private InteractorUnityEvent onDeselected = new();
@@ -47,10 +49,14 @@ namespace Shababeek.Interactions
         [ReadOnly]
         private bool isSelected;
 
-        [Tooltip("The interactor that is currently interacting with this object.")] [SerializeField] [ReadOnly]
+        [Tooltip("The interactor that is currently interacting with this object.")]
+        [SerializeField]
+        [ReadOnly]
         private InteractorBase currentInteractor;
 
-        [Tooltip("The current interaction state of this interactable.")] [SerializeField] [ReadOnly]
+        [Tooltip("The current interaction state of this interactable.")]
+        [SerializeField]
+        [ReadOnly]
         private InteractionState currentState;
 
         [Tooltip("Indicates whether this interactable is currently being used (secondary button pressed).")]
@@ -59,6 +65,10 @@ namespace Shababeek.Interactions
         private bool isUsing;
 
         private PoseConstrainter _constrainter;
+
+        private Collider[] colliders;
+        private int[] collisionLayers;
+        private int layer;
 
         public PoseConstrainter Constrainter => _constrainter ??= GetComponent<PoseConstrainter>();
 
@@ -197,6 +207,7 @@ namespace Shababeek.Interactions
                 DeSelected();
                 isSelected = false;
                 onDeselected.Invoke(currentInteractor);
+                RestoreLayers();
             }
             else if (currentState == InteractionState.Hovering)
             {
@@ -216,6 +227,7 @@ namespace Shababeek.Interactions
                 isSelected = false;
                 onDeselected.Invoke(currentInteractor);
                 DeSelected();
+                RestoreLayers();
             }
 
             currentState = InteractionState.Hovering;
@@ -252,6 +264,18 @@ namespace Shababeek.Interactions
             try
             {
                 onSelected.Invoke(currentInteractor);
+
+                layer = gameObject.layer;
+                for (int i = 0; i < collisionLayers.Length; i++)
+                {
+                    collisionLayers[i] = colliders[i].gameObject.layer;
+                }
+                foreach (var collider in colliders)
+                {
+                    collider.gameObject.layer = currentInteractor.gameObject.layer;
+                }
+
+                gameObject.layer = currentInteractor.gameObject.layer;
             }
             catch (Exception ee)
             {
@@ -259,6 +283,18 @@ namespace Shababeek.Interactions
             }
 
             currentState = InteractionState.Selected;
+        }
+
+        private void RestoreLayers()
+        {
+            if (colliders == null || collisionLayers == null) return;
+
+            for (var i = 0; i < colliders.Length; i++)
+            {
+                colliders[i].gameObject.layer = collisionLayers[i];
+            }
+
+            gameObject.layer = layer;
         }
 
         /// <summary>
@@ -406,6 +442,8 @@ namespace Shababeek.Interactions
         public virtual void InitializeInteractable()
         {
             // Override in derived classes
+            colliders = gameObject.GetComponentsInChildren<Collider>();
+            collisionLayers = new int[colliders.Length];
         }
 
         public void ValidateAndCreateHierarchy()
