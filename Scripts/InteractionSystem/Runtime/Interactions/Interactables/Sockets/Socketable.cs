@@ -43,6 +43,11 @@ namespace Shababeek.Interactions
         [Tooltip("Physics layers scanned during socket detection. Combined with Socketable Mask — both must match.")]
         [SerializeField] private LayerMask socketLayerMask = -1;
 
+        [Tooltip("Verbose detection logs: candidate sockets, accept/reject reasons, chosen socket, release decision.")]
+        [SerializeField] private bool verboseSocketLogs = true;
+
+        private float _nextNoHitLogTime;
+
         [Tooltip("Bitmask of categories this socketable belongs to. Matched against each socket's accepted mask via bitwise AND. Default is everything.")]
         [FormerlySerializedAs("category")]
         [SerializeField] private SocketMask socketableMask = SocketMask.FromInt(~0);
@@ -117,18 +122,19 @@ namespace Shababeek.Interactions
 
             _interactable = GetComponent<InteractableBase>();
             _interactable.OnDeselected
+                .Do(_ => { if (verboseSocketLogs) Debug.Log($"[Socketable:{name}] RELEASE socket={(socket!=null?socket.name:"null")} canSocket={(socket!=null && socket.CanSocket())} canAcceptMe={(socket!=null && socket.CanSocket(this))} isSocketed={IsSocketed} pos={transform.position}"); })
                 .Where(_ => !IsSocketed && socket != null && socket.CanSocket())
                 .Select(_=>socket)
-                .Do(soc=>Insert(soc))
+                .Do(soc=> { if (verboseSocketLogs) Debug.Log($"[Socketable:{name}] RELEASE → INSERT into '{soc.name}'"); Insert(soc); })
                 .Subscribe().AddTo(this);
             _interactable.OnDeselected
                 .Where(_ => shouldReturnToLastSocket && !IsSocketed && (socket == null || !socket.CanSocket()))
-                .Do(_ => Return()).Subscribe().AddTo(this);
+                .Do(_ => { if (verboseSocketLogs) Debug.Log($"[Socketable:{name}] RELEASE → RETURN (socket={(socket!=null?socket.name:"null")} canSocket={(socket!=null && socket.CanSocket())})"); Return(); }).Subscribe().AddTo(this);
 
             _interactable.OnSelected
                 .Where(_ => IsSocketed)
                 .Do(_ => IsSocketed = false)
-                .Do(_ => socket.Remove(this))
+                .Do(_ => { if (verboseSocketLogs) Debug.Log($"[Socketable:{name}] GRAB → REMOVE from '{(socket!=null?socket.name:"null")}'"); socket.Remove(this); })
                 .Subscribe().AddTo(this);
         }
 
@@ -283,6 +289,7 @@ namespace Shababeek.Interactions
 
             AbstractSocket closestSocket = null;
             float closestDistance = float.MaxValue;
+            int candidateCount = 0;
 
             // Find the closest socket
             for (int i = 0; i < hitCount; i++)
@@ -290,10 +297,18 @@ namespace Shababeek.Interactions
                 var col = _overlapResults[i];
                 if (col == null) continue;
                 var detectedSocket = col.GetComponent<AbstractSocket>();
-                if (detectedSocket == null || !detectedSocket.CanSocket()) continue;
-                if (!detectedSocket.CanSocket(this)) continue;
+                if (detectedSocket == null) continue;
 
+                bool canSocket = detectedSocket.CanSocket();
+                bool canAcceptMe = detectedSocket.CanSocket(this);
                 float distance = Vector3.Distance(detectionCenter, col.transform.position);
+                candidateCount++;
+
+                if (verboseSocketLogs)
+                    Debug.Log($"[Socketable:{name}] CANDIDATE '{detectedSocket.name}' dist={distance:F3} canSocket={canSocket} canAcceptMe={canAcceptMe} myMask=0x{(int)socketableMask.Value:X8} colliderPos={col.transform.position}");
+
+                if (!canSocket || !canAcceptMe) continue;
+
                 if (distance < closestDistance)
                 {
                     closestDistance = distance;
