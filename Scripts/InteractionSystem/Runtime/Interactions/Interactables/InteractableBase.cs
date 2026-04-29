@@ -16,6 +16,12 @@ namespace Shababeek.Interactions
         Right = 2,
     }
 
+    public enum ChangeInteractableLayer
+    {
+        TakeHandLayer = 1,
+        None = 2,
+    }
+
     /// <summary>
     /// Base class for all interactable objects in the interaction system.
     /// Provides the foundation for hover, selection, and activation interactions.
@@ -30,6 +36,8 @@ namespace Shababeek.Interactions
         [Tooltip("The button that triggers selection of this interactable (Grip or Trigger).")]
         [SerializeField]
         private XRButton selectionButton = XRButton.Grip;
+
+        [SerializeField] private ChangeInteractableLayer layerBehavior = ChangeInteractableLayer.TakeHandLayer;
 
         [Header("Interaction Events")]
         [SerializeField]
@@ -207,7 +215,8 @@ namespace Shababeek.Interactions
                 DeSelected();
                 isSelected = false;
                 onDeselected.Invoke(currentInteractor);
-                RestoreLayers();
+                if (layerBehavior == ChangeInteractableLayer.TakeHandLayer)
+                    RestoreLayers();
             }
             else if (currentState == InteractionState.Hovering)
             {
@@ -227,7 +236,8 @@ namespace Shababeek.Interactions
                 isSelected = false;
                 onDeselected.Invoke(currentInteractor);
                 DeSelected();
-                RestoreLayers();
+                if (layerBehavior == ChangeInteractableLayer.TakeHandLayer)
+                    RestoreLayers();
             }
 
             currentState = InteractionState.Hovering;
@@ -270,12 +280,15 @@ namespace Shababeek.Interactions
                 {
                     collisionLayers[i] = colliders[i].gameObject.layer;
                 }
-                foreach (var collider in colliders)
+                if (layerBehavior == ChangeInteractableLayer.TakeHandLayer)
                 {
-                    collider.gameObject.layer = currentInteractor.gameObject.layer;
-                }
+                    foreach (var collider in colliders)
+                    {
+                        collider.gameObject.layer = currentInteractor.gameObject.layer;
+                    }
 
-                gameObject.layer = currentInteractor.gameObject.layer;
+                    gameObject.layer = currentInteractor.gameObject.layer;
+                }
             }
             catch (Exception ee)
             {

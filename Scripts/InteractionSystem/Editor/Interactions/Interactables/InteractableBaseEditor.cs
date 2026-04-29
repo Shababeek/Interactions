@@ -9,6 +9,7 @@ namespace Shababeek.Interactions.Editors
         // Common serialized properties for all interactables
         private SerializedProperty _interactionHandProp;
         private SerializedProperty _selectionButtonProp;
+        private SerializedProperty _layerBehaviorProp;
 
         // Common event properties
         private SerializedProperty _onSelectedProp;
@@ -34,6 +35,7 @@ namespace Shababeek.Interactions.Editors
             // Find common serialized properties
             _interactionHandProp = serializedObject.FindProperty("interactionHand");
             _selectionButtonProp = serializedObject.FindProperty("selectionButton");
+            _layerBehaviorProp = serializedObject.FindProperty("layerBehavior");
             
             _onSelectedProp = serializedObject.FindProperty("onSelected");
             _onDeselectedProp = serializedObject.FindProperty("onDeselected");
@@ -59,6 +61,8 @@ namespace Shababeek.Interactions.Editors
             DrawInteractionSettings();
             EditorGUILayout.Space();
             DrawCustomProperties();
+            EditorGUILayout.Space();
+            DrawLayeringSettings();
             EditorGUILayout.Space();
             DrawEvents();
             EditorGUILayout.Space();
@@ -105,6 +109,18 @@ namespace Shababeek.Interactions.Editors
         protected virtual void DrawCustomProperties()
         {
             // Override in derived classes to add custom properties
+        }
+
+        private void DrawLayeringSettings()
+        {
+            EditorGUILayout.LabelField("Layering Settings", EditorStyles.boldLabel);
+
+            EditorGUI.indentLevel++;
+            if (_layerBehaviorProp != null)
+            {
+                EditorGUILayout.PropertyField(_layerBehaviorProp, new GUIContent("Layer Behavior", "Whether to assign the layer to this interactable and its children when selected."));
+            }
+            EditorGUI.indentLevel--;
         }
 
         protected virtual void DrawEvents()
