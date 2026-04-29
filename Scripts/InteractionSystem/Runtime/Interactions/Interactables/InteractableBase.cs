@@ -16,6 +16,12 @@ namespace Shababeek.Interactions
         Right = 2,
     }
 
+    public enum ChangeInteractableLayer
+    {
+        TakeHandLayer = 1,
+        None = 2,
+    }
+
     /// <summary>
     /// Base class for all interactable objects in the interaction system.
     /// Provides the foundation for hover, selection, and activation interactions.
@@ -207,7 +213,7 @@ namespace Shababeek.Interactions
                 DeSelected();
                 isSelected = false;
                 onDeselected.Invoke(currentInteractor);
-                RestoreLayers();
+                    RestoreLayers();
             }
             else if (currentState == InteractionState.Hovering)
             {
@@ -227,7 +233,7 @@ namespace Shababeek.Interactions
                 isSelected = false;
                 onDeselected.Invoke(currentInteractor);
                 DeSelected();
-                RestoreLayers();
+                    RestoreLayers();
             }
 
             currentState = InteractionState.Hovering;
@@ -270,13 +276,13 @@ namespace Shababeek.Interactions
                 {
                     collisionLayers[i] = colliders[i].gameObject.layer;
                 }
-                foreach (var collider in colliders)
-                {
-                    collider.gameObject.layer = currentInteractor.gameObject.layer;
-                }
+                    foreach (var collider in colliders)
+                    {
+                        collider.gameObject.layer = currentInteractor.gameObject.layer;
+                    }
 
-                gameObject.layer = currentInteractor.gameObject.layer;
-            }
+                    gameObject.layer = currentInteractor.gameObject.layer;
+                }
             catch (Exception ee)
             {
                 Debug.LogError(ee, this);
