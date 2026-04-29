@@ -3400,11 +3400,11 @@ PrefabInstance:
       objectReference: {fileID: 11400000, guid: 6266a90037c0340d2bcd35911bf35101, type: 2}
     - target: {fileID: 7163084461643045383, guid: 0a2f4a37f9c0d4e6cb1d4f44a6c1b007, type: 3}
       propertyPath: detectionRadius
-      value: 0.15
+      value: 0.11
       objectReference: {fileID: 0}
     - target: {fileID: 7163084461643045383, guid: 0a2f4a37f9c0d4e6cb1d4f44a6c1b007, type: 3}
       propertyPath: detectionOffset.x
-      value: -0.15
+      value: -0.14
       objectReference: {fileID: 0}
     - target: {fileID: 7163084461643045383, guid: 0a2f4a37f9c0d4e6cb1d4f44a6c1b007, type: 3}
       propertyPath: detectionOffset.z
