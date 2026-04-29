@@ -1,3 +1,76 @@
+# Interaction Drivers
+
+This page documents the **interaction-specific drivers** provided by the Interaction System package.
+
+If you need generic UI/transform/physics binders (for example `NumericalFillBinder`, `BoolToggleBinder`, `TransformBinder`), use the **ReactiveVars** package documentation.
+
+---
+
+## What Is a Driver?
+
+A **Driver** listens to interaction events and writes to ReactiveVars assets (variables/events) without custom code.
+
+Typical flow:
+
+```
+Interactable / Socket event
+          ↓
+Interaction Driver
+          ↓
+ReactiveVars Variable or GameEvent
+          ↓
+ReactiveVars Binder updates visuals/logic
+```
+
+---
+
+## Available Interaction Drivers
+
+| Driver | Attach To | Purpose |
+|--------|-----------|---------|
+| `DialToVariableDriver` | `DialInteractable` | Push dial step/normalized output to variables and events |
+| `InteractableEventDriver` | Any `InteractableBase` | Convert interaction lifecycle into variables + events |
+| `InteractableToEventDriver` | Any `InteractableBase` | Forward interaction lifecycle to GameEvents only |
+
+---
+
+## Driver Quick Notes
+
+### `DialToVariableDriver`
+- Use when dial output should control data (step index, normalized values).
+- Good for panel controls, locks, and tuning interactions.
+
+### `InteractableEventDriver`
+- Use when one interactable should drive mixed reactive state (boolean/float/events).
+- Good for "selected", "hovered", and "used" state wiring.
+
+### `InteractableToEventDriver`
+- Use when you only need event forwarding with no variable writes.
+- Good for sequence triggers and pure event pipelines.
+
+---
+
+## Driver vs Binder Naming
+
+- **Interaction System:** uses the term **Driver** for interaction-to-data bridges.
+- **ReactiveVars:** still uses **Binder** for generic variable-to-component wiring.
+
+Both are valid, but they serve different layers.
+
+---
+
+## Related Documentation
+
+- [Scriptable Variables](ScriptableVariables.md) — Variable asset types
+- [Variable Container](VariableContainer.md) — Group variables
+- [Scriptable System Window](ScriptableSystemWindow.md) — Runtime inspection
+- [Socket System](../SocketSystem/SocketSystem.md) — Socket event sources
+- [Sequencing System](../Systems/SequencingSystem.md) — Interaction-driven sequences
+- [ReactiveVars](https://github.com/Shababeek/ReactiveVars) — Generic binders and core data-flow docs
+
+---
+
+**Last Updated:** April 2026
 # Interaction Drivers — Connect Interactions to Reactive Variables
 
 > **Quick Reference**

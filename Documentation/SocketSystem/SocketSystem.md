@@ -530,59 +530,39 @@ public class MultiSocket : AbstractSocket
 
 ---
 
-## Socket Binders (Scriptable System Integration)
+## Socket Integration with ReactiveVars
 
-The Socket System integrates with the Scriptable System through dedicated binders. These allow socket events to drive variables and trigger GameEvents without custom code.
+Socket and Socketable workflows integrate cleanly with ReactiveVars through:
+- UnityEvents exposed by interaction components
+- Interaction Drivers for interaction lifecycle outputs
+- ReactiveVars binders for visual/state updates
 
-### Available Binders
-
-| Binder | Attached To | Purpose |
-|--------|-------------|---------|
-| **SocketToBoolDriver** | Socket | Track if socket has an object |
-| **SocketToEventDriver** | Socket | Fire events on insert/remove |
-| **SocketableToBoolDriver** | Socketable | Track if object is socketed |
-| **SocketableToEventDriver** | Socketable | Fire events on socket/unsocket |
-
-### Socket To Bool Binder
-
-Attach to a Socket to expose its state as a BoolVariable.
+### Recommended Pattern
 
 ```
-Socket (with SocketToBoolDriver)
-├── Has Object Variable → true when filled
-├── On Inserted Event → fires when object inserted
-└── On Removed Event → fires when object removed
+Socket / Socketable event
+        ↓
+UnityEvent or Interaction Driver
+        ↓
+BoolVariable / GameEvent
+        ↓
+ReactiveVars Binder (e.g. BoolToggleBinder)
 ```
-
-**Use Case:** Light indicator that turns on when slot is filled.
-
-### Socketable To Bool Binder
-
-Attach to a Socketable object to track its socketed state.
-
-```
-Key (with SocketableToBoolDriver)
-├── Is Socketed Variable → true when in socket
-├── On Socketed Event → fires when inserted
-└── On Unsocketed Event → fires when removed
-```
-
-**Use Case:** Key that triggers door unlock when inserted.
 
 ### Example: Puzzle with All Slots Filled
 
-1. Create 3 sockets, each with `SocketToBoolDriver`
-2. Assign each to a different `BoolVariable` (Slot1Filled, Slot2Filled, Slot3Filled)
-3. Create a `BoolComposite` that ANDs all three
-4. Use result to trigger puzzle completion
+1. For each socketed item, expose state using events or an interaction driver.
+2. Write each state into a `BoolVariable` (`Slot1Filled`, `Slot2Filled`, `Slot3Filled`).
+3. Combine variables in ReactiveVars logic (AND condition).
+4. Trigger puzzle completion when all are true.
 
 ### Example: Battery Installation Feedback
 
-1. Add `SocketableToBoolDriver` to battery
-2. Assign `IsInstalledVariable` BoolVariable
-3. Use `BoolToggleBinder` to enable device when `IsInstalledVariable = true`
+1. Emit installation/removal state from socket flow.
+2. Write to `IsInstalledVariable` (`BoolVariable`).
+3. Use `BoolToggleBinder` to enable the device when installed.
 
-See [Binders Documentation](../ScriptableSystem/Drivers.md) for full binder reference.
+See [Interaction Drivers](../ScriptableSystem/Drivers.md) for interaction-side bridging details.
 
 ---
 
@@ -591,7 +571,7 @@ See [Binders Documentation](../ScriptableSystem/Drivers.md) for full binder refe
 - [Grabable](../Interactables/Grabable.md) — Making objects grabbable
 - [Feedback System](../Systems/FeedbackSystem.md) — Adding snap feedback
 - [Sequencing System](../Systems/SequencingSystem.md) — Validating socket sequences
-- [Binders](../ScriptableSystem/Drivers.md) — Socket binder details
+- [Interaction Drivers](../ScriptableSystem/Drivers.md) — Socket integration bridge
 - [Quick Start Guide](../GettingStarted/QuickStart.md) — Basic setup
 
 ---

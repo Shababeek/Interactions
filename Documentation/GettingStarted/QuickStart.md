@@ -491,7 +491,7 @@ You've learned the fundamentals of the Shababeek Interaction System:
 
 ### Get Support
 - **Documentation:** [Full Reference](../README.md)
-- **Examples:** Check `Shababeek/Interactions/Examples/` scenes
+- **Examples:** Check `ExampleScene/Scenes/` in this repository
 - **GitHub Issues:** [Report bugs](https://github.com/Shababeek/Interactions/issues)
 - **Email:** Ahmadabobakr@gmail.com
 

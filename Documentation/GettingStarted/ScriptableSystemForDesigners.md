@@ -18,6 +18,8 @@
 
 **Variables** are the glue between inputs and outputs. They're assets that live in your Project folder.
 
+> **Naming note:** In ReactiveVars these output components are called **Binders**. In InteractionSystem, interaction-specific bridges are documented as **Drivers**.
+
 ---
 
 ## Example 1: Lever Controls a Door

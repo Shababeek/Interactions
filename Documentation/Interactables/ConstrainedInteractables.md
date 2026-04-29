@@ -553,7 +553,7 @@ public class CombinationLock : MonoBehaviour
 }
 ```
 
-## Binder Integration
+## Driver Integration
 
 Use **DialToVariableDriver** to connect dial output to the Scriptable System:
 

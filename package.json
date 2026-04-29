@@ -12,7 +12,6 @@
   "company": "Shababeek",
   "keywords": ["interactions", "events", "unity", "shababeek"],
   "dependencies": {
-    "com.unity.inputsystem": "1.0.0",
-    
+    "com.unity.inputsystem": "1.0.0"
   }
 } 

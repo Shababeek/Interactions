@@ -68,6 +68,8 @@ The Shababeek Interaction System integrates with the **com.shababeek.reactivevar
 |----------|-------------|
 | **[Interaction Drivers](ScriptableSystem/Drivers.md)** | Connect interactables and sockets to reactive variables |
 | **[Interaction Sequences](Systems/SequencingSystem.md)** | Tutorials using interaction-specific sequence actions |
+| **[Architecture Map](Analysis/ArchitectureMap.md)** | Runtime flow and extension points |
+| **[Pose Migration Guide](PoseSystem/MuscleBasedMigration.md)** | Legacy to muscle-based pose migration |
 
 For complete documentation on the ReactiveVars system (Scriptable Variables, Game Events, Sequencing System core, and generic binders), visit the **com.shababeek.reactivevars** package documentation.
 
@@ -144,9 +146,11 @@ See [ImagesTodo.md](ImagesTodo.md) for a complete tracking list of all needed im
 | Constrained Interactables | ✅ Complete |
 | PoseConstrainer | ✅ Complete |
 | Feedback System | ✅ Complete (v1.1 - added Scale, Particle, Toggle, UnityEvent) |
-| Socket System | ✅ Complete (v1.1 - added Socket Binders) |
+| Socket System | ✅ Complete (v1.1 - added ReactiveVars integration guidance) |
 | Interaction Drivers | ✅ Complete (v1.5 - interaction-specific only) |
 | Interaction Sequences | ✅ Complete (v1.5 - interaction-specific actions only) |
+| Architecture Map | ✅ Complete |
+| Pose Migration Guide | ✅ Complete |
 | Interactors | ✅ Complete |
 
 ---
