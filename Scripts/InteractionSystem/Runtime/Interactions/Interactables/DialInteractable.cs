@@ -329,13 +329,15 @@ namespace Shababeek.Interactions
             };
         }
 
-        private void Reset()
+        protected override void Reset()
         {
+            base.Reset();
             returnSpeed = 10f;
         }
 
-        private void OnValidate()
+        protected override void OnValidate()
         {
+            base.OnValidate();
             numberOfSteps = Mathf.Max(2, numberOfSteps);
             totalAngle = Mathf.Max(1f, totalAngle);
             startingStep = Mathf.Clamp(startingStep, 0, numberOfSteps - 1);
