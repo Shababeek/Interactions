@@ -9,16 +9,13 @@ namespace Shababeek.Interactions
     /// Defines how objects are grabbed, positioned, and released by interactors.
     /// </summary>
     /// <remarks>
-    /// This class handles the core grab mechanics including layer management,
-    /// transform parenting, and collision handling. Different strategies can be
-    /// implemented for various object types (rigidbody, transform-based, etc.).
+    /// This class handles core grab mechanics such as transform parenting and
+    /// release behavior. Layer management is handled by InteractableBase so
+    /// strategies can focus only on attachment semantics.
     /// </remarks>
     public abstract class GrabStrategy
     {
         protected GameObject gameObject;
-        private readonly Collider[] colliders;
-        private readonly int[] collisionLayers;
-        private int layer;
 
         /// <summary>
         /// Initializes a new instance of the GrabStrategy class.
@@ -27,29 +24,16 @@ namespace Shababeek.Interactions
         protected GrabStrategy(GameObject gameObject)
         {
             this.gameObject = gameObject;
-            colliders = gameObject.GetComponentsInChildren<Collider>();
-            collisionLayers = new int[colliders.Length];
            
         }
         
         /// <summary>
         /// Initializes the GrabStrategy for a specific interactor.
-        /// Sets up layer management and calls the strategy-specific initialization.
+        /// Calls the strategy-specific initialization step.
         /// </summary>
         /// <param name="interactor">The interactor that will grab this object</param>
         public void Initialize(InteractorBase interactor)
         {
-            layer = gameObject.layer;
-            for (int i = 0; i < collisionLayers.Length; i++)
-            {
-                collisionLayers[i] = colliders[i].gameObject.layer;
-            }
-            foreach (var collider in colliders)
-            {
-                collider.gameObject.layer = interactor.gameObject.layer;
-            }
-
-            gameObject.layer = interactor.gameObject.layer;
             InitializeStep();
         }
 
@@ -85,11 +69,6 @@ namespace Shababeek.Interactions
         public virtual void UnGrab(Grabable interactable, InteractorBase interactor)
         {
             interactable.transform.parent = null;
-            for (var i = 0; i < colliders.Length; i++)
-            {
-                colliders[i].gameObject.layer = collisionLayers[i];
-            }
-            gameObject.layer = layer;
         }
     }
 }
