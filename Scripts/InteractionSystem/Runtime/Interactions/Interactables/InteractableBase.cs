@@ -37,6 +37,8 @@ namespace Shababeek.Interactions
         [SerializeField]
         private XRButton selectionButton = XRButton.Grip;
 
+        [SerializeField] private ChangeInteractableLayer layerBehavior = ChangeInteractableLayer.TakeHandLayer;
+
         [Header("Interaction Events")]
         [SerializeField]
         public InteractorUnityEvent onSelected = new();
@@ -213,6 +215,7 @@ namespace Shababeek.Interactions
                 DeSelected();
                 isSelected = false;
                 onDeselected.Invoke(currentInteractor);
+                if (layerBehavior == ChangeInteractableLayer.TakeHandLayer)
                     RestoreLayers();
             }
             else if (currentState == InteractionState.Hovering)
@@ -233,6 +236,7 @@ namespace Shababeek.Interactions
                 isSelected = false;
                 onDeselected.Invoke(currentInteractor);
                 DeSelected();
+                if (layerBehavior == ChangeInteractableLayer.TakeHandLayer)
                     RestoreLayers();
             }
 
@@ -276,6 +280,8 @@ namespace Shababeek.Interactions
                 {
                     collisionLayers[i] = colliders[i].gameObject.layer;
                 }
+                if (layerBehavior == ChangeInteractableLayer.TakeHandLayer)
+                {
                     foreach (var collider in colliders)
                     {
                         collider.gameObject.layer = currentInteractor.gameObject.layer;
@@ -283,6 +289,7 @@ namespace Shababeek.Interactions
 
                     gameObject.layer = currentInteractor.gameObject.layer;
                 }
+            }
             catch (Exception ee)
             {
                 Debug.LogError(ee, this);
