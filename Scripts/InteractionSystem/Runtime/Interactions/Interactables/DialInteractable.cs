@@ -1,25 +1,17 @@
 using System;
 using UnityEngine;
 using Shababeek.ReactiveVars;
-using Shababeek.Interactions.Core;
 using UniRx;
 
 namespace Shababeek.Interactions
 {
     /// <summary>
     /// Rotary dial with discrete steps (combination lock, selector switch, rotary phone dial).
-    /// Mirrors WheelInteractable's structure but snaps to fixed step positions on release.
+    /// Snaps to the nearest step on release.
     /// </summary>
     [AddComponentMenu("Shababeek/Interactions/Interactables/Dial")]
-    public class DialInteractable : ConstrainedInteractableBase
+    public class DialInteractable : RotaryInteractableBase
     {
-        [Header("Dial Settings")]
-        [Tooltip("How the hand and dial interact during grab.")]
-        [SerializeField] private WheelGrabMode grabMode = WheelGrabMode.ObjectFollowsHand;
-
-        [Tooltip("The axis around which the dial rotates.")]
-        [SerializeField] private RotationAxis rotationAxis = RotationAxis.Forward;
-
         [Header("Steps")]
         [Tooltip("Number of discrete positions on the dial.")]
         [SerializeField, Min(2)] private int numberOfSteps = 8;
@@ -52,15 +44,9 @@ namespace Shababeek.Interactions
 
         [Header("Debug")]
         [ReadOnly, SerializeField] private int currentStep;
-        [ReadOnly, SerializeField] private float currentAngle;
 
-        private Quaternion _originalRotation;
-        private float _previousHandAngle;
         private int _previousStep;
         private float _targetSnapAngle;
-
-        private Transform _fakeHand;
-        private float _fakeHandOrbitAngle;
 
         /// <summary>Observable fired when the current step changes.</summary>
         public IObservable<int> OnStepChanged => onStepChanged.AsObservable();
@@ -71,9 +57,6 @@ namespace Shababeek.Interactions
         /// <summary>Current step index (0-based).</summary>
         public int CurrentStep => currentStep;
 
-        /// <summary>Current dial rotation in degrees.</summary>
-        public float CurrentAngle => currentAngle;
-
         /// <summary>Number of discrete steps on the dial.</summary>
         public int NumberOfSteps => numberOfSteps;
 
@@ -83,16 +66,9 @@ namespace Shababeek.Interactions
         /// <summary>Normalized value (0 to 1) based on the current step.</summary>
         public float NormalizedValue => numberOfSteps > 1 ? (float)currentStep / (numberOfSteps - 1) : 0f;
 
-        /// <summary>How the hand and dial are positioned during grab.</summary>
-        public WheelGrabMode GrabMode => grabMode;
-
-        /// <summary>Axis the dial rotates around.</summary>
-        public RotationAxis RotationAxis => rotationAxis;
-
-        private void Start()
+        protected override void Start()
         {
-            _originalRotation = interactableObject.transform.localRotation;
-            PoseConstrainer = GetComponent<PoseConstrainter>();
+            base.Start();
 
             // Dial always snaps on release — the base class's return pipeline drives the snap lerp.
             returnWhenDeselected = true;
@@ -102,18 +78,12 @@ namespace Shababeek.Interactions
             _previousStep = currentStep;
             _targetSnapAngle = currentAngle;
 
-            ApplyDialRotation();
+            ApplyRotation();
         }
 
-        protected override void HandleObjectMovement(Vector3 handWorldPosition)
+        protected override float ProcessAngleDelta(float currentAngle, float delta)
         {
-            if (!IsSelected || IsReturning) return;
-
-            var handAngle = GetHandAngle(handWorldPosition);
-            var delta = Mathf.DeltaAngle(_previousHandAngle, handAngle);
-            _previousHandAngle = handAngle;
-
-            var newAngle = currentAngle + delta;
+            float newAngle = currentAngle + delta;
 
             if (wrapAround)
             {
@@ -125,18 +95,12 @@ namespace Shababeek.Interactions
                 newAngle = Mathf.Clamp(newAngle, 0f, totalAngle - 0.0001f);
             }
 
-            currentAngle = newAngle;
+            return newAngle;
+        }
 
-            if (grabMode == WheelGrabMode.HandFollowsObject && _fakeHand != null)
-            {
-                _fakeHandOrbitAngle += delta;
-                UpdateFakeHandOrbit();
-            }
-
-            ApplyDialRotation();
-
-            int newStep = Mathf.FloorToInt(currentAngle / AnglePerStep);
-            newStep = Mathf.Clamp(newStep, 0, numberOfSteps - 1);
+        protected override void OnAngleApplied(float newAngle)
+        {
+            int newStep = Mathf.Clamp(Mathf.FloorToInt(newAngle / AnglePerStep), 0, numberOfSteps - 1);
 
             if (newStep != _previousStep)
             {
@@ -148,95 +112,9 @@ namespace Shababeek.Interactions
             }
         }
 
-        private float GetHandAngle(Vector3 handWorldPosition)
-        {
-            Vector3 localPos = transform.InverseTransformPoint(handWorldPosition);
-
-            float x, y;
-            switch (rotationAxis)
-            {
-                case RotationAxis.Right:   x = localPos.z; y = localPos.y; break;
-                case RotationAxis.Up:      x = localPos.x; y = localPos.z; break;
-                case RotationAxis.Forward:
-                default:                   x = localPos.x; y = localPos.y; break;
-            }
-
-            return Mathf.Atan2(y, x) * Mathf.Rad2Deg;
-        }
-
-        private void ApplyDialRotation()
-        {
-            Vector3 axis = GetAxis();
-            Quaternion rot = Quaternion.AngleAxis(currentAngle, axis);
-            interactableObject.transform.localRotation = _originalRotation * rot;
-        }
-
-        private Vector3 GetAxis()
-        {
-            return rotationAxis switch
-            {
-                RotationAxis.Right => -Vector3.right,
-                RotationAxis.Up => -Vector3.up,
-                _ => Vector3.forward
-            };
-        }
-
-        private void TryPlayStepHaptic()
-        {
-            if (!hapticOnStep || CurrentInteractor == null) return;
-            CurrentInteractor.SendHapticImpulse(hapticAmplitude, hapticDuration);
-        }
-
-        #region Grab Handling
-
-        protected override void PositionFakeHand(Transform fakeHand, HandIdentifier handIdentifier)
-        {
-            _fakeHand = fakeHand;
-
-            float grabHandAngle = GetHandAngle(CurrentInteractor.transform.position);
-            _previousHandAngle = grabHandAngle;
-
-            if (grabMode == WheelGrabMode.ObjectFollowsHand)
-            {
-                base.PositionFakeHand(fakeHand, handIdentifier);
-            }
-            else
-            {
-                _fakeHandOrbitAngle = grabHandAngle;
-                UpdateFakeHandOrbit();
-            }
-        }
-
-        private void UpdateFakeHandOrbit()
-        {
-            if (_fakeHand == null || PoseConstrainer == null) return;
-
-            var basePose = PoseConstrainer.GetTargetHandTransform(CurrentInteractor.HandIdentifier);
-            var orbitRadius = basePose.position.magnitude;
-            float rad = _fakeHandOrbitAngle * Mathf.Deg2Rad;
-            float cos = Mathf.Cos(rad) * orbitRadius;
-            float sin = Mathf.Sin(rad) * orbitRadius;
-
-            Vector3 offset = rotationAxis switch
-            {
-                RotationAxis.Right => new Vector3(0, sin, cos),
-                RotationAxis.Up => new Vector3(cos, 0, sin),
-                _ => new Vector3(cos, sin, 0)
-            };
-
-            _fakeHand.position = transform.TransformPoint(offset);
-
-            Quaternion orbitRot = Quaternion.AngleAxis(_fakeHandOrbitAngle, GetAxis());
-            _fakeHand.localRotation = orbitRot * basePose.rotation;
-        }
-
-        #endregion
-
-        #region Deselection / Snap
-
         protected override void HandleObjectDeselection()
         {
-            _fakeHand = null;
+            base.HandleObjectDeselection();
 
             int nearestStep = Mathf.RoundToInt(currentAngle / AnglePerStep);
             nearestStep = wrapAround
@@ -256,21 +134,17 @@ namespace Shababeek.Interactions
         protected override void HandleReturnToOriginalPosition()
         {
             currentAngle = Mathf.Lerp(currentAngle, _targetSnapAngle, Time.deltaTime * returnSpeed);
-            ApplyDialRotation();
+            ApplyRotation();
 
             if (Mathf.Abs(Mathf.DeltaAngle(currentAngle, _targetSnapAngle)) < 0.05f)
             {
                 currentAngle = _targetSnapAngle;
-                ApplyDialRotation();
+                ApplyRotation();
                 IsReturning = false;
 
                 onStepConfirmed?.Invoke(currentStep);
             }
         }
-
-        #endregion
-
-        #region Public API
 
         /// <summary>Sets the dial to a specific step immediately, firing change and confirm events.</summary>
         public void SetStep(int step)
@@ -281,7 +155,7 @@ namespace Shababeek.Interactions
             _previousStep = step;
             _targetSnapAngle = currentAngle;
 
-            if (interactableObject != null) ApplyDialRotation();
+            if (interactableObject != null) ApplyRotation();
 
             onStepChanged?.Invoke(currentStep);
             onStepConfirmed?.Invoke(currentStep);
@@ -313,20 +187,10 @@ namespace Shababeek.Interactions
             SetStep(step);
         }
 
-        #endregion
-
-        #region Editor
-
-        /// <summary>Returns the dial's rotation axis in world space.</summary>
-        public Vector3 GetWorldAxis()
+        private void TryPlayStepHaptic()
         {
-            var t = interactableObject != null ? interactableObject.transform : transform;
-            return rotationAxis switch
-            {
-                RotationAxis.Right => t.right,
-                RotationAxis.Up => t.up,
-                _ => t.forward
-            };
+            if (!hapticOnStep || CurrentInteractor == null) return;
+            CurrentInteractor.SendHapticImpulse(hapticAmplitude, hapticDuration);
         }
 
         protected override void Reset()
@@ -382,7 +246,5 @@ namespace Shababeek.Interactions
                 Gizmos.DrawRay(pos, curRot * reference * 0.2f);
             }
         }
-
-        #endregion
     }
 }

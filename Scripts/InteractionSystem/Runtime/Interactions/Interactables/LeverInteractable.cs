@@ -5,12 +5,6 @@ using UniRx;
 
 namespace Shababeek.Interactions
 {
-    public enum RotationAxis
-    {
-        Right,
-        Up,
-        Forward
-    }
     /// <summary>
     /// Lever-style interactable that rotates around a single axis with configurable limits.
     /// Provides smooth rotation control and normalized output values.

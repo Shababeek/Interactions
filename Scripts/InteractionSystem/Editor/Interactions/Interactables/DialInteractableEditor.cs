@@ -6,11 +6,9 @@ namespace Shababeek.Interactions.Editors
 {
     [CustomEditor(typeof(DialInteractable))]
     [CanEditMultipleObjects]
-    public class DialInteractableEditor : ConstrainedInteractableEditor
+    public class DialInteractableEditor : RotaryInteractableEditor
     {
         private DialInteractable _dial;
-        private SerializedProperty _grabModeProp;
-        private SerializedProperty _rotationAxisProp;
         private SerializedProperty _numberOfStepsProp;
         private SerializedProperty _startingStepProp;
         private SerializedProperty _totalAngleProp;
@@ -21,15 +19,12 @@ namespace Shababeek.Interactions.Editors
         private SerializedProperty _onStepChangedProp;
         private SerializedProperty _onStepConfirmedProp;
         private SerializedProperty _currentStepProp;
-        private SerializedProperty _currentAngleProp;
 
         protected override void OnEnable()
         {
             base.OnEnable();
             _dial = (DialInteractable)target;
 
-            _grabModeProp = serializedObject.FindProperty("grabMode");
-            _rotationAxisProp = serializedObject.FindProperty("rotationAxis");
             _numberOfStepsProp = serializedObject.FindProperty("numberOfSteps");
             _startingStepProp = serializedObject.FindProperty("startingStep");
             _totalAngleProp = serializedObject.FindProperty("totalAngle");
@@ -40,15 +35,12 @@ namespace Shababeek.Interactions.Editors
             _onStepChangedProp = serializedObject.FindProperty("onStepChanged");
             _onStepConfirmedProp = serializedObject.FindProperty("onStepConfirmed");
             _currentStepProp = serializedObject.FindProperty("currentStep");
-            _currentAngleProp = serializedObject.FindProperty("currentAngle");
         }
 
         protected override void DrawCustomHeader()
         {
             EditorGUILayout.HelpBox(
                 "Rotary dial with discrete steps (combination lock, selector switch).\n" +
-                "• ObjectFollowsHand: Dial rotates to match hand movement\n" +
-                "• HandFollowsObject: Hand orbits around fixed dial\n" +
                 "Always snaps to the nearest step on release.",
                 MessageType.Info);
         }
@@ -57,9 +49,6 @@ namespace Shababeek.Interactions.Editors
         {
             EditorGUILayout.LabelField("Dial Settings", EditorStyles.boldLabel);
             base.DrawCustomProperties();
-
-            EditorGUILayout.PropertyField(_grabModeProp, new GUIContent("Grab Mode"));
-            EditorGUILayout.PropertyField(_rotationAxisProp, new GUIContent("Rotation Axis"));
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Steps", EditorStyles.boldLabel);
@@ -96,10 +85,10 @@ namespace Shababeek.Interactions.Editors
         protected override void DrawCustomDebugInfo()
         {
             EditorGUILayout.LabelField("Debug", EditorStyles.boldLabel);
+            base.DrawCustomDebugInfo();
 
             EditorGUI.BeginDisabledGroup(true);
             EditorGUILayout.PropertyField(_currentStepProp, new GUIContent("Current Step"));
-            EditorGUILayout.PropertyField(_currentAngleProp, new GUIContent("Current Angle"));
             EditorGUI.EndDisabledGroup();
         }
 

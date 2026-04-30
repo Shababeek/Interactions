@@ -15,7 +15,7 @@ namespace Shababeek.Interactions
         Left = 1,
         Right = 2,
     }
-
+public enum ChangeInteractableLayer{
         TakeHandLayer = 1,
         None = 2,
     }
