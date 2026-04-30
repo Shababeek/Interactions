@@ -30,7 +30,7 @@ The Shababeek Interaction System is a Unity package for building advanced, desig
 - **Add new interactables:** Inherit from `InteractableBase` and implement required methods.
 - **Add new interactors:** Inherit from `InteractorBase` for custom input or interaction logic.
 - **Extend feedback:** Use or extend the `FeedbackSystem` for custom responses.
-- **Reactive Logic:** Use the ReactiveVars package (ScriptableVariables, GameEvents, Binders) to create decoupled systems without additional code.
+- **Reactive Logic:** Use the ReactiveVars package (ScriptableVariables, GameEvents, and Interaction Drivers) to create decoupled systems without additional code.
 
 ## Troubleshooting
 - Ensure all required layers and input settings are configured in the Config asset.

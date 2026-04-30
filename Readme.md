@@ -204,17 +204,17 @@ Additional functionality:
 ```
 Shababeek Interactions/
 ├── Scripts/
-│   ├── InteractionSystem/      # Core interaction components
-│   └── Utility/                # Helper utilities
+│   ├── InteractionSystem/      # Core interaction runtime/editor
+│   └── SequencingSystem/       # Interaction-specific sequence actions
 ├── Documentation/              # Complete documentation
+│   ├── Core/                   # Config and core setup docs
 │   ├── GettingStarted/         # Quick start guides
 │   ├── Interactables/          # Component documentation
 │   ├── Interactors/            # Interactor documentation
-│   ├── Systems/                # System documentation
 │   ├── PoseSystem/             # Pose constrainer docs
+│   ├── ScriptableSystem/       # Interaction drivers docs
 │   ├── SocketSystem/           # Socket system docs
-│   ├── ScriptableSystem/       # Interaction binders docs
-│   ├── Tutorials/              # Video script tutorials
+│   ├── Systems/                # System documentation
 │   └── Images/                 # Documentation images
 ├── EditorResources/            # Editor icons and assets
 ├── Resources/                  # Runtime resources
@@ -280,12 +280,12 @@ Special thanks to all contributors and the Unity VR community.
 ### Editor Tooling
 - [x] Visual sequence editor (node-graph or timeline view)
 - [ ] Feedback preview without Play mode
-- [ ] Binder setup wizard ( creating a group of variables and binding them in one go)
+- [ ] Driver setup wizard ( creating a group of variables and wiring them in one go)
 - [x] Variable connection visualizer 
 
 ### Architecture
 - [ ] UniRx to R3 migration (adapter layer for gradual transition is being implemented)
-- [ ] Extract common binder base class
+- [ ] Extract common driver base class
 - [ ] Assembly definition restructuring ( move the utilites to a new package)
 - [ ] Unit test suite 
 ### Platform & Distribution
