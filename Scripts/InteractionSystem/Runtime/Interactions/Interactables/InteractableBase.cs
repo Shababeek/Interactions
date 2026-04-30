@@ -22,19 +22,12 @@ namespace Shababeek.Interactions
     /// </summary>
     public abstract class InteractableBase : MonoBehaviour
     {
-        [Header("Interaction Settings")]
         [Tooltip("Specifies which hands can interact with this object (Left, Right, or Both).")]
-        [SerializeField]
-        private InteractionHand interactionHand = (InteractionHand.Left | InteractionHand.Right);
+        [SerializeField] private InteractionHand interactionHand = (InteractionHand.Left | InteractionHand.Right);
 
         [Tooltip("The button that triggers selection of this interactable (Grip or Trigger).")]
-        [SerializeField]
-        private XRButton selectionButton = XRButton.Grip;
-
-        [Header("Interaction Events")]
-        [SerializeField]
-        public InteractorUnityEvent onSelected = new();
-
+        [SerializeField] private XRButton selectionButton = XRButton.Grip;
+        [SerializeField] public InteractorUnityEvent onSelected = new();
         [SerializeField] private InteractorUnityEvent onDeselected = new();
         [SerializeField] private InteractorUnityEvent onHoverStart = new();
         [SerializeField] private InteractorUnityEvent onHoverEnd = new();
@@ -42,27 +35,14 @@ namespace Shababeek.Interactions
         [SerializeField] private InteractorUnityEvent onUseEnded = new();
         [SerializeField] private InteractorUnityEvent onThumbPressed = new();
         [SerializeField] private InteractorUnityEvent onThumbReleased = new();
-
-        [Header("Runtime State")]
         [Tooltip("Indicates whether this interactable is currently selected.")]
-        [SerializeField]
-        [ReadOnly]
-        private bool isSelected;
-
-        [Tooltip("The interactor that is currently interacting with this object.")]
-        [SerializeField]
-        [ReadOnly]
-        private InteractorBase currentInteractor;
-
-        [Tooltip("The current interaction state of this interactable.")]
-        [SerializeField]
-        [ReadOnly]
-        private InteractionState currentState;
-
+        [SerializeField] [ReadOnly] private bool isSelected;
+        [Tooltip("The interactor that is currently interacting with this object.")] 
+        [SerializeField] [ReadOnly] private InteractorBase currentInteractor;
+        [Tooltip("The current interaction state of this interactable.")] 
+        [SerializeField] [ReadOnly] private InteractionState currentState;
         [Tooltip("Indicates whether this interactable is currently being used (secondary button pressed).")]
-        [SerializeField]
-        [ReadOnly]
-        private bool isUsing;
+        [SerializeField] [ReadOnly] private bool isUsing;
 
         private PoseConstrainter _constrainter;
 
