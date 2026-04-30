@@ -7,151 +7,68 @@ using UniRx;
 namespace Shababeek.Interactions
 {
     /// <summary>
-    /// Drawer/slider interactable that moves linearly between two points.
-    /// Provides smooth movement along a defined path with optional return-to-start behavior.
+    /// Drawer interactable that moves linearly between two local-space points,
+    /// firing open/closed events when reaching the rail extremes.
     /// </summary>
-    [CreateAssetMenu(menuName = "Shababeek/Interactions/Interactables/DrawerInteractable")]
-    public class DrawerInteractable : ConstrainedInteractableBase
+    [AddComponentMenu("Shababeek/Interactions/Interactables/Drawer")]
+    public class DrawerInteractable : LinearInteractableBase
     {
-        [Header("Drawer/Slider Settings")]
-        [Tooltip("Local space position when the drawer is closed.")]
-        [SerializeField] private Vector3 localStart = Vector3.zero;
-
-        [Tooltip("Local space position when the drawer is fully opened.")]
-        [SerializeField] private Vector3 localEnd = Vector3.forward;
-
         [Tooltip("Event invoked when the drawer reaches the open position.")]
         [SerializeField] private UnityEvent onOpened;
 
         [Tooltip("Event invoked when the drawer reaches the closed position.")]
         [SerializeField] private UnityEvent onClosed;
 
-        [Tooltip("Event invoked when the drawer position changes, passing normalized position (0-1).")]
+        [Tooltip("Event invoked continuously as the drawer moves, passing normalized position (0-1).")]
         [SerializeField] private FloatUnityEvent onMoved;
 
-        [Header("Debug")] [ReadOnly, SerializeField]
-        private float currentValue = 0f;
+        private const float LimitEpsilon = 0.05f;
+        private float _returnTimer;
 
-        /// <summary>
-        /// Gets or sets the local space starting position of the drawer.
-        /// </summary>
-        public Vector3 LocalStart
-        {
-            get => localStart;
-            set => localStart = value;
-        }
-
-        /// <summary>
-        /// Gets or sets the local space ending position of the drawer.
-        /// </summary>
-        public Vector3 LocalEnd
-        {
-            get => localEnd;
-            set => localEnd = value;
-        }
-
-        /// <summary>
-        /// Observable that fires when the drawer's normalized position changes.
-        /// </summary>
+        /// <summary>Observable fired continuously as the drawer's normalized position changes.</summary>
         public IObservable<float> OnMoved => onMoved.AsObservable();
 
-        /// <summary>
-        /// Fires when The drawer is opened (position nears 1)
-        /// </summary>
+        /// <summary>Observable fired when the drawer reaches the open extreme.</summary>
         public IObservable<Unit> OnOpened => onOpened.AsObservable();
 
-        /// <summary>
-        /// Fires when the drawer is closed (position nears 0)
-        /// </summary>
+        /// <summary>Observable fired when the drawer reaches the closed extreme.</summary>
         public IObservable<Unit> OnClosed => onClosed.AsObservable();
 
-        private Vector3 _lastPosition;
-        private const float LimitEpsilon = 0.05f;
-        private Vector3 _originalPosition;
-        private float _returnTimer;
-        private static float _normalizedDistance;
-
-
-        private void Start()
+        protected override float ProcessNormalizedPosition(float current, float requested)
         {
-            _originalPosition = interactableObject.transform.localPosition;
+            return requested;
         }
 
-        protected override void Reset()
+        protected override void OnNormalizedApplied(float newNormalized)
         {
-            base.Reset();
-            AutoAssignInteractableObject();
-        }
+            onMoved?.Invoke(newNormalized);
 
-#if UNITY_EDITOR
-        protected override void OnValidate()
-        {
-            base.OnValidate();
-            AutoAssignInteractableObject();
-        }
-#endif
-
-        private void AutoAssignInteractableObject()
-        {
-            if (interactableObject != null) return;
-            if (transform.childCount > 0)
-            {
-                interactableObject = transform.GetChild(0);
-            }
-            else
-            {
-                var obj = new GameObject("InteractableObject");
-                obj.transform.parent = transform;
-                obj.transform.localPosition = Vector3.zero;
-                interactableObject = obj.transform;
-            }
-        }
-
-        protected override void HandleObjectMovement(Vector3 target)
-        {
-            if (!IsSelected) return;
-
-            var localInteractorPos = transform.InverseTransformPoint(target);
-            var newLocalPos = GetPositionBetweenTwoPoints(localInteractorPos, localStart, localEnd);
-            HandleEvents(newLocalPos);
-        }
-
-        private void HandleEvents(Vector3 newLocalPos)
-        {
-            if (interactableObject.transform.localPosition != newLocalPos)
-            {
-                interactableObject.transform.localPosition = newLocalPos;
-                UpdateValue(newLocalPos);
-                onMoved?.Invoke(_normalizedDistance);
-            }
-
-            if (_normalizedDistance >= 1 - LimitEpsilon)
-            {
+            if (newNormalized >= 1f - LimitEpsilon)
                 onOpened?.Invoke();
-            }
-            else if (_normalizedDistance <= LimitEpsilon)
-            {
+            else if (newNormalized <= LimitEpsilon)
                 onClosed?.Invoke();
-            }
         }
 
         protected override void HandleObjectDeselection()
         {
-            _returnTimer = 0;
-            if (returnWhenDeselected)
-                return;
-            switch (_normalizedDistance)
-            {
-                case >= 1 - LimitEpsilon:
-                    HandleObjectMovement(transform.TransformPoint(localEnd));
-                    break;
-                case <= LimitEpsilon:
-                    HandleObjectMovement(transform.TransformPoint(localStart));
+            _returnTimer = 0f;
 
-                    break;
+            if (returnWhenDeselected) return;
+
+            // Snap to the nearest extreme if released near one — preserves the previous behavior.
+            if (currentNormalized >= 1f - LimitEpsilon)
+            {
+                currentNormalized = 1f;
+                ApplyNormalized(currentNormalized);
+                OnNormalizedApplied(currentNormalized);
+            }
+            else if (currentNormalized <= LimitEpsilon)
+            {
+                currentNormalized = 0f;
+                ApplyNormalized(currentNormalized);
+                OnNormalizedApplied(currentNormalized);
             }
         }
-
 
         protected override void HandleReturnToOriginalPosition()
         {
@@ -162,7 +79,8 @@ namespace Shababeek.Interactions
                 _returnTimer
             );
 
-            UpdateValue(interactableObject.transform.localPosition);
+            currentNormalized = ProjectLocalPositionToNormalized(interactableObject.transform.localPosition);
+            onMoved?.Invoke(currentNormalized);
 
             if (Vector3.Distance(interactableObject.transform.localPosition, _originalPosition) < 0.001f)
             {
@@ -170,60 +88,11 @@ namespace Shababeek.Interactions
             }
         }
 
-        private void OnDrawGizmos()
+        private float ProjectLocalPositionToNormalized(Vector3 localPos)
         {
-            var worldStart = transform.TransformPoint(localStart);
-            var worldEnd = transform.TransformPoint(localEnd);
-            var direction = worldEnd - worldStart;
-            Gizmos.color = Color.red;
-            Gizmos.DrawSphere(worldStart, .03f);
-            Gizmos.DrawSphere(worldEnd, .03f);
-            Gizmos.color = Color.green;
-            Gizmos.DrawLine(worldStart, worldEnd);
-            if (interactableObject != null)
-            {
-                var localObjPos = interactableObject.transform.localPosition;
-                var projectedPoint = Vector3.Project(localObjPos - localStart, localEnd - localStart) + localStart;
-                var worldProjected = transform.TransformPoint(projectedPoint);
-                Gizmos.DrawSphere(worldProjected, .03f);
-            }
-        }
-
-        private static Vector3 GetPositionBetweenTwoPoints(Vector3 point, Vector3 start, Vector3 end)
-        {
-            var direction = (end - start);
-            var projectedPoint = Vector3.Project(point - start, direction) + start;
-            _normalizedDistance = Mathf.Clamp01(FindNormalizedDistanceAlongPath(direction, projectedPoint, start));
-            return Vector3.Lerp(start, end, _normalizedDistance);
-        }
-
-        private static float FindNormalizedDistanceAlongPath(Vector3 direction, Vector3 projectedPoint,
-            Vector3 position1)
-        {
-            var axe = GetBiggestAxe(direction);
-            var x = projectedPoint[axe];
-            var m = 1 / direction[axe];
-            var c = 0 - m * position1[axe];
-            var t = m * x + c;
-            return Mathf.Clamp01(t);
-        }
-
-        private static int GetBiggestAxe(Vector3 direction)
-        {
-            if (Mathf.Abs(direction.x) >= Mathf.Abs(direction.y))
-            {
-                return Mathf.Abs(direction.x) >= Mathf.Abs(direction.z) ? 0 : 2;
-            }
-
-            return Mathf.Abs(direction.y) >= Mathf.Abs(direction.z) ? 1 : 2;
-        }
-
-        private void UpdateValue(Vector3 position)
-        {
-            // Calculate normalized value (0-1) based on position
-            float normalizedDistance = FindNormalizedDistanceAlongPath(localEnd - localStart, position, localStart);
-            currentValue = normalizedDistance;
-            onMoved?.Invoke(currentValue);
+            Vector3 direction = localEnd - localStart;
+            if (direction.sqrMagnitude < 1e-6f) return 0f;
+            return Mathf.Clamp01(Vector3.Dot(localPos - localStart, direction) / direction.sqrMagnitude);
         }
     }
 }

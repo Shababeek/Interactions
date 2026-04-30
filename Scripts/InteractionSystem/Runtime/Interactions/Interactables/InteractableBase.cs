@@ -15,9 +15,13 @@ namespace Shababeek.Interactions
         Left = 1,
         Right = 2,
     }
-public enum ChangeInteractableLayer{
-        TakeHandLayer = 1,
-        None = 2,
+    /// <summary>
+    /// Controls whether an interactable adopts the hand's layer when selected.
+    /// </summary>
+    public enum LayerBehavior
+    {
+        MatchHand = 1,
+        KeepOriginal = 2,
     }
 
     /// <summary>
@@ -33,7 +37,8 @@ public enum ChangeInteractableLayer{
         [SerializeField]
         private XRButton selectionButton = XRButton.Grip;
 
-        [SerializeField] private ChangeInteractableLayer layerBehavior = ChangeInteractableLayer.TakeHandLayer;
+        [Tooltip("Whether this interactable should adopt the hand's layer while selected.")]
+        [SerializeField] private LayerBehavior layerBehavior = LayerBehavior.MatchHand;
 
         [Header("Interaction Events")]
         [SerializeField]
@@ -198,7 +203,7 @@ public enum ChangeInteractableLayer{
                 DeSelected();
                 isSelected = false;
                 onDeselected.Invoke(currentInteractor);
-                if (layerBehavior == ChangeInteractableLayer.TakeHandLayer)
+                if (layerBehavior == LayerBehavior.MatchHand)
                     RestoreLayers();
             }
             else if (currentState == InteractionState.Hovering)
@@ -219,7 +224,7 @@ public enum ChangeInteractableLayer{
                 isSelected = false;
                 onDeselected.Invoke(currentInteractor);
                 DeSelected();
-                if (layerBehavior == ChangeInteractableLayer.TakeHandLayer)
+                if (layerBehavior == LayerBehavior.MatchHand)
                     RestoreLayers();
             }
 
@@ -263,7 +268,7 @@ public enum ChangeInteractableLayer{
                 {
                     collisionLayers[i] = colliders[i].gameObject.layer;
                 }
-                if (layerBehavior == ChangeInteractableLayer.TakeHandLayer)
+                if (layerBehavior == LayerBehavior.MatchHand)
                 {
                     foreach (var collider in colliders)
                     {

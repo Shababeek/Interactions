@@ -1,25 +1,17 @@
 using System;
 using UnityEngine;
 using Shababeek.ReactiveVars;
-using Shababeek.Interactions.Core;
 using UniRx;
 
 namespace Shababeek.Interactions
 {
     /// <summary>
     /// Linear slider with discrete steps (volume control, gear selector, multi-position switch).
-    /// Mirrors DrawerInteractable's structure but snaps to fixed step positions on release.
+    /// Snaps to the nearest step on release.
     /// </summary>
     [AddComponentMenu("Shababeek/Interactions/Interactables/Slider")]
-    public class SliderInteractable : ConstrainedInteractableBase
+    public class SliderInteractable : LinearInteractableBase
     {
-        [Header("Slider Settings")]
-        [Tooltip("Local space position when the slider is at step 0.")]
-        [SerializeField] private Vector3 localStart = Vector3.zero;
-
-        [Tooltip("Local space position when the slider is at the last step.")]
-        [SerializeField] private Vector3 localEnd = Vector3.forward;
-
         [Header("Steps")]
         [Tooltip("Number of discrete positions on the slider.")]
         [SerializeField, Min(2)] private int numberOfSteps = 4;
@@ -49,13 +41,9 @@ namespace Shababeek.Interactions
 
         [Header("Debug")]
         [ReadOnly, SerializeField] private int currentStep;
-        [ReadOnly, SerializeField] private float currentNormalized;
 
         private int _previousStep;
         private float _targetSnapNormalized;
-
-        // Shared projection helper — mirrors the DrawerInteractable pattern.
-        private static float _normalizedDistance;
 
         /// <summary>Observable fired when the current step changes.</summary>
         public IObservable<int> OnStepChanged => onStepChanged.AsObservable();
@@ -69,21 +57,15 @@ namespace Shababeek.Interactions
         /// <summary>Current step index (0-based).</summary>
         public int CurrentStep => currentStep;
 
-        /// <summary>Current normalized position (0-1).</summary>
-        public float CurrentNormalized => currentNormalized;
-
         /// <summary>Number of discrete steps on the slider.</summary>
         public int NumberOfSteps => numberOfSteps;
 
         /// <summary>Normalized value (0-1) derived from the current step.</summary>
-        public float NormalizedValue => numberOfSteps > 1 ? (float)currentStep / (numberOfSteps - 1) : 0f;
+        public float NormalizedValue => StepToNormalized(currentStep);
 
-        public Vector3 LocalStart { get => localStart; set => localStart = value; }
-        public Vector3 LocalEnd   { get => localEnd;   set => localEnd   = value; }
-
-        private void Start()
+        protected override void Start()
         {
-            PoseConstrainer = GetComponent<PoseConstrainter>();
+            base.Start();
 
             // Slider always snaps on release — the base class return pipeline drives the lerp.
             returnWhenDeselected = true;
@@ -96,18 +78,16 @@ namespace Shababeek.Interactions
             ApplyNormalized(currentNormalized);
         }
 
-        protected override void HandleObjectMovement(Vector3 target)
+        protected override float ProcessNormalizedPosition(float current, float requested)
         {
-            if (!IsSelected) return;
+            return requested;
+        }
 
-            var localInteractorPos = transform.InverseTransformPoint(target);
-            var newLocalPos = GetPositionBetweenTwoPoints(localInteractorPos, localStart, localEnd);
-            currentNormalized = _normalizedDistance;
+        protected override void OnNormalizedApplied(float newNormalized)
+        {
+            onMoved?.Invoke(newNormalized);
 
-            interactableObject.transform.localPosition = newLocalPos;
-            onMoved?.Invoke(currentNormalized);
-
-            int newStep = NormalizedToStep(currentNormalized);
+            int newStep = NormalizedToStep(newNormalized);
             if (newStep != _previousStep)
             {
                 currentStep = newStep;
@@ -117,19 +97,9 @@ namespace Shababeek.Interactions
             }
         }
 
-        private void TryPlayStepHaptic()
-        {
-            if (!hapticOnStep || CurrentInteractor == null) return;
-            CurrentInteractor.SendHapticImpulse(hapticAmplitude, hapticDuration);
-        }
-
-        #region Deselection / Snap
-
         protected override void HandleObjectDeselection()
         {
-            int nearestStep = Mathf.Clamp(
-                Mathf.RoundToInt(currentNormalized * (numberOfSteps - 1)),
-                0, numberOfSteps - 1);
+            int nearestStep = NormalizedToStep(currentNormalized);
 
             if (nearestStep != _previousStep)
             {
@@ -157,10 +127,6 @@ namespace Shababeek.Interactions
             }
         }
 
-        #endregion
-
-        #region Public API
-
         /// <summary>Sets the slider to a specific step immediately, firing change and confirm events.</summary>
         public void SetStep(int step)
         {
@@ -178,38 +144,16 @@ namespace Shababeek.Interactions
         }
 
         /// <summary>Moves the slider one step forward (clamps at the last step).</summary>
-        public void IncrementStep()
-        {
-            SetStep(Mathf.Min(currentStep + 1, numberOfSteps - 1));
-        }
+        public void IncrementStep() => SetStep(Mathf.Min(currentStep + 1, numberOfSteps - 1));
 
         /// <summary>Moves the slider one step backward (clamps at step 0).</summary>
-        public void DecrementStep()
-        {
-            SetStep(Mathf.Max(currentStep - 1, 0));
-        }
+        public void DecrementStep() => SetStep(Mathf.Max(currentStep - 1, 0));
 
         /// <summary>Resets the slider to its configured starting step.</summary>
-        public void ResetSlider()
-        {
-            SetStep(startingStep);
-        }
+        public void ResetSlider() => SetStep(startingStep);
 
         /// <summary>Sets the slider to the step closest to a normalized value (0-1).</summary>
-        public void SetNormalized(float value)
-        {
-            SetStep(Mathf.RoundToInt(Mathf.Clamp01(value) * (numberOfSteps - 1)));
-        }
-
-        #endregion
-
-        #region Geometry — mirrors DrawerInteractable math exactly
-
-        private void ApplyNormalized(float t)
-        {
-            if (interactableObject == null) return;
-            interactableObject.transform.localPosition = Vector3.Lerp(localStart, localEnd, t);
-        }
+        public void SetNormalized(float value) => SetStep(NormalizedToStep(Mathf.Clamp01(value)));
 
         private int NormalizedToStep(float normalized)
         {
@@ -221,34 +165,11 @@ namespace Shababeek.Interactions
             return numberOfSteps > 1 ? (float)step / (numberOfSteps - 1) : 0f;
         }
 
-        private static Vector3 GetPositionBetweenTwoPoints(Vector3 point, Vector3 start, Vector3 end)
+        private void TryPlayStepHaptic()
         {
-            var direction = end - start;
-            var projectedPoint = Vector3.Project(point - start, direction) + start;
-            _normalizedDistance = Mathf.Clamp01(FindNormalizedDistanceAlongPath(direction, projectedPoint, start));
-            return Vector3.Lerp(start, end, _normalizedDistance);
+            if (!hapticOnStep || CurrentInteractor == null) return;
+            CurrentInteractor.SendHapticImpulse(hapticAmplitude, hapticDuration);
         }
-
-        private static float FindNormalizedDistanceAlongPath(Vector3 direction, Vector3 projectedPoint, Vector3 start)
-        {
-            var axis = GetBiggestAxis(direction);
-            var x = projectedPoint[axis];
-            var m = 1 / direction[axis];
-            var c = 0 - m * start[axis];
-            var t = m * x + c;
-            return Mathf.Clamp01(t);
-        }
-
-        private static int GetBiggestAxis(Vector3 direction)
-        {
-            if (Mathf.Abs(direction.x) >= Mathf.Abs(direction.y))
-                return Mathf.Abs(direction.x) >= Mathf.Abs(direction.z) ? 0 : 2;
-            return Mathf.Abs(direction.y) >= Mathf.Abs(direction.z) ? 1 : 2;
-        }
-
-        #endregion
-
-        #region Editor
 
         protected override void Reset()
         {
@@ -260,43 +181,26 @@ namespace Shababeek.Interactions
         {
             base.OnValidate();
             numberOfSteps = Mathf.Max(2, numberOfSteps);
-            startingStep  = Mathf.Clamp(startingStep, 0, numberOfSteps - 1);
+            startingStep = Mathf.Clamp(startingStep, 0, numberOfSteps - 1);
             if (returnSpeed < 1f) returnSpeed = 10f;
             returnSpeed = Mathf.Clamp(returnSpeed, 1f, 20f);
         }
 
-        private void OnDrawGizmos()
+        protected override void OnDrawGizmos()
         {
+            base.OnDrawGizmos();
+
             var worldStart = transform.TransformPoint(localStart);
-            var worldEnd   = transform.TransformPoint(localEnd);
+            var worldEnd = transform.TransformPoint(localEnd);
 
-            // Rail
-            Gizmos.color = Color.green;
-            Gizmos.DrawLine(worldStart, worldEnd);
-
-            // End caps
-            Gizmos.color = Color.red;
-            Gizmos.DrawSphere(worldStart, 0.02f);
-            Gizmos.DrawSphere(worldEnd,   0.02f);
-
-            // Step positions
             for (int i = 0; i < numberOfSteps; i++)
             {
-                float t = numberOfSteps > 1 ? (float)i / (numberOfSteps - 1) : 0f;
+                float t = StepToNormalized(i);
                 var worldPos = Vector3.Lerp(worldStart, worldEnd, t);
 
                 Gizmos.color = (Application.isPlaying && i == currentStep) ? Color.green : Color.cyan;
                 Gizmos.DrawWireSphere(worldPos, 0.015f);
             }
-
-            // Current handle position at runtime
-            if (Application.isPlaying && interactableObject != null)
-            {
-                Gizmos.color = Color.yellow;
-                Gizmos.DrawSphere(interactableObject.transform.position, 0.025f);
-            }
         }
-
-        #endregion
     }
 }
