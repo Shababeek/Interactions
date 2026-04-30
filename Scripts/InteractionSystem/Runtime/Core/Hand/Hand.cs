@@ -26,6 +26,7 @@ namespace Shababeek.Interactions.Core
         #region Private Fields
 
         private IPoseable poseDriver;
+        private Collider[] _colliders;
 
         #endregion
 
@@ -90,6 +91,7 @@ namespace Shababeek.Interactions.Core
         {
             poseDriver = GetComponent<IPoseable>();
             AutoAssignHandModel();
+            _colliders = GetComponentsInChildren<Collider>(true);
         }
 
         #endregion
@@ -123,6 +125,19 @@ namespace Shababeek.Interactions.Core
         /// Toggles the visibility of the hand model.
         /// </summary>
         public void ToggleRenderer(bool enable) => handModel?.gameObject.SetActive(enable);
+
+        /// <summary>
+        /// Enables or disables every Collider in the hand hierarchy.
+        /// Used to suppress physics and hover detection on visual-only hand instances (e.g. fake hands on constrained interactables).
+        /// </summary>
+        public void ToggleColliders(bool enable)
+        {
+            if (_colliders == null) return;
+            for (int i = 0; i < _colliders.Length; i++)
+            {
+                _colliders[i].enabled = enable;
+            }
+        }
 
         #endregion
 

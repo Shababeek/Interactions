@@ -69,6 +69,16 @@ namespace Shababeek.Interactions
         }
 
         /// <summary>
+        /// Disables every Collider on the hand hierarchy. Use to suppress physics or hover detection.
+        /// </summary>
+        public void DisableColliders() => _hand.ToggleColliders(false);
+
+        /// <summary>
+        /// Re-enables every Collider on the hand hierarchy.
+        /// </summary>
+        public void EnableColliders() => _hand.ToggleColliders(true);
+
+        /// <summary>
         /// World position where this interactor contacts or targets interactables.
         /// Override in subclasses to provide interactor-specific contact points.
         /// </summary>

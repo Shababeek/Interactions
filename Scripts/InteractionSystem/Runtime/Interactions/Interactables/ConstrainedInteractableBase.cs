@@ -192,6 +192,7 @@ namespace Shababeek.Interactions
                 ? handData.LeftHandPrefab
                 : handData.RightHandPrefab).GetComponent<Hand>();
             var fakeHand = Instantiate(handPrefab);
+            fakeHand.ToggleColliders(false);
 
             // Create a scale-compensation wrapper so the hand rotation isn't skewed
             // by non-uniform parent scale. Position goes on the wrapper (in the parent's
