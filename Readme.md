@@ -69,33 +69,34 @@ A comprehensive Unity package for building advanced VR/AR and 3D interactions wi
 4. Press Play and grab it with your VR controllers!
 ```
 
-**📚 Full guide:** [10-Minute Quick Start](Documentation/GettingStarted/QuickStart.md)
+**📚 Full guide:** [10-Minute Quick Start](~Documentation/GettingStarted/QuickStart.md)
 
 ---
 
 ## 📖 Documentation
 
 ### 🎓 Getting Started
-- **[Quick Start Guide](Documentation/GettingStarted/QuickStart.md)** - 10-minute guide from install to first interaction
-- **[Component Overview](Documentation/README.md)** - Catalog of all components
-- **[Core Concepts](UserManual.md)** - System architecture and design principles
+- **[Quick Start Guide](~Documentation/GettingStarted/QuickStart.md)** - 10-minute guide from install to first interaction
+- **[Component Overview](~Documentation/README.md)** - Catalog of all components
+- **[Core Concepts](~Documentation/UserManual.md)** - System architecture and design principles
 
 ### 📘 Component Manuals
-- **[Grabable](Documentation/Interactables/Grabable.md)** - Pick up and throw objects
-- **[Switch](Documentation/Interactables/Switch.md)** - Toggle switches and buttons
-- **[Hand System](Documentation/Interactors/Interactors.md)** - Hand models and pose configuration
-- **[Feedback System](Documentation/Systems/FeedbackSystem.md)** - Haptics, audio, and visuals
-- **[More components...](Documentation/README.md)**
+- **[Grabable](~Documentation/Interactables/Grabable.md)** - Pick up and throw objects
+- **[Switch](~Documentation/Interactables/Switch.md)** - Toggle switches and buttons
+- **[Hand System](~Documentation/Interactors/Interactors.md)** - Hand models and pose configuration
+- **[Feedback System](~Documentation/Systems/FeedbackSystem.md)** - Haptics, audio, and visuals
+- **[More components...](~Documentation/README.md)**
 
 ### 🛠️ Advanced Topics
-- **[Custom Interactables](UserManual.md#customization--extensibility)** - Create your own components
-- **[Hand Poses](Documentation/PoseSystem/PoseConstrainer.md)** - Import and configure hands
-- **[Interaction Drivers](Documentation/ScriptableSystem/Drivers.md)** - Connect interactions to reactive variables
-- **[Interaction Sequences](Documentation/Systems/SequencingSystem.md)** - Tutorials using interaction-specific actions
+- **[Custom Interactables](~Documentation/UserManual.md#customization--extensibility)** - Create your own components
+- **[Hand Poses](~Documentation/PoseSystem/PoseConstrainer.md)** - Import and configure hands
+- **[Interaction Drivers](~Documentation/ScriptableSystem/Drivers.md)** - Connect interactions to reactive variables
+- **[Interaction Sequences](~Documentation/Systems/SequencingSystem.md)** - Tutorials using interaction-specific actions
+- **[Architecture Map](~Documentation/Analysis/ArchitectureMap.md)** - Runtime flow and extension points
 
 ### 💻 For Developers
-- **[Scripting Reference](Documentation/README.md)** - Complete API documentation
-- **[Component Reference](Documentation/README.md)** - All components indexed
+- **[Scripting Reference](~Documentation/README.md)** - Complete API documentation
+- **[Component Reference](~Documentation/README.md)** - All components indexed
 
 ---
 
@@ -113,6 +114,7 @@ Make objects interactive in your VR scene:
 | **Lever** | Pull/push interaction | Gear shifts, throttles |
 | **Wheel** | Rotatable wheel | Valves, steering wheels |
 | **Drawer** | Sliding compartment | Desks, toolboxes |
+| **Slider** | Linear stepped control | Volume rails, detented faders |
 
 ### Interactors
 Detect and manage interactions:
@@ -161,7 +163,7 @@ Additional functionality:
 // 4. Grab flashlight and press Trigger to turn on/off
 ```
 
-**📚 More examples:** [Component Manuals](Documentation/README.md)
+**📚 More examples:** [Component Manuals](~Documentation/README.md)
 
 ---
 
@@ -206,7 +208,8 @@ Shababeek Interactions/
 ├── Scripts/
 │   ├── InteractionSystem/      # Core interaction runtime/editor
 │   └── SequencingSystem/       # Interaction-specific sequence actions
-├── Documentation/              # Complete documentation
+├── ~Documentation/              # Complete documentation
+│   ├── Analysis/               # Architecture overviews
 │   ├── Core/                   # Config and core setup docs
 │   ├── GettingStarted/         # Quick start guides
 │   ├── Interactables/          # Component documentation
@@ -247,11 +250,23 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE.md) f
 
 ## 📞 Support
 
-- **Documentation:** [Full Documentation](Documentation/README.md)
+- **Documentation:** [Full Documentation](~Documentation/README.md)
 - **Issues:** [GitHub Issues](https://github.com/Shababeek/Interactions/issues)
 - **Discussions:** [GitHub Discussions](https://github.com/Shababeek/Interactions/discussions)
 - **Email:** Ahmadabobakr@gmail.com
 - **Website:** [ahmadabobakr.github.io](https://ahmadabobakr.github.io)
+
+---
+
+## 🧪 Documentation Validation
+
+Run link validation from the package root:
+
+```bash
+npm run docs:check
+```
+
+This checks all markdown files under `~Documentation/` for broken relative links.
 
 ---
 
@@ -269,7 +284,7 @@ Special thanks to all contributors and the Unity VR community.
 - [ ] Two-handed grab support
 - [ ] Grab transition smoothing (lerp from world to grab position)
 - [ ] Distance grab / force pull (gravity gloves style)
-- [ ] SliderInteractable (mixing board fader with snap points)
+- [x] SliderInteractable (linear stepped slider)
 - [ ] HingeInteractable (physics-driven doors/lids)
 - [ ] VRButton/Switch unification under InteractableBase lifecycle( will require big change to archticture) so it's low prioirty for now
 
@@ -297,9 +312,9 @@ Special thanks to all contributors and the Unity VR community.
 
 ---
 
-**Ready to get started?** → [Quick Start Guide](Documentation/GettingStarted/QuickStart.md)
+**Ready to get started?** → [Quick Start Guide](~Documentation/GettingStarted/QuickStart.md)
 
-**Need help?** → [Documentation](Documentation/README.md)
+**Need help?** → [Documentation](~Documentation/README.md)
 
 **Want to contribute?** → [Contact the Team](mailto:Ahmadabobakr@gmail.com)
 
@@ -309,6 +324,6 @@ Special thanks to all contributors and the Unity VR community.
 
 Made with ❤️ by the Shababeek team
 
-[⭐ Star us on GitHub](https://github.com/Shababeek/Interactions) | [📖 Read the Docs](Documentation/README.md) | [💬 Join Discussion](https://github.com/Shababeek/Interactions/discussions)
+[⭐ Star us on GitHub](https://github.com/Shababeek/Interactions) | [📖 Read the Docs](~Documentation/README.md) | [💬 Join Discussion](https://github.com/Shababeek/Interactions/discussions)
 
 </div>
