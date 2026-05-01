@@ -1,6 +1,5 @@
 using System.Reflection;
 using NUnit.Framework;
-using UniRx;
 using UnityEngine;
 
 namespace Shababeek.Interactions.Tests
@@ -8,214 +7,174 @@ namespace Shababeek.Interactions.Tests
     [TestFixture]
     public class ThrowableTests
     {
+        private GameObject _go;
+        private Rigidbody _body;
         private Throwable _throwable;
-        private Rigidbody _rigidbody;
 
-        private void SetSerializedField(string fieldName, object value)
+        private static T GetField<T>(object instance, string fieldName)
         {
             var field = typeof(Throwable).GetField(fieldName,
                 BindingFlags.NonPublic | BindingFlags.Instance);
-            field?.SetValue(_throwable, value);
+            return (T)field.GetValue(instance);
         }
 
-        private T GetSerializedField<T>(string fieldName)
+        private static T GetStaticField<T>(string fieldName)
         {
             var field = typeof(Throwable).GetField(fieldName,
-                BindingFlags.NonPublic | BindingFlags.Instance);
-            return (T)field.GetValue(_throwable);
+                BindingFlags.NonPublic | BindingFlags.Static);
+            return (T)field.GetValue(null);
+        }
+
+        private static Vector3 InvokeAngularVelocityFromDelta(Quaternion delta, float dt)
+        {
+            var method = typeof(Throwable).GetMethod("AngularVelocityFromDelta",
+                BindingFlags.NonPublic | BindingFlags.Static);
+            return (Vector3)method.Invoke(null, new object[] { delta, dt });
         }
 
         [SetUp]
         public void SetUp()
         {
-            var go = new GameObject("ThrowableObject");
-            go.AddComponent<BoxCollider>();
-            _rigidbody = go.AddComponent<Rigidbody>();
-            go.AddComponent<Grabable>();
-            _throwable = go.AddComponent<Throwable>();
+            _go = new GameObject("ThrowableHost");
+            _body = _go.AddComponent<Rigidbody>();
+            _throwable = new Throwable();
         }
 
         [TearDown]
         public void TearDown()
         {
-            TestHelpers.DestroyComponent(_throwable);
+            if (_go != null) Object.DestroyImmediate(_go);
         }
 
-        // ── OnValidate Clamping ──
+        // ── Defaults ──
 
         [Test]
-        public void OnValidate_VelocitySampleCount_ClampsToMinimumOne()
+        public void DefaultVelocitySampleCount_IsTen()
         {
-            SetSerializedField("velocitySampleCount", -5);
-
-            // Invoke OnValidate via reflection
-            var onValidate = typeof(Throwable).GetMethod("OnValidate",
-                BindingFlags.NonPublic | BindingFlags.Instance);
-            onValidate?.Invoke(_throwable, null);
-
-            var count = GetSerializedField<int>("velocitySampleCount");
-            Assert.GreaterOrEqual(count, 1);
+            Assert.AreEqual(10, GetField<int>(_throwable, "velocitySampleCount"));
         }
 
         [Test]
-        public void OnValidate_ThrowMultiplier_ClampsToMinimum01()
+        public void DefaultThrowMultiplier_IsOne()
         {
-            SetSerializedField("throwMultiplier", -2f);
-
-            var onValidate = typeof(Throwable).GetMethod("OnValidate",
-                BindingFlags.NonPublic | BindingFlags.Instance);
-            onValidate?.Invoke(_throwable, null);
-
-            var multiplier = GetSerializedField<float>("throwMultiplier");
-            Assert.GreaterOrEqual(multiplier, 0.1f);
+            Assert.AreEqual(1f, GetField<float>(_throwable, "throwMultiplier"), 0.001f);
         }
 
         [Test]
-        public void OnValidate_AngularVelocityMultiplier_ClampsToMinimumZero()
+        public void DefaultEnableAngularVelocity_IsTrue()
         {
-            SetSerializedField("angularVelocityMultiplier", -1f);
-
-            var onValidate = typeof(Throwable).GetMethod("OnValidate",
-                BindingFlags.NonPublic | BindingFlags.Instance);
-            onValidate?.Invoke(_throwable, null);
-
-            var multiplier = GetSerializedField<float>("angularVelocityMultiplier");
-            Assert.GreaterOrEqual(multiplier, 0f);
+            Assert.IsTrue(GetField<bool>(_throwable, "enableAngularVelocity"));
         }
 
-        [Test]
-        public void OnValidate_ValidValues_RemainUnchanged()
-        {
-            SetSerializedField("velocitySampleCount", 15);
-            SetSerializedField("throwMultiplier", 2f);
-            SetSerializedField("angularVelocityMultiplier", 1.5f);
-
-            var onValidate = typeof(Throwable).GetMethod("OnValidate",
-                BindingFlags.NonPublic | BindingFlags.Instance);
-            onValidate?.Invoke(_throwable, null);
-
-            Assert.AreEqual(15, GetSerializedField<int>("velocitySampleCount"));
-            Assert.AreEqual(2f, GetSerializedField<float>("throwMultiplier"), 0.01f);
-            Assert.AreEqual(1.5f, GetSerializedField<float>("angularVelocityMultiplier"), 0.01f);
-        }
-
-        // ── Velocity Sample Array Initialization ──
+        // ── StartTracking ──
 
         [Test]
-        public void Awake_InitializesVelocitySampleArray()
+        public void StartTracking_InitializesSampleBuffer()
         {
-            var samples = GetSerializedField<Vector3[]>("_velocitySamples");
+            _throwable.StartTracking(_body, _go.transform);
 
-            Assert.IsNotNull(samples);
-            Assert.AreEqual(10, samples.Length); // default velocitySampleCount is 10
-        }
-
-        [Test]
-        public void Awake_InitializesAngularVelocitySampleArray()
-        {
-            var samples = GetSerializedField<Vector3[]>("_angularVelocitySamples");
-
+            var samples = GetField<Vector3[]>(_throwable, "_velocitySamples");
             Assert.IsNotNull(samples);
             Assert.AreEqual(10, samples.Length);
         }
 
-        // ── StartThrowing (private, via reflection) ──
-
         [Test]
-        public void StartThrowing_SetsRigidbodyKinematic()
+        public void StartTracking_ResetsSampleCount()
         {
-            var startMethod = typeof(Throwable).GetMethod("StartThrowing",
-                BindingFlags.NonPublic | BindingFlags.Instance);
-            startMethod?.Invoke(_throwable, null);
+            _throwable.StartTracking(_body, _go.transform);
+            // Sample once to advance the count, then re-start; count should reset to 0.
+            _throwable.Sample();
+            _throwable.StartTracking(_body, _go.transform);
 
-            Assert.IsTrue(_rigidbody.isKinematic);
+            Assert.AreEqual(0, GetField<int>(_throwable, "_count"));
         }
 
         [Test]
-        public void StartThrowing_ResetsVelocitySamples()
+        public void StartTracking_ClearsPriorSamples()
         {
-            // Fill with non-zero data first
-            var samples = GetSerializedField<Vector3[]>("_velocitySamples");
-            for (int i = 0; i < samples.Length; i++)
-                samples[i] = Vector3.one;
+            _throwable.StartTracking(_body, _go.transform);
+            var samples = GetField<Vector3[]>(_throwable, "_velocitySamples");
+            for (int i = 0; i < samples.Length; i++) samples[i] = Vector3.one;
 
-            var startMethod = typeof(Throwable).GetMethod("StartThrowing",
-                BindingFlags.NonPublic | BindingFlags.Instance);
-            startMethod?.Invoke(_throwable, null);
+            _throwable.StartTracking(_body, _go.transform);
 
-            samples = GetSerializedField<Vector3[]>("_velocitySamples");
+            samples = GetField<Vector3[]>(_throwable, "_velocitySamples");
             for (int i = 0; i < samples.Length; i++)
             {
-                Assert.AreEqual(Vector3.zero, samples[i],
-                    $"Sample {i} should be zero after StartThrowing");
+                Assert.AreEqual(Vector3.zero, samples[i], $"sample {i} should be zero");
             }
         }
 
-        [Test]
-        public void StartThrowing_ResetsSampleIndex()
-        {
-            var startMethod = typeof(Throwable).GetMethod("StartThrowing",
-                BindingFlags.NonPublic | BindingFlags.Instance);
-            startMethod?.Invoke(_throwable, null);
+        // ── ApplyThrow ──
 
-            var sampleIndex = GetSerializedField<int>("_currentSampleIndex");
-            Assert.AreEqual(0, sampleIndex);
+        [Test]
+        public void ApplyThrow_WhenNotTracking_ReturnsZero()
+        {
+            Vector3 result = _throwable.ApplyThrow();
+            Assert.AreEqual(Vector3.zero, result);
         }
 
         [Test]
-        public void StartThrowing_ResetsSampleCount()
+        public void ApplyThrow_WhenKinematicBody_DoesNotSetVelocity()
         {
-            var startMethod = typeof(Throwable).GetMethod("StartThrowing",
-                BindingFlags.NonPublic | BindingFlags.Instance);
-            startMethod?.Invoke(_throwable, null);
+            _body.isKinematic = true;
+            _throwable.StartTracking(_body, _go.transform);
+            // No Sample calls — count is 0, but we still want to confirm the kinematic guard works.
+            // Move the transform so a sample would have non-zero velocity, then sample once.
+            _go.transform.position = new Vector3(1f, 0f, 0f);
+            _throwable.Sample();
 
-            var sampleCount = GetSerializedField<int>("_sampleCount");
-            Assert.AreEqual(0, sampleCount);
-        }
+            _throwable.ApplyThrow();
 
-        // ── GetAngularVelocityFromDeltaRotation (private) ──
-
-        [Test]
-        public void GetAngularVelocity_IdentityDelta_ReturnsZero()
-        {
-            var method = typeof(Throwable).GetMethod("GetAngularVelocityFromDeltaRotation",
-                BindingFlags.NonPublic | BindingFlags.Instance);
-
-            var result = (Vector3)method.Invoke(_throwable,
-                new object[] { Quaternion.identity, 0.02f });
-
-            Assert.AreEqual(0f, result.magnitude, 0.1f);
+            // linearVelocity setter is a no-op on kinematic bodies; just confirm we didn't crash
+            // and that the velocity stayed zero.
+            Assert.AreEqual(Vector3.zero, _body.linearVelocity);
         }
 
         [Test]
-        public void GetAngularVelocity_90DegreeRotation_ReturnsNonZero()
+        public void CancelTracking_StopsApplyFromFiring()
         {
-            var method = typeof(Throwable).GetMethod("GetAngularVelocityFromDeltaRotation",
-                BindingFlags.NonPublic | BindingFlags.Instance);
+            _throwable.StartTracking(_body, _go.transform);
+            _throwable.CancelTracking();
 
-            var deltaRot = Quaternion.AngleAxis(90f, Vector3.up);
-            var result = (Vector3)method.Invoke(_throwable, new object[] { deltaRot, 0.02f });
+            Vector3 result = _throwable.ApplyThrow();
+            Assert.AreEqual(Vector3.zero, result);
+        }
 
+        // ── AngularVelocityFromDelta ──
+
+        [Test]
+        public void AngularVelocityFromDelta_Identity_ReturnsZero()
+        {
+            Vector3 result = InvokeAngularVelocityFromDelta(Quaternion.identity, 0.02f);
+            Assert.LessOrEqual(result.magnitude, 0.0001f);
+        }
+
+        [Test]
+        public void AngularVelocityFromDelta_90Degrees_ReturnsNonZero()
+        {
+            Vector3 result = InvokeAngularVelocityFromDelta(Quaternion.AngleAxis(90f, Vector3.up), 0.02f);
             Assert.Greater(result.magnitude, 0f);
         }
 
-        // ── Observable ──
-
         [Test]
-        public void OnThrowEnd_ReturnsNonNullObservable()
+        public void AngularVelocityFromDelta_DivideByDeltaTime_ScalesProperly()
         {
-            Assert.IsNotNull(_throwable.OnThrowEnd);
+            // A 1-radian rotation over 1s = 1 rad/s. Over 0.5s = 2 rad/s.
+            var delta = Quaternion.AngleAxis(Mathf.Rad2Deg, Vector3.up);
+            Vector3 a = InvokeAngularVelocityFromDelta(delta, 1f);
+            Vector3 b = InvokeAngularVelocityFromDelta(delta, 0.5f);
+
+            // The magnitude of b should be roughly 2× the magnitude of a.
+            Assert.AreEqual(a.magnitude * 2f, b.magnitude, 0.01f);
         }
 
-        [Test]
-        public void OnThrowEnd_CanSubscribeWithoutError()
-        {
-            bool called = false;
-            var disposable = _throwable.OnThrowEnd.Do(_ => called = true).Subscribe();
+        // ── OnThrowEnd event surface ──
 
-            // Not thrown yet, so should not fire
-            Assert.IsFalse(called);
-            disposable.Dispose();
+        [Test]
+        public void OnThrowEnd_IsNonNull()
+        {
+            Assert.IsNotNull(_throwable.OnThrowEnd);
         }
     }
 }

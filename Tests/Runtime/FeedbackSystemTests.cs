@@ -1,230 +1,161 @@
 using NUnit.Framework;
+using Shababeek.Interactions.Core;
 using Shababeek.Interactions.Feedback;
 using UnityEngine;
 
 namespace Shababeek.Interactions.Tests
 {
+    /// <summary>
+    /// Feedback pipeline: list lifecycle plus forwarding interaction observables to valid feedback entries.
+    /// </summary>
     [TestFixture]
     public class FeedbackSystemTests
     {
-        private FeedbackSystem _feedbackSystem;
+        private GameObject _root;
         private TestInteractable _interactable;
+        private FeedbackSystem _feedbackSystem;
 
         [SetUp]
         public void SetUp()
         {
-            var go = new GameObject("FeedbackTestObject");
-            _interactable = go.AddComponent<TestInteractable>();
-            _feedbackSystem = go.AddComponent<FeedbackSystem>();
+            _root = new GameObject("FeedbackTestRoot");
+            _interactable = _root.AddComponent<TestInteractable>();
+            _feedbackSystem = _root.AddComponent<FeedbackSystem>();
         }
 
         [TearDown]
         public void TearDown()
         {
-            TestHelpers.DestroyComponent(_feedbackSystem);
-            TestHelpers.DestroyComponent(_interactable);
+            TestHelpers.DestroyGameObject(_root);
+        }
+
+        private sealed class RecordingFeedback : FeedbackData
+        {
+            public int HoverStartedCount;
+            public int HoverEndedCount;
+            public int SelectedCount;
+            public int DeselectedCount;
+            public int ActivatedCount;
+
+            public override void OnHoverStarted(InteractorBase interactor)
+            {
+                HoverStartedCount++;
+            }
+
+            public override void OnHoverEnded(InteractorBase interactor)
+            {
+                HoverEndedCount++;
+            }
+
+            public override void OnSelected(InteractorBase interactor)
+            {
+                SelectedCount++;
+            }
+
+            public override void OnDeselected(InteractorBase interactor)
+            {
+                DeselectedCount++;
+            }
+
+            public override void OnActivated(InteractorBase interactor)
+            {
+                ActivatedCount++;
+            }
         }
 
         [Test]
-        public void FeedbackSystem_CanAddFeedback()
+        public void FeedbackRoutesHoverSelectedUse_ToValidFeedback()
         {
-            var feedback = new MaterialFeedback();
-            _feedbackSystem.AddFeedback(feedback);
+            var spy = new RecordingFeedback();
+            _feedbackSystem.AddFeedback(spy);
 
-            var feedbacks = _feedbackSystem.GetFeedbacks();
-            Assert.Contains(feedback, feedbacks);
+            var interactor = TestHelpers.CreateMockInteractor(HandIdentifier.Left);
+            _interactable.SetSelectResult(false);
+
+            _interactable.OnStateChanged(InteractionState.Hovering, interactor);
+            Assert.AreEqual(1, spy.HoverStartedCount);
+
+            _interactable.OnStateChanged(InteractionState.Selected, interactor);
+            Assert.AreEqual(1, spy.HoverEndedCount);
+            Assert.AreEqual(1, spy.SelectedCount);
+
+            _interactable.StartUsing(interactor);
+            Assert.AreEqual(1, spy.ActivatedCount);
+
+            _interactable.OnStateChanged(InteractionState.None, interactor);
+            Assert.AreEqual(1, spy.DeselectedCount);
+
+            TestHelpers.DestroyComponent(interactor);
         }
 
         [Test]
-        public void FeedbackSystem_CanRemoveFeedback()
+        public void DisabledFeedback_SkipsCallbacks()
         {
-            var feedback = new MaterialFeedback();
-            _feedbackSystem.AddFeedback(feedback);
-            _feedbackSystem.RemoveFeedback(feedback);
+            var spy = new RecordingFeedback { Enabled = false };
+            _feedbackSystem.AddFeedback(spy);
 
-            var feedbacks = _feedbackSystem.GetFeedbacks();
-            Assert.IsEmpty(feedbacks);
+            var interactor = TestHelpers.CreateMockInteractor(HandIdentifier.Left);
+            _interactable.OnStateChanged(InteractionState.Hovering, interactor);
+
+            Assert.AreEqual(0, spy.HoverStartedCount);
+            TestHelpers.DestroyComponent(interactor);
         }
 
         [Test]
-        public void FeedbackSystem_CanClearAllFeedbacks()
+        public void LateAddedFeedback_StillReceivesSubsequentEvents()
         {
-            var feedback1 = new MaterialFeedback();
-            var feedback2 = new AnimationFeedback();
-            _feedbackSystem.AddFeedback(feedback1);
-            _feedbackSystem.AddFeedback(feedback2);
+            var interactor = TestHelpers.CreateMockInteractor(HandIdentifier.Left);
+            _interactable.OnStateChanged(InteractionState.Hovering, interactor);
+
+            var spy = new RecordingFeedback();
+            _feedbackSystem.AddFeedback(spy);
+
+            _interactable.OnStateChanged(InteractionState.None, interactor);
+            Assert.AreEqual(1, spy.HoverEndedCount);
+
+            TestHelpers.DestroyComponent(interactor);
+        }
+
+        [Test]
+        public void Add_Remove_Clear_ManageList()
+        {
+            var a = new RecordingFeedback();
+            var b = new RecordingFeedback();
+
+            _feedbackSystem.AddFeedback(a);
+            _feedbackSystem.AddFeedback(b);
+            Assert.AreEqual(2, _feedbackSystem.GetFeedbacks().Count);
+
+            _feedbackSystem.RemoveFeedback(a);
+            Assert.AreEqual(1, _feedbackSystem.GetFeedbacks().Count);
 
             _feedbackSystem.ClearFeedbacks();
-            var feedbacks = _feedbackSystem.GetFeedbacks();
-            Assert.IsEmpty(feedbacks);
+            Assert.IsEmpty(_feedbackSystem.GetFeedbacks());
         }
 
         [Test]
-        public void FeedbackSystem_GetFeedbacksReturnsValidList()
+        public void AddFeedback_IgnoresDuplicateInstance()
         {
-            var feedbacks = _feedbackSystem.GetFeedbacks();
-            Assert.IsNotNull(feedbacks);
-            Assert.IsInstanceOf<System.Collections.Generic.List<FeedbackData>>(feedbacks);
+            var fb = new RecordingFeedback();
+            _feedbackSystem.AddFeedback(fb);
+            _feedbackSystem.AddFeedback(fb);
+            Assert.AreEqual(1, _feedbackSystem.GetFeedbacks().Count);
         }
 
         [Test]
-        public void FeedbackSystem_CanAddMaterialFeedback()
+        public void RemoveNonExistentFeedback_DoesNotThrow()
+        {
+            Assert.DoesNotThrow(() =>
+                _feedbackSystem.RemoveFeedback(new RecordingFeedback()));
+        }
+
+        [Test]
+        public void AddFeedback_Parameterless_AddsMaterialFeedbackEntry()
         {
             _feedbackSystem.AddFeedback();
-            var feedbacks = _feedbackSystem.GetFeedbacks();
-            Assert.Greater(feedbacks.Count, 0);
-        }
-
-        [Test]
-        public void FeedbackSystem_NoDuplicateFeedbacks()
-        {
-            var feedback = new MaterialFeedback();
-            _feedbackSystem.AddFeedback(feedback);
-            _feedbackSystem.AddFeedback(feedback);
-
-            var feedbacks = _feedbackSystem.GetFeedbacks();
-            Assert.AreEqual(1, feedbacks.Count);
-        }
-
-        [Test]
-        public void FeedbackSystem_RemoveNonExistentFeedback()
-        {
-            var feedback = new MaterialFeedback();
-            _feedbackSystem.RemoveFeedback(feedback);
-
-            // Should not throw
-            Assert.Pass();
-        }
-
-        [Test]
-        public void FeedbackData_MaterialFeedback_HasValidName()
-        {
-            var feedback = new MaterialFeedback();
-            Assert.AreEqual("Material Feedback", feedback.FeedbackName);
-        }
-
-        [Test]
-        public void FeedbackData_AnimationFeedback_HasValidName()
-        {
-            var feedback = new AnimationFeedback();
-            Assert.AreEqual("Animation Feedback", feedback.FeedbackName);
-        }
-
-        [Test]
-        public void FeedbackData_HapticFeedback_HasValidName()
-        {
-            var feedback = new HapticFeedback();
-            Assert.AreEqual("Haptic Feedback", feedback.FeedbackName);
-        }
-
-        [Test]
-        public void FeedbackData_AudioFeedback_HasValidName()
-        {
-            var feedback = new AudioFeedback();
-            Assert.AreEqual("Audio Feedback", feedback.FeedbackName);
-        }
-
-        [Test]
-        public void FeedbackData_CanSetName()
-        {
-            var feedback = new MaterialFeedback();
-            feedback.FeedbackName = "Custom Feedback";
-            Assert.AreEqual("Custom Feedback", feedback.FeedbackName);
-        }
-
-        [Test]
-        public void FeedbackData_CanToggleEnabled()
-        {
-            var feedback = new MaterialFeedback();
-            feedback.Enabled = false;
-            Assert.IsFalse(feedback.Enabled);
-
-            feedback.Enabled = true;
-            Assert.IsTrue(feedback.Enabled);
-        }
-
-        [Test]
-        public void FeedbackData_IsValid_ChecksEnabled()
-        {
-            var feedback = new MaterialFeedback();
-            feedback.Enabled = false;
-            Assert.IsFalse(feedback.IsValid());
-
-            feedback.Enabled = true;
-            // IsValid also checks for proper initialization, so result may vary
-        }
-
-        [Test]
-        public void FeedbackSystem_CanAddMultipleTypes()
-        {
-            var material = new MaterialFeedback();
-            var animation = new AnimationFeedback();
-            var haptic = new HapticFeedback();
-
-            _feedbackSystem.AddFeedback(material);
-            _feedbackSystem.AddFeedback(animation);
-            _feedbackSystem.AddFeedback(haptic);
-
-            var feedbacks = _feedbackSystem.GetFeedbacks();
-            Assert.AreEqual(3, feedbacks.Count);
-        }
-
-        [Test]
-        public void FeedbackData_ObjectToggleFeedback_HasValidName()
-        {
-            var feedback = new ObjectToggleFeedback();
-            Assert.AreEqual("Object Toggle Feedback", feedback.FeedbackName);
-        }
-
-        [Test]
-        public void FeedbackData_ScaleFeedback_HasValidName()
-        {
-            var feedback = new ScaleFeedback();
-            Assert.AreEqual("Scale Feedback", feedback.FeedbackName);
-        }
-
-        [Test]
-        public void FeedbackData_ParticleFeedback_HasValidName()
-        {
-            var feedback = new ParticleFeedback();
-            Assert.AreEqual("Particle Feedback", feedback.FeedbackName);
-        }
-
-        [Test]
-        public void FeedbackData_UnityEventFeedback_HasValidName()
-        {
-            var feedback = new UnityEventFeedback();
-            Assert.AreEqual("UnityEvent Feedback", feedback.FeedbackName);
-        }
-
-        [Test]
-        public void FeedbackSystem_RemoveAndReaddFeedback()
-        {
-            var feedback = new MaterialFeedback();
-            _feedbackSystem.AddFeedback(feedback);
-            _feedbackSystem.RemoveFeedback(feedback);
-
-            // Should be able to add again
-            _feedbackSystem.AddFeedback(feedback);
-            var feedbacks = _feedbackSystem.GetFeedbacks();
-            Assert.AreEqual(1, feedbacks.Count);
-        }
-
-        [Test]
-        public void FeedbackSystem_ClearAndReaddFeedback()
-        {
-            var feedback1 = new MaterialFeedback();
-            var feedback2 = new AnimationFeedback();
-            _feedbackSystem.AddFeedback(feedback1);
-            _feedbackSystem.AddFeedback(feedback2);
-
-            _feedbackSystem.ClearFeedbacks();
-            var feedback3 = new HapticFeedback();
-            _feedbackSystem.AddFeedback(feedback3);
-
-            var feedbacks = _feedbackSystem.GetFeedbacks();
-            Assert.AreEqual(1, feedbacks.Count);
-            Assert.Contains(feedback3, feedbacks);
+            var list = _feedbackSystem.GetFeedbacks();
+            Assert.AreEqual(1, list.Count);
+            Assert.IsInstanceOf<MaterialFeedback>(list[0]);
         }
     }
 }

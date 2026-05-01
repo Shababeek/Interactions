@@ -1,5 +1,6 @@
 using System.Reflection;
 using NUnit.Framework;
+using Shababeek.Interactions;
 using Shababeek.Interactions.Drivers;
 using Shababeek.Interactions.Core;
 using Shababeek.ReactiveVars;
@@ -15,6 +16,7 @@ namespace Shababeek.Interactions.Tests
         private BoolVariable _hoveredVar;
         private BoolVariable _selectedVar;
         private BoolVariable _usedVar;
+        private BoolVariable _thumbVar;
 
         [SetUp]
         public void SetUp()
@@ -26,6 +28,7 @@ namespace Shababeek.Interactions.Tests
             _hoveredVar = ScriptableObject.CreateInstance<BoolVariable>();
             _selectedVar = ScriptableObject.CreateInstance<BoolVariable>();
             _usedVar = ScriptableObject.CreateInstance<BoolVariable>();
+            _thumbVar = ScriptableObject.CreateInstance<BoolVariable>();
 
             // Disable the GO so OnEnable doesn't fire yet
             go.SetActive(false);
@@ -36,6 +39,7 @@ namespace Shababeek.Interactions.Tests
             SetDriverField("hoveredVariable", _hoveredVar);
             SetDriverField("selectedVariable", _selectedVar);
             SetDriverField("usedVariable", _usedVar);
+            SetDriverField("thumbVariable", _thumbVar);
             SetDriverField("resetOnDisable", true);
 
             // Re-enable so OnEnable fires with variables set
@@ -49,6 +53,7 @@ namespace Shababeek.Interactions.Tests
             Object.DestroyImmediate(_hoveredVar);
             Object.DestroyImmediate(_selectedVar);
             Object.DestroyImmediate(_usedVar);
+            Object.DestroyImmediate(_thumbVar);
         }
 
         private void SetDriverField(string fieldName, object value)
@@ -161,50 +166,64 @@ namespace Shababeek.Interactions.Tests
             Assert.IsFalse(_hoveredVar.Value);
             Assert.IsFalse(_selectedVar.Value);
             Assert.IsFalse(_usedVar.Value);
+            Assert.IsFalse(_thumbVar.Value);
 
             TestHelpers.DestroyComponent(interactor);
         }
 
-        // ── IsHovered / IsSelected / IsUsed Properties ──
+        // ── Thumb state binding ──
 
         [Test]
-        public void IsHovered_WhenVariableNull_ReturnsFalse()
+        public void ThumbPress_WhenSelected_SetsThumbVariableTrue()
+        {
+            var interactor = TestHelpers.CreateMockInteractor(HandIdentifier.Left);
+            _interactable.SetSelectResult(false);
+            _interactable.OnStateChanged(InteractionState.Selected, interactor);
+            _interactable.ThumbPress(interactor);
+
+            Assert.IsTrue(_thumbVar.Value);
+            TestHelpers.DestroyComponent(interactor);
+        }
+
+        [Test]
+        public void ThumbRelease_WhenSelected_SetsThumbVariableFalse()
+        {
+            var interactor = TestHelpers.CreateMockInteractor(HandIdentifier.Left);
+            _interactable.SetSelectResult(false);
+            _interactable.OnStateChanged(InteractionState.Selected, interactor);
+            _interactable.ThumbPress(interactor);
+            _interactable.ThumbRelease(interactor);
+
+            Assert.IsFalse(_thumbVar.Value);
+            TestHelpers.DestroyComponent(interactor);
+        }
+
+        // ── IsHovered / IsSelected / IsUsed / IsThumbPressed ──
+
+        [Test]
+        public void IsStateFlags_ReturnFalse_WhenBackingVariableNull()
         {
             SetDriverField("hoveredVariable", null);
+            SetDriverField("selectedVariable", null);
+            SetDriverField("usedVariable", null);
+            SetDriverField("thumbVariable", null);
 
             Assert.IsFalse(_driver.IsHovered);
-        }
-
-        [Test]
-        public void IsSelected_WhenVariableNull_ReturnsFalse()
-        {
-            SetDriverField("selectedVariable", null);
-
             Assert.IsFalse(_driver.IsSelected);
-        }
-
-        [Test]
-        public void IsUsed_WhenVariableNull_ReturnsFalse()
-        {
-            SetDriverField("usedVariable", null);
-
             Assert.IsFalse(_driver.IsUsed);
+            Assert.IsFalse(_driver.IsThumbPressed);
         }
 
         [Test]
-        public void IsHovered_WhenVariableTrue_ReturnsTrue()
+        public void IsStateFlags_MirrorBoolVariableValues()
         {
             _hoveredVar.Value = true;
-
-            Assert.IsTrue(_driver.IsHovered);
-        }
-
-        [Test]
-        public void IsSelected_WhenVariableTrue_ReturnsTrue()
-        {
             _selectedVar.Value = true;
-
+            Assert.IsTrue(_driver.IsHovered);
             Assert.IsTrue(_driver.IsSelected);
+
+            _thumbVar.Value = true;
+            Assert.IsTrue(_driver.IsThumbPressed);
         }
     }
 
