@@ -21,25 +21,32 @@ namespace Shababeek.Interactions
     {
         [Tooltip("The tweener component used for smooth grab animations. Auto-added if not present., only add if you want to the same tweener across multiple tweenables")]
         [SerializeField] private VariableTweener tweener;
-        
+
+        [Tooltip("Whether this grabable should track velocity while held and apply a throw on release. Requires a Rigidbody.")]
+        [SerializeField] private bool canBeThrown = true;
+
+        [Tooltip("Throw tracking settings. Only used when Can Be Thrown is enabled and a Rigidbody is present.")]
+        [SerializeField] private Throwable throwable = new();
+
         private readonly TransformTweenable _transformTweenable = new();
         private GrabStrategy _grabStrategy;
-        private PoseConstrainter _poseConstrainter;
+        private Rigidbody _body;
         private Action _tweenCompleteCallback;
-        
-   
-        
-        /// <summary>
-        /// Gets the target position and rotation for the right hand during grabbing.
-        /// </summary>
-        /// <returns>The target position and rotation for the right hand.</returns>
-        public (Vector3 position, Quaternion rotation) GetRightHandTarget() => _poseConstrainter.GetTargetHandTransform(HandIdentifier.Right);
-        
-        /// <summary>
-        /// Gets the target position and rotation for the left hand during grabbing.
-        /// </summary>
-        /// <returns>The target position and rotation for the left hand.</returns>
-        public (Vector3 position, Quaternion rotation) GetLeftHandTarget() => _poseConstrainter.GetTargetHandTransform(HandIdentifier.Left);
+
+
+        private (Vector3 position, Quaternion rotation) RightHandTarget => Constrainter.GetTargetHandTransform(HandIdentifier.Right);
+
+        private (Vector3 position, Quaternion rotation) LeftHandTarget => Constrainter.GetTargetHandTransform(HandIdentifier.Left);
+
+        /// <summary>Throw tracker for this grabable. Active only when Can Be Thrown is enabled and a Rigidbody is present.</summary>
+        public Throwable Throwable => throwable;
+
+        /// <summary>Whether this grabable applies a throw velocity on release.</summary>
+        public bool CanBeThrown
+        {
+            get => canBeThrown;
+            set => canBeThrown = value;
+        }
 
 
         /// <inheritdoc/>
@@ -57,43 +64,63 @@ namespace Shababeek.Interactions
         {
             // Apply pose constraints with interaction point for nearest grab point selection
             Vector3 interactionPoint = CurrentInteractor.GetInteractionPoint();
-            _poseConstrainter.ApplyConstraints(CurrentInteractor.Hand, interactionPoint);
+            Constrainter.ApplyConstraints(CurrentInteractor.Hand, interactionPoint);
 
             _grabStrategy.Initialize(CurrentInteractor);
             InitializeAttachmentPointTransform();
             MoveObjectToPosition(() => _grabStrategy.Grab(this, CurrentInteractor));
+
+            if (canBeThrown && _body != null)
+            {
+                throwable.StartTracking(_body, transform);
+            }
+
             return false;
         }
-        
+
         /// <inheritdoc/>
         protected override void DeSelected()
         {
             // Remove pose constraints and restore hand visibility
-            _poseConstrainter.RemoveConstraints(CurrentInteractor.Hand);
-            
+            Constrainter.RemoveConstraints(CurrentInteractor.Hand);
+
             // Clean up tween subscription before removing tweenable
             UnsubscribeTweenComplete();
-            
+
             tweener.RemoveTweenable(_transformTweenable);
+
+            // UnGrab restores the rigidbody's prior kinematic state, so apply throw afterward.
             _grabStrategy.UnGrab(this, CurrentInteractor);
+
+            if (canBeThrown && _body != null)
+            {
+                throwable.ApplyThrow();
+            }
         }
-        
-        public override void InitializeInteractable()
+
+        private void FixedUpdate()
+        {
+            if (IsSelected && canBeThrown && _body != null)
+            {
+                throwable.Sample();
+            }
+        }
+
+        protected override void InitializeInteractable()
         {
             base.InitializeInteractable();
-            
-            _poseConstrainter ??= GetComponent<PoseConstrainter>();
+
             tweener ??= GetComponent<VariableTweener>();
             if (!tweener)
             {
                 tweener = gameObject.AddComponent<VariableTweener>();
                 tweener.TweenScale = 15;
             }
-            
-            Rigidbody body = GetComponent<Rigidbody>();
-            if (body)
+
+            _body = GetComponent<Rigidbody>();
+            if (_body)
             {
-                _grabStrategy = new RigidBodyGrabStrategy(body);
+                _grabStrategy = new RigidBodyGrabStrategy(_body);
             }
             else
             {
@@ -104,11 +131,11 @@ namespace Shababeek.Interactions
         private void InitializeAttachmentPointTransform()
         {
             var (handLocalPosition, handLocalRotation) = CurrentInteractor.Hand.HandIdentifier == HandIdentifier.Left ?
-                GetLeftHandTarget() : GetRightHandTarget();
+                LeftHandTarget : RightHandTarget;
 
             // Hand offsets are in ConstraintTransform local space which is scaled by the
             // interactable's own scale. Convert to world scale for the attachment point.
-            Vector3 constraintScale = _poseConstrainter.ConstraintTransform.lossyScale;
+            Vector3 constraintScale = Constrainter.ConstraintTransform.lossyScale;
             Vector3 scaledHandPosition = Vector3.Scale(handLocalPosition, constraintScale);
 
             Quaternion objectRotation = Quaternion.Inverse(handLocalRotation);

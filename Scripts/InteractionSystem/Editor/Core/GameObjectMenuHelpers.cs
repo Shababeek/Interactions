@@ -337,36 +337,6 @@ namespace Shababeek.Interactions.Editors
             return ValidateRequiredComponents() && Selection.activeGameObject != null;
         }
 
-        [MenuItem("GameObject/Shababeek/Make Into/Throwable", priority = 101)]
-        public static void MakeIntoThrowable()
-        {
-            var obj = Selection.activeGameObject;
-            if (obj == null)
-            {
-                Debug.LogWarning("No object selected. Please select an object to make throwable.");
-                return;
-            }
-
-            if (obj.GetComponent<Throwable>())
-            {
-                Debug.LogWarning("Object already has a Throwable component.");
-                return;
-            }
-
-            if (!obj.GetComponent<Rigidbody>())
-                Undo.AddComponent<Rigidbody>(obj).isKinematic = true;
-            if (!obj.GetComponent<Grabable>())
-                Undo.AddComponent<Grabable>(obj);
-            Undo.AddComponent<Throwable>(obj);
-            Selection.activeGameObject = obj;
-        }
-
-        [MenuItem("GameObject/Shababeek/Make Into/Throwable", true)]
-        private static bool ValidateMakeIntoThrowable()
-        {
-            return ValidateRequiredComponents() && Selection.activeGameObject != null;
-        }
-
         [MenuItem("GameObject/Shababeek/Make Into/Lever", priority = 102)]
         public static void MakeIntoLever()
         {
@@ -624,7 +594,6 @@ namespace Shababeek.Interactions.Editors
             var requiredTypes = new System.Type[]
             {
                 typeof(Grabable),
-                typeof(Throwable),
                 typeof(LeverInteractable),
                 typeof(DrawerInteractable),
                 typeof(JoystickInteractable),
