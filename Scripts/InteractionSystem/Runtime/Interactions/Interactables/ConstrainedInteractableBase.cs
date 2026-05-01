@@ -251,7 +251,7 @@ namespace Shababeek.Interactions
         }
 
 
-        public override void InitializeInteractable()
+        protected override void InitializeInteractable()
         {
             base.InitializeInteractable();
             DestroyFakeHands();

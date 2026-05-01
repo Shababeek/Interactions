@@ -34,16 +34,12 @@ namespace Shababeek.Interactions
         [SerializeField] private InteractionHand interactionHand = (InteractionHand.Left | InteractionHand.Right);
 
         [Tooltip("The button that triggers selection of this interactable (Grip or Trigger).")]
-        [SerializeField]
-        private XRButton selectionButton = XRButton.Grip;
+        [SerializeField] private XRButton selectionButton = XRButton.Grip;
 
-        [Tooltip("Whether this interactable should adopt the hand's layer while selected.")]
+        [Tooltip("Whether this interactable should adopt the hand's layer while selected.")] 
         [SerializeField] private LayerBehavior layerBehavior = LayerBehavior.MatchHand;
 
-        [Header("Interaction Events")]
-        [SerializeField]
-        public InteractorUnityEvent onSelected = new();
-
+        [SerializeField] private InteractorUnityEvent onSelected = new();
         [SerializeField] private InteractorUnityEvent onDeselected = new();
         [SerializeField] private InteractorUnityEvent onHoverStart = new();
         [SerializeField] private InteractorUnityEvent onHoverEnd = new();
@@ -51,6 +47,7 @@ namespace Shababeek.Interactions
         [SerializeField] private InteractorUnityEvent onUseEnded = new();
         [SerializeField] private InteractorUnityEvent onThumbPressed = new();
         [SerializeField] private InteractorUnityEvent onThumbReleased = new();
+        
         [Tooltip("Indicates whether this interactable is currently selected.")]
         [SerializeField] [ReadOnly] private bool isSelected;
         [Tooltip("The interactor that is currently interacting with this object.")] 
@@ -440,10 +437,10 @@ namespace Shababeek.Interactions
         /// <summary>
         /// Override this method in derived classes for custom initialization logic.
         /// </summary>
-        public virtual void InitializeInteractable()
+        protected virtual void InitializeInteractable()
         {
             // Override in derived classes
-            colliders = gameObject.GetComponentsInChildren<Collider>();
+            colliders = gameObject.GetComponentsInChildren<Collider>(true);
             collisionLayers = new int[colliders.Length];
         }
 
@@ -557,9 +554,9 @@ namespace Shababeek.Interactions
 
         protected virtual void OnDisable()
         {
-            if (currentState == InteractionState.Selected || currentState == InteractionState.Hovering)
+            if (currentState is InteractionState.Selected or InteractionState.Hovering)
             {
-                currentInteractor.Release(this);
+                currentInteractor?.Release(this);
             }
         }
     }
