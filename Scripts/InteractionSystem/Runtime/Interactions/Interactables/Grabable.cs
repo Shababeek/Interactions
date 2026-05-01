@@ -16,7 +16,7 @@ namespace Shababeek.Interactions
     /// of objects to hand attachment points with smooth animations.
     /// </remarks>
     [AddComponentMenu("Shababeek/Interactions/Interactables/Grabable")]
-    [RequireComponent(typeof(PoseConstrainter))]
+    [RequireComponent(typeof(PoseConstrainer))]
     public class Grabable : InteractableBase
     {
         [Tooltip("The tweener component used for smooth grab animations. Auto-added if not present., only add if you want to the same tweener across multiple tweenables")]
@@ -29,8 +29,8 @@ namespace Shababeek.Interactions
         [SerializeField] private Throwable throwable = new();
 
         private readonly TransformTweenable _transformTweenable = new();
-        private GrabStrategy _grabStrategy;
         private Rigidbody _body;
+        private bool _wasKinematic;
         private Action _tweenCompleteCallback;
 
 
@@ -66,9 +66,16 @@ namespace Shababeek.Interactions
             Vector3 interactionPoint = CurrentInteractor.GetInteractionPoint();
             Constrainter.ApplyConstraints(CurrentInteractor.Hand, interactionPoint);
 
-            _grabStrategy.Initialize(CurrentInteractor);
+            // Force the rigidbody kinematic for the duration of the grab so the tween can
+            // animate position cleanly. The prior state is restored on release.
+            if (_body != null)
+            {
+                _wasKinematic = _body.isKinematic;
+                _body.isKinematic = true;
+            }
+
             InitializeAttachmentPointTransform();
-            MoveObjectToPosition(() => _grabStrategy.Grab(this, CurrentInteractor));
+            MoveObjectToPosition(AttachToHand);
 
             if (canBeThrown && _body != null)
             {
@@ -89,13 +96,23 @@ namespace Shababeek.Interactions
 
             tweener.RemoveTweenable(_transformTweenable);
 
-            // UnGrab restores the rigidbody's prior kinematic state, so apply throw afterward.
-            _grabStrategy.UnGrab(this, CurrentInteractor);
+            // Detach + restore the rigidbody's prior kinematic state, then apply the throw.
+            // Order matters: ApplyThrow is a no-op on kinematic bodies, so kinematic state must
+            // be restored first.
+            transform.SetParent(null, true);
+            if (_body != null) _body.isKinematic = _wasKinematic;
 
             if (canBeThrown && _body != null)
             {
                 throwable.ApplyThrow();
             }
+        }
+
+        private void AttachToHand()
+        {
+            transform.SetParent(CurrentInteractor.AttachmentPoint, false);
+            transform.localPosition = Vector3.zero;
+            transform.localRotation = Quaternion.identity;
         }
 
         private void FixedUpdate()
@@ -118,14 +135,6 @@ namespace Shababeek.Interactions
             }
 
             _body = GetComponent<Rigidbody>();
-            if (_body)
-            {
-                _grabStrategy = new RigidBodyGrabStrategy(_body);
-            }
-            else
-            {
-                _grabStrategy = new TransformGrabStrategy(transform);
-            }
         }
         
         private void InitializeAttachmentPointTransform()
