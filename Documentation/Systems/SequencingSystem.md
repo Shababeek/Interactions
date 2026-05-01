@@ -319,8 +319,7 @@ These actions integrate seamlessly with all Interaction System components:
 
 | Component | Compatible Actions |
 |-----------|-------------------|
-| **Grabable** | GrabHoldAction, InteractionAction (Selection/Activation) |
-| **Throwable** | GrabHoldAction, InteractionAction |
+| **Grabable** (incl. throwable rigidbodies) | GrabHoldAction, InteractionAction (Selection/Activation) |
 | **Switch** | InteractionAction (Selection/Activation) |
 | **VRButton** | InteractionAction (Activation) |
 | **Lever** | LeverAction, InteractionAction (Selection) |

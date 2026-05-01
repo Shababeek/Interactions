@@ -22,8 +22,7 @@ Components you add to objects to make them interactive.
 #### Basic Interactables
 | Component | Description | Use Case |
 |-----------|-------------|----------|
-| **[Grabable](Interactables/Grabable.md)** | Pick up and hold objects | Tools, props, weapons |
-| **[Throwable](Interactables/Throwable.md)** | Physics-based throwing | Balls, grenades, toys |
+| **[Grabable](Interactables/Grabable.md)** | Pick up and hold objects (with built-in throwing) | Tools, props, weapons, balls, grenades |
 | **[Switch](Interactables/Switch.md)** | Toggle switches | Light switches, levers |
 | **[VRButton](Interactables/VRButton.md)** | Pressable buttons | Control panels, keypads |
 
@@ -123,6 +122,18 @@ See [ImagesTodo.md](ImagesTodo.md) for a complete tracking list of all needed im
 
 ---
 
+## ✅ Documentation Link Check
+
+Run this from the package root to validate relative markdown links:
+
+```bash
+npm run docs:check
+```
+
+This executes `Documentation/validate-links.mjs` and reports broken links.
+
+---
+
 ## 🆘 Getting Help
 
 - **Documentation Issues**: Check the troubleshooting section of each component
@@ -139,8 +150,7 @@ See [ImagesTodo.md](ImagesTodo.md) for a complete tracking list of all needed im
 |---------|--------|
 | Getting Started | ✅ Complete |
 | Config | ✅ Complete |
-| Grabable | ✅ Complete |
-| Throwable | ✅ Complete |
+| Grabable (incl. throwing) | ✅ Complete |
 | Switch | ✅ Complete |
 | VRButton | ✅ Complete |
 | Constrained Interactables | ✅ Complete |

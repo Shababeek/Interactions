@@ -15,7 +15,7 @@ Perfect for creating tools, weapons, toys, or any object your player needs to pi
 
 **Common Uses:**
 - ✅ Tools the player can pick up (hammer, flashlight, key)
-- ✅ Throwable objects (balls, grenades, rocks) _but needs to also add [Throwable](Throwable.md)_
+- ✅ Throwable objects (balls, grenades, rocks) — throwing is built in (see the [Throwing](#4-throwing-) inspector section below)
 - ✅ Weapons that need to be held (sword, gun, bow)
 - ✅ Interactive props (phone, book, remote control)
   **Don't use for**:
@@ -40,14 +40,14 @@ This example shows a basic grabbable Object. The player can pick it up, move it 
 1. Select or create the GameObject you want to make grabbable
 2. **Important:** The object must have a **Collider** component
 3. For primitive Unity Shapes (cube,Sphere,Capsul,...) make sure to scale them to a size that makes sense a cube is (1m,1m,1m) your hand can't hold such object
-4. For physics objects: Add a **Rigidbody** and Throwable components
+4. For physics objects: Add a **Rigidbody** — throwing is then handled automatically by the Grabable's Throwing settings.
 
 ![Grabable.png](../Images/Grabable.png)
 
 > 💡 **Note:**
 > - Without a Collider, the hand can't detect the object.
 > - Without a Rigidbody, the object will float mid-air when you leave it.
-> - Without a Throwable The object will not follow the trajectory of the hand when thrown
+> - Without `Can Be Thrown` (under Throwing on the Grabable), the object will simply drop instead of flying with hand motion.
 
 ### Step 2: Add the Component
 #### From Add component Menu
@@ -162,7 +162,48 @@ Events let you trigger actions when the object is grabbed, released, or used.
 
 ---
 
-#### 4.  Debug Information 🐛 (Runtime Only)
+#### 4. Throwing 🚀
+
+Throwing is built into Grabable. The fields below appear under the **Throwing** foldout.
+
+##### a. Can Be Thrown
+- **What it does:** Master toggle for the throw behavior
+- **Default:** `true`
+- **Notes:** When off, the object simply drops on release. When on with no Rigidbody on the GameObject, the inspector shows a warning and throwing is silently skipped at runtime.
+
+##### b. Velocity Sample Count
+- **What it does:** Number of FixedUpdate frames averaged for the release velocity
+- **Default:** 10
+- **When to change:**
+  - Lower (3–5) = snappier throws, may feel jittery
+  - Higher (12–15) = smoother throws, slightly delayed feel
+
+##### c. Throw Multiplier
+- **What it does:** Scales the final linear velocity applied on release
+- **Default:** 1.0
+- **When to change:**
+  - 0.5 = throws feel weak
+  - 1.5 = throws feel powerful
+  - 2.0+ = superhuman
+
+##### d. Enable Angular Velocity
+- **What it does:** Whether spin is applied on release
+- **Default:** `true`
+- **When to change:** Disable for objects that should always fly straight (darts, arrows)
+
+##### e. Angular Velocity Multiplier
+- **What it does:** Scales the calculated spin (only used when Enable Angular Velocity is on)
+- **Default:** 1.0
+
+##### f. On Throw End
+- **What it does:** UnityEvent invoked on release with the final throw velocity
+- **Common uses:** Play a whoosh sound, spawn a trail VFX, log throw analytics
+
+> 💡 **Tip:** Kinematic-by-design Rigidbodies are preserved. The grab strategy caches the prior `isKinematic` state on grab and restores it on release; if your body is kinematic by design, the throw is skipped rather than forcing it physical.
+
+---
+
+#### 5.  Debug Information 🐛 (Runtime Only)
 
 These fields show the object's state while in Play mode. You can't edit them.
 
@@ -178,6 +219,16 @@ These fields show the object's state while in Play mode. You can't edit them.
 - **Shows:** None, Hovering, Selected, or Activating
 - **Useful for:** Understanding the interaction flow
 
+
+---
+
+## How Throwing Works
+
+1. **On grab:** `Grabable.Select()` calls `throwable.StartTracking(rigidbody, transform)` and the sample buffer is reset.
+2. **Each FixedUpdate while held:** `Grabable.FixedUpdate()` records linear `(currentPos − lastPos) / dt` and angular velocity into a circular buffer.
+3. **On release:** `Grabable.DeSelected()` first calls the grab strategy's `UnGrab` (which restores the rigidbody's prior `isKinematic` state), then calls `throwable.ApplyThrow()`. The averaged velocity is multiplied by `throwMultiplier` and applied via `Rigidbody.linearVelocity`; angular velocity is applied via `Rigidbody.angularVelocity` if enabled. `OnThrowEnd` fires with the applied velocity.
+
+This ordering matters: `UnGrab` must restore the kinematic state **before** the throw, otherwise the velocity setter is a no-op on a still-kinematic body.
 
 ---
 
@@ -197,14 +248,11 @@ These fields show the object's state while in Play mode. You can't edit them.
 1. Select the Cube
 2. **Add Component > Rigidbody**
 3. Leave all settings at default
-#### Step 3: Add Throwable [optional]
-1. Select the Cube
-2. **Add Component > Throwable**
-3. Leave all settings at default
 
-#### Step 4: Make It Grabbable
+#### Step 3: Make It Grabbable
 1. **Add Component > Grabable**
 2. That's it! Grabable automatically adds PoseConstrainer
+3. Throwing is built in — `Can Be Thrown` is on by default. With a Rigidbody on the object, releasing it while moving the hand will launch it.
 
 ![ThrowableComponent.png](../Images/ThrowableComponent.png)
 #### ✅ Result
@@ -271,8 +319,8 @@ Now only the right hand can grab this object. Left hand will pass through it.
 
 ### How To: Make a Throwable Object
 
-> **Goal:** Create an object that can be thrown with proper physics  
-> **Time:** ~3 minutes  
+> **Goal:** Create an object that can be thrown with proper physics
+> **Time:** ~3 minutes
 > **Prerequisites:** Basic grabbable setup complete
 
 #### Step 1: Set Up the Base
@@ -286,14 +334,85 @@ These settings make throwing feel good:
 2. **Drag:** 0.1 to 0.5 (higher = slows down in air)
 3. **Angular Drag:** 0.5 (prevents spinning too much)
 
+#### Step 3: Tune the Throw on Grabable
+Under the **Throwing** foldout on the Grabable:
+- **Can Be Thrown:** ✓ (already on by default)
+- **Throw Multiplier:** start at 1.0; raise if throws feel weak
+- **Velocity Sample Count:** 10 is a good default; lower for snappier throws
 
 #### ✅ Result
 <!-- TODO: Add grabable-throw-trail.gif -->
 *Grabable throw trail demonstration*
 
-Your object now throws realistically! The Grabable automatically calculates release velocity from your hand's movement.
+Your object now throws realistically. The Grabable averages your hand velocity over the last few FixedUpdate frames and applies it on release.
 
-> 💡 **Tip:** If throws feel too weak or too strong, adjust the **Mass** and drag.
+> 💡 **Tip:** If throws feel too weak or too strong, adjust **Throw Multiplier** before reaching for Mass/Drag. Mass affects how the body reacts after the throw (gravity, drag); the multiplier scales the launch velocity directly.
+
+---
+
+### How To: Create a Baseball
+
+> **Goal:** A ball that throws realistically
+> **Time:** ~3 minutes
+
+1. Create Sphere, scale to (0.07, 0.07, 0.07)
+2. Add `Rigidbody`: Mass = 0.15, Drag = 0.1
+3. Add `Grabable` (auto-adds PoseConstrainer)
+4. Under **Throwing**: `Throw Multiplier` = 1.2, `Angular Velocity Multiplier` = 0.8
+
+The ball should feel natural with realistic arc.
+
+---
+
+### How To: Create a Grenade
+
+> **Goal:** Throwable with a fuse and explosion
+> **Time:** ~5 minutes
+
+1. Create grenade model with `Rigidbody`
+2. Add `Grabable` — leave throwing defaults
+3. Add a small fuse/explode script and wire `Grabable.OnDeselected` to `Arm()`:
+
+```csharp
+public class Grenade : MonoBehaviour
+{
+    [SerializeField] private GameObject explosionPrefab;
+    [SerializeField] private float fuseTime = 3f;
+    private bool _armed;
+
+    public void Arm()
+    {
+        if (_armed) return;
+        _armed = true;
+        Invoke(nameof(Explode), fuseTime);
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (_armed && collision.relativeVelocity.magnitude > 2f) Explode();
+    }
+
+    private void Explode()
+    {
+        Instantiate(explosionPrefab, transform.position, Quaternion.identity);
+        Destroy(gameObject);
+    }
+}
+```
+
+---
+
+### How To: Make a Dart
+
+> **Goal:** Object that flies straight and sticks where it lands
+> **Time:** ~5 minutes
+
+1. Create dart model with `Rigidbody`
+2. Add `Grabable`
+3. Under **Throwing**:
+   - **Throw Multiplier:** 1.5 (darts throw fast)
+   - **Enable Angular Velocity:** ✗ (flies straight)
+4. Add a stick-on-impact script that switches the rigidbody to kinematic on hard contact.
 
 ---
 
@@ -349,12 +468,6 @@ Grab the flashlight (Grip), then press **Trigger** to turn it on/off!
 
 ## Combine With...
 
-### → Throwable Component
-Grabable works great with the **Throwable** component for advanced throwing mechanics.
-
-**Example:** Create a baseball that tracks throw speed and shows a trail effect.
-
-
 ### → Socket Component
 Use with **Sockets** to create places where objects can be placed and held.
 **Example:** Tool rack where tools snap into place when released nearby.
@@ -398,7 +511,10 @@ Combine with **Sequences** for tutorial scenarios.
 | Can't grab the object even when touching it | **Cause:** Collider might be a Trigger<br>**Fix:** Uncheck "Is Trigger" on the Collider<br>**Or:** Check that Selection Button matches your controller input |
 | Object feels "slippery" or slides in hand | **Common cause:** Missing or improperly configured PoseConstrainer<br>**Steps:** 1. Check PoseConstrainer exists 2. Set Constraint Type to "Constrained" 3. Configure hand positioning |
 | Object flies away randomly when released | **Cause:** Rigidbody is receiving too much velocity<br>**Fix:** 1. Lower **Mass** 2. Increase **Drag** 3. Check for collisions with other objects at release point |
-| Can't throw object / no velocity on release | **Check:** Object must have a Rigidbody<br>**Then:** Verify Grab Strategy is **RigidBodyGrabStrategy**<br>**Solution:** Add Rigidbody component or check Grab Strategy setting |
+| Can't throw object / no velocity on release | **Check:** Object must have a Rigidbody and `Can Be Thrown` must be on<br>**Then:** Confirm the Rigidbody isn't kinematic by design (the throw is skipped on kinematic bodies)<br>**Solution:** Add Rigidbody component, enable `Can Be Thrown`, or unset `Is Kinematic` if the body should be physical |
+| Throws feel weak / too strong | Adjust the **Throw Multiplier** under the Throwing foldout. As a rule, tune the multiplier first (it scales launch velocity directly), then Rigidbody mass/drag (which affect post-throw flight) |
+| Throws feel laggy or jittery | Adjust **Velocity Sample Count**. Lower (3–5) for snappier throws, higher (12–15) for smoother ones |
+| Object spins too much when thrown | Lower the **Angular Velocity Multiplier**, or disable **Enable Angular Velocity** entirely for objects that should fly straight (darts, arrows) |
 | Wrong hand pose when grabbing | **Cause:** PoseConstrainer not configured for this object type<br>**Fix:** 1. Select the object 2. Find PoseConstrainer component 3. Set Target Pose Index to appropriate pose (0=Open, 1=Fist, etc.) |
 
 ---
@@ -417,6 +533,18 @@ public InteractorBase CurrentInteractor { get; }
 
 // Current interaction state
 public InteractionState CurrentState { get; }
+
+// Toggle throw behavior at runtime
+public bool CanBeThrown { get; set; }
+
+// Throw tracker (configure or subscribe to its OnThrowEnd)
+public Throwable Throwable { get; }
+```
+
+### Subscribe to Throws
+```csharp
+grabable.Throwable.OnThrowEnd
+    .AddListener(velocity => Debug.Log($"Thrown at {velocity.magnitude:F2} m/s"));
 ```
 
 ### Useful Methods
@@ -484,9 +612,20 @@ When you grab an object:
 
 ---
 
+## Migration from Previous Versions
+
+Earlier versions of this package shipped `Throwable` as a separate `MonoBehaviour`. It is now a `[Serializable]` plain class owned by `Grabable`.
+
+**If you have prefabs/scenes with the old `Throwable` component:**
+- The component will appear as "missing script" after upgrade
+- Remove it from the GameObject
+- The `Grabable` on the same GameObject already has throwing enabled by default — re-enter your tuned values (Throw Multiplier, Sample Count, etc.) under Grabable → Throwing
+- Any old `OnThrowEnd` event subscriptions need to be re-wired to `grabable.Throwable.OnThrowEnd`
+
+---
+
 ## Related Topics
 
-- [Throwable](Throwable.md) - Advanced throwing mechanics
 - [PoseConstrainer](../PoseSystem/PoseConstrainer.md) - Hand pose configuration
 - [Socket](../SocketSystem/SocketSystem.md) - Object placement and snapping
 - [Getting Started Guide](../GettingStarted/QuickStart.md) - Your first grabbable object
@@ -500,5 +639,5 @@ Found an issue with this documentation? Have a suggestion? *Submit feedback via 
 
 ---
 
-**Last Updated:** October 2025  
-**Component Version:** 1.0.0
+**Last Updated:** April 2026
+**Component Version:** 1.1.0 (throwing folded into Grabable)

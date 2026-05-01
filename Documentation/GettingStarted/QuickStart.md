@@ -253,7 +253,7 @@ Now let's create some more interesting interactions beyond simple grabbing.
 > You can quickly create ready-made interactables with placeholder models via the hierarchy context menu:
 > **Right-click in Hierarchy > Shababeek > Create > [Lever / Drawer / Joystick / Wheel / Button / Switch]**
 > The object is created as a child of whatever you have selected (or at the scene root if nothing is selected) at local position (0,0,0).
-> You can also convert existing objects: **Right-click > Shababeek > Make Into > [Grabable / Throwable / Lever / Drawer / Joystick / Wheel]**
+> You can also convert existing objects: **Right-click > Shababeek > Make Into > [Grabable / Lever / Drawer / Joystick / Wheel]**
 
 ### Step 8: Create a Lever
 
@@ -452,7 +452,7 @@ You've learned the fundamentals of the Shababeek Interaction System:
 
 ### Learn More Components
 - 📚 [Grabable](../Interactables/Grabable.md) — Deep dive into grabbable objects
-- 📚 [Throwable](../Interactables/Throwable.md) — Physics-based throwing
+- 📚 [Throwing settings](../Interactables/Grabable.md#4-throwing-) — Built into Grabable; tune throw physics
 - 📚 [Constrained Interactables](../Interactables/ConstrainedInteractables.md) — All constrained types
 - 📚 [Switch & VRButton](../Interactables/Switch.md) — Trigger-based interactions
 
