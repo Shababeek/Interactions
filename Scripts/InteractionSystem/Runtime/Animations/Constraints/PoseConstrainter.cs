@@ -223,16 +223,7 @@ namespace Shababeek.Interactions
             }
             return nearest;
         }
-        /// <summary>Updates hand pivot positions.</summary>
-        public void UpdatePivots()
-        {
-            // This method is no longer needed as pivotParent is removed
-        }
-
-        /// <summary>Initializes the pose constrainer.</summary>
-        public void Initialize()
-        {
-            UpdatePivots();
-        }
+  
+        
     }
 }

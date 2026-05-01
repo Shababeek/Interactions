@@ -28,9 +28,5 @@ namespace Shababeek.Interactions.Animations.Constraints
         /// <summary>Gets the speed of smooth transitions.</summary>
         float TransitionSpeed { get; }
 
-        /// <summary>Updates hand pivot positions.</summary>
-        void UpdatePivots();
-        /// <summary>Initializes the pose constrainer.</summary>
-        void Initialize();
     }
 }
