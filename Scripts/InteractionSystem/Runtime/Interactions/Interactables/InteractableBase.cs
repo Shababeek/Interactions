@@ -57,13 +57,13 @@ namespace Shababeek.Interactions
         [Tooltip("Indicates whether this interactable is currently being used (secondary button pressed).")]
         [SerializeField] [ReadOnly] private bool isUsing;
 
-        private PoseConstrainter _constrainter;
+        private PoseConstrainer _constrainter;
 
         private Collider[] colliders;
         private int[] collisionLayers;
         private int layer;
 
-        public PoseConstrainter Constrainter => _constrainter ??= GetComponent<PoseConstrainter>();
+        public PoseConstrainer Constrainter => _constrainter ??= GetComponent<PoseConstrainer>();
 
         // Scale compensation - prevents shearing during editor pose setup and runtime manipulation
         protected Transform _scaleCompensator;
@@ -159,7 +159,7 @@ namespace Shababeek.Interactions
             set => interactionHand = value;
         }
 
-        public PoseConstrainter this[HandIdentifier index] => Constrainter;
+        public PoseConstrainer this[HandIdentifier index] => Constrainter;
 
         protected virtual void Awake()
         {

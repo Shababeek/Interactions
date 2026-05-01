@@ -6,10 +6,10 @@ using UnityEngine;
 
 namespace Shababeek.Interactions.Editors
 {
-    [CustomEditor(typeof(PoseConstrainter))]
+    [CustomEditor(typeof(PoseConstrainer))]
     public class PoseConstrainerEditor : Editor
     {
-        private PoseConstrainter _constrainter;
+        private PoseConstrainer _constrainter;
         private SerializedProperty _constraintTypeProperty;
         private SerializedProperty _useSmoothTransitionsProperty;
         private SerializedProperty _transitionSpeedProperty;
@@ -33,7 +33,7 @@ namespace Shababeek.Interactions.Editors
 
         private void OnEnable()
         {
-            _constrainter = (PoseConstrainter)target;
+            _constrainter = (PoseConstrainer)target;
 
             _constraintTypeProperty = serializedObject.FindProperty("constraintType");
             _useSmoothTransitionsProperty = serializedObject.FindProperty("useSmoothTransitions");

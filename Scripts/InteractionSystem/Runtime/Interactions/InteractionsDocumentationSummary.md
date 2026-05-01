@@ -10,13 +10,10 @@ This document summarizes the current state of documentation for the Interactions
 - **InteractableBase.cs** - ✅ Fully documented with XML comments, tooltips, and headers
 
 ### Interactables
-- **Grabable.cs** - ✅ Fully documented with XML comments, tooltips, and headers
-- **GrabStrategy.cs** - ✅ Fully documented with XML comments for all public members
-- **RigidBodyGrabStrategy.cs** - ✅ Fully documented with XML comments for all public members
-- **TransformGrabStrategy.cs** - ✅ Fully documented with XML comments for all public members
+- **Grabable.cs** - ✅ Fully documented with XML comments, tooltips, and headers (kinematic + parenting now inlined; throwing is a serialized sub-feature)
 - **Switch.cs** - ✅ Fully documented with XML comments, tooltips, and headers
 - **VRButton.cs** - ✅ Already had good documentation
-- **Throwable.cs** - ✅ Already had good documentation
+- **Throwable.cs** - ✅ Plain `[Serializable]` class owned by Grabable
 
 ### Interactors
 - **InteractorBase.cs** - ✅ Fully documented with XML comments, tooltips, and headers

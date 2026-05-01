@@ -56,7 +56,7 @@ namespace Shababeek.Interactions
     
     /// <summary>Constrains hand poses during interactions.</summary>
     [AddComponentMenu("Shababeek/Interactions/Pose Constrainer")]
-    public class PoseConstrainter : MonoBehaviour, IPoseConstrainer
+    public class PoseConstrainer : MonoBehaviour, IPoseConstrainer
     {
         [Header("Constraint Configuration")]
         [Tooltip("The type of constraint to apply to hands during interaction.")]

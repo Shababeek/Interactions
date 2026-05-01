@@ -9,7 +9,7 @@ namespace Shababeek.Interactions
     /// Base class for interactables that use constrained hand poses during interaction.
     /// Manages fake hand creation, pose constraints, and smooth transitions.
     /// </summary>
-    [RequireComponent(typeof(PoseConstrainter))]
+    [RequireComponent(typeof(PoseConstrainer))]
     public abstract class ConstrainedInteractableBase : InteractableBase
     {
         [Tooltip("Transform representing the object that will be manipulated during interaction.")]
@@ -21,7 +21,7 @@ namespace Shababeek.Interactions
         [Tooltip("Speed at which the object returns to its original position.")]
         [SerializeField] protected float returnSpeed;
         protected bool IsReturning = false;
-        protected PoseConstrainter PoseConstrainer;
+        protected PoseConstrainer PoseConstrainer;
 
         private Hand _leftFakeHand;
         private Hand _rightFakeHand;
@@ -77,7 +77,7 @@ namespace Shababeek.Interactions
 
         protected override bool Select()
         {
-            if (!PoseConstrainer) PoseConstrainer = GetComponent<PoseConstrainter>();
+            if (!PoseConstrainer) PoseConstrainer = GetComponent<PoseConstrainer>();
             var handIdentifier = CurrentInteractor.HandIdentifier;
             Vector3 interactionPoint = CurrentInteractor.GetInteractionPoint();
 
@@ -194,20 +194,24 @@ namespace Shababeek.Interactions
             var fakeHand = Instantiate(handPrefab);
             fakeHand.ToggleColliders(false);
 
-            // Create a scale-compensation wrapper so the hand rotation isn't skewed
-            // by non-uniform parent scale. Position goes on the wrapper (in the parent's
-            // skewed space — fine for position), rotation goes on the hand (in the
-            // wrapper's uniform space — no shearing).
+            // Create a scale-compensation wrapper. Position goes on the wrapper (in the parent's
+            // skewed space — fine for position); rotation goes on the hand (in the wrapper's
+            // uniform space — no shearing).
+            //
+            // Compensation must be UNIFORM. A per-axis inverse only cancels the diagonal part of
+            // the parent's lossy scale; if the parent has non-uniform scale and any rotation in
+            // its ancestor chain (e.g. the rotating InteractableObject of a wheel/dial), the
+            // remaining shear stretches the fake hand. A uniform inverse based on the geometric
+            // mean produces a hand that's slightly off-size on non-uniform parents but never
+            // sheared. For uniform parents this is identical to the per-axis inverse.
             var wrapper = new GameObject($"FakeHandWrapper_{handIdentifier}").transform;
             wrapper.SetParent(InteractableObject, false);
             wrapper.localRotation = Quaternion.identity;
 
             var parentScale = InteractableObject.lossyScale;
-            wrapper.localScale = new Vector3(
-                1f / parentScale.x,
-                1f / parentScale.y,
-                1f / parentScale.z
-            );
+            float volume = Mathf.Abs(parentScale.x * parentScale.y * parentScale.z);
+            float uniformInverse = volume > 1e-6f ? 1f / Mathf.Pow(volume, 1f / 3f) : 1f;
+            wrapper.localScale = new Vector3(uniformInverse, uniformInverse, uniformInverse);
 
             var fakeHandTransform = fakeHand.transform;
             fakeHandTransform.SetParent(wrapper, false);

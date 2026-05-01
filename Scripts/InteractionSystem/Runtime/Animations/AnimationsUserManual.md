@@ -159,7 +159,7 @@ Represents a single hand pose with animation clips and type information.
 
 ## Constraint System
 
-### PoseConstrainter
+### PoseConstrainer
 
 Component that constrains hand poses during interactions, providing pose constraints, transform positioning, and hand visibility control.
 
@@ -188,7 +188,7 @@ Component that constrains hand poses during interactions, providing pose constra
 
 #### Usage
 
-1. Add the `PoseConstrainter` component to interactable objects
+1. Add the `PoseConstrainer` component to interactable objects
 2. Configure the constraint type and positioning data
 3. The system automatically applies constraints during interactions
 4. Use `ApplyConstraints()` and `RemoveConstraints()` methods
@@ -320,7 +320,7 @@ Mixes between two different states of a finger (open and closed).
 - Check console for initialization errors
 
 **Pose Constraints Not Working:**
-- Verify the PoseConstrainter component is attached
+- Verify the PoseConstrainer component is attached
 - Check that constraint types are properly configured
 - Ensure hand positioning data is set correctly
 - Verify that the Hand component is present

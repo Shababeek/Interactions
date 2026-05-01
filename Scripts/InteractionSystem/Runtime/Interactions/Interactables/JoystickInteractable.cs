@@ -16,6 +16,7 @@ namespace Shababeek.Interactions
     /// Joystick-style interactable that allows constrained rotation around X (pitch) and Z (yaw) axes.
     /// Uses plane projection for natural, intuitive joystick control with configurable angle limits.
     /// </summary>
+    [AddComponentMenu("Shababeek/Interactions/Interactables/Joystick")]
     public class JoystickInteractable : ConstrainedInteractableBase
     {
         [Header("Joystick Settings")]

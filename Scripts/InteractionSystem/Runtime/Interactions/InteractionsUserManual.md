@@ -101,13 +101,13 @@ A component that enables objects to be grabbed and held by VR hands. Manages the
 
 #### Required Components
 
-- **PoseConstrainter**: Manages hand positioning and constraints
+- **PoseConstrainer**: Manages hand positioning and constraints
 - **VariableTweener**: Handles smooth grab animations
 
 #### Usage
 
 1. Add the `Grabable` component to any object you want to be grabbable
-2. Ensure the object has a `PoseConstrainter` component
+2. Ensure the object has a `PoseConstrainer` component
 3. The system automatically handles grab/ungrab logic
 4. Use the `RightHandRelativePosition` and `LeftHandRelativePosition` properties to customize grab positions
 
@@ -285,33 +285,18 @@ A raycast-based interactor that can interact with objects at a distance.
 - **Max Distance**: Maximum raycast distance
 - **Layer Mask**: Layers to include in raycast
 
-## Grab Strategies
+## Grab Behavior
 
-### GrabStrategy
+Grabable handles its own attach/detach inline (the previous strategy abstraction was removed).
 
-Abstract base class for implementing different grab strategies.
+When a Grabable is selected:
+1. Pose constraints are applied to the interacting hand
+2. If a Rigidbody is present, its prior `isKinematic` state is cached and the body is forced kinematic (the original state is restored on release, so designer-set kinematic bodies stay kinematic)
+3. The attachment point is positioned relative to the configured hand target
+4. The object is tweened to the attachment point; on tween completion it is parented to the hand and its local transform is zeroed
+5. If `Can Be Thrown` is on and a Rigidbody is present, throw-velocity tracking begins
 
-#### Public Methods
-
-- **Initialize(InteractorBase)**: Sets up the strategy for a specific interactor
-- **Grab(Grabable, InteractorBase)**: Performs the grab action
-- **UnGrab(Grabable, InteractorBase)**: Performs the ungrab action
-
-### RigidBodyGrabStrategy
-
-Grab strategy for objects with Rigidbody components. Makes the rigidbody kinematic while grabbed.
-
-#### Usage
-
-Automatically selected when a Grabable object has a Rigidbody component.
-
-### TransformGrabStrategy
-
-Grab strategy for objects without Rigidbody components. Maintains exact position when released.
-
-#### Usage
-
-Automatically selected when a Grabable object has no Rigidbody component.
+When deselected: pose constraints are removed, the object is unparented, the rigidbody's kinematic state is restored, and the throw is applied (if enabled).
 
 ## Editor Tools
 
@@ -381,7 +366,7 @@ Custom editor for the LeverInteractable component that provides:
 
 **Object Not Grabbable:**
 - Ensure the object has a `Grabable` component
-- Check that it has a `PoseConstrainter` component
+- Check that it has a `PoseConstrainer` component
 - Verify the object has appropriate colliders
 
 **Events Not Firing:**

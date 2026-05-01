@@ -13,7 +13,7 @@ namespace Shababeek.Interactions.Tests
         public void SetUp()
         {
             var go = new GameObject("ConstrainedInteractable");
-            var poseConstrainter = go.AddComponent<TestPoseConstrainter>();
+            var poseConstrainter = go.AddComponent<TestPoseConstrainer>();
             _constrainedInteractable = go.AddComponent<TestConstrainedInteractable>();
         }
 
@@ -140,9 +140,9 @@ namespace Shababeek.Interactions.Tests
     }
 
     /// <summary>
-    /// Test implementation of PoseConstrainter for testing.
+    /// Test implementation of PoseConstrainer for testing.
     /// </summary>
-    public class TestPoseConstrainter : MonoBehaviour
+    public class TestPoseConstrainer : MonoBehaviour
     {
         public void ApplyConstraints(Hand hand, Vector3 interactionPoint)
         {

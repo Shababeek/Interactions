@@ -11,6 +11,7 @@ namespace Shababeek.Interactions
     /// Continuously rotatable up to a configured number of full rotations in each direction,
     /// returning smoothly to zero on release.
     /// </summary>
+    [AddComponentMenu("Shababeek/Interactions/Interactables/Wheel")]
     public class WheelInteractable : RotaryInteractableBase
     {
         [Header("Rotation Limits")]

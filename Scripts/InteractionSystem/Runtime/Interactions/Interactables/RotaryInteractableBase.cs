@@ -68,7 +68,7 @@ namespace Shababeek.Interactions
         protected virtual void Start()
         {
             _originalRotation = interactableObject.transform.localRotation;
-            PoseConstrainer = GetComponent<PoseConstrainter>();
+            PoseConstrainer = GetComponent<PoseConstrainer>();
         }
 
         protected override void HandleObjectMovement(Vector3 handWorldPosition)

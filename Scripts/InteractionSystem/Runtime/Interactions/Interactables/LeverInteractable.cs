@@ -9,6 +9,7 @@ namespace Shababeek.Interactions
     /// Lever-style interactable that rotates around a single axis with configurable limits.
     /// Provides smooth rotation control and normalized output values.
     /// </summary>
+    [AddComponentMenu("Shababeek/Interactions/Interactables/Lever")]
     public class LeverInteractable : ConstrainedInteractableBase
     {
         [Tooltip("The axis around which the lever rotates.")]
