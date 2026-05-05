@@ -27,8 +27,9 @@ Perfect for creating tools, weapons, toys, or any object your player needs to pi
 
 > **Goal:** Make a cube you can pick up and throw
 
-<!-- TODO: Add grabable-select-throw.gif -->
-*Grabable select and throw demonstration*
+![Grabable — grab, move, and throw](../Images/Grabable/grabable-select-throw.gif)
+
+*Selecting a grabbable object, moving it, and throwing.*
 
 This example shows a basic grabbable Object. The player can pick it up, move it around, and throw it. You'll learn the essential settings needed for any grabbable object.
 
@@ -257,8 +258,9 @@ This ordering matters: `UnGrab` must restore the kinematic state **before** the 
 ![ThrowableComponent.png](../Images/ThrowableComponent.png)
 #### ✅ Result
 
-<!-- TODO: Add grabable-playmode.gif -->
-*Grabable play mode demonstration*
+![Grabable — Play Mode pickup](../Images/Grabable/grabable-playmode.gif)
+
+*Play Mode: reaching and grabbing with the configured selection button.*
 
 Press Play! Put on your VR headset, reach for the cube, and press the **Grip** button. You can now move it around and throw it by releasing grip while moving your hand!
 
@@ -289,8 +291,9 @@ Press Play! Put on your VR headset, reach for the cube, and press the **Grip** b
 
 
 #### ✅ Result
-<!-- TODO: Add grabable-audio-feedback.png -->
-*Grabable audio feedback demonstration*
+![Grabable — grab/release wired to Audio Source](../Images/Grabable/grabable-audio-feedback.png)
+
+*Inspector or Play Mode view: audio feedback on grab and release.*
 
 Now your object plays a sound when grabbed and released!
 
@@ -341,8 +344,9 @@ Under the **Throwing** foldout on the Grabable:
 - **Velocity Sample Count:** 10 is a good default; lower for snappier throws
 
 #### ✅ Result
-<!-- TODO: Add grabable-throw-trail.gif -->
-*Grabable throw trail demonstration*
+![Grabable — thrown object with velocity](../Images/Grabable/grabable-throw-trail.gif)
+
+*Throwing with tracked hand velocity applied on release.*
 
 Your object now throws realistically. The Grabable averages your hand velocity over the last few FixedUpdate frames and applies it on release.
 
@@ -458,8 +462,9 @@ public class FlashlightToggle : MonoBehaviour
 
 
 #### ✅ Result
-<!-- TODO: Add grabable-flashlight-toggle.gif -->
-*Grabable flashlight toggle demonstration*
+![Grabable — use action toggling a flashlight](../Images/Grabable/grabable-flashlight-toggle.gif)
+
+*Held object: secondary button (use) toggling a light on/off.*
 
 Grab the flashlight (Grip), then press **Trigger** to turn it on/off!
 

@@ -57,8 +57,9 @@ Controls how hands behave during interaction.
 
 **Visual Example:**
 
-<!-- TODO: Add pose-mode-comparison.gif -->
-*Comparison of Constrained, FreeHand, and HideHand modes*
+![PoseConstrainer — constraint modes compared](../Images/Pose_Constrainer/pose-mode-comparison.gif)
+
+*Comparison of Constrained, FreeHand, and HideHand modes.*
 
 ---
 
@@ -220,8 +221,9 @@ Pinky:  Locked=true, Min=0.9 (tightly curled)
 3. Check if grip looks natural
 4. Adjust and repeat until satisfied
 
-<!-- TODO: Add pose-hammer-grip.gif -->
-*Example of a hammer power grip with tightly curled fingers*
+![PoseConstrainer — hammer power grip](../Images/Pose_Constrainer/pose-hammer-grip.gif)
+
+*Example hammer power grip with tightly curled fingers.*
 
 ✅ **Result:** A hammer with a natural-looking power grip!
 
@@ -243,8 +245,9 @@ Pinky:  Locked=true, Min=0.8 (curled)
 
 This creates a pose where the index finger stays extended while other fingers grip the object.
 
-<!-- TODO: Add pose-wand-pointing.png -->
-*Wand pointing pose example*
+![PoseConstrainer — wand pointing pose](../Images/Pose_Constrainer/pose-wand-pointing.png)
+
+*Wand-style pose with extended index finger.*
 
 ---
 
@@ -316,8 +319,9 @@ That's it! When the player grabs the orb, their hand model will become invisible
    - **10-15**: Natural, balanced (recommended)
    - **20+**: Quick, snappy grabs
 
-<!-- TODO: Add pose-grab-transition.gif -->
-*Smooth hand animation transitioning to grab position*
+![PoseConstrainer — smooth grab transition](../Images/Pose_Constrainer/pose-grab-transition.gif)
+
+*Smooth transition of the hand into the grab pose.*
 
 ---
 

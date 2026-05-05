@@ -39,8 +39,9 @@ The **Socket System** enables objects to snap into designated holders or positio
 
 > **Goal:** Create a flashlight holder
 
-<!-- TODO: Add socket-snap.gif -->
-*Animation showing object snapping into socket*
+![Socket — object snapping into holder](../Images/Socket_System/socket-snap.gif)
+
+*Object moves into a socket and snaps to the pivot.*
 
 1. Create mount → Add Socket component + Trigger collider
 2. Create flashlight → Add Socketable + Grabable
@@ -329,8 +330,9 @@ public class SocketPreview : MonoBehaviour
 }
 ```
 
-<!-- TODO: Add socket-ghost-preview.png -->
-*Semi-transparent ghost outline showing where object will snap*
+![Socket — ghost preview at snap position](../Images/Socket_System/socket-ghost-preview.png)
+
+*Semi-transparent ghost outline preview where the object will snap.*
 
 ---
 

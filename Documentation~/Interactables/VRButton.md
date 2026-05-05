@@ -29,8 +29,9 @@ The **VRButton** component creates a physical button that responds to trigger co
 
 > **Goal:** Create a button that plays a sound when pressed
 
-<!-- TODO: Add vrbutton-press.gif -->
-*VRButton Press animation showing button press and release cycle*
+![VRButton — press and release cycle](../Images/VR_Button/vrbutton-press.gif)
+
+*VRButton press animation: button press and release cycle.*
 
 1. Create a button model with a pressable cap
 2. Add VRButton component

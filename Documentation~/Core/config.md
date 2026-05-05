@@ -104,8 +104,9 @@ Layers prevent unwanted collisions (like hands colliding with themselves), this 
  -  LeftHand cannot collide with LeftHand
  -  RightHand cannot collide with RightHand
 
-<!-- TODO: Add PhysicsLayerMatrix.png -->
-*Physics Layer Matrix configuration*
+![Physics Layer Collision Matrix](../Images/Core/PhysicsLayerMatrix.png)
+
+*Physics Layer Matrix: hands, interactables, and player layers configured for VR.*
 
 **Note:** The Setup Wizard can configure this automatically!
 

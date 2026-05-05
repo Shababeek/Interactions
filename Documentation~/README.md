@@ -129,15 +129,15 @@ Each component manual follows a consistent structure:
 5. **Troubleshooting** — Common issues and solutions
 6. **Scripting API** — Code examples (brief)
 
-### Missing Images
-Throughout the documentation, missing images are marked with HTML comments like:
+### Figures (screenshots & GIFs)
+Manuals reference images under **`Images/`** using Markdown:
 
-```
-<!-- TODO: Add filename.gif -->
-*Description of needed image*
+```markdown
+![Short description](Images/General/documentation-example.png)
+*Optional caption below the image.*
 ```
 
-See [ImagesTodo.md](ImagesTodo.md) for a complete tracking list of all needed images and their current status.
+Paths are relative to the markdown file (subfolders use `../Images/...`). Assets that are not in the repo yet are listed in **[ImagesTodo.md](ImagesTodo.md)**—add the file there and remove the row once the PNG or GIF is committed.
 
 ---
 

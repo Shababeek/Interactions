@@ -38,8 +38,9 @@ The **Feedback System** provides unified feedback management for interactions. I
 
 > **Goal:** Object highlights when hovered and vibrates when grabbed
 
-<!-- TODO: Add feedback-highlight-haptic.gif -->
-*Object highlights when hovered and vibrates when grabbed*
+![FeedbackSystem — hover highlight and grab haptics](../Images/Feedback_System/feedback-highlight-haptic.gif)
+
+*Material highlight on hover and haptic pulse on grab.*
 
 1. Add Feedback System to any interactable
 2. Add Material Feedback → Configure hover color
@@ -49,8 +50,9 @@ The **Feedback System** provides unified feedback management for interactions. I
 
 ## Inspector Reference
 
-<!-- TODO: Add feedback-inspector-expanded.png -->
-*Expanded feedback system inspector showing all feedback types*
+![FeedbackSystem — Inspector with multiple feedback entries](../Images/Feedback_System/feedback-inspector-expanded.png)
+
+*Feedback System component expanded with several feedback types configured.*
 
 ### Feedback Configuration
 

@@ -25,8 +25,9 @@
 > **Goal:** Create a container for player stats with variables and events
 > **Time:** ~3 minutes
 
-<!-- TODO: Add variable-container-create.gif -->
-*Creating a variable container and adding variables with default values*
+![Variable Container — create asset and add variables](../Images/Scriptable_System/variable-container-create.gif)
+
+*Creating a Variable Container asset and adding variables with default values.*
 
 1. **Create the Container:**
    - Right-click in Project > **Create > Shababeek > Scriptable System > Variables > Variable Container**
@@ -72,8 +73,9 @@
 
 ## Inspector Reference
 
-<!-- TODO: Add variable-container-inspector.png -->
-*Variable container inspector showing variables and events sections*
+![Variable Container — Inspector](../Images/Scriptable_System/variable-container-inspector.png)
+
+*Variable Container Inspector: variables list and events section.*
 
 ### Variables Section
 
