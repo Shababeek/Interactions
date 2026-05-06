@@ -1,5 +1,6 @@
 using Shababeek.Interactions;
 using Shababeek.Interactions.Core;
+using TMPro;
 using UnityEditor;
 using UnityEngine;
 using System.Linq;
@@ -540,9 +541,34 @@ namespace Shababeek.Interactions.Editors
             buttonObject.localScale = new Vector3(ButtonScale, ButtonHeight, ButtonScale);
             buttonObject.localPosition = Vector3.up * ButtonYOffset;
 
+            // Apply red material to the button cylinder
+            var renderer = buttonObject.GetComponent<Renderer>();
+            if (renderer != null)
+            {
+                var mat = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+                mat.color = new Color(0.8f, 0.15f, 0.15f);
+                renderer.sharedMaterial = mat;
+            }
+
+            // Create label
+            var labelGo = new GameObject("Label");
+            labelGo.transform.parent = buttonBody;
+            labelGo.transform.localPosition = new Vector3(0, ButtonYOffset + ButtonHeight + 0.1f, 0);
+            labelGo.transform.localRotation = Quaternion.Euler(90, 0, 0);
+            var tmp = labelGo.AddComponent<TextMeshPro>();
+            tmp.text = "Button";
+            tmp.fontSize = 3;
+            tmp.alignment = TextAlignmentOptions.Center;
+            tmp.rectTransform.sizeDelta = new Vector2(2f, 0.5f);
+
             // Add the VRButton component
             var button = buttonBody.gameObject.AddComponent<VRButton>();
             button.Button = buttonObject.transform;
+
+            // Assign label via serialized field
+            var so = new SerializedObject(button);
+            so.FindProperty("labelText").objectReferenceValue = tmp;
+            so.ApplyModifiedPropertiesWithoutUndo();
 
             // Scale the button body
             buttonBody.localScale = Vector3.one * ButtonBodyScale;

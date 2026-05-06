@@ -5,7 +5,8 @@
         "UniRx",
         "Unity.InputSystem",
         "Unity.XR.Hands",
-        "Shababeek.ReactiveVars"
+        "Shababeek.ReactiveVars",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
