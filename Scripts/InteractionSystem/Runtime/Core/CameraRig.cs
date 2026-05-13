@@ -123,11 +123,12 @@ namespace Shababeek.Interactions.Core
 
         private async void OnEnable()
         {
-
             ApplyCameraHeight();
-            SubscribeToTrackingEvents();
-            await Awaitable.NextFrameAsync();
-            RecenterCameraToRig();
+            await SubscribeToTrackingEventsWhenReady();
+            if (this == null || !isActiveAndEnabled) return;
+            await WaitForActiveHeadTracking();
+            if (this == null || !isActiveAndEnabled) return;
+            ApplyInitialTrackingAlignment();
         }
 
         private void OnDisable()
@@ -162,12 +163,24 @@ namespace Shababeek.Interactions.Core
 
         #region XR Tracking
 
-        private void SubscribeToTrackingEvents()
+        private async Awaitable SubscribeToTrackingEventsWhenReady()
         {
+            const int maxFramesToWait = 600;
             var subsystems = new List<XRInputSubsystem>();
-            SubsystemManager.GetSubsystems(subsystems);
+
+            for (int frame = 0; frame < maxFramesToWait; frame++)
+            {
+                subsystems.Clear();
+                SubsystemManager.GetSubsystems(subsystems);
+                if (subsystems.Count > 0) break;
+
+                await Awaitable.NextFrameAsync();
+                if (this == null || !isActiveAndEnabled) return;
+            }
+
             foreach (var subsystem in subsystems)
             {
+                subsystem.trackingOriginUpdated -= OnTrackingOriginUpdated;
                 subsystem.trackingOriginUpdated += OnTrackingOriginUpdated;
             }
         }
@@ -182,13 +195,37 @@ namespace Shababeek.Interactions.Core
             }
         }
 
+        private async Awaitable WaitForActiveHeadTracking()
+        {
+            const int maxFramesToWait = 240;
+            var nodeStates = new List<XRNodeState>();
+
+            for (int frame = 0; frame < maxFramesToWait; frame++)
+            {
+                InputTracking.GetNodeStates(nodeStates);
+                foreach (var state in nodeStates)
+                {
+                    if ((state.nodeType == XRNode.CenterEye || state.nodeType == XRNode.Head) && state.tracked)
+                        return;
+                }
+
+                await Awaitable.NextFrameAsync();
+                if (this == null || !isActiveAndEnabled) return;
+            }
+        }
+
         private async void OnTrackingOriginUpdated(XRInputSubsystem subsystem)
         {
             await Awaitable.NextFrameAsync();
             await Awaitable.NextFrameAsync();
+            if (this == null || !isActiveAndEnabled) return;
+            ApplyInitialTrackingAlignment();
+        }
+
+        private void ApplyInitialTrackingAlignment()
+        {
             if (xrCamera == null || offsetObject == null) return;
 
-            // Step 1: Align rig forward direction (only once if enabled)
             if (!_trackingInitialized && alignRigForwardOnTracking)
             {
                 Vector3 cameraForward = xrCamera.transform.forward;
