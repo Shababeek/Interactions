@@ -77,13 +77,7 @@ namespace Shababeek.Interactions.Core
             {
                 InputSystem.onDeviceChange -= OnDeviceChange;
             }
-
-            // Disable actions
-            _thumbAction?.Disable();
-            _indexAction?.Disable();
-            _middleAction?.Disable();
-            _ringAction?.Disable();
-            _pinkyAction?.Disable();
+            
         }
 
         protected override void UpdateFingerValues()
