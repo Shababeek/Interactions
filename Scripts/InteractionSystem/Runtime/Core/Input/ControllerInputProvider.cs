@@ -19,15 +19,15 @@ namespace Shababeek.Interactions.Core
         [SerializeField] private bool useDeviceDetection = true;
 
         [Tooltip("Input action for thumb curl value.")]
-        [SerializeField]private InputAction _thumbAction;
+        [SerializeField]private InputAction thumbAction;
         [Tooltip("Input action for index finger curl value.")]
-        [SerializeField]private InputAction _indexAction;
+        [SerializeField]private InputAction indexAction;
         [Tooltip("Input action for middle finger curl value.")]
-        [SerializeField]private InputAction _middleAction;
+        [SerializeField]private InputAction middleAction;
         [Tooltip("Input action for ring finger curl value.")]
-        [SerializeField]private InputAction _ringAction;
+        [SerializeField]private InputAction ringAction;
         [Tooltip("Input action for pinky finger curl value.")]
-        [SerializeField]private InputAction _pinkyAction;
+        [SerializeField]private InputAction pinkyAction;
 
         private bool _controllerConnected = false;
         private XRController _controllerDevice;
@@ -53,11 +53,11 @@ namespace Shababeek.Interactions.Core
             base.OnEnable();
 
             // Enable actions if they exist
-            _thumbAction?.Enable();
-            _indexAction?.Enable();
-            _middleAction?.Enable();
-            _ringAction?.Enable();
-            _pinkyAction?.Enable();
+            thumbAction?.Enable();
+            indexAction?.Enable();
+            middleAction?.Enable();
+            ringAction?.Enable();
+            pinkyAction?.Enable();
 
             // Subscribe to device changes
             if (useDeviceDetection)
@@ -79,11 +79,11 @@ namespace Shababeek.Interactions.Core
             }
 
             // Disable actions
-            _thumbAction?.Disable();
-            _indexAction?.Disable();
-            _middleAction?.Disable();
-            _ringAction?.Disable();
-            _pinkyAction?.Disable();
+            thumbAction?.Disable();
+            indexAction?.Disable();
+            middleAction?.Disable();
+            ringAction?.Disable();
+            pinkyAction?.Disable();
         }
 
         protected override void UpdateFingerValues()
@@ -99,11 +99,11 @@ namespace Shababeek.Interactions.Core
             }
             
             // Read values from Input System actions
-            this[FingerName.Thumb] = _thumbAction?.ReadValue<float>() ?? 0f;
-            this[FingerName.Index] = _indexAction?.ReadValue<float>() ?? 0f;
-            this[FingerName.Middle] = _middleAction?.ReadValue<float>() ?? 0f;
-            this[FingerName.Ring] = _ringAction?.ReadValue<float>() ?? 0f;
-            this[FingerName.Pinky] = _pinkyAction?.ReadValue<float>() ?? 0f;
+            this[FingerName.Thumb] = thumbAction?.ReadValue<float>() ?? 0.5f;
+            this[FingerName.Index] = indexAction?.ReadValue<float>() ?? 0.5f;
+            this[FingerName.Middle] = middleAction?.ReadValue<float>() ?? 0.5f;
+            this[FingerName.Ring] = ringAction?.ReadValue<float>() ?? 0.5f;
+            this[FingerName.Pinky] = pinkyAction?.ReadValue<float>() ?? 0.5f;
             
             // Update position, rotation, and tracking state
             if (_controllerDevice != null)
@@ -228,20 +228,20 @@ namespace Shababeek.Interactions.Core
         public void Initialize(Config.HandInputActions actions)
         {
             // Get actions from config
-            _thumbAction = actions.ThumbAction;
-            _indexAction = actions.IndexAction;
-            _middleAction = actions.MiddleAction;
-            _ringAction = actions.RingAction;
-            _pinkyAction = actions.PinkyAction;
+            thumbAction = actions.ThumbAction;
+            indexAction = actions.IndexAction;
+            middleAction = actions.MiddleAction;
+            ringAction = actions.RingAction;
+            pinkyAction = actions.PinkyAction;
 
             // Enable actions if component is already enabled
             if (enabled)
             {
-                _thumbAction?.Enable();
-                _indexAction?.Enable();
-                _middleAction?.Enable();
-                _ringAction?.Enable();
-                _pinkyAction?.Enable();
+                thumbAction?.Enable();
+                indexAction?.Enable();
+                middleAction?.Enable();
+                ringAction?.Enable();
+                pinkyAction?.Enable();
             }
         }
 
