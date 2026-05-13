@@ -67,10 +67,10 @@ namespace Shababeek.Interactions.Core
         /// </summary>
         public float this[int fingerIndex]
         {
-            get => fingerIndex >= 0 && fingerIndex < 5 ? _fingers[fingerIndex] : 0f;
+            get => fingerIndex is >= 0 and < 5 ? _fingers[fingerIndex] : 0f;
             private set
             {
-                if (fingerIndex >= 0 && fingerIndex < 5)
+                if (fingerIndex is >= 0 and < 5)
                     _fingers[fingerIndex] = Mathf.Clamp01(value);
             }
         }
