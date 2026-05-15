@@ -196,6 +196,7 @@ namespace Shababeek.Interactions
             DisposeActivationSubscription();
             DisposeHoverSubscription();
             DisposeThumbSubscription();
+            if (currentInteractable == null) return;
             currentInteractable.OnStateChanged(InteractionState.None, this);
             StartHover();
             EndHover();
@@ -317,6 +318,14 @@ namespace Shababeek.Interactions
         {
             Selection,
             Activation
+        }
+
+        private void OnDisable()
+        {
+            if (currentInteractable != null)
+            {
+                Release(currentInteractable);
+            }
         }
 
         private void OnDestroy()

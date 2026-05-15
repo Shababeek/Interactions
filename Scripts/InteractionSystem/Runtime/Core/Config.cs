@@ -72,44 +72,42 @@ namespace Shababeek.Interactions.Core
         [Tooltip("Angular damping for hand physics. Higher values reduce hand rotation more quickly.")] [SerializeField]
         private float angularDamping = 1f;
 
-        [Header("Hand Input Providers")] [Tooltip("Input provider for the left hand.")] [SerializeField]
+        [Header("Hand Input Providers (Optional Override)")]
+        [Tooltip("Optional manual override for the left hand input provider. Leave empty to auto-create one shared provider at runtime based on InputType.")]
+        [SerializeField]
         private MonoBehaviour leftHandInputProvider;
 
-        [Tooltip("Input provider for the right hand.")] [SerializeField]
+        [Tooltip("Optional manual override for the right hand input provider. Leave empty to auto-create one shared provider at runtime based on InputType.")]
+        [SerializeField]
         private MonoBehaviour rightHandInputProvider;
 
         private IHandInputProvider _leftProvider;
         private IHandInputProvider _rightProvider;
+        private GameObject _runtimeProviderHost;
         #region Public Properties
 
         /// <summary>
-        /// Gets the input provider for the left hand.
+        /// Gets the shared input provider for the left hand. Auto-created on first access at runtime
+        /// if no manual override is assigned. A single provider is shared across all rigs.
         /// </summary>
         public IHandInputProvider LeftHandProvider
         {
             get
             {
-                if (_leftProvider == null && leftHandInputProvider != null)
-                {
-                    _leftProvider = leftHandInputProvider as IHandInputProvider;
-                }
-
+                _leftProvider = ResolveProvider(HandIdentifier.Left, _leftProvider, leftHandInputProvider, leftHandActions);
                 return _leftProvider;
             }
         }
 
         /// <summary>
-        /// Gets the input provider for the right hand.
+        /// Gets the shared input provider for the right hand. Auto-created on first access at runtime
+        /// if no manual override is assigned. A single provider is shared across all rigs.
         /// </summary>
         public IHandInputProvider RightHandProvider
         {
             get
             {
-                if (_rightProvider == null && rightHandInputProvider != null)
-                {
-                    _rightProvider = rightHandInputProvider as IHandInputProvider;
-                }
-
+                _rightProvider = ResolveProvider(HandIdentifier.Right, _rightProvider, rightHandInputProvider, rightHandActions);
                 return _rightProvider;
             }
         }
@@ -197,21 +195,72 @@ namespace Shababeek.Interactions.Core
             };
 
         #region Public Methods
-        /// <summary>Sets the input provider for a specific hand at runtime.</summary>
+        /// <summary>Sets the input provider for a specific hand at runtime, overriding the auto-created shared provider.</summary>
         public void SetHandProvider(HandIdentifier hand, IHandInputProvider provider)
-{
-    if (hand == HandIdentifier.Left)
-    {
-        leftHandInputProvider = provider as MonoBehaviour;
-        _leftProvider = provider;
-    }
-    else
-    {
-        rightHandInputProvider = provider as MonoBehaviour;
-        _rightProvider = provider;
-    }
-}
-#endregion
+        {
+            if (hand == HandIdentifier.Left)
+            {
+                leftHandInputProvider = provider as MonoBehaviour;
+                _leftProvider = provider;
+            }
+            else
+            {
+                rightHandInputProvider = provider as MonoBehaviour;
+                _rightProvider = provider;
+            }
+        }
+        #endregion
+
+        #region Provider Lifecycle
+
+        private IHandInputProvider ResolveProvider(HandIdentifier hand, IHandInputProvider cached, MonoBehaviour serializedOverride, HandInputActions actions)
+        {
+            if (serializedOverride != null && serializedOverride is IHandInputProvider serializedProvider)
+                return serializedProvider;
+
+            if (cached != null && (cached as MonoBehaviour) != null)
+                return cached;
+
+            return Application.isPlaying ? CreateProviderOnHost(hand, actions) : null;
+        }
+
+        private IHandInputProvider CreateProviderOnHost(HandIdentifier hand, HandInputActions actions)
+        {
+            var host = GetOrCreateProviderHost();
+            if (host == null) return null;
+
+            switch (inputType)
+            {
+                case TrackingType.ControllerTracking:
+                    var controller = host.AddComponent<ControllerInputProvider>();
+                    controller.Handedness = hand;
+                    controller.Initialize(actions);
+                    return controller;
+#if XR_HANDS_AVAILABLE
+                case TrackingType.HandTracking:
+                    var handTracking = host.AddComponent<HandTrackingInputProvider>();
+                    handTracking.Handedness = hand;
+                    return handTracking;
+#endif
+                default:
+                    var fallback = host.AddComponent<ControllerInputProvider>();
+                    fallback.Handedness = hand;
+                    fallback.Initialize(actions);
+                    return fallback;
+            }
+        }
+
+        private GameObject GetOrCreateProviderHost()
+        {
+            if (_runtimeProviderHost != null) return _runtimeProviderHost;
+
+            _runtimeProviderHost = new GameObject($"[Shababeek] {name} Input Providers");
+            _runtimeProviderHost.hideFlags = HideFlags.DontSave;
+            UnityEngine.Object.DontDestroyOnLoad(_runtimeProviderHost);
+            return _runtimeProviderHost;
+        }
+
+        #endregion
         #region Nested Types
 
         /// <summary>

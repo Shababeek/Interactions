@@ -133,7 +133,7 @@ namespace Shababeek.Interactions.Animations
         /// <summary>All poses built from HandData.</summary>
         public List<IPose> Poses => _poses;
 
-        public void Start()
+        public void OnEnable()
         {
             Initialize();
         }

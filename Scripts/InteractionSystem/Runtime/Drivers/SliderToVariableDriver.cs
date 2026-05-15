@@ -48,7 +48,7 @@ namespace Shababeek.Interactions
 
         private void OnStepChangedHandler(int step)
         {
-            if (stepVariable != null) stepVariable.Value = step;
+            if (stepVariable) stepVariable.Value = step;
             onStepChangedEvent?.Raise();
         }
 

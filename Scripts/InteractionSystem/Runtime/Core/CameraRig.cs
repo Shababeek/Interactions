@@ -258,39 +258,6 @@ namespace Shababeek.Interactions.Core
             offsetObject.localPosition = targetCameraPosInRigSpace - cameraLocalPos;
         }
 
-        private IHandInputProvider SetupHandProviders(Transform handPivot, HandIdentifier hand)
-        {
-            var inputActions = hand == HandIdentifier.Left ? config.LeftHandActions : config.RightHandActions;
-            var trackingType = config.InputType;
-
-            // Create provider based on tracking type
-            switch (trackingType)
-            {
-
-                case Config.TrackingType.ControllerTracking:
-                    // Create only controller provider
-                    var controllerOnly = handPivot.gameObject.AddComponent<ControllerInputProvider>();
-                    controllerOnly.Handedness = hand;
-                    controllerOnly.Initialize(inputActions);
-                    return controllerOnly;
-
-#if XR_HANDS_AVAILABLE
-                case Config.TrackingType.HandTracking:
-                    // Create only hand tracking provider
-                    var handTrackingOnly = handPivot.gameObject.AddComponent<HandTrackingInputProvider>();
-                    handTrackingOnly.Handedness = hand;
-                    return handTrackingOnly;
-#endif
-
-                default:
-                    // Fallback to controller if unknown
-                    var fallbackController = handPivot.gameObject.AddComponent<ControllerInputProvider>();
-                    fallbackController.Handedness = hand;
-                    fallbackController.Initialize(inputActions);
-                    return fallbackController;
-            }
-        }
-
         #endregion
 
         #region Layer Management
@@ -382,16 +349,16 @@ namespace Shababeek.Interactions.Core
         private void InitializeHands()
         {
             if (config?.HandData == null) return;
-            var leftProvider = SetupHandProviders(leftHandPivot, HandIdentifier.Left);
-            var rightProvider = SetupHandProviders(rightHandPivot, HandIdentifier.Right);
 
-            // Assign to config
-            config.SetHandProvider(HandIdentifier.Left, leftProvider);
-            config.SetHandProvider(HandIdentifier.Right, rightProvider);
+            // Provider ownership lives on the Config asset, not on the rig. Touching these
+            // properties forces lazy creation of a single shared provider per hand on the
+            // Config's runtime host GameObject, so multiple rigs reuse the same providers.
+            _ = config.LeftHandProvider;
+            _ = config.RightHandProvider;
+
             _leftPoseController = InitializeHand(LeftHandPrefab, leftHandPivot, HandIdentifier.Left, leftHandInteractorType);
             _rightPoseController = InitializeHand(RightHandPrefab, rightHandPivot, HandIdentifier.Right, rightHandInteractorType);
 
-            // Initialize hand pivot updater
             InitializeHandPivotUpdater();
         }
 

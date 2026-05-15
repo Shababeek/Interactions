@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Shababeek.ReactiveVars;
 using UniRx;
 using UnityEngine;
@@ -39,8 +40,10 @@ namespace Shababeek.Interactions
 
             _disposable = new CompositeDisposable();
             OnRotationChanged(joystick.NormalizedRotation);
+            
             joystick.OnRotationChanged
-                .Subscribe(OnRotationChanged)
+                .Do(OnRotationChanged)
+                .Subscribe()
                 .AddTo(_disposable);
         }
 

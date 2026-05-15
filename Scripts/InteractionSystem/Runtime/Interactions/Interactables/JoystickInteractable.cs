@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using Shababeek.Interactions.Core;
 using Shababeek.ReactiveVars;
 using UniRx;
 

@@ -60,7 +60,7 @@ namespace Shababeek.Interactions
         [SerializeField] private float coolDownTime = .2f;
 
         [Tooltip("Name substring to identify the pressing collider.")]
-        [SerializeField] private string maskName = "tip";
+        [SerializeField] private string maskName = "";
 
         [Header("Label")]
         [Tooltip("Text mesh used to display the button label.")]
