@@ -25,7 +25,7 @@ namespace Shababeek.Interactions
         [SerializeField] private float distanceCheckInterval = 0.05f;
 
         [Tooltip("Array of colliders found by the detection sphere.")]
-        [ReadOnly] [SerializeField] private Collider[] overlapResults = new Collider[10];
+        [ReadOnly] [SerializeField] private Collider[] overlapResults = new Collider[20];
         private float _timeSinceLastColliderUpdate = 0;                                    
 
         private void Update()
@@ -61,6 +61,7 @@ namespace Shababeek.Interactions
                 var col = overlapResults[i];
                 var interactable = col.GetComponentInParent<InteractableBase>();
                 if (interactable == null || !interactable.CanInteract(Hand)) continue;
+                //if (interactable.CurrentInteractor!= null && interactable.CurrentInteractor != this) continue;;
                 var distance = Vector3.SqrMagnitude(detectionCenter - GetInteractionPoint(interactable));
                 if (distance < closestDistance)
                 {
