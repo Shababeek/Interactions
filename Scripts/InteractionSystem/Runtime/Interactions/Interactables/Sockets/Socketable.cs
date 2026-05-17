@@ -396,6 +396,7 @@ namespace Shababeek.Interactions
         {
             if (isSocketed && socket != null)
             {
+                _lastSocket = null;
                 socket.Remove(this);
             }
 
