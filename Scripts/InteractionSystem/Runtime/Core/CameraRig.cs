@@ -1,7 +1,8 @@
 using Shababeek.Interactions.Animations;
+using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.XR;
-using System.Collections.Generic;
 
 namespace Shababeek.Interactions.Core
 {
@@ -57,6 +58,13 @@ namespace Shababeek.Interactions.Core
         [Tooltip("Whether to align the rig's forward direction with the tracking origin on initialization.")]
         [SerializeField] private bool alignRigForwardOnTracking = true;
 
+        [Header("Eyelid Effect")]
+        [Tooltip("Eyelid overlay effect used for blink transitions between steps.")]
+        [SerializeField] private EyelidEffect eyelidEffect;
+
+        [Tooltip("Duration in seconds for a single close or open transition.")]
+        [SerializeField] private float eyelidTransitionDuration = 2f;
+
         [Header("Layer Management")]
         [Tooltip("Whether to automatically initialize layers for the camera rig and hands on startup.")]
         [SerializeField][HideInInspector] private bool initializeLayers = true;
@@ -110,6 +118,32 @@ namespace Shababeek.Interactions.Core
 
         #endregion
 
+        #region Eyelid Control
+
+        /// <summary>Snap lids fully closed (no animation).</summary>
+        public void CloseLids() => eyelidEffect?.SetClosed();
+
+        /// <summary>Snap lids fully open (no animation).</summary>
+        public void OpenLids() => eyelidEffect?.SetOpen();
+
+        /// <summary>Animate lids closed to hide the scene.</summary>
+        public async Awaitable BlinkIn(CancellationToken cancellationToken = default)
+        {
+            if (eyelidEffect == null) return;
+            eyelidEffect.Close(eyelidTransitionDuration);
+            await Awaitable.WaitForSecondsAsync(eyelidTransitionDuration, cancellationToken);
+        }
+
+        /// <summary>Animate lids open to reveal the scene.</summary>
+        public async Awaitable BlinkOut(CancellationToken cancellationToken = default)
+        {
+            if (eyelidEffect == null) return;
+            eyelidEffect.Open(eyelidTransitionDuration);
+            await Awaitable.WaitForSecondsAsync(eyelidTransitionDuration, cancellationToken);
+        }
+
+        #endregion
+
         #region Unity Lifecycle
 
         private void Awake()
@@ -123,6 +157,7 @@ namespace Shababeek.Interactions.Core
 
         private async void OnEnable()
         {
+            eyelidEffect?.SetClosed();
             ApplyCameraHeight();
             await SubscribeToTrackingEventsWhenReady();
             if (this == null || !isActiveAndEnabled) return;

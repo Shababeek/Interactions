@@ -24,6 +24,8 @@ namespace Shababeek.Interactions.Editors
         private SerializedProperty alignRigForwardOnTrackingProp;
         private SerializedProperty initializeLayersProp;
         private SerializedProperty customLayerAssignmentsProp;
+        private SerializedProperty eyelidEffectProp;
+        private SerializedProperty eyelidTransitionDurationProp;
 
         private void OnEnable()
         {
@@ -43,11 +45,19 @@ namespace Shababeek.Interactions.Editors
             alignRigForwardOnTrackingProp = serializedObject.FindProperty("alignRigForwardOnTracking");
             initializeLayersProp = serializedObject.FindProperty("initializeLayers");
             customLayerAssignmentsProp = serializedObject.FindProperty("customLayerAssignments");
+            eyelidEffectProp = serializedObject.FindProperty("eyelidEffect");
+            eyelidTransitionDurationProp = serializedObject.FindProperty("eyelidTransitionDuration");
         }
 
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
+
+            if (eyelidEffectProp == null || eyelidTransitionDurationProp == null)
+            {
+                eyelidEffectProp = serializedObject.FindProperty("eyelidEffect");
+                eyelidTransitionDurationProp = serializedObject.FindProperty("eyelidTransitionDuration");
+            }
             
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Camera Rig Configuration", EditorStyles.boldLabel);
@@ -104,7 +114,42 @@ namespace Shababeek.Interactions.Editors
             EditorGUILayout.PropertyField(alignRigForwardOnTrackingProp, new GUIContent("Align Rig Forward", "If true, aligns the rig's forward direction with tracking"));
             
             EditorGUILayout.Space();
-            
+
+            // Eyelid Effect Section
+            EditorGUILayout.LabelField("Eyelid Effect", EditorStyles.boldLabel);
+            var effectProp     = serializedObject.FindProperty("eyelidEffect");
+            var transitionProp = serializedObject.FindProperty("eyelidTransitionDuration");
+
+            if (effectProp != null)
+            {
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.PrefixLabel("Effect");
+                effectProp.objectReferenceValue = EditorGUILayout.ObjectField(effectProp.objectReferenceValue, typeof(EyelidEffect), true);
+                if (GUILayout.Button("Find", GUILayout.Width(40)))
+                {
+                    var found = rig.GetComponentInChildren<EyelidEffect>(true);
+                    if (found != null)
+                    {
+                        effectProp.objectReferenceValue = found;
+                        serializedObject.ApplyModifiedProperties();
+                    }
+                    else
+                    {
+                        EditorUtility.DisplayDialog("Not Found", "No EyelidEffect found in children.", "OK");
+                    }
+                }
+                EditorGUILayout.EndHorizontal();
+            }
+            if (transitionProp != null)
+                EditorGUILayout.PropertyField(transitionProp, new GUIContent("Transition Duration", "Seconds for a single close or open animation"));
+
+            if (effectProp == null || transitionProp == null)
+                EditorGUILayout.HelpBox("Eyelid fields not found — ensure CameraRig has recompiled.", MessageType.Error);
+            else if (effectProp.objectReferenceValue == null)
+                EditorGUILayout.HelpBox("Assign an EyelidEffect component to enable blink transitions.", MessageType.Info);
+
+            EditorGUILayout.Space();
+
             // Layer Management Section
             EditorGUILayout.LabelField("Layer Management", EditorStyles.boldLabel);
             EditorGUILayout.PropertyField(initializeLayersProp, new GUIContent("Initialize Layers", "If true, automatically assigns layers to camera rig and hands"));
@@ -161,7 +206,13 @@ namespace Shababeek.Interactions.Editors
                 hasWarnings = true;
                 warningMessage += "• XR Camera is not assigned\n";
             }
-            
+
+            if (eyelidEffectProp != null && eyelidEffectProp.objectReferenceValue == null)
+            {
+                hasWarnings = true;
+                warningMessage += "• Eyelid Effect is not assigned (blink transitions disabled)\n";
+            }
+
             if (hasWarnings)
             {
                 EditorGUILayout.HelpBox("Setup Issues:\n" + warningMessage, MessageType.Warning);
