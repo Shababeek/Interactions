@@ -1,6 +1,7 @@
 using Shababeek.Interactions.Animations;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.XR;
 
@@ -155,14 +156,22 @@ namespace Shababeek.Interactions.Core
             InitializeLayers();
         }
 
-        private async void OnEnable()
+        private  void OnEnable()
         {
             eyelidEffect?.SetClosed();
-            ApplyCameraHeight();
+            _= HandleRigPositionUpdate();
+        }
+
+        private async Awaitable HandleRigPositionUpdate()
+        {
             await SubscribeToTrackingEventsWhenReady();
-            if (this == null || !isActiveAndEnabled) return;
+            await Awaitable.NextFrameAsync();
+            await Awaitable.NextFrameAsync();
+            if (!isActiveAndEnabled) return;
+            ApplyInitialTrackingAlignment();
+            if (!isActiveAndEnabled) return;
             await WaitForActiveHeadTracking();
-            if (this == null || !isActiveAndEnabled) return;
+            if (!isActiveAndEnabled) return;
             ApplyInitialTrackingAlignment();
         }
 
