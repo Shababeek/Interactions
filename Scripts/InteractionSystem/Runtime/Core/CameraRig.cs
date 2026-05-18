@@ -490,7 +490,6 @@ namespace Shababeek.Interactions.Core
         /// <summary>Animate lids closed to hide the scene.</summary>
         public async Awaitable BlinkIn(CancellationToken cancellationToken = default)
         {
-            Debug.Log("BlinkIn");
             if (eyelidEffect == null) return;
             eyelidEffect.Close(eyelidTransitionDuration);
             await Awaitable.WaitForSecondsAsync(eyelidTransitionDuration, cancellationToken);
@@ -499,7 +498,6 @@ namespace Shababeek.Interactions.Core
         /// <summary>Animate lids open to reveal the scene.</summary>
         public async Awaitable BlinkOut(CancellationToken cancellationToken = default)
         {
-            Debug.Log("BlinkOut");
             if (eyelidEffect == null) return;
             eyelidEffect.Open(eyelidTransitionDuration);
             await Awaitable.WaitForSecondsAsync(eyelidTransitionDuration, cancellationToken);

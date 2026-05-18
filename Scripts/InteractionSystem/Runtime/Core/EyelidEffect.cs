@@ -33,9 +33,7 @@ namespace Shababeek.Interactions.Core
 
         private void Awake()
         {
-            _topImage = topLid.GetComponent<Image>();
-            _bottomImage = bottomLid.GetComponent<Image>();
-            SetOpen();
+            EnsureImagesInitialized();
         }
 
         /// <summary>Scale + fade lids in to cover the screen.</summary>
@@ -115,6 +113,7 @@ namespace Shababeek.Interactions.Core
         /// <summary>Snap lids to fully open (scaleY = 0, alpha = 0).</summary>
         public void SetOpen()
         {
+            EnsureImagesInitialized();
             Kill();
             SetScaleY(topLid, 0f);
             SetScaleY(bottomLid, 0f);
@@ -125,11 +124,18 @@ namespace Shababeek.Interactions.Core
         /// <summary>Snap lids to fully closed (scaleY = 1, alpha = 1).</summary>
         public void SetClosed()
         {
+            EnsureImagesInitialized();
             Kill();
             SetScaleY(topLid, 1f);
             SetScaleY(bottomLid, 1f);
             SetAlpha(_topImage, 1f);
             SetAlpha(_bottomImage, 1f);
+        }
+
+        private void EnsureImagesInitialized()
+        {
+            if (_topImage == null) _topImage = topLid.GetComponent<Image>();
+            if (_bottomImage == null) _bottomImage = bottomLid.GetComponent<Image>();
         }
 
         private static Tweener TweenScaleY(RectTransform rt, float target, float duration, Ease ease) =>
