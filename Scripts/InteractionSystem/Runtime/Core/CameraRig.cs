@@ -185,8 +185,15 @@ namespace Shababeek.Interactions.Core
         {
             if (offsetObject == null) return;
 
-            offsetObject.transform.localPosition = Vector3.up * cameraHeight;
-            offsetObject.transform.localRotation = Quaternion.identity;
+            if (_trackingInitialized && xrCamera != null)
+            {
+                RecenterCameraToRig();
+            }
+            else
+            {
+                offsetObject.transform.localPosition = Vector3.up * cameraHeight;
+                offsetObject.transform.localRotation = Quaternion.identity;
+            }
         }
 
         #endregion
