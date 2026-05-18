@@ -127,21 +127,7 @@ namespace Shababeek.Interactions.Core
         /// <summary>Snap lids fully open (no animation).</summary>
         public void OpenLids() => eyelidEffect?.SetOpen();
 
-        /// <summary>Animate lids closed to hide the scene.</summary>
-        public async Awaitable BlinkIn(CancellationToken cancellationToken = default)
-        {
-            if (eyelidEffect == null) return;
-            eyelidEffect.Close(eyelidTransitionDuration);
-            await Awaitable.WaitForSecondsAsync(eyelidTransitionDuration, cancellationToken);
-        }
-
-        /// <summary>Animate lids open to reveal the scene.</summary>
-        public async Awaitable BlinkOut(CancellationToken cancellationToken = default)
-        {
-            if (eyelidEffect == null) return;
-            eyelidEffect.Open(eyelidTransitionDuration);
-            await Awaitable.WaitForSecondsAsync(eyelidTransitionDuration, cancellationToken);
-        }
+        
 
         #endregion
 
@@ -504,6 +490,28 @@ namespace Shababeek.Interactions.Core
 
 
             return hand;
+        }
+
+        #endregion
+
+        #region Blinking
+
+        /// <summary>Animate lids closed to hide the scene.</summary>
+        public async Awaitable BlinkIn(CancellationToken cancellationToken = default)
+        {
+            Debug.Log("BlinkIn");
+            if (eyelidEffect == null) return;
+            eyelidEffect.Close(eyelidTransitionDuration);
+            await Awaitable.WaitForSecondsAsync(eyelidTransitionDuration, cancellationToken);
+        }
+
+        /// <summary>Animate lids open to reveal the scene.</summary>
+        public async Awaitable BlinkOut(CancellationToken cancellationToken = default)
+        {
+            Debug.Log("BlinkOut");
+            if (eyelidEffect == null) return;
+            eyelidEffect.Open(eyelidTransitionDuration);
+            await Awaitable.WaitForSecondsAsync(eyelidTransitionDuration, cancellationToken);
         }
 
         #endregion
