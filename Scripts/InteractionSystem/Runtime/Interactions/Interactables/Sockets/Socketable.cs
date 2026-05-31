@@ -79,11 +79,7 @@ namespace Shababeek.Interactions
         public bool IsSocketed
         {
             get => isSocketed;
-            private set
-            {
-                isSocketed = value;
-
-            }
+            private set { isSocketed = value; }
         }
 
         /// <summary>
@@ -146,6 +142,10 @@ namespace Shababeek.Interactions
             }
 
             this.socket = soc;
+            // Clear hover state/visuals before socketing; DetectSockets stops running once
+            // isSocketed is true, so EndHovering would otherwise never fire and the hover
+            // indicator would remain visible.
+            soc.EndHovering(this);
             var t = soc.Insert(this);
             IsSocketed = true;
             onSocketed.Invoke(soc);
@@ -176,7 +176,8 @@ namespace Shababeek.Interactions
             }
             else
             {
-                indicator?.gameObject.SetActive(false);
+                if (indicator)
+                    indicator?.gameObject.SetActive(false);
             }
         }
 
@@ -191,6 +192,7 @@ namespace Shababeek.Interactions
             else
             {
                 if (!socket || !socket.CanSocket()) return;
+                socket.EndHovering(this);
                 IsSocketed = true;
                 var parentSocket = socket.Insert(this);
                 LerpToPosition(parentSocket);
