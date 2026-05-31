@@ -52,13 +52,13 @@ Material:
     m_Ints: []
     m_Floats:
     - _Fresnel_Power: 1
-    - _OutlineWidth: 0
+    - _OutlineWidth: 0.1
     - _QueueControl: 0
     - _QueueOffset: 0
     - _Stripes: 300
     - _Stripes_Speed: 0.02
     - _XRMotionVectorsPass: 1
     m_Colors:
-    - _OutlineColor: {r: 1, g: 1, b: 1, a: 1}
+    - _OutlineColor: {r: 1, g: 1, b: 1, a: 0.2509804}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
