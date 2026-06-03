@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using UniRx;
 using UnityEngine;
 
 namespace Shababeek.Interactions.Tests
@@ -28,81 +29,63 @@ namespace Shababeek.Interactions.Tests
         }
 
         [Test]
-        public void Switch_InitialStateIsNeutral()
+        public void Switch_DefaultState_IsOff()
         {
-            _switch.StartingPosition = StartingPosition.Neutral;
-            // Trigger Start to initialize
-            _switch.gameObject.SetActive(true);
-            var state = _switch.GetSwitchState();
-            Assert.AreEqual(null, state);
+            Assert.IsFalse(_switch.IsOn);
         }
 
         [Test]
-        public void Switch_CanSetPositionToOn()
+        public void Switch_SetState_On_TurnsOn()
         {
-            _switch.SetPosition(StartingPosition.On);
-            var state = _switch.GetSwitchState();
-            Assert.AreEqual(true, state);
+            _switch.SetState(true);
+            Assert.IsTrue(_switch.IsOn);
         }
 
         [Test]
-        public void Switch_CanSetPositionToOff()
+        public void Switch_SetState_Off_TurnsOff()
         {
-            _switch.SetPosition(StartingPosition.Off);
-            var state = _switch.GetSwitchState();
-            Assert.AreEqual(false, state);
+            _switch.SetState(true);
+            _switch.SetState(false);
+            Assert.IsFalse(_switch.IsOn);
         }
 
         [Test]
-        public void Switch_CanSetPositionToNeutral()
+        public void Switch_Toggle_FlipsState()
         {
-            _switch.SetPosition(StartingPosition.Neutral);
-            var state = _switch.GetSwitchState();
-            Assert.AreEqual(null, state);
+            Assert.IsFalse(_switch.IsOn);
+            _switch.Toggle();
+            Assert.IsTrue(_switch.IsOn);
+            _switch.Toggle();
+            Assert.IsFalse(_switch.IsOn);
         }
 
         [Test]
-        public void Switch_StayInPosition_PreventsPivotReturn()
+        public void Switch_SetState_FiresOnStateChanged_WithNewState()
         {
-            _switch.StayInPosition = true;
-            _switch.SetPosition(StartingPosition.On);
-            Assert.IsTrue(_switch.StayInPosition);
+            bool? received = null;
+            var disposable = _switch.OnStateChanged.Subscribe(state => received = state);
+
+            _switch.SetState(true);
+
+            Assert.AreEqual(true, received);
+            disposable.Dispose();
         }
 
         [Test]
-        public void Switch_ResetSwitch_ResetsToNeutral_WhenNotStaying()
+        public void Switch_Toggle_FiresOnStateChanged()
         {
-            _switch.StayInPosition = false;
-            _switch.SetPosition(StartingPosition.On);
-            _switch.ResetSwitch();
+            int fireCount = 0;
+            var disposable = _switch.OnStateChanged.Subscribe(_ => fireCount++);
 
-            var state = _switch.GetSwitchState();
-            Assert.AreEqual(null, state);
-        }
+            _switch.Toggle();
+            _switch.Toggle();
 
-
-
-        [Test]
-        public void Switch_ForceResetSwitch_AlwaysResetsToNeutral()
-        {
-            _switch.StayInPosition = true;
-            _switch.SetPosition(StartingPosition.On);
-            _switch.ForceResetSwitch();
-
-            var state = _switch.GetSwitchState();
-            Assert.AreEqual(null, state);
+            Assert.AreEqual(2, fireCount);
+            disposable.Dispose();
         }
 
         [Test]
-        public void Switch_GetCurrentRotation_ReturnsVector3()
-        {
-            _switch.SetPosition(StartingPosition.On);
-            var rotation = _switch.GetCurrentRotation();
-            Assert.IsNotNull(rotation);
-        }
-
-        [Test]
-        public void Switch_SwitchBodyCanBeAssigned()
+        public void Switch_SwitchBody_CanBeAssigned()
         {
             var newBody = new GameObject("NewSwitchBody").transform;
             _switch.SwitchBody = newBody;
@@ -111,64 +94,16 @@ namespace Shababeek.Interactions.Tests
         }
 
         [Test]
-        [TestCase(StartingPosition.Off)]
-        [TestCase(StartingPosition.Neutral)]
-        [TestCase(StartingPosition.On)]
-        public void Switch_CanSetMultiplePositions(StartingPosition position)
-        {
-            _switch.SetPosition(position);
-            var state = _switch.GetSwitchState();
-
-            switch (position)
-            {
-                case StartingPosition.Off:
-                    Assert.AreEqual(false, state);
-                    break;
-                case StartingPosition.On:
-                    Assert.AreEqual(true, state);
-                    break;
-                case StartingPosition.Neutral:
-                    Assert.AreEqual(null, state);
-                    break;
-            }
-        }
-
-        [Test]
         public void Switch_TransitionsBetweenStates()
         {
-            _switch.SetPosition(StartingPosition.Off);
-            var offState = _switch.GetSwitchState();
-            Assert.AreEqual(false, offState);
+            _switch.SetState(false);
+            Assert.IsFalse(_switch.IsOn);
 
-            _switch.SetPosition(StartingPosition.On);
-            var onState = _switch.GetSwitchState();
-            Assert.AreEqual(true, onState);
+            _switch.SetState(true);
+            Assert.IsTrue(_switch.IsOn);
 
-            _switch.SetPosition(StartingPosition.Neutral);
-            var neutralState = _switch.GetSwitchState();
-            Assert.AreEqual(null, neutralState);
-        }
-
-        [Test]
-        public void Switch_StartingPositionCanBeSet()
-        {
-            _switch.StartingPosition = StartingPosition.On;
-            Assert.AreEqual(StartingPosition.On, _switch.StartingPosition);
-        }
-
-        [Test]
-        public void Switch_MultipleResets()
-        {
-            _switch.SetPosition(StartingPosition.On);
-            _switch.ResetSwitch();
-            var state1 = _switch.GetSwitchState();
-
-            _switch.SetPosition(StartingPosition.Off);
-            _switch.ResetSwitch();
-            var state2 = _switch.GetSwitchState();
-
-            Assert.AreEqual(null, state1);
-            Assert.AreEqual(null, state2);
+            _switch.SetState(false);
+            Assert.IsFalse(_switch.IsOn);
         }
     }
 }

@@ -1,4 +1,6 @@
+using System;
 using Shababeek.ReactiveVars;
+using UniRx;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -15,47 +17,27 @@ namespace Shababeek.Interactions
     }
 
     /// <summary>
-    /// Enum representing the current direction of the switch.
-    /// </summary>
-    enum Direction
-    {
-        Up = 1,
-        Down = -1,
-        None = 0
-    }
-
-    /// <summary>
-    /// Enum representing the starting position of the switch.
-    /// </summary>
-    public enum StartingPosition
-    {
-        Off,
-        Neutral,
-        On
-    }
-
-    /// <summary>
-    /// Physical switch component that responds to trigger interactions.
-    /// Rotates the switch body based on interaction direction and raises events.
-    /// Configurable to work with any rotation axis and detection direction.
+    /// Physical two-state (on/off) switch driven by trigger collisions.
+    /// The side a finger or object approaches from decides whether the switch turns on or off,
+    /// then the switch body rotates to the matching angle and latches there.
     /// </summary>
     /// <remarks>
-    /// This component creates a physical switch that can be activated by trigger interactions.
-    /// It automatically rotates the switch body and raises events based on the interaction direction.
-    /// The rotation axis and detection direction can be configured to work with switches oriented in any direction.
+    /// Attach to an object with a trigger collider. When a non-trigger collider crosses the
+    /// detection threshold on one side the switch turns on, on the other side it turns off.
+    /// Re-approaching from the same side does nothing, so the switch never thrashes between states.
     /// </remarks>
     [AddComponentMenu("Shababeek/Interactions/Interactables/Switch")]
     public class Switch : MonoBehaviour
     {
         [Header("Events")]
-        [Tooltip("Event raised when the switch is moved to the up position.")]
-        [SerializeField] private UnityEvent onUp;
+        [Tooltip("Raised when the switch turns on.")]
+        [SerializeField] private UnityEvent onTurnedOn;
 
-        [Tooltip("Event raised when the switch is moved to the down position.")]
-        [SerializeField] private UnityEvent onDown;
+        [Tooltip("Raised when the switch turns off.")]
+        [SerializeField] private UnityEvent onTurnedOff;
 
-        [Tooltip("Event raised when the switch is held in a position.")]
-        [SerializeField] private UnityEvent onHold;
+        [Tooltip("Raised whenever the switch state changes, passing the new state (true = on).")]
+        [SerializeField] private BoolUnityEvent onStateChanged = new();
 
         [Header("Switch Configuration")]
         [Tooltip("The transform of the switch body that rotates during interaction.")]
@@ -64,148 +46,117 @@ namespace Shababeek.Interactions
         [Tooltip("The axis around which the switch rotates.")]
         [SerializeField] private Axis rotationAxis = Axis.Z;
 
-        [Tooltip("The axis used to detect interaction direction.")]
+        [Tooltip("The axis used to detect which side the hand approaches from.")]
         [SerializeField] private Axis detectionAxis = Axis.X;
 
-        [Tooltip("Rotation angle in degrees for the up position.")]
-        [SerializeField] private float upRotation = 20;
+        [Tooltip("Rotation angle in degrees for the on position.")]
+        [SerializeField] private float onAngle = 20f;
 
-        [Tooltip("Rotation angle in degrees for the down position.")]
-        [SerializeField] private float downRotation = -20;
+        [Tooltip("Rotation angle in degrees for the off position.")]
+        [SerializeField] private float offAngle = -20f;
 
-        [Tooltip("Speed of the rotation animation in degrees per second.")]
-        [SerializeField] private float rotateSpeed = 10;
+        [Tooltip("Speed of the rotation animation (higher snaps faster).")]
+        [SerializeField] private float rotateSpeed = 10f;
 
-        [Tooltip("Angle threshold in degrees for direction detection.")]
+        [Tooltip("Angle in degrees the approach must clear before the switch flips. Prevents accidental toggles near the centre.")]
         [SerializeField] private float angleThreshold = 5f;
 
-        [Tooltip("When enabled, the switch will stay in its current position instead of returning to neutral when the trigger exits.")]
-        [SerializeField] private bool stayInPosition = false;
-
-        [Tooltip("The starting position of the switch when the scene starts.")]
-        [SerializeField] private StartingPosition startingPosition = StartingPosition.Neutral;
+        [Tooltip("State the switch starts in when the scene loads.")]
+        [SerializeField] private bool startOn = false;
 
         [Header("Debug")]
-        [Tooltip("Current direction of the switch.")]
-        [ReadOnly][SerializeField] private Direction direction;
+        [Tooltip("Current state of the switch (read-only).")]
+        [ReadOnly, SerializeField] private bool currentState;
 
-        private float t = 0;
-        private float targetRotation = 0;
-        private Collider activeCollider;
+        private float _currentAngle;
+        private float _targetAngle;
+        private float _animStartAngle;
+        private float _animProgress = 1f;
+        private Collider _activeCollider;
 
-        /// <summary>
-        /// Gets or sets the switch body transform that rotates during interaction.
-        /// </summary>
-        /// <value>The transform of the switch body</value>
+        /// <summary>The transform that rotates between the on and off positions.</summary>
         public Transform SwitchBody
         {
             get => switchBody;
             set => switchBody = value;
         }
 
-        /// <summary>
-        /// Gets or sets whether the switch should stay in position instead of returning to neutral.
-        /// </summary>
-        /// <value>True if the switch should stay in position, false if it should return to neutral</value>
-        public bool StayInPosition
-        {
-            get => stayInPosition;
-            set => stayInPosition = value;
-        }
+        /// <summary>True when the switch is currently on.</summary>
+        public bool IsOn => currentState;
 
-        /// <summary>
-        /// Gets or sets the starting position of the switch.
-        /// </summary>
-        /// <value>The starting position (Off, Neutral, or On)</value>
-        public StartingPosition StartingPosition
-        {
-            get => startingPosition;
-            set => startingPosition = value;
-        }
+        /// <summary>Fires whenever the switch state changes, passing the new state.</summary>
+        public IObservable<bool> OnStateChanged => onStateChanged.AsObservable();
 
-        public bool State { get; private set; }
-
-        /// <summary>
-        /// Updates the switch direction and rotation each frame.
-        /// </summary>
-        private void Update()
-        {
-            ChooseDirection();
-            Rotate();
-        }
-
-        /// <summary>
-        /// Initializes the switch with the configured starting position.
-        /// </summary>
         private void Start()
         {
-            SetStartingPosition();
+            currentState = startOn;
+            _targetAngle = startOn ? onAngle : offAngle;
+            _currentAngle = _targetAngle;
+            _animProgress = 1f;
+            ApplyAngle(_currentAngle);
         }
 
-        /// <summary>
-        /// Sets the switch to its configured starting position.
-        /// </summary>
-        private void SetStartingPosition()
+        private void Update()
+        {
+            EvaluateApproach();
+            Animate();
+        }
+
+        private void EvaluateApproach()
+        {
+            if (!_activeCollider) return;
+
+            var toCollider = _activeCollider.transform.position - transform.position;
+            var angle = Vector3.SignedAngle(GetDetectionVector(), toCollider, GetRotationAxisVector());
+
+            if (Mathf.Abs(angle) < angleThreshold) return;
+
+            var desiredOn = angle > 0f;
+            if (desiredOn != currentState) ApplyState(desiredOn, true);
+        }
+
+        private void Animate()
+        {
+            if (!switchBody) return;
+
+            _animProgress = Mathf.Clamp01(_animProgress + Time.deltaTime * rotateSpeed);
+            _currentAngle = Mathf.Lerp(_animStartAngle, _targetAngle, _animProgress);
+            ApplyAngle(_currentAngle);
+        }
+
+        private void ApplyState(bool on, bool animate)
         {
             if (switchBody == null) return;
 
-            switch (startingPosition)
+            currentState = on;
+            _targetAngle = on ? onAngle : offAngle;
+            _animStartAngle = animate ? _currentAngle : _targetAngle;
+            _animProgress = animate ? 0f : 1f;
+
+            if (!animate)
             {
-                case StartingPosition.On:
-                    direction = Direction.Up;
-                    targetRotation = upRotation;
-                    break;
-                case StartingPosition.Off:
-                    direction = Direction.Down;
-                    targetRotation = downRotation;
-                    break;
-                case StartingPosition.Neutral:
-                default:
-                    direction = Direction.None;
-                    targetRotation = (upRotation + downRotation) / 2f; // Calculate middle position
-                    break;
+                _currentAngle = _targetAngle;
+                ApplyAngle(_currentAngle);
             }
 
-            // Apply the starting rotation immediately
-            t = 1f; // Set to 1 to skip animation
-            Rotate();
+            onStateChanged?.Invoke(on);
+            if (on) onTurnedOn?.Invoke();
+            else onTurnedOff?.Invoke();
         }
 
-        /// <summary>
-        /// Determines the switch direction based on the active collider position.
-        /// </summary>
-        private void ChooseDirection()
+        private void ApplyAngle(float angle)
         {
-            if (!activeCollider) return;
-
-            var dir = activeCollider.transform.position - transform.position;
-            var detectionVector = GetDetectionVector();
-            var rotationAxisVector = GetRotationAxisVector();
-
-            var angle = Vector3.SignedAngle(detectionVector, dir, rotationAxisVector);
-
-            // Switch should rotate away from the collider, so we invert the logic
-            switch (angle)
+            var euler = switchBody.localRotation.eulerAngles;
+            var rotation = rotationAxis switch
             {
-                case > 0 when Mathf.Abs(angle) > angleThreshold && direction != Direction.Up:
-                    direction = Direction.Up;
-                    t = 0;
-                    targetRotation = upRotation;
-                    onUp.Invoke();
-                    break;
-                case < 0 when Mathf.Abs(angle) > angleThreshold && direction != Direction.Down:
-                    direction = Direction.Down;
-                    t = 0;
-                    targetRotation = downRotation;
-                    onDown.Invoke();
-                    break;
-            }
+                Axis.X => new Vector3(angle, euler.y, euler.z),
+                Axis.Y => new Vector3(euler.x, angle, euler.z),
+                Axis.Z => new Vector3(euler.x, euler.y, angle),
+                _ => new Vector3(euler.x, euler.y, angle)
+            };
+            switchBody.localRotation = Quaternion.Euler(rotation);
         }
 
-        /// <summary>
-        /// Gets the detection vector based on the configured detection axis.
-        /// </summary>
-        /// <returns>The world space vector for direction detection.</returns>
         private Vector3 GetDetectionVector()
         {
             return detectionAxis switch
@@ -217,10 +168,6 @@ namespace Shababeek.Interactions
             };
         }
 
-        /// <summary>
-        /// Gets the rotation axis vector based on the configured rotation axis.
-        /// </summary>
-        /// <returns>The world space vector for the rotation axis.</returns>
         private Vector3 GetRotationAxisVector()
         {
             return rotationAxis switch
@@ -232,285 +179,75 @@ namespace Shababeek.Interactions
             };
         }
 
-        /// <summary>
-        /// Rotates the switch body towards the target rotation.
-        /// </summary>
-        private void Rotate()
-        {
-            t += Time.deltaTime * rotateSpeed;
-            t = Mathf.Clamp01(t);
-
-            // Get current rotation and apply target rotation based on the configured axis
-            var currentRotation = switchBody.localRotation.eulerAngles;
-            var newRotation = rotationAxis switch
-            {
-                Axis.X => new Vector3(targetRotation, currentRotation.y, currentRotation.z),
-                Axis.Y => new Vector3(currentRotation.x, targetRotation, currentRotation.z),
-                Axis.Z => new Vector3(currentRotation.x, currentRotation.y, targetRotation),
-                _ => new Vector3(currentRotation.x, currentRotation.y, targetRotation)
-            };
-
-            switchBody.localRotation = Quaternion.Euler(newRotation);
-        }
-
-
         private void OnTriggerEnter(Collider other)
         {
             if (other.isTrigger) return;
-            activeCollider = other;
-            t = 0;
+            _activeCollider = other;
         }
+
         private void OnTriggerExit(Collider other)
         {
-            if (other != activeCollider) return;
-            direction = Direction.None;
-            activeCollider = null;
-
-            // Only reset to neutral position if stayInPosition is false
-            if (!stayInPosition)
-            {
-                targetRotation = 0;
-                t = 0;
-            }
+            if (other != _activeCollider) return;
+            _activeCollider = null;
         }
 
-        /// <summary>
-        /// Called when the object is selected in the editor to validate configuration.
-        /// </summary>
         private void OnValidate()
         {
-            if (switchBody == null)
-            {
-                switchBody = transform;
-            }
-
-            // Ensure angle threshold is positive
-            if (angleThreshold < 0)
-            {
-                angleThreshold = Mathf.Abs(angleThreshold);
-            }
+            if (switchBody == null) switchBody = transform;
+            angleThreshold = Mathf.Abs(angleThreshold);
+            rotateSpeed = Mathf.Max(0.01f, rotateSpeed);
         }
 
         /// <summary>
-        /// Resets the switch to its neutral position.
-        /// Note: This method will only reset to neutral if stayInPosition is false.
+        /// Sets the switch state, animating to the matching position and raising events.
         /// </summary>
-        public void ResetSwitch()
-        {
-            direction = Direction.None;
-            activeCollider = null;
-
-            // Only reset to neutral position if stayInPosition is false
-            if (!stayInPosition)
-            {
-                targetRotation = (upRotation + downRotation) / 2f; // Calculate middle position
-                t = 0;
-
-                // Reset rotation to neutral position
-                var currentRotation = switchBody.localRotation.eulerAngles;
-                var neutralRotation = rotationAxis switch
-                {
-                    Axis.X => new Vector3(targetRotation, currentRotation.y, currentRotation.z),
-                    Axis.Y => new Vector3(currentRotation.x, targetRotation, currentRotation.z),
-                    Axis.Z => new Vector3(currentRotation.x, currentRotation.y, targetRotation),
-                    _ => new Vector3(currentRotation.x, currentRotation.y, targetRotation)
-                };
-
-                switchBody.localRotation = Quaternion.Euler(neutralRotation);
-            }
-        }
+        /// <param name="on">True to turn the switch on, false to turn it off.</param>
+        public void SetState(bool on) => ApplyState(on, true);
 
         /// <summary>
-        /// Forces the switch to reset to neutral position regardless of the stayInPosition setting.
+        /// Flips the switch to the opposite state.
         /// </summary>
-        public void ForceResetSwitch()
-        {
-            direction = Direction.None;
-            activeCollider = null;
-            targetRotation = (upRotation + downRotation) / 2f; // Calculate middle position
-            t = 0;
-
-            // Reset rotation to neutral position
-            var currentRotation = switchBody.localRotation.eulerAngles;
-            var neutralRotation = rotationAxis switch
-            {
-                Axis.X => new Vector3(targetRotation, currentRotation.y, currentRotation.z),
-                Axis.Y => new Vector3(currentRotation.x, targetRotation, currentRotation.z),
-                Axis.Z => new Vector3(currentRotation.x, currentRotation.y, targetRotation),
-                _ => new Vector3(currentRotation.x, currentRotation.y, targetRotation)
-            };
-
-            switchBody.localRotation = Quaternion.Euler(neutralRotation);
-        }
-
-        /// <summary>
-        /// Gets the current switch state.
-        /// </summary>
-        /// <returns>True if switch is in up position, false if down, null if neutral.</returns>
-        public bool? GetSwitchState()
-        {
-            return direction switch
-            {
-                Direction.Up => true,
-                Direction.Down => false,
-                Direction.None => null,
-                _ => null
-            };
-        }
-
-        /// <summary>
-        /// Gets the current rotation of the switch body.
-        /// </summary>
-        /// <returns>The current local rotation as a Vector3.</returns>
-        public Vector3 GetCurrentRotation()
-        {
-            return switchBody != null ? switchBody.localRotation.eulerAngles : Vector3.zero;
-        }
-
-        /// <summary>
-        /// Sets the switch to a specific position.
-        /// </summary>
-        /// <param name="position">The position to set the switch to.</param>
-        public void SetPosition(StartingPosition position)
-        {
-            if (switchBody == null) return;
-
-            switch (position)
-            {
-                case StartingPosition.On:
-                    direction = Direction.Up;
-                    targetRotation = upRotation;
-                    break;
-                case StartingPosition.Off:
-                    direction = Direction.Down;
-                    targetRotation = downRotation;
-                    break;
-                case StartingPosition.Neutral:
-                default:
-                    direction = Direction.None;
-                    targetRotation = (upRotation + downRotation) / 2f; // Calculate middle position
-                    break;
-            }
-
-            // Apply the position immediately
-            t = 1f;
-            Rotate();
-        }
+        public void Toggle() => ApplyState(!currentState, true);
 
 #if UNITY_EDITOR
-        /// <summary>
-        /// Draws gizmos in the scene view to visualize switch configuration.
-        /// </summary>
         private void OnDrawGizmos()
         {
             if (switchBody == null) return;
-
-            DrawSwitchVisualization();
+            DrawSwitchVisualization(false);
         }
 
-        /// <summary>
-        /// Draws selected gizmos with more detail when the object is selected.
-        /// </summary>
         private void OnDrawGizmosSelected()
         {
             if (switchBody == null) return;
-
             DrawSwitchVisualization(true);
-            DrawDetectionArea();
         }
 
-        /// <summary>
-        /// Draws the switch visualization gizmos.
-        /// </summary>
-        /// <param name="selected">Whether the object is selected (for more detailed visualization).</param>
-        private void DrawSwitchVisualization(bool selected = false)
+        private void DrawSwitchVisualization(bool selected)
         {
             var detectionVector = GetDetectionVector();
             var rotationAxisVector = GetRotationAxisVector();
             var position = switchBody.position;
 
-            // Draw rotation axis
             Gizmos.color = selected ? Color.yellow : new Color(1f, 1f, 0f, 0.5f);
             Gizmos.DrawRay(position, rotationAxisVector * 0.5f);
             Gizmos.DrawRay(position, -rotationAxisVector * 0.5f);
 
-            // Draw detection direction
             Gizmos.color = selected ? Color.cyan : new Color(0f, 1f, 1f, 0.5f);
             Gizmos.DrawRay(position, detectionVector * 0.3f);
 
-            // Draw rotation range
-            if (selected)
-            {
-                Gizmos.color = new Color(0f, 1f, 0f, 0.3f);
-                DrawRotationArc(position, rotationAxisVector, detectionVector, upRotation);
+            if (!selected) return;
 
-                Gizmos.color = new Color(1f, 0f, 0f, 0.3f);
-                DrawRotationArc(position, rotationAxisVector, detectionVector, downRotation);
-            }
+            Gizmos.color = new Color(0f, 1f, 0f, 0.4f);
+            DrawAngleRay(position, rotationAxisVector, detectionVector, onAngle);
+
+            Gizmos.color = new Color(1f, 0f, 0f, 0.4f);
+            DrawAngleRay(position, rotationAxisVector, detectionVector, offAngle);
         }
 
-        /// <summary>
-        /// Draws the detection area for the switch.
-        /// </summary>
-        private void DrawDetectionArea()
+        private void DrawAngleRay(Vector3 center, Vector3 axis, Vector3 from, float angle)
         {
-            var collider = GetComponent<Collider>();
-            if (collider == null) return;
-
-            // Draw detection threshold
-            Gizmos.color = new Color(1f, 0.5f, 0f, 0.2f);
-            var bounds = collider.bounds;
-            Gizmos.DrawWireCube(bounds.center, bounds.size);
-
-            // Draw angle threshold visualization
-            var detectionVector = GetDetectionVector();
-            var rotationAxisVector = GetRotationAxisVector();
-            var position = switchBody.position;
-
-            Gizmos.color = new Color(1f, 0.5f, 0f, 0.5f);
-            DrawAngleThreshold(position, detectionVector, rotationAxisVector, angleThreshold);
-        }
-
-        /// <summary>
-        /// Draws a rotation arc to visualize the switch movement range.
-        /// </summary>
-        /// <param name="center">The center point of the arc</param>
-        /// <param name="axis">The rotation axis</param>
-        /// <param name="from">The starting direction</param>
-        /// <param name="angle">The rotation angle in degrees</param>
-        private void DrawRotationArc(Vector3 center, Vector3 axis, Vector3 from, float angle)
-        {
-            var rotation = Quaternion.AngleAxis(angle, axis);
-            var to = rotation * from;
-
-            // Draw arc
-            var steps = 10;
-            var stepAngle = angle / steps;
-            var currentVector = from;
-
-            for (int i = 0; i < steps; i++)
-            {
-                var nextRotation = Quaternion.AngleAxis(stepAngle, axis);
-                var nextVector = nextRotation * currentVector;
-
-                Gizmos.DrawLine(center + currentVector * 0.2f, center + nextVector * 0.2f);
-                currentVector = nextVector;
-            }
-
-            // Draw end position
-            Gizmos.DrawRay(center, to * 0.2f);
-        }
-
-        private void DrawAngleThreshold(Vector3 center, Vector3 detectionVector, Vector3 rotationAxis, float threshold)
-        {
-            var thresholdRotation1 = Quaternion.AngleAxis(threshold, rotationAxis);
-            var thresholdRotation2 = Quaternion.AngleAxis(-threshold, rotationAxis);
-
-            var threshold1 = thresholdRotation1 * detectionVector;
-            var threshold2 = thresholdRotation2 * detectionVector;
-
-            Gizmos.DrawRay(center, threshold1 * 0.4f);
-            Gizmos.DrawRay(center, threshold2 * 0.4f);
+            var direction = Quaternion.AngleAxis(angle, axis) * from;
+            Gizmos.DrawRay(center, direction * 0.25f);
         }
 #endif
     }
