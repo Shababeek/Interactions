@@ -28,7 +28,7 @@ ReactiveVars Binder updates visuals/logic
 
 | Driver | Attach To | Purpose |
 |--------|-----------|---------|
-| `DialToVariableDriver` | `DialInteractable` | Push dial step/normalized output to variables and events |
+| `DialVariableWriter` | `DialInteractable` | Push dial step/normalized output to variables and events |
 | `InteractableEventDriver` | Any `InteractableBase` | Convert interaction lifecycle into variables + events |
 | `InteractableToEventDriver` | Any `InteractableBase` | Forward interaction lifecycle to GameEvents only |
 
@@ -36,7 +36,7 @@ ReactiveVars Binder updates visuals/logic
 
 ## Driver Quick Notes
 
-### `DialToVariableDriver`
+### `DialVariableWriter`
 - Use when dial output should control data (step index, normalized values).
 - Good for panel controls, locks, and tuning interactions.
 
@@ -94,11 +94,11 @@ This enables:
 
 ---
 
-## Interactable-to-Variable Drivers
+## Interactable-to-Variable Writers
 
-These drivers connect constrained interactables (rotatable/movable objects) to numeric variables.
+These writers connect constrained interactables (rotatable/movable objects) to numeric variables.
 
-### Lever To Variable Driver
+### Lever Variable Writer
 
 Writes a LeverInteractable's output to float variables.
 
@@ -114,7 +114,7 @@ Writes a LeverInteractable's output to float variables.
 
 ---
 
-### Wheel To Variable Driver
+### Wheel Variable Writer
 
 Writes a WheelInteractable's output to float variables.
 
@@ -130,7 +130,7 @@ Writes a WheelInteractable's output to float variables.
 
 ---
 
-### Dial To Variable Driver
+### Dial Variable Writer
 
 Writes a DialInteractable's discrete step output to variables and events.
 
@@ -156,7 +156,7 @@ Writes a DialInteractable's discrete step output to variables and events.
 
 ---
 
-### Joystick To Variable Driver
+### Joystick Variable Writer
 
 Writes a JoystickInteractable's output to Vector2 or separate float variables.
 
@@ -174,7 +174,7 @@ Writes a JoystickInteractable's output to Vector2 or separate float variables.
 
 ---
 
-### Drawer To Variable Driver
+### Drawer Variable Writer
 
 Writes a DrawerInteractable's output to variables and events.
 
@@ -329,7 +329,7 @@ Simplified version focusing only on GameEvents.
 ### Tutorial with Variable Feedback
 
 1. Create a FloatVariable "LeverPosition"
-2. Add **LeverToVariableDriver** to your lever
+2. Add **LeverVariableWriter** to your lever
 3. Create a UI progress bar bound to "LeverPosition" (using a generic driver from ReactiveVars)
 4. Create a Sequence that advances when "LeverPosition" reaches 1.0
 
@@ -338,7 +338,7 @@ Simplified version focusing only on GameEvents.
 ### Puzzle Lock System
 
 1. Create IntVariables for each dial: "Dial1", "Dial2", "Dial3"
-2. Add **DialToVariableDriver** to each dial
+2. Add **DialVariableWriter** to each dial
 3. Create a Sequence that checks if all dials match target values
 4. When all match, unlock the door
 
@@ -347,7 +347,7 @@ Simplified version focusing only on GameEvents.
 ### Drawer Auto-Close Detection
 
 1. Create a BoolVariable "DrawerOpen"
-2. Add **DrawerToVariableDriver** to the drawer
+2. Add **DrawerVariableWriter** to the drawer
 3. Bind UI element visibility to "DrawerOpen"
 4. Create sound effect triggered by "OnClosed" event
 

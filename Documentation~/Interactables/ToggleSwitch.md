@@ -102,7 +102,7 @@ toggle.OnValueChanged.Subscribe(v => Debug.Log($"Value {v:F2}"));
 
 ### Driving a ScriptableVariable
 
-Add a **Toggle Switch To Variable Driver** to write the current step into an `IntVariable`, raise
+Add a **Toggle Switch Variable Writer** to write the current step into an `IntVariable`, raise
 `GameEvent`s on step change / confirm, and optionally fire a per-step `GameEvent` array.
 
 ---

@@ -5,8 +5,8 @@ using UnityEngine;
 namespace Shababeek.Interactions
 {
     /// <summary>Writes a LeverInteractable's output to scriptable variables.</summary>
-    [AddComponentMenu("Shababeek/Interactions/Drivers/Lever To Variable Driver")]
-    public class LeverToVariableDriver : MonoBehaviour
+    [AddComponentMenu("Shababeek/Interactions/Writers/Lever Variable Writer")]
+    public class LeverVariableWriter : MonoBehaviour
     {
         [Header("Source")]
         [Tooltip("Source lever interactable.")]

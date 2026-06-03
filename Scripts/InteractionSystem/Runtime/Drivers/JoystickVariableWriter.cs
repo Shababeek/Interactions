@@ -6,8 +6,8 @@ using UnityEngine;
 namespace Shababeek.Interactions
 {
     /// <summary>Writes a JoystickInteractable's output to scriptable variables.</summary>
-    [AddComponentMenu("Shababeek/Interactions/Drivers/Joystick To Variable Driver")]
-    public class JoystickToVariableDriver : MonoBehaviour
+    [AddComponentMenu("Shababeek/Interactions/Writers/Joystick Variable Writer")]
+    public class JoystickVariableWriter : MonoBehaviour
     {
         [Header("Source")]
         [Tooltip("Source joystick interactable.")]

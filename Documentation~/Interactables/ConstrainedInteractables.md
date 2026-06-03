@@ -584,7 +584,7 @@ public class CombinationLock : MonoBehaviour
 
 ## Driver Integration
 
-Use **DialToVariableDriver** to connect dial output to the Scriptable System:
+Use **DialVariableWriter** to connect dial output to the Scriptable System:
 
 ```csharp
 // Dial outputs:

@@ -86,7 +86,7 @@ mySwitch.SwitchBody = leverTransform;
 
 ### Driving a ScriptableVariable
 
-Add a **Switch To Variable Driver** alongside the Switch to mirror its state into a `BoolVariable`
+Add a **Switch Variable Writer** alongside the Switch to mirror its state into a `BoolVariable`
 and raise `GameEvent`s on turn-on / turn-off, without writing any glue code.
 
 ---

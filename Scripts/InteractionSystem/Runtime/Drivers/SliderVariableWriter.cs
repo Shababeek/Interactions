@@ -4,9 +4,9 @@ using UnityEngine;
 
 namespace Shababeek.Interactions
 {
-    [AddComponentMenu("Shababeek/Interactions/Drivers/Slider To Variable Driver")]
+    [AddComponentMenu("Shababeek/Interactions/Writers/Slider Variable Writer")]
     [RequireComponent(typeof(SliderInteractable))]
-    public class SliderToVariableDriver : MonoBehaviour
+    public class SliderVariableWriter : MonoBehaviour
     {
         [Header("Variable Outputs")]
         [Tooltip("IntVariable that receives the current step index (0-based).")]

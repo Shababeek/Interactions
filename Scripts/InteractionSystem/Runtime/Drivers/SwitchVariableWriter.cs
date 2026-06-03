@@ -5,9 +5,9 @@ using UnityEngine;
 namespace Shababeek.Interactions
 {
     /// <summary>Writes a Switch's on/off state to a scriptable variable and raises events.</summary>
-    [AddComponentMenu("Shababeek/Interactions/Drivers/Switch To Variable Driver")]
+    [AddComponentMenu("Shababeek/Interactions/Writers/Switch Variable Writer")]
     [RequireComponent(typeof(Switch))]
-    public class SwitchToVariableDriver : MonoBehaviour
+    public class SwitchVariableWriter : MonoBehaviour
     {
         [Header("Variable Output")]
         [Tooltip("BoolVariable that receives the switch state (true = on).")]

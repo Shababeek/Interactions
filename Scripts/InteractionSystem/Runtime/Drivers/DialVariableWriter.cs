@@ -5,9 +5,9 @@ using Shababeek.ReactiveVars;
 namespace Shababeek.Interactions
 {
     /// <summary>Writes a DialInteractable's step output to scriptable variables and events.</summary>
-    [AddComponentMenu("Shababeek/Interactions/Drivers/Dial To Variable Driver")]
+    [AddComponentMenu("Shababeek/Interactions/Writers/Dial Variable Writer")]
     [RequireComponent(typeof(DialInteractable))]
-    public class DialToVariableDriver : MonoBehaviour
+    public class DialVariableWriter : MonoBehaviour
     {
         [Header("Variable Outputs")]
         [Tooltip("IntVariable that receives the current step index (0-based).")]

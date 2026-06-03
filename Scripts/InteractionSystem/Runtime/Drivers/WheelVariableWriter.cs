@@ -5,8 +5,8 @@ using UnityEngine;
 namespace Shababeek.Interactions
 {
     /// <summary>Writes a WheelInteractable's output to scriptable variables.</summary>
-    [AddComponentMenu("Shababeek/Interactions/Drivers/Wheel To Variable Driver")]
-    public class WheelToVariableDriver : MonoBehaviour
+    [AddComponentMenu("Shababeek/Interactions/Writers/Wheel Variable Writer")]
+    public class WheelVariableWriter : MonoBehaviour
     {
         [Header("Source")]
         [Tooltip("Source wheel interactable.")]

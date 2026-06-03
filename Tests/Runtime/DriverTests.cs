@@ -301,7 +301,7 @@ namespace Shababeek.Interactions.Tests
     }
 
     [TestFixture]
-    public class JoystickToVariableDriverTests
+    public class JoystickVariableWriterTests
     {
         [Test]
         public void OnRotationChanged_AppliesDeadzone()
@@ -310,12 +310,12 @@ namespace Shababeek.Interactions.Tests
             var joystick = go.AddComponent<JoystickInteractable>();
 
             go.SetActive(false);
-            var driver = go.AddComponent<JoystickToVariableDriver>();
+            var driver = go.AddComponent<JoystickVariableWriter>();
 
             var xOutput = ScriptableObject.CreateInstance<FloatVariable>();
             var yOutput = ScriptableObject.CreateInstance<FloatVariable>();
 
-            var driverType = typeof(JoystickToVariableDriver);
+            var driverType = typeof(JoystickVariableWriter);
             driverType.GetField("joystick", BindingFlags.NonPublic | BindingFlags.Instance)
                 ?.SetValue(driver, joystick);
             driverType.GetField("xOutput", BindingFlags.NonPublic | BindingFlags.Instance)
@@ -353,12 +353,12 @@ namespace Shababeek.Interactions.Tests
             var joystick = go.AddComponent<JoystickInteractable>();
 
             go.SetActive(false);
-            var driver = go.AddComponent<JoystickToVariableDriver>();
+            var driver = go.AddComponent<JoystickVariableWriter>();
 
             var xOutput = ScriptableObject.CreateInstance<FloatVariable>();
             var yOutput = ScriptableObject.CreateInstance<FloatVariable>();
 
-            var driverType = typeof(JoystickToVariableDriver);
+            var driverType = typeof(JoystickVariableWriter);
             driverType.GetField("joystick", BindingFlags.NonPublic | BindingFlags.Instance)
                 ?.SetValue(driver, joystick);
             driverType.GetField("xOutput", BindingFlags.NonPublic | BindingFlags.Instance)
@@ -392,7 +392,7 @@ namespace Shababeek.Interactions.Tests
     }
 
     [TestFixture]
-    public class LeverToVariableDriverTests
+    public class LeverVariableWriterTests
     {
         [Test]
         public void OnLeverChanged_InvertOutput_InvertsValue()
@@ -401,11 +401,11 @@ namespace Shababeek.Interactions.Tests
             var lever = go.AddComponent<LeverInteractable>();
 
             go.SetActive(false);
-            var driver = go.AddComponent<LeverToVariableDriver>();
+            var driver = go.AddComponent<LeverVariableWriter>();
 
             var normalizedOutput = ScriptableObject.CreateInstance<FloatVariable>();
 
-            var driverType = typeof(LeverToVariableDriver);
+            var driverType = typeof(LeverVariableWriter);
             driverType.GetField("lever", BindingFlags.NonPublic | BindingFlags.Instance)
                 ?.SetValue(driver, lever);
             driverType.GetField("normalizedOutput", BindingFlags.NonPublic | BindingFlags.Instance)
@@ -436,11 +436,11 @@ namespace Shababeek.Interactions.Tests
             var lever = go.AddComponent<LeverInteractable>();
 
             go.SetActive(false);
-            var driver = go.AddComponent<LeverToVariableDriver>();
+            var driver = go.AddComponent<LeverVariableWriter>();
 
             var normalizedOutput = ScriptableObject.CreateInstance<FloatVariable>();
 
-            var driverType = typeof(LeverToVariableDriver);
+            var driverType = typeof(LeverVariableWriter);
             driverType.GetField("lever", BindingFlags.NonPublic | BindingFlags.Instance)
                 ?.SetValue(driver, lever);
             driverType.GetField("normalizedOutput", BindingFlags.NonPublic | BindingFlags.Instance)

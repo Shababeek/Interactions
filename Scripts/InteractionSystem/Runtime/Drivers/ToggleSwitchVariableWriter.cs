@@ -5,9 +5,9 @@ using UnityEngine;
 namespace Shababeek.Interactions
 {
     /// <summary>Writes a ToggleSwitchInteractable's step output to scriptable variables and events.</summary>
-    [AddComponentMenu("Shababeek/Interactions/Drivers/Toggle Switch To Variable Driver")]
+    [AddComponentMenu("Shababeek/Interactions/Writers/Toggle Switch Variable Writer")]
     [RequireComponent(typeof(ToggleSwitchInteractable))]
-    public class ToggleSwitchToVariableDriver : MonoBehaviour
+    public class ToggleSwitchVariableWriter : MonoBehaviour
     {
         [Header("Variable Outputs")]
         [Tooltip("IntVariable that receives the current step index (0-based).")]
