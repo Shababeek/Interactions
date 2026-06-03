@@ -6,6 +6,8 @@ using Shababeek.Interactions;
 /// Drives a QuickOutline component from an InteractableBase's hover/select events.
 /// Enables the outline on hover, swaps color/width when selected, disables on release.
 /// Optionally shows a pulsing idle "grab hint" outline to advertise the object as grabbable.
+/// All colors/widths/modes/toggles come from the shared <see cref="OutlineFeedbackConfig"/>
+/// (Resources/OutlineFeedbackConfig) so the whole project shares one source of truth.
 /// </summary>
 [RequireComponent(typeof(InteractableBase))]
 [DisallowMultipleComponent]
@@ -15,40 +17,24 @@ public class InteractableOutlineFeedback : MonoBehaviour
     [Tooltip("Outline to drive. Auto-found on this GameObject (or children) if not assigned. Created on this GameObject when missing.")]
     [SerializeField] private Outline outline;
 
-    [Header("Hover")]
-    [SerializeField] private Color hoverColor = new Color(1f, 0.85f, 0.2f, 0.2f);
-    [SerializeField, Range(0f, 5f)] private float hoverWidth = 0.1f;
-    [SerializeField] private Outline.Mode hoverMode = Outline.Mode.OutlineVisible;
-
-    [Header("Selected")]
-    [Tooltip("Keep outline visible while held.")]
-    [SerializeField] private bool showWhileSelected = true;
-    [SerializeField] private Color selectedColor = new Color(0.2f, 0.9f, 1f, 0.2f);
-    [SerializeField, Range(0f, 5f)] private float selectedWidth = 0.1f;
-    [SerializeField] private Outline.Mode selectedMode = Outline.Mode.OutlineVisible;
-
-    [Header("Grab Hint (Idle)")]
-    [Tooltip("Show a pulsing outline when idle (not hovered/selected) to hint the object is grabbable.")]
-    [SerializeField] private bool showGrabHint = false;
-    [SerializeField] private Color hintColor = new Color(1f, 1f, 1f, 0.1f);
-    [SerializeField] private Outline.Mode hintMode = Outline.Mode.OutlineVisible;
-    [Tooltip("Minimum outline width during the pulse cycle.")]
-    [SerializeField, Range(0f, 5f)] private float hintMinWidth = 0.02f;
-    [Tooltip("Maximum outline width during the pulse cycle.")]
-    [SerializeField, Range(0f, 5f)] private float hintMaxWidth = 0.08f;
-    [Tooltip("Pulses per second.")]
-    [SerializeField, Range(0.1f, 5f)] private float hintPulseSpeed = 1f;
-
     private static readonly Color HiddenColor = new Color(0f, 0f, 0f, 0f);
+
+    // Shared project-wide settings, resolved statically from Resources/OutlineFeedbackConfig.
+    private static OutlineFeedbackConfig Config => OutlineFeedbackConfig.Default;
 
     private InteractableBase _interactable;
     private readonly CompositeDisposable _disposables = new();
     private bool _isHovering;
     private bool _isSelected;
+    // Per-instance runtime toggle for the idle grab hint. Style comes from the config;
+    // this decides whether THIS object currently advertises itself (e.g. driven by sockets).
+    private bool _showGrabHint;
 
     private void Awake()
     {
         _interactable = GetComponent<InteractableBase>();
+        var config = Config;
+        _showGrabHint = config != null && config.Hint.enabled;
         EnsureOutline();
         ApplyState();
     }
@@ -87,12 +73,13 @@ public class InteractableOutlineFeedback : MonoBehaviour
 
     private void Update()
     {
-        if (!showGrabHint) return;
+        var config = Config;
+        if (config == null || !config.FeedbackEnabled || !_showGrabHint) return;
         if (_isHovering || _isSelected) return;
         if (outline == null) return;
 
-        float t = (Mathf.Sin(Time.time * hintPulseSpeed * Mathf.PI * 2f) + 1f) * 0.5f;
-        Set(hintMode, hintColor, Mathf.Lerp(hintMinWidth, hintMaxWidth, t));
+        float t = (Mathf.Sin(Time.time * config.HintPulseSpeed * Mathf.PI * 2f) + 1f) * 0.5f;
+        Set(config.Hint.mode, config.Hint.color, Mathf.Lerp(config.HintMinWidth, config.HintMaxWidth, t));
     }
 
     private void EnsureOutline()
@@ -111,25 +98,39 @@ public class InteractableOutlineFeedback : MonoBehaviour
     {
         if (outline == null) return;
 
-        if (_isSelected && showWhileSelected)
+        var config = Config;
+        if (config == null || !config.FeedbackEnabled)
         {
-            Set(selectedMode, selectedColor, selectedWidth);
+            HideOutline();
             return;
         }
 
-        if (_isHovering && !_isSelected)
+        if (_isSelected && config.Selected.enabled)
         {
-            Set(hoverMode, hoverColor, hoverWidth);
+            Set(config.Selected.mode, config.Selected.color, config.Selected.width);
             return;
         }
 
-        if (showGrabHint)
+        if (_isHovering && !_isSelected && config.Hover.enabled)
         {
-            Set(hintMode, hintColor, hintMinWidth);
+            Set(config.Hover.mode, config.Hover.color, config.Hover.width);
+            return;
+        }
+
+        if (_showGrabHint)
+        {
+            Set(config.Hint.mode, config.Hint.color, config.HintMinWidth);
             return;
         }
 
         HideOutline();
+    }
+
+    /// <summary>Toggle this object's idle grab-hint outline at runtime (style comes from the config).</summary>
+    public void SetGrabHint(bool enabled)
+    {
+        _showGrabHint = enabled;
+        ApplyState();
     }
 
     private void HideOutline()
@@ -145,16 +146,8 @@ public class InteractableOutlineFeedback : MonoBehaviour
         outline.OutlineWidth = width;
     }
 
-    /// <summary>Toggle the idle grab-hint outline at runtime.</summary>
-    public void SetGrabHint(bool enabled)
-    {
-        showGrabHint = enabled;
-        ApplyState();
-    }
-
     private void OnValidate()
     {
         if (outline == null) outline = GetComponent<Outline>();
-        if (hintMaxWidth < hintMinWidth) hintMaxWidth = hintMinWidth;
     }
 }
