@@ -122,10 +122,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Shababeek.GoodMorning::Shababeek.Common.EyelidEffect
   topLid: {fileID: 2328012862661448129}
   bottomLid: {fileID: 7842709237774802012}
-  defaultDuration: 2
+  defaultDuration: 3
   closeEase: 6
   openEase: 6
-  topLidSpeedWeight: 0.7
+  topLidSpeedWeight: 0.6
   useFade: 1
   fadeOffset: 0.3
 --- !u!1 &8737396409015829036
@@ -155,8 +155,8 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8737396409015829036}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0.1}
-  m_LocalScale: {x: 0.0003, y: 0.0003, z: 0.0003}
+  m_LocalPosition: {x: 0, y: 0, z: 0.0115}
+  m_LocalScale: {x: 0.0001, y: 0.0001, z: 0.0001}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 2328012862661448129}
