@@ -32,10 +32,7 @@ namespace Shababeek.Interactions.Feedback
         {
             foreach (var feedback in feedbacks)
             {
-                if (feedback != null && feedback.IsValid())
-                {
-                    feedback.Initialize(this);
-                }
+                feedback?.Initialize(this);
             }
         }
 
@@ -138,10 +135,7 @@ namespace Shababeek.Interactions.Feedback
             if (feedback != null && !feedbacks.Contains(feedback))
             {
                 feedbacks.Add(feedback);
-                if (feedback.IsValid())
-                {
-                    feedback.Initialize(this);
-                }
+                feedback.Initialize(this);
             }
         }
 
@@ -157,10 +151,7 @@ namespace Shababeek.Interactions.Feedback
         {
             var newFeedback = new MaterialFeedback();
             feedbacks.Add(newFeedback);
-            if (newFeedback.IsValid())
-            {
-                newFeedback.Initialize(this);
-            }
+            newFeedback.Initialize(this);
         }
 
         /// <summary>
