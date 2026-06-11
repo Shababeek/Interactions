@@ -550,11 +550,19 @@ namespace Shababeek.Interactions.Editors
                 renderer.sharedMaterial = mat;
             }
 
-            // Create label
+            // Label is child of buttonObject (scale = ButtonScale, ButtonHeight, ButtonScale).
+            // All localPosition values must be in buttonObject local space.
+            // Unity cylinder mesh: -1 to +1 in local Y → top rim = +1.
+            // Desired world-Y (buttonBody space) = ButtonYOffset*0.5 + ButtonHeight*0.5 = 0.375 (inside cylinder),
+            // so place label above: world-Y = ButtonYOffset + ButtonHeight → local-Y = ButtonHeight/ButtonHeight = 1.
+            // Extra gap (ButtonYOffset*0.5f) converted to local: divide by ButtonHeight.
+            // labelLocalY = 1f + (ButtonYOffset * 0.5f) / ButtonHeight
             var labelGo = new GameObject("Label");
-            labelGo.transform.parent = buttonBody;
-            labelGo.transform.localPosition = new Vector3(0, ButtonYOffset + ButtonHeight + 0.1f, 0);
+            labelGo.transform.parent = buttonObject;
+            float labelLocalY = (ButtonYOffset / 0.5f) +  (ButtonHeight * 0.5f) ;
+            labelGo.transform.localPosition = new Vector3(0, labelLocalY, 0);
             labelGo.transform.localRotation = Quaternion.Euler(90, 0, 0);
+            labelGo.transform.localScale = new Vector3(2f, 2f, 2f);
             var tmp = labelGo.AddComponent<TextMeshPro>();
             tmp.text = "Button";
             tmp.fontSize = 3;

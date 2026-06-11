@@ -85,6 +85,29 @@ namespace Shababeek.Interactions
         [Tooltip("Button height when inactive (HeightChange mode).")]
         [SerializeField] private float inactiveHeight = 0.05f;
 
+        [Header("Audio Feedback")]
+        [Tooltip("AudioSource for button sounds. Auto-created if left empty.")]
+        [SerializeField] private AudioSource audioSource;
+
+        [Tooltip("Sound played when the button is pressed down. Leave empty to disable.")]
+        [SerializeField] private AudioClip pressSound;
+
+        [Tooltip("Sound played when the button is released (click). Leave empty to disable.")]
+        [SerializeField] private AudioClip releaseSound;
+
+        [Tooltip("Volume of button sounds.")]
+        [SerializeField] [Range(0f, 1f)] private float soundVolume = 1f;
+
+        [Header("Haptic Feedback")]
+        [Tooltip("Send haptic impulse on button press.")]
+        [SerializeField] private bool useHaptics = false;
+
+        [Tooltip("Haptic amplitude on press (0–1).")]
+        [SerializeField] [Range(0f, 1f)] private float hapticAmplitude = 0.5f;
+
+        [Tooltip("Haptic duration on press in seconds.")]
+        [SerializeField] private float hapticDuration = 0.1f;
+
         [ReadOnly][SerializeField] private bool isDown;
 
         private float _coolDownTimer = 0;
@@ -145,6 +168,13 @@ namespace Shababeek.Interactions
                 button = transform.GetChild(0);
             }
             _originalScale = transform.localScale;
+
+            if ((pressSound != null || releaseSound != null) && audioSource == null)
+            {
+                audioSource = gameObject.AddComponent<AudioSource>();
+                audioSource.spatialBlend = 1f;
+                audioSource.playOnAwake = false;
+            }
         }
 
         /// <summary>
@@ -185,20 +215,47 @@ namespace Shababeek.Interactions
         private void OnTriggerEnter(Collider other)
         {
             if (!enabled) return;
-            if (maskName!="" && !other.gameObject.name .Contains( maskName)) return;
+            if (maskName != "" && !other.gameObject.name.Contains(maskName)) return;
             if (_coolDownTimer < coolDownTime) return;
             if (isDown) return;
             _coolDownTimer = 0;
             onButtonDown.Invoke();
             isDown = true;
+            PlaySound(pressSound);
+            if (useHaptics) SendHaptic(other);
         }
+
         private void OnTriggerExit(Collider other)
         {
             if (!isDown) return;
             onButtonUp.Invoke();
             onClick.Invoke();
-
             isDown = false;
+            PlaySound(releaseSound);
+        }
+
+        private void PlaySound(AudioClip clip)
+        {
+            if (audioSource == null || clip == null) return;
+            audioSource.PlayOneShot(clip, soundVolume);
+        }
+
+        private void SendHaptic(Collider other)
+        {
+            var name = other.gameObject.name.ToLowerInvariant();
+            bool isLeft = name.Contains("left");
+            bool isRight = name.Contains("right");
+
+            if (isLeft || (!isLeft && !isRight))
+                TrySendHaptic(UnityEngine.XR.XRNode.LeftHand);
+            if (isRight || (!isLeft && !isRight))
+                TrySendHaptic(UnityEngine.XR.XRNode.RightHand);
+        }
+
+        private void TrySendHaptic(UnityEngine.XR.XRNode node)
+        {
+            var device = UnityEngine.XR.InputDevices.GetDeviceAtXRNode(node);
+            device.SendHapticImpulse(0, hapticAmplitude, hapticDuration);
         }
     }
 }
