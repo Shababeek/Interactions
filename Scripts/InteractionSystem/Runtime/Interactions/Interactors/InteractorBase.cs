@@ -138,11 +138,15 @@ namespace Shababeek.Interactions
             }
             var buttonObservable =
                 GetButtonObservable(currentInteractable.SelectionButton, ButtonMappingType.Selection);
+            DisposeHoverSubscription();
             _hoverSubscriber = buttonObservable?.Do(_onInteractionStateChanged).Subscribe();
         }
 
         protected virtual void EndHover()
         {
+            // Always dispose, even on the early returns below — a leaked subscription
+            // lets a stale button stream select a different interactable later.
+            DisposeHoverSubscription();
             if (currentInteractable==null)
             {
                 return;
@@ -174,15 +178,26 @@ namespace Shababeek.Interactions
             catch (Exception e)
             {
                 Debug.LogError($"Error during selection on {currentInteractable.name}: {e.Message}", currentInteractable);
-               
-            }
-            isInteracting = true;
-            
 
+            }
+            // The interactable can abort the selection (Select() returning true) or force a
+            // deselect mid-selection; committing isInteracting without a selected state would
+            // permanently block this interactor.
+            if (!currentInteractable || currentInteractable.CurrentState != InteractionState.Selected ||
+                currentInteractable.CurrentInteractor != this)
+                return;
+            isInteracting = true;
+
+
+            // Dispose before subscribing — SpawningInteractable re-enters Select() from inside
+            // OnStateChanged, so the inner call's subscriptions would otherwise be overwritten
+            // here without disposal (one leaked subscription per spawn).
+            DisposeActivationSubscription();
             var buttonObservable =
                 GetButtonObservable(currentInteractable.SelectionButton, ButtonMappingType.Activation);
             _activationSubscriber = buttonObservable?.Do(_onActivate).Subscribe();
 
+            DisposeThumbSubscription();
             var thumbObservable = _hand.OnThumbButtonStateChange;
             _thumbSubscriber = thumbObservable?.Do(_onThumb).Subscribe();
         }
@@ -223,7 +238,11 @@ namespace Shababeek.Interactions
 
         private void HandleInteractionStateChanged(VRButtonState state)
         {
-            if (currentInteractable == null) return;
+            if (currentInteractable == null)
+            {
+                if (isInteracting) ForceReleaseDestroyedInteractable();
+                return;
+            }
             switch (state)
             {
                 case VRButtonState.Up:
@@ -263,6 +282,15 @@ namespace Shababeek.Interactions
                     UnUse();
                     break;
             }
+        }
+
+        private void ForceReleaseDestroyedInteractable()
+        {
+            isInteracting = false;
+            DisposeActivationSubscription();
+            DisposeHoverSubscription();
+            DisposeThumbSubscription();
+            currentInteractable = null;
         }
 
         private void DisposeHoverSubscription()
