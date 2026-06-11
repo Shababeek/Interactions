@@ -82,6 +82,11 @@ namespace Shababeek.Interactions
 
         private void PerformRaycast()
         {
+            // While selected, the ray drifting off the object must not swap CurrentInteractable —
+            // doing so makes the button-up handler miss DeSelect, stranding the grab forever.
+            // Same guard TriggerInteractor.Update uses.
+            if (IsInteracting) return;
+
             Vector3 origin = raycastOrigin.position;
             Vector3 direction = raycastOrigin.forward;
             

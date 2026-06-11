@@ -217,6 +217,14 @@ namespace Shababeek.Interactions.Core
 
             foreach (var subsystem in subsystems)
             {
+                // Anchor tracking to the physical floor. Without this the runtime default can
+                // be Device mode, where positions are relative to wherever the headset was at
+                // session start (e.g. on a desk) — RecenterCameraToRig then bakes that stale
+                // reference into the rig offset and the player spawns elevated until the
+                // headset's recenter button re-zeroes the origin.
+                if ((subsystem.GetSupportedTrackingOriginModes() & TrackingOriginModeFlags.Floor) != 0)
+                    subsystem.TrySetTrackingOriginMode(TrackingOriginModeFlags.Floor);
+
                 subsystem.trackingOriginUpdated -= OnTrackingOriginUpdated;
                 subsystem.trackingOriginUpdated += OnTrackingOriginUpdated;
             }
@@ -242,13 +250,29 @@ namespace Shababeek.Interactions.Core
                 InputTracking.GetNodeStates(nodeStates);
                 foreach (var state in nodeStates)
                 {
-                    if ((state.nodeType == XRNode.CenterEye || state.nodeType == XRNode.Head) && state.tracked)
+                    // tracked alone isn't enough — over Link the head can report tracked while
+                    // the pose is still at origin. Require a real position so the alignment
+                    // doesn't bake a zero/stale head pose into the rig offset.
+                    if ((state.nodeType == XRNode.CenterEye || state.nodeType == XRNode.Head) && state.tracked
+                        && state.TryGetPosition(out var headPosition) && headPosition.sqrMagnitude > 0.0001f)
                         return;
                 }
 
                 await Awaitable.NextFrameAsync();
                 if (this == null || !isActiveAndEnabled) return;
             }
+        }
+
+        private static bool IsHeadTracked()
+        {
+            var nodeStates = new List<XRNodeState>();
+            InputTracking.GetNodeStates(nodeStates);
+            foreach (var state in nodeStates)
+            {
+                if ((state.nodeType == XRNode.CenterEye || state.nodeType == XRNode.Head) && state.tracked)
+                    return true;
+            }
+            return false;
         }
 
         private async void OnTrackingOriginUpdated(XRInputSubsystem subsystem)
@@ -482,18 +506,17 @@ namespace Shababeek.Interactions.Core
             // side-agnostic; only the pin side depends on this.
             hand.Hand = handIdentifier;
 
-            if (interactorType == HandInteractorType.Trigger)
-            {
-                handGameObject.GetComponent<TriggerInteractor>().enabled = true;
-                handGameObject.AddComponent<RaycastInteractor>().enabled = false;
-            }
+            // Get-or-add both interactors, then enable only the requested one. The previous
+            // code NRE'd when the prefab lacked a TriggerInteractor, and in the Ray branch
+            // added a duplicate TriggerInteractor while leaving the prefab's original enabled —
+            // two live interactors fighting over the same interactable state machine.
+            var triggerInteractor = handGameObject.GetComponent<TriggerInteractor>();
+            if (triggerInteractor == null) triggerInteractor = handGameObject.AddComponent<TriggerInteractor>();
+            var raycastInteractor = handGameObject.GetComponent<RaycastInteractor>();
+            if (raycastInteractor == null) raycastInteractor = handGameObject.AddComponent<RaycastInteractor>();
 
-            else
-            {
-                handGameObject.AddComponent<RaycastInteractor>().enabled = true;
-                handGameObject.AddComponent<TriggerInteractor>().enabled = false;
-
-            }
+            triggerInteractor.enabled = interactorType == HandInteractorType.Trigger;
+            raycastInteractor.enabled = interactorType != HandInteractorType.Trigger;
 
 
             return hand;
