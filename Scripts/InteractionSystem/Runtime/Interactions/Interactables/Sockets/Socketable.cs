@@ -147,6 +147,10 @@ namespace Shababeek.Interactions
             // indicator would remain visible.
             soc.EndHovering(this);
             var t = soc.Insert(this);
+            if (t == null)
+            {
+                return false;
+            }
             IsSocketed = true;
             onSocketed.Invoke(soc);
             _lastSocket = soc;
