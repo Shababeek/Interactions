@@ -16,8 +16,6 @@ namespace Shababeek.Interactions.Editors
                 controller.Initialize();
             }
             EditorApplication.update += Update;
-
-            controller.Initialize();
         }
         void OnDisable()
         {
@@ -32,7 +30,7 @@ namespace Shababeek.Interactions.Editors
 
                     controller.UpdateGraphVariables();
                 }
-                else
+                else if (controller.HandData)
                 {
                     controller.Initialize();
                 }

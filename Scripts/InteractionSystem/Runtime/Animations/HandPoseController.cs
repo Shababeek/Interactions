@@ -164,6 +164,11 @@ namespace Shababeek.Interactions.Animations
 
         private void InitializeGraph()
         {
+            if (!handData) return;
+            // Dispose any previous graph first — [ExecuteAlways] means OnEnable/Initialize can
+            // run many times (editor selection, enable cycles); without this every call leaks
+            // a live PlayableGraph.
+            DisposeGraph();
             _activePoseSystem = handData.PoseSystem;
             if (_activePoseSystem == HandPoseSystem.MuscleBased)
             {
@@ -354,9 +359,12 @@ namespace Shababeek.Interactions.Animations
         {
             if (!_graph.IsValid())
             {
+                // Can't rebuild without HandData — bail instead of NRE'ing every frame.
+                if (!handData) return;
                 Debug.LogWarning($"[HandPoseController] Graph became invalid on {gameObject.name}, reinitializing...", this);
                 DisposeGraph();
                 InitializeGraph();
+                if (!_graph.IsValid()) return;
             }
 
             for (int i = 0; i < fingers.Length; i++)
@@ -411,6 +419,14 @@ namespace Shababeek.Interactions.Animations
             {
                 _graph.Destroy();
             }
+        }
+
+        private void OnDisable()
+        {
+            // Symmetric with OnEnable→Initialize; without this, disable/enable cycles
+            // (and editor selections under [ExecuteAlways]) leak PlayableGraphs.
+            DisposeGraph();
+            DisposeHumanPoseHandler();
         }
 
         private void OnDestroy()
