@@ -5,16 +5,24 @@ using UnityEngine;
 namespace Shababeek.Interactions
 {
     /// <summary>
-    /// Grabable that accepts a second hand while held. The primary hand owns position; the
-    /// object's grip axis aims from the primary to the secondary hand (rifle-style look-rotation).
-    /// When the primary releases, the secondary hand is promoted to primary and keeps the object.
+    /// Constrained grabable that supports one or two hands. Both hands are represented by fake
+    /// hands welded to the object's grips (real hands hidden), so grips always look perfect.
+    /// One hand: the object follows the hidden primary hand. Two hands: the object's grip axis
+    /// aims from the primary to the secondary hand (rifle-style look-rotation). When the primary
+    /// releases, the secondary hand is promoted and keeps the object.
     /// </summary>
     [AddComponentMenu("Shababeek/Interactions/Interactables/Two Handed Grabable")]
-    public class TwoHandedGrabable : Grabable
+    public class TwoHandedGrabable : ConstrainedInteractableBase
     {
         [Header("Two-Handed")]
-        [Tooltip("Smoothing speed of the two-handed pose solve. Higher snaps faster.")]
-        [SerializeField] private float solveSmoothing = 25f;
+        [Tooltip("Smoothing speed of the follow/solve motion. Higher snaps faster.")]
+        [SerializeField] private float followSmoothing = 25f;
+
+        [Tooltip("Whether this object tracks velocity while held and applies a throw on release. Requires a Rigidbody.")]
+        [SerializeField] private bool canBeThrown = true;
+
+        [Tooltip("Throw tracking settings. Only used when Can Be Thrown is enabled and a Rigidbody is present.")]
+        [SerializeField] private Throwable throwable = new();
 
         [Tooltip("Fired when a second hand grabs this object.")]
         [SerializeField] private InteractorUnityEvent onSecondaryGrabStart = new();
@@ -22,130 +30,175 @@ namespace Shababeek.Interactions
         [Tooltip("Fired when the second hand releases or is promoted to primary.")]
         [SerializeField] private InteractorUnityEvent onSecondaryGrabEnd = new();
 
-        private InteractorBase _secondary;
-
-        /// <summary>The interactor holding the secondary grip (null when one-handed).</summary>
-        public InteractorBase SecondaryInteractor => _secondary;
+        private Rigidbody _body;
+        private bool _wasKinematic;
 
         /// <summary>True while both hands are holding this object.</summary>
-        public bool IsTwoHanded => IsSelected && _secondary != null;
+        public bool IsTwoHanded => IsSelected && SecondaryInteractor != null;
 
         /// <inheritdoc/>
-        public override bool CanAcceptSecondaryInteractor(InteractorBase interactor)
+        protected override bool SupportsSecondaryGrab => true;
+
+        protected override void InitializeInteractable()
         {
-            return IsSelected
-                   && _secondary == null
-                   && interactor != null
-                   && interactor != CurrentInteractor
-                   && CanInteract(interactor.Hand);
+            base.InitializeInteractable();
+            _body = GetComponent<Rigidbody>();
         }
 
         /// <inheritdoc/>
-        public override bool TrySecondarySelect(InteractorBase interactor)
+        protected override bool Select()
         {
-            if (!CanAcceptSecondaryInteractor(interactor)) return false;
-
-            _secondary = interactor;
-            Constrainter.ApplyConstraints(interactor.Hand, interactor.GetInteractionPoint());
-
-            // Two hands can't both parent the object — switch to the per-frame solve.
-            CancelGrabTween();
-            transform.SetParent(null, true);
-
-            onSecondaryGrabStart.Invoke(interactor);
-            return true;
-        }
-
-        /// <inheritdoc/>
-        public override void SecondaryDeselect(InteractorBase interactor)
-        {
-            if (_secondary == null || _secondary != interactor) return;
-
-            Constrainter.RemoveConstraints(interactor.Hand);
-            var released = _secondary;
-            _secondary = null;
-
-            if (IsSelected)
+            // Freeze physics for the duration of the grab; prior state restored on release.
+            if (_body != null)
             {
-                // Back to the ordinary one-hand attachment on the primary.
-                InitializeAttachmentPointTransform();
-                AttachToHand();
+                _wasKinematic = _body.isKinematic;
+                _body.isKinematic = true;
             }
 
-            onSecondaryGrabEnd.Invoke(released);
-        }
+            var abort = base.Select(); // fake hand + constraints + hidden real hand
 
-        /// <inheritdoc/>
-        protected override bool SuppressThrow => _secondary != null;
+            if (canBeThrown && _body != null)
+            {
+                throwable.StartTracking(_body, transform);
+            }
+
+            return abort;
+        }
 
         /// <inheritdoc/>
         protected override void DeSelected()
         {
+            // Read before base.DeSelected() — it consumes SecondaryInteractor for promotion.
+            bool handingOver = SecondaryInteractor != null;
+
             base.DeSelected();
 
-            if (_secondary == null) return;
+            if (_body != null) _body.isKinematic = _wasKinematic;
 
-            // Primary released while the second hand still holds: promote it. The promotion is
-            // a normal Select() and must run after the state machine settles to None, so defer
-            // one frame.
-            var toPromote = _secondary;
-            _secondary = null;
-            onSecondaryGrabEnd.Invoke(toPromote);
-            PromoteNextFrame(toPromote);
+            // Order matters: ApplyThrow is a no-op on kinematic bodies, so kinematic state is
+            // restored first. No throw during a hand-over — the other hand keeps the object.
+            if (canBeThrown && _body != null && !handingOver)
+            {
+                throwable.ApplyThrow();
+            }
         }
 
-        private async void PromoteNextFrame(InteractorBase interactor)
+        /// <inheritdoc/>
+        protected override void OnSecondarySelected(InteractorBase interactor)
         {
-            await Awaitable.NextFrameAsync();
-            if (this == null || interactor == null) return;
-            if (IsSelected) return; // something else claimed the object meanwhile
-            interactor.PromoteSecondaryToPrimary();
+            onSecondaryGrabStart.Invoke(interactor);
         }
 
-        private void LateUpdate()
+        /// <inheritdoc/>
+        protected override void OnSecondaryDeselected(InteractorBase interactor)
         {
-            if (!IsTwoHanded) return;
-            if (CurrentInteractor == null || _secondary == null) return;
+            onSecondaryGrabEnd.Invoke(interactor);
+        }
 
-            Vector3 primaryHand = CurrentInteractor.Hand.transform.position;
-            Vector3 secondaryHand = _secondary.Hand.transform.position;
-            Vector3 upHint = CurrentInteractor.Hand.transform.up;
+        /// <inheritdoc/>
+        protected override void HandleObjectMovement(Vector3 handWorldPosition)
+        {
+            if (!IsSelected || CurrentInteractor == null) return;
 
-            var (targetPosition, targetRotation) = TwoHandSolver.Solve(
-                primaryHand, secondaryHand, upHint,
-                GetGripAnchorLocal(CurrentInteractor),
-                GetGripAnchorLocal(_secondary),
-                Constrainter.ConstraintTransform.lossyScale);
+            Vector3 targetPosition;
+            Quaternion targetRotation;
+
+            if (SecondaryInteractor != null)
+            {
+                (targetPosition, targetRotation) = TwoHandSolver.Solve(
+                    CurrentInteractor.transform.position,
+                    SecondaryInteractor.transform.position,
+                    CurrentInteractor.transform.up,
+                    GetGripAnchorLocal(CurrentInteractor.HandIdentifier),
+                    GetGripAnchorLocal(SecondaryInteractor.HandIdentifier),
+                    ConstraintTransform.lossyScale);
+            }
+            else
+            {
+                (targetPosition, targetRotation) = SolveOneHanded();
+            }
 
             // Exponential decay smoothing — frame-rate independent.
-            float t = 1f - Mathf.Exp(-solveSmoothing * Time.deltaTime);
+            float t = 1f - Mathf.Exp(-followSmoothing * Time.deltaTime);
             transform.SetPositionAndRotation(
                 Vector3.Lerp(transform.position, targetPosition, t),
                 Quaternion.Slerp(transform.rotation, targetRotation, t));
         }
 
-        private Vector3 GetGripAnchorLocal(InteractorBase interactor)
+        private (Vector3 position, Quaternion rotation) SolveOneHanded()
         {
-            var handIdentifier = interactor.Hand.HandIdentifier;
+            // Place the object so its authored grip pose coincides with the (hidden) real hand:
+            // hand pose in constraint space is (anchor, anchorRotation), so
+            // root = hand * inverse(localGripPose). Assumes ConstraintTransform is rotationally
+            // aligned with the root (the scale compensator is created with identity rotation).
+            var handIdentifier = CurrentInteractor.HandIdentifier;
+            var (anchorLocal, anchorLocalRotation) = GetGripPoseLocal(handIdentifier);
 
-            if (Constrainter.ConstraintType == HandConstrainType.MultiPoint)
+            Quaternion handRotation = CurrentInteractor.transform.rotation;
+            Quaternion rotation = handRotation * Quaternion.Inverse(anchorLocalRotation);
+            Vector3 scaledAnchor = Vector3.Scale(anchorLocal, ConstraintTransform.lossyScale);
+            Vector3 position = CurrentInteractor.transform.position - rotation * scaledAnchor;
+
+            return (position, rotation);
+        }
+
+        private Vector3 GetGripAnchorLocal(HandIdentifier handIdentifier)
+        {
+            if (PoseConstrainer.ConstraintType == HandConstrainType.MultiPoint)
             {
-                int index = Constrainter.GetActiveGrabPointIndex(handIdentifier);
-                if (index >= 0 && index < Constrainter.GrabPoints.Count)
+                int index = PoseConstrainer.GetActiveGrabPointIndex(handIdentifier);
+                if (index >= 0 && index < PoseConstrainer.GrabPoints.Count)
                 {
-                    return Constrainter.GrabPoints[index].localPosition;
+                    return PoseConstrainer.GrabPoints[index].localPosition;
                 }
             }
 
-            var (position, _) = Constrainter.GetTargetHandTransform(handIdentifier);
+            var (position, _) = PoseConstrainer.GetTargetHandTransform(handIdentifier);
             return position;
+        }
+
+        private (Vector3 position, Quaternion rotation) GetGripPoseLocal(HandIdentifier handIdentifier)
+        {
+            var (position, rotation) = PoseConstrainer.GetTargetHandTransform(handIdentifier);
+
+            if (PoseConstrainer.ConstraintType == HandConstrainType.MultiPoint)
+            {
+                int index = PoseConstrainer.GetActiveGrabPointIndex(handIdentifier);
+                if (index >= 0 && index < PoseConstrainer.GrabPoints.Count)
+                {
+                    var point = PoseConstrainer.GrabPoints[index];
+                    // Grab point pose combined with the per-hand offset authored on it.
+                    position = point.localPosition + Quaternion.Euler(point.localRotation) * position;
+                    rotation = Quaternion.Euler(point.localRotation) * rotation;
+                }
+            }
+
+            return (position, rotation);
+        }
+
+        /// <inheritdoc/>
+        protected override void HandleObjectDeselection() { }
+
+        /// <inheritdoc/>
+        protected override void HandleReturnToOriginalPosition()
+        {
+            // Free objects don't return to a rest pose.
+            IsReturning = false;
+        }
+
+        private void FixedUpdate()
+        {
+            if (IsSelected && canBeThrown && _body != null)
+            {
+                throwable.Sample();
+            }
         }
 
         private void OnDrawGizmosSelected()
         {
             if (!Application.isPlaying || !IsTwoHanded) return;
             Gizmos.color = Color.cyan;
-            Gizmos.DrawLine(CurrentInteractor.Hand.transform.position, _secondary.Hand.transform.position);
+            Gizmos.DrawLine(CurrentInteractor.transform.position, SecondaryInteractor.transform.position);
         }
     }
 }

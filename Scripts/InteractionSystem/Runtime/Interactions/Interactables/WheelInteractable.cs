@@ -42,6 +42,9 @@ namespace Shababeek.Interactions
         /// <summary>Maximum number of rotations in each direction.</summary>
         public float MaxRotations => maxRotations;
 
+        /// <summary>Wheels accept a second hand when driven by hand position (steering-wheel style).</summary>
+        protected override bool SupportsSecondaryGrab => controlScheme == RotaryControlScheme.HandPosition;
+
         private float MaxAngle => maxRotations * 360f;
         private float MinAngle => -maxRotations * 360f;
 

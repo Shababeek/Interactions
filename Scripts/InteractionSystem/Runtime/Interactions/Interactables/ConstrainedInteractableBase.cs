@@ -26,6 +26,7 @@ namespace Shababeek.Interactions
         private Hand _leftFakeHand;
         private Hand _rightFakeHand;
         private Hand _currentFakeHand;
+        private Hand _secondaryFakeHand;
         private Transform _leftFakeHandWrapper;
         private Transform _rightFakeHandWrapper;
         private float _transitionProgress = 0f;
@@ -45,6 +46,15 @@ namespace Shababeek.Interactions
         }
 
         protected Transform ManipulationTarget => interactableObject ? interactableObject : ConstraintTransform;
+
+        /// <summary>The interactor holding a secondary grip (null when one-handed).</summary>
+        protected InteractorBase SecondaryInteractor { get; private set; }
+
+        /// <summary>The fake hand spawned for the secondary grip (null when one-handed).</summary>
+        protected Hand SecondaryFakeHand => _secondaryFakeHand;
+
+        /// <summary>Subclasses that support a second hand (e.g. steering wheels) override to true.</summary>
+        protected virtual bool SupportsSecondaryGrab => false;
 
         protected virtual void Update()
         {
@@ -103,6 +113,14 @@ namespace Shababeek.Interactions
         {
             IsReturning = returnWhenDeselected;
             CurrentInteractor.ToggleHandModel(true);
+
+            // Clear this hand's pose constraints/grab point so a stale claimed index never
+            // excludes points from the other hand's next search.
+            if (PoseConstrainer)
+            {
+                PoseConstrainer.RemoveConstraints(_currentFakeHand ? _currentFakeHand : CurrentInteractor.Hand);
+            }
+
             if (_currentFakeHand)
             {
                 _currentFakeHand.gameObject.SetActive(false);
@@ -110,6 +128,106 @@ namespace Shababeek.Interactions
             }
 
             HandleObjectDeselection();
+
+            if (SecondaryInteractor != null)
+            {
+                // Primary released while the second hand still holds: promote it next frame
+                // (the state machine must settle to None before a normal Select can run).
+                var toPromote = SecondaryInteractor;
+                SecondaryInteractor = null;
+                // The secondary's fake hand stays active — Select() reuses it as the primary's.
+                _secondaryFakeHand = null;
+                PromoteNextFrame(toPromote);
+            }
+        }
+
+        private async void PromoteNextFrame(InteractorBase interactor)
+        {
+            try
+            {
+                await Awaitable.NextFrameAsync();
+                if (this == null || interactor == null || IsSelected) return;
+                interactor.PromoteSecondaryToPrimary();
+                // The brief deselected frame may have started a return animation — the new
+                // grab must not fight it.
+                if (IsSelected) IsReturning = false;
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+        }
+
+        /// <inheritdoc/>
+        public override bool CanAcceptSecondaryInteractor(InteractorBase interactor)
+        {
+            return SupportsSecondaryGrab
+                   && IsSelected
+                   && SecondaryInteractor == null
+                   && interactor != null
+                   && interactor != CurrentInteractor
+                   && CanInteract(interactor.Hand);
+        }
+
+        /// <inheritdoc/>
+        public override bool TrySecondarySelect(InteractorBase interactor)
+        {
+            if (!CanAcceptSecondaryInteractor(interactor)) return false;
+
+            SecondaryInteractor = interactor;
+            Vector3 interactionPoint = interactor.GetInteractionPoint();
+
+            if (PoseConstrainer.ConstraintType == HandConstrainType.Constrained ||
+                PoseConstrainer.ConstraintType == HandConstrainType.MultiPoint)
+            {
+                _secondaryFakeHand = GetOrCreateFakeHand(interactor.HandIdentifier);
+                PoseConstrainer.ApplyConstraints(_secondaryFakeHand, interactionPoint);
+                interactor.ToggleHandModel(false);
+                PositionSecondaryFakeHand(_secondaryFakeHand.transform, interactor.HandIdentifier);
+            }
+            else
+            {
+                PoseConstrainer.ApplyConstraints(interactor.Hand, interactionPoint);
+            }
+
+            OnSecondarySelected(interactor);
+            return true;
+        }
+
+        /// <inheritdoc/>
+        public override void SecondaryDeselect(InteractorBase interactor)
+        {
+            if (SecondaryInteractor == null || SecondaryInteractor != interactor) return;
+
+            interactor.ToggleHandModel(true);
+            if (PoseConstrainer)
+            {
+                PoseConstrainer.RemoveConstraints(_secondaryFakeHand ? _secondaryFakeHand : interactor.Hand);
+            }
+
+            if (_secondaryFakeHand)
+            {
+                _secondaryFakeHand.gameObject.SetActive(false);
+                _secondaryFakeHand = null;
+            }
+
+            SecondaryInteractor = null;
+            OnSecondaryDeselected(interactor);
+        }
+
+        /// <summary>Hook fired after a secondary grip attaches. Subclasses init per-hand state here.</summary>
+        protected virtual void OnSecondarySelected(InteractorBase interactor) { }
+
+        /// <summary>Hook fired after a secondary grip detaches.</summary>
+        protected virtual void OnSecondaryDeselected(InteractorBase interactor) { }
+
+        /// <summary>Positions the secondary fake hand; default places it at the authored hand positioning.</summary>
+        protected virtual void PositionSecondaryFakeHand(Transform fakeHand, HandIdentifier handIdentifier)
+        {
+            if (!fakeHand || !PoseConstrainer) return;
+            var positioning = PoseConstrainer.GetTargetHandTransform(handIdentifier);
+            fakeHand.parent.localPosition = positioning.position;
+            fakeHand.localRotation = positioning.rotation;
         }
 
         protected override void ValidateInteractableObject()

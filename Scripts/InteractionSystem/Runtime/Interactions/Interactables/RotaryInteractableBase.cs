@@ -41,6 +41,11 @@ namespace Shababeek.Interactions
         // accounts for the static gap between where the user grabbed and where the constraint sits.
         private float _grabRotationOffset;
 
+        // Secondary-hand state (two-handed wheels, HandPosition scheme only)
+        private float _secondaryPreviousHandAngle;
+        private float _secondaryOrbitAngle;
+        private float _secondaryGrabRotationOffset;
+
         /// <summary>Current rotation angle in degrees, relative to the original rotation.</summary>
         public float CurrentAngle => currentAngle;
 
@@ -79,14 +84,33 @@ namespace Shababeek.Interactions
                 ? GatherDeltaFromHandPosition(handWorldPosition)
                 : GatherDeltaFromHandRotation();
 
+            if (SecondaryInteractor != null && controlScheme == RotaryControlScheme.HandPosition)
+            {
+                // Two hands share authority: average the deltas so moving both hands together
+                // turns the wheel 1:1 and a stationary hand damps the other.
+                float secondaryAngle = GetHandAngle(SecondaryInteractor.transform.position);
+                float secondaryDelta = Mathf.DeltaAngle(_secondaryPreviousHandAngle, secondaryAngle);
+                _secondaryPreviousHandAngle = secondaryAngle;
+                delta = (delta + secondaryDelta) * 0.5f;
+            }
+
             currentAngle = ProcessAngleDelta(currentAngle, delta);
 
             if (controlScheme == RotaryControlScheme.HandPosition
-                && grabMode == WheelGrabMode.HandFollowsObject
-                && _fakeHand != null)
+                && grabMode == WheelGrabMode.HandFollowsObject)
             {
-                _fakeHandOrbitAngle += delta;
-                UpdateFakeHandOrbit();
+                if (_fakeHand != null)
+                {
+                    _fakeHandOrbitAngle += delta;
+                    UpdateFakeHandOrbit();
+                }
+
+                if (SecondaryInteractor != null && SecondaryFakeHand != null)
+                {
+                    _secondaryOrbitAngle += delta;
+                    UpdateFakeHandOrbitFor(SecondaryFakeHand.transform, _secondaryOrbitAngle,
+                        _secondaryGrabRotationOffset, SecondaryInteractor.HandIdentifier);
+                }
             }
 
             ApplyRotation();
@@ -176,11 +200,20 @@ namespace Shababeek.Interactions
 
         protected void UpdateFakeHandOrbit()
         {
-            if (_fakeHand == null || PoseConstrainer == null) return;
+            if (_fakeHand == null) return;
+            UpdateFakeHandOrbitFor(_fakeHand, _fakeHandOrbitAngle, _grabRotationOffset,
+                CurrentInteractor.HandIdentifier);
+        }
 
-            var basePose = PoseConstrainer.GetTargetHandTransform(CurrentInteractor.HandIdentifier);
+        /// <summary>Orbits a fake hand around the rotation axis at the given angle, for either hand.</summary>
+        protected void UpdateFakeHandOrbitFor(Transform fakeHand, float orbitAngle, float grabRotationOffset,
+            HandIdentifier handIdentifier)
+        {
+            if (fakeHand == null || PoseConstrainer == null) return;
+
+            var basePose = PoseConstrainer.GetTargetHandTransform(handIdentifier);
             var orbitRadius = basePose.position.magnitude;
-            float rad = _fakeHandOrbitAngle * Mathf.Deg2Rad;
+            float rad = orbitAngle * Mathf.Deg2Rad;
             float cos = Mathf.Cos(rad) * orbitRadius;
             float sin = Mathf.Sin(rad) * orbitRadius;
 
@@ -191,13 +224,36 @@ namespace Shababeek.Interactions
                 _ => new Vector3(cos, sin, 0)
             };
 
-            _fakeHand.position = transform.TransformPoint(offset);
+            fakeHand.position = transform.TransformPoint(offset);
 
             // The interactable object's rotation (currentAngle around axis) already rotates the
             // fake hand visually via parenting. Only the constant grab-time offset needs to be
-            // applied as local rotation — applying _fakeHandOrbitAngle here double-counts.
-            Quaternion orbitRot = Quaternion.AngleAxis(_grabRotationOffset, GetLocalAxis());
-            _fakeHand.localRotation = orbitRot * basePose.rotation;
+            // applied as local rotation — applying the orbit angle here double-counts.
+            Quaternion orbitRot = Quaternion.AngleAxis(grabRotationOffset, GetLocalAxis());
+            fakeHand.localRotation = orbitRot * basePose.rotation;
+        }
+
+        /// <inheritdoc/>
+        protected override void OnSecondarySelected(InteractorBase interactor)
+        {
+            if (controlScheme != RotaryControlScheme.HandPosition) return;
+            _secondaryPreviousHandAngle = GetHandAngle(interactor.transform.position);
+        }
+
+        /// <inheritdoc/>
+        protected override void PositionSecondaryFakeHand(Transform fakeHand, HandIdentifier handIdentifier)
+        {
+            if (controlScheme == RotaryControlScheme.HandPosition
+                && grabMode == WheelGrabMode.HandFollowsObject
+                && SecondaryInteractor != null)
+            {
+                _secondaryOrbitAngle = GetHandAngle(SecondaryInteractor.transform.position);
+                _secondaryGrabRotationOffset = _secondaryOrbitAngle - GetConstraintAngle(handIdentifier);
+                UpdateFakeHandOrbitFor(fakeHand, _secondaryOrbitAngle, _secondaryGrabRotationOffset, handIdentifier);
+                return;
+            }
+
+            base.PositionSecondaryFakeHand(fakeHand, handIdentifier);
         }
 
         protected float GetConstraintAngle(HandIdentifier handIdentifier)
