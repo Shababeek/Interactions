@@ -120,44 +120,53 @@ A component that enables objects to be grabbed and held by VR hands. Manages the
 
 ### Switch
 
-A physical switch component that responds to trigger interactions. Automatically rotates based on interaction direction and raises events.
+A physical two-state (on/off) switch that responds to trigger collisions. The side a finger or
+object approaches from decides whether it turns on or off; the body rotates to match and latches.
+See [Switch](Interactables/Switch.md) for full details.
 
 #### Inspector Settings
 
 **Events:**
-- **On Up**: Event raised when switch moves to up position
-- **On Down**: Event raised when switch moves to down position
-- **On Hold**: Event raised when switch is held in a position
+- **On Turned On**: Raised when the switch turns on
+- **On Turned Off**: Raised when the switch turns off
+- **On State Changed**: Raised on every state change, passing the new state (bool)
 
 **Switch Configuration:**
 - **Switch Body**: The transform that rotates during interaction
 - **Rotation Axis**: Axis around which the switch rotates (X, Y, or Z)
-- **Detection Axis**: Axis used to detect interaction direction
-- **Up Rotation**: Rotation angle in degrees for the up position
-- **Down Rotation**: Rotation angle in degrees for the down position
-- **Rotate Speed**: Speed of rotation animation in degrees per second
-- **Angle Threshold**: Angle threshold in degrees for direction detection
-- **Stay In Position**: Whether the switch stays in position instead of returning to neutral
-- **Starting Position**: Starting position when the scene starts (Off, Neutral, or On)
+- **Detection Axis**: Axis used to detect which side the hand approaches from
+- **On Angle**: Rotation angle in degrees for the on position
+- **Off Angle**: Rotation angle in degrees for the off position
+- **Rotate Speed**: Speed of the rotation animation
+- **Angle Threshold**: Minimum approach angle before the switch flips
+- **Start On**: State the switch starts in when the scene loads
 
 **Debug:**
-- **Direction**: Current direction of the switch (read-only)
+- **Current State**: Read-only — true when the switch is on
 
 #### Usage
 
-1. Add the `Switch` component to a GameObject
+1. Add the `Switch` component to a GameObject with a trigger collider
 2. Configure the rotation and detection axes
-3. Set up the rotation angles and speed
+3. Set the on/off angles and animation speed
 4. Connect events in the inspector to trigger custom behaviors
-5. The switch automatically detects trigger interactions and rotates accordingly
 
-#### Public Methods
+#### Public API
 
-- **ResetSwitch()**: Resets to neutral position (respects stayInPosition setting)
-- **ForceResetSwitch()**: Forces reset to neutral regardless of settings
-- **GetSwitchState()**: Returns current state (true=up, false=down, null=neutral)
-- **GetCurrentRotation()**: Returns current rotation as Vector3
-- **SetPosition(StartingPosition)**: Sets switch to specific position
+- **IsOn**: Whether the switch is currently on
+- **SetState(bool)**: Sets the state, animating and raising events
+- **Toggle()**: Flips to the opposite state
+- **OnStateChanged**: `IObservable<bool>` that fires on every state change
+
+### Toggle Switch
+
+A grabbable lever-style switch that snaps to discrete step positions on release — the rotary
+counterpart to the Slider. See [Toggle Switch](Interactables/ToggleSwitch.md) for full details.
+
+- **Number Of Steps / Starting Step**: Discrete positions and initial step
+- **Angle Range / Rotation Axis**: Rotation limits and pivot axis
+- **On Step Changed / On Step Confirmed / On Value Changed**: Step and value events
+- **SetStep / IncrementStep / DecrementStep / CurrentStep**: Step API
 
 ### VRButton
 

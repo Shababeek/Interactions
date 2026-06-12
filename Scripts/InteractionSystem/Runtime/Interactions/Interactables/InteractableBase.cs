@@ -353,6 +353,23 @@ namespace Shababeek.Interactions
         }
 
         /// <summary>
+        /// Whether a second interactor may join while this interactable is selected.
+        /// Two-handed interactables override this; the default refuses.
+        /// </summary>
+        public virtual bool CanAcceptSecondaryInteractor(InteractorBase interactor) => false;
+
+        /// <summary>
+        /// Attempts to attach a second interactor to an already-selected interactable.
+        /// Runs outside the primary state machine. Returns true when accepted.
+        /// </summary>
+        public virtual bool TrySecondarySelect(InteractorBase interactor) => false;
+
+        /// <summary>
+        /// Detaches the given secondary interactor. No-op when it is not the secondary holder.
+        /// </summary>
+        public virtual void SecondaryDeselect(InteractorBase interactor) { }
+
+        /// <summary>
         /// Starts the use action for this interactable.
         /// Called when the secondary button is pressed while selected.
         /// </summary>

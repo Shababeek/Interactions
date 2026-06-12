@@ -48,6 +48,12 @@ namespace Shababeek.Interactions
             set => canBeThrown = value;
         }
 
+        /// <summary>Subclasses can suppress the release throw (e.g. during a two-handed hand-over).</summary>
+        protected virtual bool SuppressThrow => false;
+
+        /// <summary>Rigidbody of this grabable (null when none).</summary>
+        protected Rigidbody Body => _body;
+
 
         /// <inheritdoc/>
         protected override void UseStarted() { }
@@ -102,17 +108,25 @@ namespace Shababeek.Interactions
             transform.SetParent(null, true);
             if (_body != null) _body.isKinematic = _wasKinematic;
 
-            if (canBeThrown && _body != null)
+            if (canBeThrown && _body != null && !SuppressThrow)
             {
                 throwable.ApplyThrow();
             }
         }
 
-        private void AttachToHand()
+        /// <summary>Parents the object to the current interactor's attachment point.</summary>
+        protected void AttachToHand()
         {
             transform.SetParent(CurrentInteractor.AttachmentPoint, false);
             transform.localPosition = Vector3.zero;
             transform.localRotation = Quaternion.identity;
+        }
+
+        /// <summary>Stops any in-flight grab tween and clears its completion callback.</summary>
+        protected void CancelGrabTween()
+        {
+            UnsubscribeTweenComplete();
+            tweener.RemoveTweenable(_transformTweenable);
         }
 
         private void FixedUpdate()
@@ -137,7 +151,8 @@ namespace Shababeek.Interactions
             _body = GetComponent<Rigidbody>();
         }
         
-        private void InitializeAttachmentPointTransform()
+        /// <summary>Positions the interactor's attachment point from the hand-positioning data.</summary>
+        protected void InitializeAttachmentPointTransform()
         {
             var (handLocalPosition, handLocalRotation) = CurrentInteractor.Hand.HandIdentifier == HandIdentifier.Left ?
                 LeftHandTarget : RightHandTarget;

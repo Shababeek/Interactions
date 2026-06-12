@@ -29,6 +29,10 @@ namespace Shababeek.Interactions
         private readonly CompositeDisposable _disposables = new();
         private IDisposable _hoverSubscriber, _activationSubscriber, _thumbSubscriber;
         private XRButton _actualSelectionButton;
+        private bool _isSecondaryHold;
+
+        /// <summary>True while this interactor holds a secondary grip on a two-handed interactable.</summary>
+        public bool IsSecondaryHold => _isSecondaryHold;
 
         /// <summary>
         /// Attachment point transform for held objects.
@@ -124,7 +128,19 @@ namespace Shababeek.Interactions
 
         protected void StartHover()
         {
-            if (!currentInteractable || currentInteractable.IsSelected ) return;
+            if (!currentInteractable) return;
+            if (currentInteractable.IsSelected)
+            {
+                // Already held by another hand: if the interactable accepts a second grip,
+                // subscribe the selection button only — never OnStateChanged(Hovering), which
+                // would tear down the primary's Selected state.
+                if (!currentInteractable.CanAcceptSecondaryInteractor(this)) return;
+                DisposeHoverSubscription();
+                var secondaryObservable =
+                    GetButtonObservable(currentInteractable.SelectionButton, ButtonMappingType.Selection);
+                _hoverSubscriber = secondaryObservable?.Do(_onInteractionStateChanged).Subscribe();
+                return;
+            }
             if (!currentInteractable.CanInteract(Hand)) return;
             try
             {
@@ -217,6 +233,20 @@ namespace Shababeek.Interactions
         /// </summary>
         public void DeSelect()
         {
+            if (_isSecondaryHold)
+            {
+                // Secondary grips live outside the interactable's state machine — releasing
+                // one must never send OnStateChanged(None), which would deselect the primary.
+                _isSecondaryHold = false;
+                isInteracting = false;
+                DisposeActivationSubscription();
+                DisposeHoverSubscription();
+                DisposeThumbSubscription();
+                if (currentInteractable != null) currentInteractable.SecondaryDeselect(this);
+                currentInteractable = null;
+                return;
+            }
+
             isInteracting = false;
             DisposeActivationSubscription();
             DisposeHoverSubscription();
@@ -226,6 +256,18 @@ namespace Shababeek.Interactions
             StartHover();
             EndHover();
             currentInteractable = null;
+        }
+
+        /// <summary>
+        /// Re-selects the current interactable as a normal (primary) grab. Called by two-handed
+        /// interactables when the primary hand released while this hand held the secondary grip.
+        /// </summary>
+        public void PromoteSecondaryToPrimary()
+        {
+            if (currentInteractable == null) return;
+            _isSecondaryHold = false;
+            isInteracting = false;
+            Select();
         }
 
 
@@ -256,9 +298,15 @@ namespace Shababeek.Interactions
             switch (state)
             {
                 case VRButtonState.Up:
-                    if (currentInteractable.CurrentState == InteractionState.Selected &&
-                        currentInteractable.CurrentInteractor == this)
+                    if (_isSecondaryHold)
+                    {
                         DeSelect();
+                    }
+                    else if (currentInteractable.CurrentState == InteractionState.Selected &&
+                             currentInteractable.CurrentInteractor == this)
+                    {
+                        DeSelect();
+                    }
                     break;
                 case VRButtonState.Down:
                     if (currentInteractable.CurrentState == InteractionState.Hovering)
@@ -266,6 +314,15 @@ namespace Shababeek.Interactions
                         if (currentInteractable.SelectionButton == XRButton.Any)
                             DetectSelectionButton();
                         Select();
+                    }
+                    else if (!_isSecondaryHold && !isInteracting &&
+                             currentInteractable.IsSelected &&
+                             currentInteractable.CurrentInteractor != this &&
+                             currentInteractable.CanAcceptSecondaryInteractor(this) &&
+                             currentInteractable.TrySecondarySelect(this))
+                    {
+                        _isSecondaryHold = true;
+                        isInteracting = true;
                     }
                     break;
             }

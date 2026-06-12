@@ -91,7 +91,10 @@ namespace Shababeek.Interactions
         private Transform parent;
         
         private InteractableBase _interactableBase;
-        private int _activeGrabPointIndex = -1;
+        // Per-hand active grab point: two hands holding a MultiPoint interactable must not
+        // overwrite each other's resolved point (each hand poses from its own).
+        private int _leftActiveGrabPointIndex = -1;
+        private int _rightActiveGrabPointIndex = -1;
 
         /// <summary>Gets or sets the parent transform for this constraint system.</summary>
         public Transform Parent
@@ -103,8 +106,15 @@ namespace Shababeek.Interactions
         /// <summary>Gets the list of grab points for MultiPoint mode.</summary>
         public IReadOnlyList<GrabPoint> GrabPoints => grabPoints;
 
-        /// <summary>Gets the index of the currently active grab point (-1 if none).</summary>
-        public int ActiveGrabPointIndex => _activeGrabPointIndex;
+        /// <summary>Gets the active grab point index of whichever hand holds one (-1 if none).</summary>
+        public int ActiveGrabPointIndex =>
+            _leftActiveGrabPointIndex >= 0 ? _leftActiveGrabPointIndex : _rightActiveGrabPointIndex;
+
+        /// <summary>Gets the active grab point index for a specific hand (-1 if none).</summary>
+        public int GetActiveGrabPointIndex(HandIdentifier hand)
+        {
+            return hand == HandIdentifier.Left ? _leftActiveGrabPointIndex : _rightActiveGrabPointIndex;
+        }
 
         /// <summary>Gets the transform used for pose calculations.</summary>
         public Transform ConstraintTransform
@@ -122,8 +132,9 @@ namespace Shababeek.Interactions
         {
             get
             {
-                if (constraintType == HandConstrainType.MultiPoint && _activeGrabPointIndex >= 0 && _activeGrabPointIndex < grabPoints.Count)
-                    return grabPoints[_activeGrabPointIndex].leftPoseConstraints;
+                int index = _leftActiveGrabPointIndex;
+                if (constraintType == HandConstrainType.MultiPoint && index >= 0 && index < grabPoints.Count)
+                    return grabPoints[index].leftPoseConstraints;
                 return leftPoseConstraints;
             }
         }
@@ -133,8 +144,9 @@ namespace Shababeek.Interactions
         {
             get
             {
-                if (constraintType == HandConstrainType.MultiPoint && _activeGrabPointIndex >= 0 && _activeGrabPointIndex < grabPoints.Count)
-                    return grabPoints[_activeGrabPointIndex].rightPoseConstraints;
+                int index = _rightActiveGrabPointIndex;
+                if (constraintType == HandConstrainType.MultiPoint && index >= 0 && index < grabPoints.Count)
+                    return grabPoints[index].rightPoseConstraints;
                 return rightPoseConstraints;
             }
         }
@@ -169,10 +181,24 @@ namespace Shababeek.Interactions
 
                 case HandConstrainType.MultiPoint:
                     Vector3 searchPoint = interactionPoint ?? hand.transform.position;
-                    _activeGrabPointIndex = FindNearestGrabPoint(searchPoint);
+                    // A point already claimed by the other hand is excluded so two hands
+                    // never resolve to the same grip.
+                    int otherHandIndex = GetActiveGrabPointIndex(OtherHand(hand.HandIdentifier));
+                    SetActiveGrabPointIndex(hand.HandIdentifier, FindNearestGrabPoint(searchPoint, otherHandIndex));
                     hand.Constrain(this);
                     break;
             }
+        }
+
+        private static HandIdentifier OtherHand(HandIdentifier hand)
+        {
+            return hand == HandIdentifier.Left ? HandIdentifier.Right : HandIdentifier.Left;
+        }
+
+        private void SetActiveGrabPointIndex(HandIdentifier hand, int index)
+        {
+            if (hand == HandIdentifier.Left) _leftActiveGrabPointIndex = index;
+            else _rightActiveGrabPointIndex = index;
         }
 
         public void ApplyConstraints(Hand interactor)
@@ -180,12 +206,13 @@ namespace Shababeek.Interactions
             ApplyConstraints(interactor, null);
         }
 
-        /// <summary>Removes pose constraints and restores hand visibility.</summary>
+        /// <summary>Removes pose constraints and restores hand visibility. Only clears the
+        /// releasing hand's grab point — the other hand may still be holding one.</summary>
         public void RemoveConstraints(Hand hand)
         {
             hand.Unconstrain(this);
             hand.ToggleRenderer(true);
-            _activeGrabPointIndex = -1;
+            SetActiveGrabPointIndex(hand.HandIdentifier, -1);
         }
         
         /// <summary>Gets target position and rotation for the specified hand in local coordinates.</summary>
@@ -197,22 +224,24 @@ namespace Shababeek.Interactions
 
         private HandPositioning GetActiveHandPositioning(HandIdentifier handIdentifier)
         {
-            if (constraintType == HandConstrainType.MultiPoint && _activeGrabPointIndex >= 0 && _activeGrabPointIndex < grabPoints.Count)
+            int index = GetActiveGrabPointIndex(handIdentifier);
+            if (constraintType == HandConstrainType.MultiPoint && index >= 0 && index < grabPoints.Count)
             {
-                var point = grabPoints[_activeGrabPointIndex];
+                var point = grabPoints[index];
                 return handIdentifier == HandIdentifier.Left ? point.leftHandPositioning : point.rightHandPositioning;
             }
             return handIdentifier == HandIdentifier.Left ? leftHandPositioning : rightHandPositioning;
         }
 
-        private int FindNearestGrabPoint(Vector3 worldPosition)
+        private int FindNearestGrabPoint(Vector3 worldPosition, int excludeIndex = -1)
         {
             if (grabPoints == null || grabPoints.Count == 0) return -1;
 
-            int nearest = 0;
+            int nearest = -1;
             float nearestDist = float.MaxValue;
             for (int i = 0; i < grabPoints.Count; i++)
             {
+                if (i == excludeIndex) continue;
                 Vector3 grabPointWorld = ConstraintTransform.TransformPoint(grabPoints[i].localPosition);
                 float dist = Vector3.SqrMagnitude(grabPointWorld - worldPosition);
                 if (dist < nearestDist)
@@ -221,7 +250,10 @@ namespace Shababeek.Interactions
                     nearest = i;
                 }
             }
-            return nearest;
+
+            // All points excluded (single point already held by the other hand) — share it
+            // rather than fail; pose data still resolves correctly per hand.
+            return nearest >= 0 ? nearest : excludeIndex;
         }
   
         
