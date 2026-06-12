@@ -19,6 +19,7 @@ namespace Shababeek.Interactions.Editors
         private SerializedProperty _hapticOnStepProp;
         private SerializedProperty _hapticAmplitudeProp;
         private SerializedProperty _hapticDurationProp;
+        private SerializedProperty _hapticPatternProp;
         private SerializedProperty _onStepChangedProp;
         private SerializedProperty _onStepConfirmedProp;
         private SerializedProperty _onValueChangedProp;
@@ -41,6 +42,7 @@ namespace Shababeek.Interactions.Editors
             _hapticOnStepProp = serializedObject.FindProperty("hapticOnStep");
             _hapticAmplitudeProp = serializedObject.FindProperty("hapticAmplitude");
             _hapticDurationProp = serializedObject.FindProperty("hapticDuration");
+            _hapticPatternProp = serializedObject.FindProperty("hapticPattern");
             _onStepChangedProp = serializedObject.FindProperty("onStepChanged");
             _onStepConfirmedProp = serializedObject.FindProperty("onStepConfirmed");
             _onValueChangedProp = serializedObject.FindProperty("onValueChanged");
@@ -93,10 +95,14 @@ namespace Shababeek.Interactions.Editors
                 EditorGUILayout.PropertyField(_hapticOnStepProp, new GUIContent("Haptic On Step"));
             if (_hapticOnStepProp != null && _hapticOnStepProp.boolValue)
             {
+                if (_hapticPatternProp != null)
+                    EditorGUILayout.PropertyField(_hapticPatternProp, new GUIContent("Pattern (optional)"));
+                EditorGUI.BeginDisabledGroup(_hapticPatternProp != null && _hapticPatternProp.objectReferenceValue != null);
                 if (_hapticAmplitudeProp != null)
                     EditorGUILayout.PropertyField(_hapticAmplitudeProp, new GUIContent("Amplitude"));
                 if (_hapticDurationProp != null)
                     EditorGUILayout.PropertyField(_hapticDurationProp, new GUIContent("Duration"));
+                EditorGUI.EndDisabledGroup();
             }
         }
 

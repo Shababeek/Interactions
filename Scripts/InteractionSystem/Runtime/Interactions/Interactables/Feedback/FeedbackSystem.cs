@@ -481,55 +481,72 @@ namespace Shababeek.Interactions.Feedback
     [Serializable]
     public class HapticFeedback : FeedbackData
     {
-        [Header("Haptic Settings")]
-        [Tooltip("Vibration amplitude for hover (0-1).")]
-        [SerializeField] public float hoverAmplitude = 0.3f;
+        [Header("Haptic Patterns")]
+        [Tooltip("Pattern played on hover start.")]
+        [SerializeField] public HapticPattern hoverPattern;
 
-        [Tooltip("Vibration duration for hover in seconds.")]
-        [SerializeField] public float hoverDuration = 0.1f;
-        
-        [Tooltip("Vibration amplitude for selection (0-1).")]
-        [SerializeField] public float selectAmplitude = 0.5f;
-        
-        [Tooltip("Vibration duration for selection in seconds.")]
-        [SerializeField] public float selectDuration = 0.2f;
-        
-        [Tooltip("Vibration amplitude for activation (0-1).")]
-        [SerializeField] public float activateAmplitude = 1f;
-        
-        [Tooltip("Vibration duration for activation in seconds.")]
-        [SerializeField] public float activateDuration = 0.3f;
+        [Tooltip("Pattern played on selection.")]
+        [SerializeField] public HapticPattern selectPattern;
+
+        [Tooltip("Pattern played on activation (use).")]
+        [SerializeField] public HapticPattern activatePattern;
+
+        // Legacy amplitude/duration pairs from before patterns became the only path.
+        // Hidden but still serialized; Initialize converts them to runtime patterns so
+        // scenes authored against the old fields keep their tuned feel.
+        [HideInInspector] [SerializeField] public float hoverAmplitude = 0.3f;
+        [HideInInspector] [SerializeField] public float hoverDuration = 0.1f;
+        [HideInInspector] [SerializeField] public float selectAmplitude = 0.5f;
+        [HideInInspector] [SerializeField] public float selectDuration = 0.2f;
+        [HideInInspector] [SerializeField] public float activateAmplitude = 1f;
+        [HideInInspector] [SerializeField] public float activateDuration = 0.3f;
+
+        private HapticPattern _legacyHover, _legacySelect, _legacyActivate;
 
         public HapticFeedback()
         {
             feedbackName = "Haptic Feedback";
         }
 
+        public override void Initialize(FeedbackSystem system)
+        {
+            base.Initialize(system);
+            if (hoverPattern == null) _legacyHover = CreateLegacyPattern("LegacyHover", hoverAmplitude, hoverDuration);
+            if (selectPattern == null) _legacySelect = CreateLegacyPattern("LegacySelect", selectAmplitude, selectDuration);
+            if (activatePattern == null) _legacyActivate = CreateLegacyPattern("LegacyActivate", activateAmplitude, activateDuration);
+        }
+
+        private static HapticPattern CreateLegacyPattern(string label, float amplitude, float duration)
+        {
+            if (amplitude <= 0f || duration <= 0f) return null;
+            var pattern = ScriptableObject.CreateInstance<HapticPattern>();
+            pattern.name = label;
+            pattern.SetShape(AnimationCurve.Constant(0f, 1f, 1f), duration, amplitude);
+            return pattern;
+        }
+
         public override void OnHoverStarted(InteractorBase interactor)
         {
             if (!enabled) return;
-            ExecuteHaptic(interactor.HandIdentifier, hoverAmplitude, hoverDuration);
+            Play(interactor, hoverPattern != null ? hoverPattern : _legacyHover);
         }
 
         public override void OnSelected(InteractorBase interactor)
         {
             if (!enabled) return;
-            ExecuteHaptic(interactor.HandIdentifier, selectAmplitude, selectDuration);
+            Play(interactor, selectPattern != null ? selectPattern : _legacySelect);
         }
 
         public override void OnActivated(InteractorBase interactor)
         {
             if (!enabled) return;
-            ExecuteHaptic(interactor.HandIdentifier, activateAmplitude, activateDuration);
+            Play(interactor, activatePattern != null ? activatePattern : _legacyActivate);
         }
 
-        private void ExecuteHaptic(HandIdentifier handIdentifier, float amplitude, float duration)
+        private static void Play(InteractorBase interactor, HapticPattern pattern)
         {
-            var hand = handIdentifier == HandIdentifier.Left
-                ? UnityEngine.XR.XRNode.LeftHand
-                : UnityEngine.XR.XRNode.RightHand;
-            var inputDevice = UnityEngine.XR.InputDevices.GetDeviceAtXRNode(hand);
-            inputDevice.SendHapticImpulse(0, amplitude, duration);
+            if (pattern == null || interactor == null) return;
+            interactor.PlayHapticPattern(pattern);
         }
     }
 

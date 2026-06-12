@@ -30,6 +30,9 @@ namespace Shababeek.Interactions
         [Tooltip("Haptic pulse duration in seconds when crossing a step.")]
         [SerializeField] private float hapticDuration = 0.05f;
 
+        [Tooltip("Optional haptic pattern asset; overrides amplitude/duration when assigned.")]
+        [SerializeField] private HapticPattern hapticPattern;
+
         [Header("Events")]
         [Tooltip("Fired when the current step changes. Passes the new step index.")]
         [SerializeField] private IntUnityEvent onStepChanged = new();
@@ -171,7 +174,10 @@ namespace Shababeek.Interactions
         private void TryPlayStepHaptic()
         {
             if (!hapticOnStep || CurrentInteractor == null) return;
-            CurrentInteractor.SendHapticImpulse(hapticAmplitude, hapticDuration);
+            if (hapticPattern != null)
+                CurrentInteractor.PlayHapticPattern(hapticPattern);
+            else
+                CurrentInteractor.SendHapticImpulse(hapticAmplitude, hapticDuration);
         }
 
         protected override void OnValidate()

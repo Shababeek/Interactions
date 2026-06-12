@@ -188,6 +188,16 @@ namespace Shababeek.Interactions
                 return;
             isInteracting = true;
 
+            // Programmatic selections (SpawningInteractable re-target, DistanceGrabber catch)
+            // bypass StartHover, which is where the selection-button stream is normally
+            // subscribed — without it, button-up can never reach DeSelect and the object
+            // would be stuck in the hand.
+            if (_hoverSubscriber == null)
+            {
+                var selectionObservable =
+                    GetButtonObservable(currentInteractable.SelectionButton, ButtonMappingType.Selection);
+                _hoverSubscriber = selectionObservable?.Do(_onInteractionStateChanged).Subscribe();
+            }
 
             // Dispose before subscribing — SpawningInteractable re-enters Select() from inside
             // OnStateChanged, so the inner call's subscriptions would otherwise be overwritten
@@ -374,6 +384,23 @@ namespace Shababeek.Interactions
             else
             {
                 EndHover();
+            }
+        }
+
+        /// <summary>
+        /// Plays a curve-based haptic pattern on this interactor's controller.
+        /// </summary>
+        /// <param name="pattern">The pattern asset to play; null is ignored.</param>
+        public async void PlayHapticPattern(HapticPattern pattern)
+        {
+            if (pattern == null) return;
+            try
+            {
+                await HapticPatternPlayer.Play(pattern, SendHapticImpulse, destroyCancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                // Interactor destroyed mid-pattern — nothing to clean up.
             }
         }
 

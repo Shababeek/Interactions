@@ -289,19 +289,23 @@ namespace Shababeek.Interactions.Editors
 
         private void DrawHapticFeedbackProperties(SerializedProperty prop)
         {
-            EditorGUILayout.LabelField("Hover", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(prop.FindPropertyRelative("hoverAmplitude"));
-            EditorGUILayout.PropertyField(prop.FindPropertyRelative("hoverDuration"));
-            
-            EditorGUILayout.Space(2);
-            EditorGUILayout.LabelField("Selection", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(prop.FindPropertyRelative("selectAmplitude"));
-            EditorGUILayout.PropertyField(prop.FindPropertyRelative("selectDuration"));
-            
-            EditorGUILayout.Space(2);
-            EditorGUILayout.LabelField("Activation", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(prop.FindPropertyRelative("activateAmplitude"));
-            EditorGUILayout.PropertyField(prop.FindPropertyRelative("activateDuration"));
+            EditorGUILayout.PropertyField(prop.FindPropertyRelative("hoverPattern"));
+            EditorGUILayout.PropertyField(prop.FindPropertyRelative("selectPattern"));
+            EditorGUILayout.PropertyField(prop.FindPropertyRelative("activatePattern"));
+
+            if (HasLegacyHapticValues(prop))
+            {
+                EditorGUILayout.HelpBox(
+                    "Empty pattern slots fall back to this component's legacy amplitude/duration values at runtime. " +
+                    "Assign pattern assets to take over.", MessageType.Info);
+            }
+        }
+
+        private static bool HasLegacyHapticValues(SerializedProperty prop)
+        {
+            return prop.FindPropertyRelative("hoverPattern").objectReferenceValue == null ||
+                   prop.FindPropertyRelative("selectPattern").objectReferenceValue == null ||
+                   prop.FindPropertyRelative("activatePattern").objectReferenceValue == null;
         }
 
         private void DrawAudioFeedbackProperties(SerializedProperty prop)

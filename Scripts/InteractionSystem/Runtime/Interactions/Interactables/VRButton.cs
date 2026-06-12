@@ -108,6 +108,9 @@ namespace Shababeek.Interactions
         [Tooltip("Haptic duration on press in seconds.")]
         [SerializeField] private float hapticDuration = 0.1f;
 
+        [Tooltip("Optional haptic pattern asset; overrides amplitude/duration when assigned.")]
+        [SerializeField] private HapticPattern hapticPattern;
+
         [ReadOnly][SerializeField] private bool isDown;
 
         private float _coolDownTimer = 0;
@@ -252,8 +255,21 @@ namespace Shababeek.Interactions
                 TrySendHaptic(UnityEngine.XR.XRNode.RightHand);
         }
 
-        private void TrySendHaptic(UnityEngine.XR.XRNode node)
+        private async void TrySendHaptic(UnityEngine.XR.XRNode node)
         {
+            if (hapticPattern != null)
+            {
+                try
+                {
+                    await HapticPatternPlayer.PlayOnNode(hapticPattern, node, destroyCancellationToken);
+                }
+                catch (System.OperationCanceledException)
+                {
+                    // Button destroyed mid-pattern — nothing to clean up.
+                }
+                return;
+            }
+
             var device = UnityEngine.XR.InputDevices.GetDeviceAtXRNode(node);
             device.SendHapticImpulse(0, hapticAmplitude, hapticDuration);
         }

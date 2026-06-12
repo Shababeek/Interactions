@@ -59,12 +59,25 @@ namespace Shababeek.Interactions
         [SerializeField] private UnityEvent onSlotUnhighlighted = new();
 
         [Header("Haptics")]
+        [Tooltip("Haptic amplitude (0-1) when the hover preview moves to another slot.")]
         [SerializeField, Range(0f, 1f)] private float slotChangeAmplitude = 0.25f;
+        [Tooltip("Haptic duration in seconds when the hover preview moves to another slot.")]
         [SerializeField, Min(0f)] private float slotChangeDuration = 0.04f;
+        [Tooltip("Haptic amplitude (0-1) when an item is inserted.")]
         [SerializeField, Range(0f, 1f)] private float insertAmplitude = 0.55f;
+        [Tooltip("Haptic duration in seconds when an item is inserted.")]
         [SerializeField, Min(0f)] private float insertDuration = 0.08f;
+        [Tooltip("Haptic amplitude (0-1) when an insert is rejected (rack full).")]
         [SerializeField, Range(0f, 1f)] private float rejectAmplitude = 0.12f;
+        [Tooltip("Haptic duration in seconds when an insert is rejected.")]
         [SerializeField, Min(0f)] private float rejectDuration = 0.03f;
+
+        [Tooltip("Optional pattern for slot-change; overrides amplitude/duration when assigned.")]
+        [SerializeField] private HapticPattern slotChangePattern;
+        [Tooltip("Optional pattern for insert; overrides amplitude/duration when assigned.")]
+        [SerializeField] private HapticPattern insertPattern;
+        [Tooltip("Optional pattern for reject; overrides amplitude/duration when assigned.")]
+        [SerializeField] private HapticPattern rejectPattern;
 
         private Transform[] _slots;
         private readonly List<Socketable> _occupants = new();
@@ -160,7 +173,7 @@ namespace Shababeek.Interactions
             if (!CanSocket())
             {
                 Debug.Log($"[Rack:{name}] HOVER START rejected (full) socketable='{(socketable!=null?socketable.name:"null")}' filled={_occupants.Count}/{slotCount}");
-                TriggerHaptic(socketable, rejectAmplitude, rejectDuration);
+                TriggerHaptic(socketable, rejectAmplitude, rejectDuration, rejectPattern);
                 return;
             }
             _hovering = socketable;
@@ -254,7 +267,7 @@ namespace Shababeek.Interactions
             _occupants.Insert(insertAt, socketable);
             _carriers[socketable] = carrier;
 
-            TriggerHaptic(socketable, insertAmplitude, insertDuration);
+            TriggerHaptic(socketable, insertAmplitude, insertDuration, insertPattern);
             ClearHover();
 
             base.Insert(socketable);
@@ -332,7 +345,7 @@ namespace Shababeek.Interactions
             _hoverIndex = newIndex;
             Debug.Log($"[Rack:{name}] HOVER SLOT CHANGED socketable='{socketable.name}' {prev}→{newIndex} filled={_occupants.Count}/{slotCount} pos={socketable.transform.position}");
             if (silent) return;
-            TriggerHaptic(socketable, slotChangeAmplitude, slotChangeDuration);
+            TriggerHaptic(socketable, slotChangeAmplitude, slotChangeDuration, slotChangePattern);
             ShowHighlight();
             onSlotHighlighted.Invoke(_hoverIndex);
         }
@@ -421,11 +434,16 @@ namespace Shababeek.Interactions
             foreach (var i in root.GetComponentsInChildren<InteractableBase>(true)) i.enabled = false;
         }
 
-        private void TriggerHaptic(Socketable socketable, float amplitude, float duration)
+        private void TriggerHaptic(Socketable socketable, float amplitude, float duration, HapticPattern pattern = null)
         {
-            if (amplitude <= 0f || duration <= 0f || socketable == null) return;
-            var interactable = socketable.GetComponent<InteractableBase>();
-            interactable?.CurrentInteractor?.SendHapticImpulse(amplitude, duration);
+            if (socketable == null) return;
+            var interactor = socketable.GetComponent<InteractableBase>()?.CurrentInteractor;
+            if (interactor == null) return;
+
+            if (pattern != null)
+                interactor.PlayHapticPattern(pattern);
+            else if (amplitude > 0f && duration > 0f)
+                interactor.SendHapticImpulse(amplitude, duration);
         }
 
         private static Vector3 AxisVector(LocalDirection d) => d switch
