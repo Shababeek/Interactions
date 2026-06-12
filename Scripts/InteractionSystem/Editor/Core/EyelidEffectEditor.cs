@@ -1,4 +1,3 @@
-using DG.Tweening;
 using Shababeek.Interactions.Core;
 using UnityEditor;
 using UnityEngine;
@@ -29,19 +28,19 @@ namespace Shababeek.Interactions.Editors
             {
                 if (GUILayout.Button("Close"))
                 {
-                    EnsureDOTween();
+                    WarnIfNotPlaying();
                     effect.Close(_previewDuration);
                 }
 
                 if (GUILayout.Button("Open"))
                 {
-                    EnsureDOTween();
+                    WarnIfNotPlaying();
                     effect.Open(_previewDuration);
                 }
 
                 if (GUILayout.Button("Blink"))
                 {
-                    EnsureDOTween();
+                    WarnIfNotPlaying();
                     effect.Blink(_previewDuration, _holdDuration, _previewDuration);
                 }
             }
@@ -63,14 +62,12 @@ namespace Shababeek.Interactions.Editors
             }
         }
 
-        private static void EnsureDOTween()
+        private static void WarnIfNotPlaying()
         {
             if (!Application.isPlaying)
             {
                 Debug.LogWarning("[EyelidEffect] Enter Play Mode to preview animations.");
-                return;
             }
-            DOTween.Init();
         }
     }
 }
