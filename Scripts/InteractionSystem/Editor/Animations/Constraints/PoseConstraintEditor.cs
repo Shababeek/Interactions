@@ -46,6 +46,10 @@ namespace Shababeek.Interactions.Editors
             _selectedGrabPointIndex = -1;
             InitializeVariables();
             EditorApplication.update += OnUpdate;
+            // OnDisable fires too late for these transitions — the preview hand gets
+            // serialized into the play-mode scene / saved prefab before it runs.
+            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+            UnityEditor.SceneManagement.PrefabStage.prefabStageClosing += OnPrefabStageClosing;
         }
 
         private void OnDisable()
@@ -54,6 +58,25 @@ namespace Shababeek.Interactions.Editors
             _selectedGrabPointIndex = -1;
             Tools.hidden = false;
             EditorApplication.update -= OnUpdate;
+            EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+            UnityEditor.SceneManagement.PrefabStage.prefabStageClosing -= OnPrefabStageClosing;
+            DeselectHands();
+        }
+
+        private void OnPlayModeStateChanged(PlayModeStateChange change)
+        {
+            // Destroy the preview before Unity snapshots the scene for play mode,
+            // otherwise the hand is carried into play and left on the object.
+            if (change == PlayModeStateChange.ExitingEditMode)
+            {
+                _selectedHand = HandIdentifier.None;
+                DeselectHands();
+            }
+        }
+
+        private void OnPrefabStageClosing(UnityEditor.SceneManagement.PrefabStage stage)
+        {
+            _selectedHand = HandIdentifier.None;
             DeselectHands();
         }
 
@@ -364,6 +387,8 @@ namespace Shababeek.Interactions.Editors
         {
             EditorGUILayout.LabelField("Pose Constraints", EditorStyles.boldLabel);
 
+            DrawAutoFitButton();
+
             EditorGUILayout.BeginHorizontal();
             var otherHand = _selectedHand == HandIdentifier.Left ? "Right" : "Left";
             if (GUILayout.Button(new GUIContent($"Copy from {otherHand} Hand", "Copies finger constraints and pose data from the other hand, with rotation values flipped for proper mirroring")))
@@ -552,7 +577,18 @@ namespace Shababeek.Interactions.Editors
             handObject.transform.localPosition = Vector3.zero;
             handObject.transform.localRotation = Quaternion.identity;
             initializedHand.Initialize();
+
+            // Safety net: even if an editor teardown path is missed, the preview must
+            // never be saved into the scene or the prefab being edited.
+            SetPreviewHideFlags(wrapper.gameObject);
             return initializedHand;
+        }
+
+        private static void SetPreviewHideFlags(GameObject go)
+        {
+            go.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
+            foreach (Transform child in go.transform)
+                SetPreviewHideFlags(child.gameObject);
         }
 
         private void SelectHand(HandIdentifier hand)
@@ -621,6 +657,112 @@ namespace Shababeek.Interactions.Editors
 
                 _currentHand = null;
                 _handScaleWrapper = null;
+            }
+        }
+
+        // ─── Procedural Auto-Fit ────────────────────────────────────────
+
+        private FingerFitResult[] _lastFitResults;
+
+        private void DrawAutoFitButton()
+        {
+            if (_currentHand == null) return;
+
+            if (GUILayout.Button(new GUIContent("Auto-Fit Fingers To Surface",
+                    "Sweeps each finger's curl arc against this object's colliders and writes the contact curl into the max constraints. Fingers that miss the surface keep their authored values.")))
+            {
+                AutoFitFingers();
+            }
+        }
+
+        private void AutoFitFingers()
+        {
+            var rig = _currentHand.GetComponentInChildren<HandFingerRig>();
+            if (rig == null || !rig.IsValid)
+            {
+                EditorUtility.DisplayDialog("Auto-Fit Fingers",
+                    "The hand prefab needs a HandFingerRig component with finger tips assigned. " +
+                    "Add it to the hand prefab and use its Auto-Populate From Avatar button.",
+                    "OK");
+                return;
+            }
+
+            var colliders = CollectObjectColliders();
+            if (colliders.Count == 0)
+            {
+                EditorUtility.DisplayDialog("Auto-Fit Fingers",
+                    "No colliders found on this interactable to fit against.", "OK");
+                return;
+            }
+
+            var poseConstraintsProperty = GetActivePoseConstraintsProperty();
+            if (poseConstraintsProperty == null) return;
+            int poseIndex = poseConstraintsProperty.FindPropertyRelative("targetPoseIndex").intValue;
+
+            var arcs = FingerArcBaker.Bake(_currentHand, rig, poseIndex);
+            if (arcs == null) return;
+
+            Physics.SyncTransforms();
+            _lastFitResults = PoseFitSolver.Fit(arcs, _currentHand.transform.localToWorldMatrix, colliders);
+
+            int hits = 0;
+            for (int f = 0; f < 5; f++)
+            {
+                if (!_lastFitResults[f].hit) continue; // no surface under this finger — keep authored values
+                hits++;
+
+                var fingerProp = poseConstraintsProperty.FindPropertyRelative(FingerPropertyNames[f]);
+                var minProp = fingerProp.FindPropertyRelative("min");
+                var maxProp = fingerProp.FindPropertyRelative("max");
+                float curl = _lastFitResults[f].curl;
+
+                switch (FingerConstraintDrawer.ResolveMode(fingerProp))
+                {
+                    case FingerConstraintMode.Fixed:
+                        // Fixed fingers hold their value in min.
+                        minProp.floatValue = curl;
+                        break;
+                    case FingerConstraintMode.Free:
+                        // The user asked for a fit — convert pass-through to a contact-limited range.
+                        FingerConstraintDrawer.WriteMode(fingerProp, FingerConstraintMode.Range);
+                        minProp.floatValue = 0f;
+                        maxProp.floatValue = curl;
+                        break;
+                    default: // Range
+                        maxProp.floatValue = curl;
+                        if (minProp.floatValue > curl)
+                            minProp.floatValue = curl;
+                        break;
+                }
+            }
+
+            serializedObject.ApplyModifiedProperties();
+            SceneView.RepaintAll();
+            Debug.Log($"[PoseConstrainer] Auto-fit {_selectedHand} hand: {hits}/5 fingers contacted the surface.", _constrainter);
+        }
+
+        private System.Collections.Generic.List<Collider> CollectObjectColliders()
+        {
+            var result = new System.Collections.Generic.List<Collider>();
+            foreach (var col in _constrainter.GetComponentsInChildren<Collider>(true))
+            {
+                // Exclude the preview hand's own colliders (parented under the scale wrapper).
+                if (_handScaleWrapper != null && col.transform.IsChildOf(_handScaleWrapper)) continue;
+                result.Add(col);
+            }
+            return result;
+        }
+
+        private void DrawFitContactGizmos()
+        {
+            if (_lastFitResults == null || _currentHand == null) return;
+
+            for (int f = 0; f < 5; f++)
+            {
+                if (!_lastFitResults[f].hit) continue;
+                Handles.color = Color.green;
+                Handles.SphereHandleCap(0, _lastFitResults[f].point, Quaternion.identity, 0.006f, EventType.Repaint);
+                Handles.DrawLine(_lastFitResults[f].point, _lastFitResults[f].point + _lastFitResults[f].normal * 0.02f);
             }
         }
 
@@ -831,6 +973,7 @@ namespace Shababeek.Interactions.Editors
 
                 UpdateVectorsFromTransform();
                 DrawFingerSlidersInScene();
+                DrawFitContactGizmos();
             }
             else
             {
@@ -896,6 +1039,7 @@ namespace Shababeek.Interactions.Editors
         // ─── Scene View Finger Slider Panel ─────────────────────────────
 
         private static readonly string[] FingerNames = { "Thumb", "Index", "Middle", "Ring", "Pinky" };
+        private static readonly string[] SceneModeNames = { "Free", "Range", "Fixed" };
         private static readonly string[] FingerPropertyNames =
         {
             "thumbFingerLimits", "indexFingerLimits", "middleFingerLimits",
@@ -909,7 +1053,7 @@ namespace Shababeek.Interactions.Editors
 
             Handles.BeginGUI();
 
-            float panelWidth = 220f;
+            float panelWidth = 270f;
             float panelHeight = 180f;
             float padding = 10f;
             float x = SceneView.currentDrawingSceneView.position.width - panelWidth - padding;
@@ -939,25 +1083,55 @@ namespace Shababeek.Interactions.Editors
 
                 var minProp = fingerProp.FindPropertyRelative("min");
                 var maxProp = fingerProp.FindPropertyRelative("max");
-                var lockedProp = fingerProp.FindPropertyRelative("locked");
+                var mode = FingerConstraintDrawer.ResolveMode(fingerProp);
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(FingerNames[i], GUILayout.Width(48));
 
                 EditorGUI.BeginChangeCheck();
 
-                float min = minProp.floatValue;
-                float max = maxProp.floatValue;
-                EditorGUILayout.MinMaxSlider(ref min, ref max, 0f, 1f, GUILayout.Width(120));
+                int modeIndex = Mathf.Clamp((int)mode - 1, 0, 2);
+                int newModeIndex = EditorGUILayout.Popup(modeIndex, SceneModeNames, GUILayout.Width(58));
+                var newMode = (FingerConstraintMode)(newModeIndex + 1);
 
-                bool locked = GUILayout.Toggle(lockedProp.boolValue, "Lock", GUILayout.Width(40));
-
-                if (EditorGUI.EndChangeCheck())
+                switch (newMode)
                 {
-                    minProp.floatValue = min;
-                    maxProp.floatValue = max;
-                    lockedProp.boolValue = locked;
-                    changed = true;
+                    case FingerConstraintMode.Range:
+                    {
+                        float min = minProp.floatValue;
+                        float max = maxProp.floatValue;
+                        EditorGUILayout.MinMaxSlider(ref min, ref max, 0f, 1f, GUILayout.Width(102));
+                        if (EditorGUI.EndChangeCheck())
+                        {
+                            minProp.floatValue = min;
+                            maxProp.floatValue = max;
+                            FingerConstraintDrawer.WriteMode(fingerProp, newMode);
+                            changed = true;
+                        }
+                        break;
+                    }
+                    case FingerConstraintMode.Fixed:
+                    {
+                        // Fixed mode stores its held value in min; max stays untouched.
+                        float value = EditorGUILayout.Slider(minProp.floatValue, 0f, 1f, GUILayout.Width(102));
+                        if (EditorGUI.EndChangeCheck())
+                        {
+                            minProp.floatValue = value;
+                            FingerConstraintDrawer.WriteMode(fingerProp, newMode);
+                            changed = true;
+                        }
+                        break;
+                    }
+                    default:
+                    {
+                        GUILayout.Label("0–1 pass-through", EditorStyles.miniLabel, GUILayout.Width(102));
+                        if (EditorGUI.EndChangeCheck())
+                        {
+                            FingerConstraintDrawer.WriteMode(fingerProp, newMode);
+                            changed = true;
+                        }
+                        break;
+                    }
                 }
 
                 GUILayout.EndHorizontal();

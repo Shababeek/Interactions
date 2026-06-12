@@ -413,6 +413,21 @@ namespace Shababeek.Interactions.Animations
             return stack.ToArray();
         }
 
+        /// <summary>
+        /// Forces an immediate out-of-band pose evaluation (graph, muscle writes, and pin chain).
+        /// Used by pose-fitting tools that need bone positions at arbitrary finger weights.
+        /// </summary>
+        public void EvaluatePoseImmediate()
+        {
+            if (!_graph.IsValid()) return;
+            _graph.Evaluate();
+            if (_activePoseSystem == HandPoseSystem.MuscleBased)
+            {
+                ApplyMuscleWrites();
+                PinHandToAnimatorRoot();
+            }
+        }
+
         private void DisposeGraph()
         {
             if (_graph.IsValid())

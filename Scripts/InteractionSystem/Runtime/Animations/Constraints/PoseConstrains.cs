@@ -3,45 +3,100 @@ using UnityEngine;
 
 namespace Shababeek.Interactions.Core
 {
+    /// <summary>How a finger responds to player input during a constrained interaction.</summary>
+    public enum FingerConstraintMode
+    {
+        /// <summary>Legacy data written before the mode enum; resolves from the locked flag and range.</summary>
+        Unset = 0,
+        /// <summary>Input passes through unchanged (full 0-1 curl).</summary>
+        Free = 1,
+        /// <summary>Input is remapped into the [min, max] range.</summary>
+        Range = 2,
+        /// <summary>Finger is held at a fixed curl value; input is ignored.</summary>
+        Fixed = 3
+    }
+
     /// <summary>Constraints for a single finger's pose.</summary>
     [System.Serializable]
     public struct FingerConstraints
     {
-        /// <summary>Whether the finger is locked at its minimum value.</summary>
+        [Tooltip("How the finger responds to input: Free (pass-through), Range (remapped into min-max), or Fixed (held at a value).")]
+        public FingerConstraintMode mode;
+
+        /// <summary>Legacy flag from before the mode enum. Kept for serialized data; use Mode instead.</summary>
+        [HideInInspector]
         public bool locked;
-        /// <summary>Minimum finger curl value (0-1).</summary>
+
+        /// <summary>Minimum finger curl (Range mode) or the held curl value (Fixed mode).</summary>
         [Range(0, 1)]
         public float min;
-        /// <summary>Maximum finger curl value (0-1).</summary>
+
+        /// <summary>Maximum finger curl value (Range mode).</summary>
+        [Range(0, 1)]
         public float max;
-        /// <summary>Initializes finger constraints with lock state and value range.</summary>
+
+        /// <summary>Resolved constraint mode; transparently migrates legacy locked/min/max data.</summary>
+        public FingerConstraintMode Mode
+        {
+            get
+            {
+                if (mode != FingerConstraintMode.Unset) return mode;
+                if (locked) return FingerConstraintMode.Fixed;
+                return min <= 0f && max >= 1f ? FingerConstraintMode.Free : FingerConstraintMode.Range;
+            }
+            set
+            {
+                mode = value;
+                // Keep the legacy flag consistent for any external readers of serialized data.
+                locked = value == FingerConstraintMode.Fixed;
+            }
+        }
+
+        /// <summary>The curl value a Fixed finger is held at (stored in min).</summary>
+        public float FixedValue
+        {
+            get => min;
+            set => min = value;
+        }
+
+        /// <summary>Initializes finger constraints with an explicit mode and value range.</summary>
+        public FingerConstraints(FingerConstraintMode mode, float min, float max)
+        {
+            this.min = min;
+            this.max = max;
+            this.mode = mode;
+            locked = mode == FingerConstraintMode.Fixed;
+        }
+
+        /// <summary>Initializes finger constraints from legacy lock/range values.</summary>
         public FingerConstraints(bool locked, float min, float max)
         {
             this.min = min;
             this.max = max;
             this.locked = locked;
+            mode = locked
+                ? FingerConstraintMode.Fixed
+                : (min <= 0f && max >= 1f ? FingerConstraintMode.Free : FingerConstraintMode.Range);
         }
+
         /// <summary>Applies constraints to a finger value, returning the constrained result.</summary>
         public float GetConstrainedValue(float value)
         {
-            if (locked)
+            switch (Mode)
             {
-                return min;
+                case FingerConstraintMode.Fixed:
+                    return min;
+                case FingerConstraintMode.Free:
+                    return value;
+                default:
+                    return (max - min) * value + min;
             }
-            return (max - min) * value + min;
         }
+
         /// <summary>
-        /// Unconstrained finger (min=0, max=1, not locked).
+        /// Unconstrained finger (Free mode, full 0-1 curl).
         /// </summary>
-        public static FingerConstraints Free
-        {
-            get
-            {
-
-
-                return new FingerConstraints(false, 0, 1); ;
-            }
-        }
+        public static FingerConstraints Free => new(FingerConstraintMode.Free, 0, 1);
     }
     /// <summary>Constraints for all fingers in a hand pose.</summary>
     [System.Serializable]
@@ -85,11 +140,11 @@ namespace Shababeek.Interactions.Core
             get
             {
                 var hand = new PoseConstrains();
-                hand.indexFingerLimits = new FingerConstraints(false, 0, 1);
-                hand.middleFingerLimits = new FingerConstraints(false, .3f, 1);
-                hand.ringFingerLimits = new FingerConstraints(false, .3f, 1);
-                hand.pinkyFingerLimits = new FingerConstraints(false, .3f, 1);
-                hand.thumbFingerLimits = new FingerConstraints(false, .3f, 1);
+                hand.indexFingerLimits = new FingerConstraints(FingerConstraintMode.Free, 0, 1);
+                hand.middleFingerLimits = new FingerConstraints(FingerConstraintMode.Range, .3f, 1);
+                hand.ringFingerLimits = new FingerConstraints(FingerConstraintMode.Range, .3f, 1);
+                hand.pinkyFingerLimits = new FingerConstraints(FingerConstraintMode.Range, .3f, 1);
+                hand.thumbFingerLimits = new FingerConstraints(FingerConstraintMode.Range, .3f, 1);
                 return hand;
             }
         }
