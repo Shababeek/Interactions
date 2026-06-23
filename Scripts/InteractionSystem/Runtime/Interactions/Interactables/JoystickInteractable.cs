@@ -35,6 +35,24 @@ namespace Shababeek.Interactions
         [Tooltip("Event invoked whenever the joystick rotation changes, passing the normalized rotation vector.")]
         [SerializeField] private Vector2UnityEvent onRotationChanged = new();
 
+        [Header("Lock")]
+        [Tooltip("When locked, the joystick ignores hand input and stays centered. Used e.g. to disable crane movement while a server is carried.")]
+        [SerializeField] private bool isLocked = false;
+
+        [Tooltip("Hand push angle (degrees) past which a 'blocked' buzz fires while locked.")]
+        [SerializeField] private float lockedPushDeadzone = 5f;
+
+        [Tooltip("Haptic amplitude (0-1) pulsed when the player pushes the locked joystick.")]
+        [SerializeField] private float lockedVibrationAmplitude = 0.5f;
+
+        [Tooltip("Haptic pulse duration in seconds.")]
+        [SerializeField] private float lockedVibrationDuration = 0.08f;
+
+        [Tooltip("Seconds between haptic pulses while the player keeps pushing the locked joystick.")]
+        [SerializeField] private float lockedVibrationInterval = 0.15f;
+
+        private float _lockedHapticTimer;
+
         [Header("Debug")]
         [ReadOnly, SerializeField] private Vector2 currentRotation = Vector2.zero;
         [ReadOnly, SerializeField] private Vector2 normalizedRotation = Vector2.zero;
@@ -51,8 +69,23 @@ namespace Shababeek.Interactions
         public IObservable<Vector2> OnRotationChanged => onRotationChanged.AsObservable();
         
         public Vector2 CurrentRotation => currentRotation;
-        
+
         public Vector2 NormalizedRotation => normalizedRotation;
+
+        /// <summary>
+        /// When true, the joystick ignores hand input and snaps back to its centered (original) rotation.
+        /// Use to stop horizontal crane movement while a server is held — vertical movement stays on the drawer/lever.
+        /// </summary>
+        public bool IsLocked
+        {
+            get => isLocked;
+            set
+            {
+                if (isLocked == value) return;
+                isLocked = value;
+                if (isLocked) ResetToOriginal();
+            }
+        }
         
         /// <summary>
         /// X-axis rotation range (pitch). x=min, y=max. Clamped to ±85°.
@@ -105,10 +138,38 @@ namespace Shababeek.Interactions
         protected override void HandleObjectMovement(Vector3 target)
         {
             if (!IsSelected || IsReturning) return;
-            
+
+            if (isLocked)
+            {
+                HandleLockedFeedback(target);
+                return;
+            }
+
             CalculateAndApplyRotation(target);
             UpdateDebugValues();
             InvokeEvents();
+        }
+
+        /// <summary>
+        /// While locked the stick stays centered, but the hand still moves — buzz the controller
+        /// (throttled) whenever the player pushes past the deadzone, so a blocked move is felt.
+        /// </summary>
+        private void HandleLockedFeedback(Vector3 handWorldPosition)
+        {
+            if (CurrentInteractor == null) return;
+
+            var push = CalculateAngle(handWorldPosition, interactableObject.transform).magnitude;
+            if (push < lockedPushDeadzone)
+            {
+                _lockedHapticTimer = 0f;
+                return;
+            }
+
+            _lockedHapticTimer -= Time.deltaTime;
+            if (_lockedHapticTimer > 0f) return;
+
+            CurrentInteractor.SendHapticImpulse(lockedVibrationAmplitude, lockedVibrationDuration);
+            _lockedHapticTimer = lockedVibrationInterval;
         }
 
         protected override void HandleObjectDeselection()
