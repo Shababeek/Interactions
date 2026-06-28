@@ -43,6 +43,32 @@ namespace Shababeek.Interactions
         [Tooltip("Only filter colliders whose name contains this string. Leave empty to accept all.")]
         [SerializeField] private string maskName = "tip";
 
+        [Header("Audio Feedback")]
+        [Tooltip("AudioSource for button sounds. Auto-created if left empty.")]
+        [SerializeField] private AudioSource audioSource;
+
+        [Tooltip("Sound played when the button toggles on. Leave empty to disable.")]
+        [SerializeField] private AudioClip toggleOnSound;
+
+        [Tooltip("Sound played when the button toggles off. Leave empty to disable.")]
+        [SerializeField] private AudioClip toggleOffSound;
+
+        [Tooltip("Volume of button sounds.")]
+        [SerializeField] [Range(0f, 1f)] private float soundVolume = 1f;
+
+        [Header("Haptic Feedback")]
+        [Tooltip("Send haptic impulse when the button toggles.")]
+        [SerializeField] private bool useHaptics = false;
+
+        [Tooltip("Haptic amplitude on toggle (0–1).")]
+        [SerializeField] [Range(0f, 1f)] private float hapticAmplitude = 0.5f;
+
+        [Tooltip("Haptic duration on toggle in seconds.")]
+        [SerializeField] private float hapticDuration = 0.1f;
+
+        [Tooltip("Optional haptic pattern asset; overrides amplitude/duration when assigned.")]
+        [SerializeField] private HapticPattern hapticPattern;
+
         [Header("State")]
         [Tooltip("When false the button ignores all input and cannot be toggled.")]
         [SerializeField] private bool active = true;
@@ -100,6 +126,13 @@ namespace Shababeek.Interactions
 
             _animationT = isToggledOn ? 1f : 0f;
             _coolDownTimer = coolDownTime;
+
+            if ((toggleOnSound != null || toggleOffSound != null) && audioSource == null)
+            {
+                audioSource = gameObject.AddComponent<AudioSource>();
+                audioSource.spatialBlend = 1f;
+                audioSource.playOnAwake = false;
+            }
         }
 
         private void Update()
@@ -131,6 +164,46 @@ namespace Shababeek.Interactions
                 onToggledOn.Invoke();
             else
                 onToggledOff.Invoke();
+
+            PlaySound(isToggledOn ? toggleOnSound : toggleOffSound);
+            if (useHaptics) SendHaptic(other);
+        }
+
+        private void PlaySound(AudioClip clip)
+        {
+            if (audioSource == null || clip == null) return;
+            audioSource.PlayOneShot(clip, soundVolume);
+        }
+
+        private void SendHaptic(Collider other)
+        {
+            var colliderName = other.gameObject.name.ToLowerInvariant();
+            bool isLeft = colliderName.Contains("left");
+            bool isRight = colliderName.Contains("right");
+
+            if (isLeft || (!isLeft && !isRight))
+                TrySendHaptic(UnityEngine.XR.XRNode.LeftHand);
+            if (isRight || (!isLeft && !isRight))
+                TrySendHaptic(UnityEngine.XR.XRNode.RightHand);
+        }
+
+        private async void TrySendHaptic(UnityEngine.XR.XRNode node)
+        {
+            if (hapticPattern != null)
+            {
+                try
+                {
+                    await HapticPatternPlayer.PlayOnNode(hapticPattern, node, destroyCancellationToken);
+                }
+                catch (System.OperationCanceledException)
+                {
+                    // Button destroyed mid-pattern — nothing to clean up.
+                }
+                return;
+            }
+
+            var device = UnityEngine.XR.InputDevices.GetDeviceAtXRNode(node);
+            device.SendHapticImpulse(0, hapticAmplitude, hapticDuration);
         }
 
         /// <summary>
