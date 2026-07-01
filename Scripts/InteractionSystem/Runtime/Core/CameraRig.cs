@@ -103,6 +103,15 @@ namespace Shababeek.Interactions.Core
         /// </summary>
         public Transform Offset => offsetObject;
 
+        /// <summary>The XR camera used as the head/eye transform.</summary>
+        public Camera XRCamera => xrCamera;
+
+        /// <summary>Transform the left hand follows.</summary>
+        public Transform LeftHandPivot => leftHandPivot;
+
+        /// <summary>Transform the right hand follows.</summary>
+        public Transform RightHandPivot => rightHandPivot;
+
         /// <summary>
         /// Camera height. Automatically updates the offset object position.
         /// </summary>
