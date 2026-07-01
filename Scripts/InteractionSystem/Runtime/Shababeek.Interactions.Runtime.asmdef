@@ -4,9 +4,9 @@
     "references": [
         "UniRx",
         "Unity.InputSystem",
-        "Unity.XR.Hands",
         "Shababeek.ReactiveVars",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "Unity.XR.Hands"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -15,6 +15,12 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.xr.hands",
+            "expression": "",
+            "define": "XR_HANDS_AVAILABLE"
+        }
+    ],
     "noEngineReferences": false
 }
