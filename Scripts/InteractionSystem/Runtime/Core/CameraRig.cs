@@ -551,6 +551,33 @@ namespace Shababeek.Interactions.Core
             await Awaitable.WaitForSecondsAsync(eyelidTransitionDuration, cancellationToken);
         }
 
+        /// <summary>
+        /// Plays repeated close-then-open eyelid cycles, then ends with lids closed.
+        /// One cycle is a full close followed by a full open.
+        /// </summary>
+        public async Awaitable PlayEyelidCyclesThenClose(
+            int cycleCount,
+            float intervalBetweenTransitions,
+            CancellationToken cancellationToken = default)
+        {
+            if (eyelidEffect == null) return;
+
+            for (int i = 0; i < cycleCount; i++)
+            {
+                await BlinkIn(cancellationToken);
+
+                if (intervalBetweenTransitions > 0f)
+                    await Awaitable.WaitForSecondsAsync(intervalBetweenTransitions, cancellationToken);
+
+                await BlinkOut(cancellationToken);
+
+                if (intervalBetweenTransitions > 0f)
+                    await Awaitable.WaitForSecondsAsync(intervalBetweenTransitions, cancellationToken);
+            }
+
+            await BlinkIn(cancellationToken);
+        }
+
         #endregion
     }
 
