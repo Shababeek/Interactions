@@ -119,7 +119,7 @@ namespace Shababeek.Interactions
             _interactable = GetComponent<InteractableBase>();
             _interactable.OnDeselected
                 .Do(_ => { if (verboseSocketLogs) Debug.Log($"[Socketable:{name}] RELEASE socket={(socket!=null?socket.name:"null")} canSocket={(socket!=null && socket.CanSocket())} canAcceptMe={(socket!=null && socket.CanSocket(this))} isSocketed={IsSocketed} pos={transform.position}"); })
-                .Where(_ => !IsSocketed && socket != null && socket.CanSocket())
+                .Where(_ => !IsSocketed && socket != null && socket.CanSocket() && socket.CanSocket(this))
                 .Select(_=>socket)
                 .Do(soc=> { if (verboseSocketLogs) Debug.Log($"[Socketable:{name}] RELEASE → INSERT into '{soc.name}'"); Insert(soc); })
                 .Subscribe().AddTo(this);
@@ -136,7 +136,11 @@ namespace Shababeek.Interactions
 
         public bool Insert(AbstractSocket soc)
         {
-            if (!soc.CanSocket())
+            // Authoritative acceptance check: availability AND category mask.
+            // Every caller (release flow, external inserters, drivers) routes through here,
+            // so enforcing the mask here prevents a non-matching socketable (e.g. mask=Nothing)
+            // from being socketed by any path that skipped the pre-check.
+            if (!soc.CanSocket() || !soc.CanSocket(this))
             {
                 return false;
             }
