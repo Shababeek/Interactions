@@ -56,7 +56,7 @@ namespace Shababeek.Interactions.Core
         [Tooltip("Height offset for the camera rig in world units. Default is 1 unit (typical standing height).")]
         [SerializeField] private float cameraHeight = 1f;
 
-        [Tooltip("Whether to align the rig's forward direction with the tracking origin on initialization.")]
+        [Tooltip("Whether to align the player's physical facing with the rig's authored forward every time the rig is enabled and on tracking-origin updates.")]
         [SerializeField] private bool alignRigForwardOnTracking = true;
 
         [Header("Eyelid Effect")]
@@ -78,6 +78,7 @@ namespace Shababeek.Interactions.Core
         private bool _trackingInitialized = false;
         private HandPoseController _leftPoseController, _rightPoseController;
         private float _lastCameraHeight;
+        private Quaternion _authoredRotation;
 
         #endregion
 
@@ -171,6 +172,8 @@ namespace Shababeek.Interactions.Core
 
         private void Awake()
         {
+            _authoredRotation = transform.rotation;
+
             if (xrCamera == null)
                 xrCamera = GetComponentInChildren<Camera>(true);
 
@@ -323,18 +326,27 @@ namespace Shababeek.Interactions.Core
         {
             if (xrCamera == null || offsetObject == null) return;
 
-            if (!_trackingInitialized && alignRigForwardOnTracking)
+            if (alignRigForwardOnTracking)
             {
-                Vector3 cameraForward = xrCamera.transform.forward;
-                cameraForward.y = 0;
-                if (cameraForward.sqrMagnitude > 0.001f)
-                {
-                    transform.rotation = Quaternion.LookRotation(cameraForward);
-                    _trackingInitialized = true;
-                }
+                AlignRigForwardToHead();
             }
 
             RecenterCameraToRig();
+        }
+
+        private void AlignRigForwardToHead()
+        {
+            // Head forward expressed in rig-local space, flattened to yaw only.
+            Vector3 headLocalForward = Quaternion.Inverse(transform.rotation) * xrCamera.transform.forward;
+            headLocalForward.y = 0f;
+            if (headLocalForward.sqrMagnitude <= 0.001f) return;
+
+            // Counter-rotate the rig by the head's local yaw so the player's physical
+            // facing lines up with the rig's authored forward. Idempotent: computed from
+            // the authored rotation, so re-running on every enable never drifts.
+            var headLocalYaw = Quaternion.LookRotation(headLocalForward);
+            transform.rotation = _authoredRotation * Quaternion.Inverse(headLocalYaw);
+            _trackingInitialized = true;
         }
 
 
