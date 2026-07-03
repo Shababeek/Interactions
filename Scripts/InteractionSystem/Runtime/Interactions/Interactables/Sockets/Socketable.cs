@@ -165,6 +165,7 @@ namespace Shababeek.Interactions
 
         private void Update()
         {
+            if (!_interactable.IsSelected) return;
             DetectSockets();
             HandleIndicator();
             DebugKeyHandling();
