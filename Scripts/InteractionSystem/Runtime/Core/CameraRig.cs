@@ -128,6 +128,33 @@ namespace Shababeek.Interactions.Core
 
         #endregion
 
+        #region Activation Ownership
+
+        private object _activeOwner;
+
+        /// <summary>
+        /// Activates the rig for the given owner. A later owner replaces the previous one without deactivating first.
+        /// </summary>
+        public void ActivateFor(object owner)
+        {
+            if (owner == null) return;
+            _activeOwner = owner;
+            if (!gameObject.activeSelf)
+                gameObject.SetActive(true);
+        }
+
+        /// <summary>
+        /// Deactivates the rig only when the caller is still the active owner.
+        /// </summary>
+        public void DeactivateFor(object owner)
+        {
+            if (owner == null || _activeOwner != owner) return;
+            _activeOwner = null;
+            gameObject.SetActive(false);
+        }
+
+        #endregion
+
         #region Eyelid Control
 
         /// <summary>Snap lids fully closed (no animation).</summary>
