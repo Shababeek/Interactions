@@ -165,10 +165,22 @@ namespace Shababeek.Interactions
 
         private void Update()
         {
-            if (!_interactable.IsSelected) return;
+            if (!_interactable.IsSelected)
+            {
+                HideIndicatorIfShown();
+                return;
+            }
             DetectSockets();
             HandleIndicator();
             DebugKeyHandling();
+        }
+
+        private void HideIndicatorIfShown()
+        {
+            if (indicator != null && indicator.gameObject.activeSelf)
+            {
+                indicator.gameObject.SetActive(false);
+            }
         }
 
         private void HandleIndicator()
