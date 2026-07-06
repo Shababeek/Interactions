@@ -50,6 +50,13 @@ namespace Shababeek.Interactions
         /// <summary>The interactor holding a secondary grip (null when one-handed).</summary>
         protected InteractorBase SecondaryInteractor { get; private set; }
 
+        /// <inheritdoc/>
+        public override bool IsHeldBy(Transform other)
+        {
+            if (base.IsHeldBy(other)) return true;
+            return SecondaryInteractor != null && other.IsChildOf(SecondaryInteractor.transform);
+        }
+
         /// <summary>The fake hand spawned for the secondary grip (null when one-handed).</summary>
         protected Hand SecondaryFakeHand => _secondaryFakeHand;
 

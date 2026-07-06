@@ -353,6 +353,17 @@ namespace Shababeek.Interactions
         }
 
         /// <summary>
+        /// Whether the given transform belongs to an interactor currently holding this object
+        /// (the interactor itself or any of its children, e.g. hand colliders). Used by feature
+        /// components (blades, etc.) to avoid self-hits. The base checks the primary interactor;
+        /// interactables that support extra grips override to widen the check.
+        /// </summary>
+        public virtual bool IsHeldBy(Transform other)
+        {
+            return currentInteractor != null && other.IsChildOf(currentInteractor.transform);
+        }
+
+        /// <summary>
         /// Whether a second interactor may join while this interactable is selected.
         /// Two-handed interactables override this; the default refuses.
         /// </summary>
@@ -370,13 +381,20 @@ namespace Shababeek.Interactions
         public virtual void SecondaryDeselect(InteractorBase interactor) { }
 
         /// <summary>
+        /// Whether the use/activation action is currently permitted while selected.
+        /// Subclasses override to gate activation (e.g. an object that must be held with
+        /// two hands before it can be used). Default always allows use.
+        /// </summary>
+        protected virtual bool CanBeUsed => true;
+
+        /// <summary>
         /// Starts the use action for this interactable.
         /// Called when the secondary button is pressed while selected.
         /// </summary>
         /// <param name="interactorBase">The interactor that started using this object</param>
         public void StartUsing(InteractorBase interactorBase)
         {
-            if (this.currentState == InteractionState.Selected)
+            if (this.currentState == InteractionState.Selected && CanBeUsed)
             {
                 isUsing = true;
                 onUseStarted.Invoke(currentInteractor);

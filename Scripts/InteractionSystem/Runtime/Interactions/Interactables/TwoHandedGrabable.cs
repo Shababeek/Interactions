@@ -15,6 +15,12 @@ namespace Shababeek.Interactions
     public class TwoHandedGrabable : ConstrainedInteractableBase
     {
         [Header("Two-Handed")]
+        [Tooltip("When enabled, the object stays anchored in place and inert (use/activation disabled) " +
+                 "when held by only one hand. It only lifts and follows the hands once a second hand " +
+                 "grabs it. Releasing one hand keeps the object with the remaining hand, freezing it in " +
+                 "place and reverting it to inert.")]
+        [SerializeField] private bool requireTwoHands = false;
+
         [Tooltip("Smoothing speed of the follow/solve motion. Higher snaps faster.")]
         [SerializeField] private float followSmoothing = 25f;
 
@@ -36,8 +42,17 @@ namespace Shababeek.Interactions
         /// <summary>True while both hands are holding this object.</summary>
         public bool IsTwoHanded => IsSelected && SecondaryInteractor != null;
 
+        /// <summary>
+        /// True when the object's two-handed function is active: either two hands are holding it,
+        /// or two hands aren't required. When false the object is held but inert.
+        /// </summary>
+        public bool IsFunctional => !requireTwoHands || IsTwoHanded;
+
         /// <inheritdoc/>
         protected override bool SupportsSecondaryGrab => true;
+
+        /// <inheritdoc/>
+        protected override bool CanBeUsed => IsFunctional;
 
         protected override void InitializeInteractable()
         {
@@ -99,6 +114,16 @@ namespace Shababeek.Interactions
         protected override void HandleObjectMovement(Vector3 handWorldPosition)
         {
             if (!IsSelected || CurrentInteractor == null) return;
+
+            // Losing the second hand makes a two-hands-required object inert; stop any active use.
+            if (IsUsing && !IsFunctional)
+            {
+                StopUsing(CurrentInteractor);
+            }
+
+            // Two-hands-required and only one hand holding: keep the object anchored in place — it
+            // doesn't lift or follow the single hand until the second hand grabs it.
+            if (!IsFunctional) return;
 
             Vector3 targetPosition;
             Quaternion targetRotation;
