@@ -31,6 +31,7 @@ namespace Shababeek.Interactions
         private readonly TransformTweenable _transformTweenable = new();
         private Rigidbody _body;
         private bool _wasKinematic;
+        private RigidbodyInterpolation _originalInterpolation;
         private Action _tweenCompleteCallback;
 
 
@@ -73,11 +74,16 @@ namespace Shababeek.Interactions
             Constrainter.ApplyConstraints(CurrentInteractor.Hand, interactionPoint);
 
             // Force the rigidbody kinematic for the duration of the grab so the tween can
-            // animate position cleanly. The prior state is restored on release.
+            // animate position cleanly. Interpolation is also disabled: while parented to a
+            // fast-moving hand it smooths the rendered pose toward the previous physics step,
+            // which makes the object visibly lag/drift away from the hand. Both are restored
+            // on release.
             if (_body != null)
             {
                 _wasKinematic = _body.isKinematic;
+                _originalInterpolation = _body.interpolation;
                 _body.isKinematic = true;
+                _body.interpolation = RigidbodyInterpolation.None;
             }
 
             InitializeAttachmentPointTransform();
@@ -106,7 +112,11 @@ namespace Shababeek.Interactions
             // Order matters: ApplyThrow is a no-op on kinematic bodies, so kinematic state must
             // be restored first.
             transform.SetParent(null, true);
-            if (_body != null) _body.isKinematic = _wasKinematic;
+            if (_body != null)
+            {
+                _body.isKinematic = _wasKinematic;
+                _body.interpolation = _originalInterpolation;
+            }
 
             if (canBeThrown && _body != null && !SuppressThrow)
             {
