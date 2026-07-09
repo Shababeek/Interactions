@@ -43,9 +43,6 @@ namespace Shababeek.Interactions
         [Tooltip("Physics layers scanned during socket detection. Combined with Socketable Mask — both must match.")]
         [SerializeField] private LayerMask socketLayerMask = -1;
 
-        [Tooltip("Verbose detection logs: candidate sockets, accept/reject reasons, chosen socket, release decision.")]
-        [SerializeField] private bool verboseSocketLogs = true;
-
         private float _nextNoHitLogTime;
 
         [Tooltip("Bitmask of categories this socketable belongs to. Matched against each socket's accepted mask via bitwise AND. Default is everything.")]
@@ -67,7 +64,11 @@ namespace Shababeek.Interactions
         private VariableTweener _tweener;
         private TransformTweenable _returnTweenable;
         private bool _isReturning = false;
-        private readonly Collider[] _overlapResults = new Collider[13];
+        // Sized generously: OverlapSphereNonAlloc fills this in undefined order and
+        // silently drops overflow. With a wide socketLayerMask a busy scene can return
+        // many colliders in the detection sphere; too small a buffer can omit the socket
+        // collider on random frames, nulling the socket ref right before release.
+        private readonly Collider[] _overlapResults = new Collider[32];
         /// <summary>
         /// Gets the transform of the socket this object is currently inserted into.
         /// </summary>
@@ -118,20 +119,38 @@ namespace Shababeek.Interactions
 
             _interactable = GetComponent<InteractableBase>();
             _interactable.OnDeselected
-                .Do(_ => { if (verboseSocketLogs) Debug.Log($"[Socketable:{name}] RELEASE socket={(socket!=null?socket.name:"null")} canSocket={(socket!=null && socket.CanSocket())} canAcceptMe={(socket!=null && socket.CanSocket(this))} isSocketed={IsSocketed} pos={transform.position}"); })
+                .Do(_ => RecoverSocketOnRelease())
                 .Where(_ => !IsSocketed && socket != null && socket.CanSocket() && socket.CanSocket(this))
                 .Select(_=>socket)
-                .Do(soc=> { if (verboseSocketLogs) Debug.Log($"[Socketable:{name}] RELEASE → INSERT into '{soc.name}'"); Insert(soc); })
+                .Do(soc => Insert(soc))
                 .Subscribe().AddTo(this);
             _interactable.OnDeselected
                 .Where(_ => shouldReturnToLastSocket && !IsSocketed && (socket == null || !socket.CanSocket()))
-                .Do(_ => { if (verboseSocketLogs) Debug.Log($"[Socketable:{name}] RELEASE → RETURN (socket={(socket!=null?socket.name:"null")} canSocket={(socket!=null && socket.CanSocket())})"); Return(); }).Subscribe().AddTo(this);
+                .Do(_ => Return()).Subscribe().AddTo(this);
 
             _interactable.OnSelected
                 .Where(_ => IsSocketed)
                 .Do(_ => IsSocketed = false)
-                .Do(_ => { if (verboseSocketLogs) Debug.Log($"[Socketable:{name}] GRAB → REMOVE from '{(socket!=null?socket.name:"null")}'"); socket.Remove(this); })
+                .Do(_ => socket.Remove(this))
                 .Subscribe().AddTo(this);
+        }
+
+        /// <summary>
+        /// Detaches from the current socket at the very START of a grab, before the grab poses
+        /// the hand. Sockets scale/reparent stored items and the hand-attachment offset is derived
+        /// from the item's live scale/transform, so the item must be restored to its real scale,
+        /// parent and physics first or the hand ends up mis-placed. Returns true if it was socketed
+        /// and has now been detached. Idempotent: the OnSelected GRAB handler no-ops afterwards
+        /// because IsSocketed is already false.
+        /// </summary>
+        public bool DetachForGrab()
+        {
+            if (!IsSocketed || socket == null) return false;
+            var soc = socket;
+            IsSocketed = false;
+            socket = null;
+            soc.Remove(this);
+            return true;
         }
 
         public bool Insert(AbstractSocket soc)
@@ -303,41 +322,7 @@ namespace Shababeek.Interactions
         {
             if (isSocketed) return;
 
-            // Calculate world position of detection sphere center with local offset
-            Vector3 detectionCenter = transform.TransformPoint(detectionOffset);
-
-            // Physics layer mask narrows the overlap query; category mask gates the match below.
-            int hitCount =
-                Physics.OverlapSphereNonAlloc(detectionCenter, detectionRadius, _overlapResults, socketLayerMask.value);
-
-            AbstractSocket closestSocket = null;
-            float closestDistance = float.MaxValue;
-            int candidateCount = 0;
-
-            // Find the closest socket
-            for (int i = 0; i < hitCount; i++)
-            {
-                var col = _overlapResults[i];
-                if (col == null) continue;
-                var detectedSocket = col.GetComponent<AbstractSocket>();
-                if (detectedSocket == null) continue;
-
-                bool canSocket = detectedSocket.CanSocket();
-                bool canAcceptMe = detectedSocket.CanSocket(this);
-                float distance = Vector3.Distance(detectionCenter, col.transform.position);
-                candidateCount++;
-
-                if (verboseSocketLogs)
-                    Debug.Log($"[Socketable:{name}] CANDIDATE '{detectedSocket.name}' dist={distance:F3} canSocket={canSocket} canAcceptMe={canAcceptMe} myMask=0x{(int)socketableMask.Value:X8} colliderPos={col.transform.position}");
-
-                if (!canSocket || !canAcceptMe) continue;
-
-                if (distance < closestDistance)
-                {
-                    closestDistance = distance;
-                    closestSocket = detectedSocket;
-                }
-            }
+            var closestSocket = FindClosestAcceptableSocket();
 
             // Handle socket enter
             if (closestSocket != null && closestSocket != socket)
@@ -358,6 +343,66 @@ namespace Shababeek.Interactions
                 socket.EndHovering(this);
                 socket = null;
             }
+        }
+
+        /// <summary>
+        /// Overlap-scans the detection sphere and returns the nearest socket that is both
+        /// available (<see cref="AbstractSocket.CanSocket()"/>) and accepts this socketable
+        /// (<see cref="AbstractSocket.CanSocket(Socketable)"/>), or null if none qualify.
+        /// </summary>
+        private AbstractSocket FindClosestAcceptableSocket()
+        {
+            // Calculate world position of detection sphere center with local offset
+            Vector3 detectionCenter = transform.TransformPoint(detectionOffset);
+
+            // Physics layer mask narrows the overlap query; category mask gates the match below.
+            int hitCount =
+                Physics.OverlapSphereNonAlloc(detectionCenter, detectionRadius, _overlapResults, socketLayerMask.value);
+
+            AbstractSocket closestSocket = null;
+            float closestDistance = float.MaxValue;
+
+            for (int i = 0; i < hitCount; i++)
+            {
+                var col = _overlapResults[i];
+                if (col == null) continue;
+                var detectedSocket = col.GetComponent<AbstractSocket>();
+                if (detectedSocket == null) continue;
+
+                bool canSocket = detectedSocket.CanSocket();
+                bool canAcceptMe = detectedSocket.CanSocket(this);
+                float distance = Vector3.Distance(detectionCenter, col.transform.position);
+
+                if (!canSocket || !canAcceptMe) continue;
+
+                if (distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    closestSocket = detectedSocket;
+                }
+            }
+
+            return closestSocket;
+        }
+
+        /// <summary>
+        /// Re-detects the closest acceptable socket at release time. DetectSockets only runs
+        /// while selected and nulls <see cref="socket"/> on any frame the socket collider is
+        /// missing from the (capped, order-undefined) overlap results, so the live ref can be
+        /// stale/null on the exact release frame. Re-scanning here from the current position
+        /// keeps a still-hovered socket valid so the OnDeselected insert path can fire.
+        /// </summary>
+        private void RecoverSocketOnRelease()
+        {
+            if (isSocketed) return;
+            if (socket != null && socket.CanSocket() && socket.CanSocket(this)) return;
+
+            var recovered = FindClosestAcceptableSocket();
+            if (recovered == null || recovered == socket) return;
+
+            if (socket != null) socket.EndHovering(this);
+            socket = recovered;
+            socket.StartHovering(this);
         }
 
         /// <summary>

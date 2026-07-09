@@ -55,6 +55,14 @@ namespace Shababeek.Interactions
         /// <summary>Rigidbody of this grabable (null when none).</summary>
         protected Rigidbody Body => _body;
 
+        /// <summary>
+        /// Overrides the kinematic state this grabable will restore on release. A socket that
+        /// froze the body (isKinematic = true) while the item was stored calls this when the item
+        /// is grabbed OUT of it, so release thaws to the item's true pre-socket state instead of
+        /// the frozen one (which would otherwise leave a dropped item floating).
+        /// </summary>
+        public void SetReleaseKinematic(bool value) => _wasKinematic = value;
+
 
         /// <inheritdoc/>
         protected override void UseStarted() { }
@@ -69,6 +77,12 @@ namespace Shababeek.Interactions
         /// <returns>False to allow the grab to proceed normally</returns>
         protected override bool Select()
         {
+            // If this item is currently stored in a socket, leave the socket NOW — before the
+            // hand pose is computed. Sockets scale/reparent stored items, and the attachment
+            // offset below is derived from the item's live scale (ConstraintTransform.lossyScale),
+            // so grabbing a still-shrunk item would mis-place the hand.
+            GetComponent<Socketable>()?.DetachForGrab();
+
             // Apply pose constraints with interaction point for nearest grab point selection
             Vector3 interactionPoint = CurrentInteractor.GetInteractionPoint();
             Constrainter.ApplyConstraints(CurrentInteractor.Hand, interactionPoint);
