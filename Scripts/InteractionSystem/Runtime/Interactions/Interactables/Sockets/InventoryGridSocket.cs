@@ -384,6 +384,11 @@ namespace Shababeek.Interactions
                 var targetSize = cellWorldSize * fp;
                 var fitScale = SocketScaleFitter.ComputeFitScale(
                     socketable.transform, targetSize, defaultScale, scalePadding);
+
+                var footprintData = GetFootprintData(socketable);
+                if (footprintData != null)
+                    fitScale = Vector3.Scale(fitScale, footprintData.PlacementScale);
+
                 socketable.transform.localScale = fitScale;
             }
 
@@ -583,16 +588,13 @@ namespace Shababeek.Interactions
             float centerY = anchor.y + (footprint.y - 1) * 0.5f;
             var centerLocal = MapGridToLocal(centerX, centerY);
 
-            // Per-item offsets from the footprint asset (default to none).
-            var itemPosOffset = data != null ? data.PlacementOffset : Vector3.zero;
-            var itemRotOffset = data != null ? Quaternion.Euler(data.PlacementRotation) : Quaternion.identity;
+            // Per-item offsets from the footprint asset override socket-level defaults.
+            var itemPosOffset = data != null ? data.PlacementOffset : placementPositionOffset;
+            var itemRotOffset = data != null ? Quaternion.Euler(data.PlacementRotation) : Quaternion.Euler(placementRotationOffset);
 
-            // Apply placement offsets relative to the cell pivot rotation.
-            // Order: global offset first, then per-item, so per-item rotation is
-            // applied in the item's own local frame (innermost).
             var cellRotLocal = Quaternion.Euler(pivotRotationOffset);
-            var placementPosLocal = centerLocal + cellRotLocal * (placementPositionOffset + itemPosOffset);
-            var placementRotLocal = cellRotLocal * Quaternion.Euler(placementRotationOffset) * itemRotOffset;
+            var placementPosLocal = centerLocal + cellRotLocal * itemPosOffset;
+            var placementRotLocal = cellRotLocal * itemRotOffset;
 
             // Transform grid-local to world.
             var worldPos = _gridRoot.TransformPoint(placementPosLocal);

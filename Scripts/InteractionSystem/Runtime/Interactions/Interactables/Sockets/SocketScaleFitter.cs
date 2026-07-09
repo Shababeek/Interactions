@@ -34,12 +34,19 @@ namespace Shababeek.Interactions
                 return defaultScale;
             }
 
-            // Compute combined world-space bounds.
+            // Temporarily reset to defaultScale so bounds measurement is
+            // position/parent-independent — world-space bounds incorporate
+            // lossy scale, which varies by cell position in a scaled grid.
+            var savedScale = item.localScale;
+            item.localScale = defaultScale;
+
             Bounds bounds = renderers[0].bounds;
             for (int i = 1; i < renderers.Length; i++)
             {
                 bounds.Encapsulate(renderers[i].bounds);
             }
+
+            item.localScale = savedScale;
 
             float boundsX = bounds.size.x;
             float boundsY = bounds.size.y;

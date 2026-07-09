@@ -25,11 +25,16 @@ namespace Shababeek.Interactions
         [Tooltip("Local Euler rotation offset applied to this item when socketed. Use to orient each item correctly in the grid.")]
         [SerializeField] private Vector3 placementRotation = Vector3.zero;
 
+        [Tooltip("Per-item scale multiplier applied AFTER the auto scale-to-fit. (1,1,1) = no change. " +
+                 "Use to fine-tune items whose auto-fit size looks wrong (too big or too small in the grid).")]
+        [SerializeField] private Vector3 placementScale = Vector3.one;
+
         public Vector2Int Dimensions => dimensions;
         public string DisplayName => displayName;
         public Sprite Icon => icon;
         public Vector3 PlacementOffset => placementOffset;
         public Vector3 PlacementRotation => placementRotation;
+        public Vector3 PlacementScale => placementScale;
 
         private void OnValidate()
         {
