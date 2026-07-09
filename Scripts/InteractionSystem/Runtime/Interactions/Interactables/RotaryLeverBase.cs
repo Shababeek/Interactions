@@ -24,7 +24,15 @@ namespace Shababeek.Interactions
         [ReadOnly, SerializeField] protected float currentNormalizedAngle = 0f;
 
         protected Quaternion _originalRotation;
+        protected Vector3 _originalPosition;
         protected float _returnTargetAngle = 0f;
+
+        /// <summary>
+        /// The point the body rotates about, in the interactable object's parent-local space.
+        /// Defaults to the object's own rest origin; override to hinge about an offset point such
+        /// as a door's edge. When this equals the rest origin the motion is a pure spin in place.
+        /// </summary>
+        protected virtual Vector3 PivotLocalPosition => _originalPosition;
 
         /// <summary>Current rotation angle in degrees, relative to the rest pose.</summary>
         public float CurrentAngle => currentAngle;
@@ -44,6 +52,7 @@ namespace Shababeek.Interactions
         protected virtual void Start()
         {
             _originalRotation = interactableObject.transform.localRotation;
+            _originalPosition = interactableObject.transform.localPosition;
             UpdateCurrentAngleFromTransform();
             UpdateDebugValues();
         }
@@ -102,9 +111,12 @@ namespace Shababeek.Interactions
 
         protected float CalculateAngle(Vector3 handWorldPosition)
         {
-            Transform pivot = interactableObject.transform;
+            Transform t = interactableObject.transform;
+            Vector3 pivotWorld = t.parent != null
+                ? t.parent.TransformPoint(PivotLocalPosition)
+                : PivotLocalPosition;
 
-            Vector3 direction = handWorldPosition - pivot.position;
+            Vector3 direction = handWorldPosition - pivotWorld;
             direction = transform.InverseTransformDirection(direction);
 
             var (axisNormal, tangent) = GetAxisVectors();
@@ -115,10 +127,41 @@ namespace Shababeek.Interactions
             return Mathf.Clamp(angle, angleRange.x, angleRange.y);
         }
 
+        /// <summary>
+        /// The hand's true angular position (degrees) around the pivot within the rotation plane,
+        /// measured in the interactable's fixed local frame. Unlike <see cref="CalculateAngle"/>
+        /// this is an absolute bearing meant for relative, delta-based dragging: track it between
+        /// frames and apply the difference, so grabbing far from the pivot does not snap the body.
+        /// </summary>
+        protected float HandAngleAroundPivot(Vector3 handWorldPosition)
+        {
+            Transform t = interactableObject.transform;
+            Vector3 pivotWorld = t.parent != null
+                ? t.parent.TransformPoint(PivotLocalPosition)
+                : PivotLocalPosition;
+
+            Vector3 dir = transform.InverseTransformDirection(handWorldPosition - pivotWorld);
+            var (axisNormal, tangent) = GetAxisVectors();
+            Vector3 binormal = Vector3.Cross(axisNormal, tangent);
+            Vector3 planar = Vector3.ProjectOnPlane(dir, axisNormal);
+            return Mathf.Atan2(Vector3.Dot(planar, binormal), Vector3.Dot(planar, tangent)) * Mathf.Rad2Deg;
+        }
+
         protected void ApplyRotationToTransform()
         {
-            var relative = Quaternion.AngleAxis(currentAngle, GetLocalAxis());
-            interactableObject.transform.localRotation = _originalRotation * relative;
+            Vector3 localAxis = GetLocalAxis();
+            Quaternion newRotation = _originalRotation * Quaternion.AngleAxis(currentAngle, localAxis);
+
+            Vector3 pivot = PivotLocalPosition;
+            // The same rotation expressed in parent space, so the body can swing about an
+            // off-origin hinge. When pivot == rest origin, position is unchanged and this reduces
+            // to the previous spin-in-place behaviour.
+            Quaternion parentSpin = Quaternion.AngleAxis(currentAngle, _originalRotation * localAxis);
+            Vector3 newPosition = pivot + parentSpin * (_originalPosition - pivot);
+
+            var t = interactableObject.transform;
+            t.localRotation = newRotation;
+            t.localPosition = newPosition;
         }
 
         protected void UpdateDebugValues()
