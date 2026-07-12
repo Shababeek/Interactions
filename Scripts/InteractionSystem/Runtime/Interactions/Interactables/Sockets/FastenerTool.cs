@@ -1,3 +1,5 @@
+using Shababeek.Interactions.Animations;
+using Shababeek.Interactions.Core;
 using UniRx;
 using UnityEngine;
 using UnityEngine.Events;
@@ -53,6 +55,9 @@ namespace Shababeek.Interactions
         [Tooltip("Optional visual that spins with the fastener (drill bit). Spun about its local Y.")]
         [SerializeField] private Transform spinVisual;
 
+        [Tooltip("Spawn a fake hand on the tool while operating to replace the real hand which can't follow the tool.")]
+        [SerializeField] private bool useFakeHand = true;
+
         [Tooltip("Log detection / buttons / lock / turning to the Console.")]
         [SerializeField] private bool verboseLogs = true;
 
@@ -68,6 +73,7 @@ namespace Shababeek.Interactions
         private InteractableBase _tool;   // the Grabable this tip belongs to
         private Fastener _engaged;
         private bool _operating;
+        private GameObject _fakeHand;
 
         // button state driven by the tool's Grabable events
         private bool _useHeld;    // Trigger  (wrench = hold-the-nut, drill = loosen)
@@ -82,9 +88,9 @@ namespace Shababeek.Interactions
         private Vector3 _lockPosLocal;
         private Quaternion _lockRot;
 
-        // motor lock pose: tool WORLD pose captured at engagement. The drill is frozen here while
-        // operating so it stays put instead of rotating/drift with the bolt.
-        private Vector3 _lockWorldPos;
+        // motor lock pose: world-space offset from fastener to tool root (constant because the drill
+        // doesn't rotate), and the frozen world rotation.
+        private Vector3 _lockWorldOffset;
         private Quaternion _lockWorldRot;
 
         private float _graceUntil;
@@ -152,14 +158,20 @@ namespace Shababeek.Interactions
 
         private void LateUpdate()
         {
-            // Motor only: keep the drill FROZEN at its engagement world pose. The bolt spins
-            // underneath; the drill body stays put (counters any hand motion applied this frame).
-            // Manual mode is parented to the fastener and needs no per-frame pin.
             if (!_operating || _engaged == null || _tool == null) return;
-            if (mode != DriveMode.Motor) return;
             var toolT = _tool.transform;
-            toolT.position = _lockWorldPos;
-            toolT.rotation = _lockWorldRot;
+            var ft = _engaged.transform;
+
+            if (mode == DriveMode.Manual)
+            {
+                toolT.position = ft.TransformPoint(_lockPosLocal);
+                toolT.rotation = ft.rotation * _lockRot;
+            }
+            else
+            {
+                toolT.position = ft.position + _lockWorldOffset;
+                toolT.rotation = _lockWorldRot;
+            }
         }
 
         private void StartOperate()
@@ -186,23 +198,18 @@ namespace Shababeek.Interactions
 
             if (mode == DriveMode.Manual)
             {
-                // PARENT the tool to the fastener. The wrench now rotates & backs out WITH the nut.
-                // Because the nut rotates by exactly the hand's crank delta (1:1 — see CrankDelta),
-                // the handle stays aligned with the hand as you swing it around the axis.
-                toolT.SetParent(ft, true);
                 _lockPosLocal = ft.InverseTransformPoint(toolT.position);
                 _lockRot = Quaternion.Inverse(ft.rotation) * toolT.rotation;
-                toolT.localPosition = _lockPosLocal;
-                toolT.localRotation = _lockRot;
-                Log($"LOCK(parent→fastener) onto '{_engaged.name}' (manual/crank) snap={snappedDeg:F0}°");
+                Log($"LOCK(track fastener) onto '{_engaged.name}' (manual/crank) snap={snappedDeg:F0}°");
             }
             else
             {
-                // Motor: freeze the drill at its (now snapped + tip-centered) world pose.
-                _lockWorldPos = toolT.position;
+                _lockWorldOffset = toolT.position - ft.position;
                 _lockWorldRot = toolT.rotation;
-                Log($"LOCK(frozen world) onto '{_engaged.name}' (motor) snap={snappedDeg:F0}°");
+                Log($"LOCK(slide with fastener) onto '{_engaged.name}' (motor) snap={snappedDeg:F0}°");
             }
+
+            SpawnFakeHand();
         }
 
         /// <summary>
@@ -231,15 +238,11 @@ namespace Shababeek.Interactions
             _operating = false;
             _hasPrevCrank = false;
 
-            // Return the tool to the hand's attachment pose (Grabable parents it to the
-            // AttachmentPoint at local identity while held). If the tool was dropped, Grabable's
-            // DeSelected already detached it — leave the pose alone.
+            DestroyFakeHand();
+
             if (ToolHeld && _tool != null)
             {
                 var toolT = _tool.transform;
-                var hand = _tool.CurrentInteractor;
-                if (mode == DriveMode.Manual && hand != null && hand.AttachmentPoint != null)
-                    toolT.SetParent(hand.AttachmentPoint, false);
                 toolT.localPosition = Vector3.zero;
                 toolT.localRotation = Quaternion.identity;
             }
@@ -318,6 +321,55 @@ namespace Shababeek.Interactions
             }
 
             return null;
+        }
+
+        private void SpawnFakeHand()
+        {
+            if (!useFakeHand || _tool == null || _tool.CurrentInteractor == null) return;
+
+            var interactor = _tool.CurrentInteractor;
+            var handData = interactor.Hand.HandData;
+            if (handData == null) return;
+
+            var handId = interactor.HandIdentifier;
+            var prefab = handId == HandIdentifier.Left ? handData.LeftHandPrefab : handData.RightHandPrefab;
+            if (prefab == null) return;
+
+            interactor.ToggleHandModel(false);
+
+            var toolT = _tool.transform;
+            _fakeHand = Instantiate(prefab.gameObject, toolT);
+
+            var constrainer = _tool.Constrainter;
+            var (posOffset, rotOffset) = constrainer.GetTargetHandTransform(handId);
+            _fakeHand.transform.localPosition = posOffset;
+            _fakeHand.transform.localRotation = rotOffset;
+
+            var poseCtrl = _fakeHand.GetComponent<HandPoseController>();
+            if (poseCtrl != null)
+            {
+                var constraints = handId == HandIdentifier.Left
+                    ? constrainer.LeftPoseConstrains
+                    : constrainer.RightPoseConstrains;
+                poseCtrl.Constrains = constraints;
+            }
+
+            foreach (var col in _fakeHand.GetComponentsInChildren<Collider>(true))
+                col.enabled = false;
+
+            Log($"FAKE HAND spawned ({handId})");
+        }
+
+        private void DestroyFakeHand()
+        {
+            if (_fakeHand != null)
+            {
+                Destroy(_fakeHand);
+                _fakeHand = null;
+            }
+
+            if (_tool != null && _tool.CurrentInteractor != null)
+                _tool.CurrentInteractor.ToggleHandModel(true);
         }
 
         private void Log(string msg)
