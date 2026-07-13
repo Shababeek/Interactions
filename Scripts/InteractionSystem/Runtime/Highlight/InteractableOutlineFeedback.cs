@@ -17,8 +17,6 @@ public class InteractableOutlineFeedback : MonoBehaviour
     [Tooltip("Outline to drive. Auto-found on this GameObject (or children) if not assigned. Created on this GameObject when missing.")]
     [SerializeField] private Outline outline;
 
-    private static readonly Color HiddenColor = new Color(0f, 0f, 0f, 0f);
-
     // Shared project-wide settings, resolved statically from Resources/OutlineFeedbackConfig.
     private static OutlineFeedbackConfig Config => OutlineFeedbackConfig.Default;
 
@@ -87,9 +85,10 @@ public class InteractableOutlineFeedback : MonoBehaviour
         if (outline == null) outline = GetComponent<Outline>();
         if (outline == null) outline = GetComponentInChildren<Outline>(true);
         if (outline == null) outline = gameObject.AddComponent<Outline>();
-        // Keep the component enabled so materials stay attached to renderers.
-        // We hide the outline by zeroing width AND alpha instead of toggling enabled,
-        // which would strip/re-add materials and can cause a one-frame pink flash.
+        // Component stays enabled; visibility is driven through SetOutlineActive,
+        // which attaches/detaches the fill material. A hidden outline therefore
+        // costs no draw calls (the old width-0/alpha-0 trick still rendered a
+        // transparent pass for every interactable, every frame).
         outline.enabled = true;
         HideOutline();
     }
@@ -135,12 +134,14 @@ public class InteractableOutlineFeedback : MonoBehaviour
 
     private void HideOutline()
     {
-        Set(Outline.Mode.OutlineVisible, HiddenColor, 0f);
+        if (outline == null) return;
+        outline.SetOutlineActive(false);
     }
 
     private void Set(Outline.Mode mode, Color color, float width)
     {
         if (outline == null) return;
+        outline.SetOutlineActive(true);
         outline.OutlineMode = mode;
         outline.OutlineColor = color;
         outline.OutlineWidth = width;

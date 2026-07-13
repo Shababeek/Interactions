@@ -1,4 +1,4 @@
-﻿//
+//
 //  Outline.cs
 //  QuickOutline
 //
@@ -80,6 +80,12 @@ public class Outline : MonoBehaviour {
 
   private bool needsUpdate;
 
+  // Desired visibility. Defaults to true so legacy users that toggle the
+  // component (e.g. ClawItemOutlineFeedback) keep the old enable=show behavior.
+  // Survives the scene-load race where a driver hides the outline in Awake
+  // before this component's OnEnable has attached anything.
+  private bool outlineRequested = true;
+
   void Awake() {
 
     // Cache renderers
@@ -100,37 +106,8 @@ public class Outline : MonoBehaviour {
   }
 
   void OnEnable() {
-    // Never mutate renderer.materials in edit mode — it serializes into the scene
-    // and leaves a missing slot (pink mat) after instance is GC'd on reload.
-    if (!Application.isPlaying) return;
-
-    EnsureRuntimeResources();
-    if (renderers == null) return;
-
-    originalSharedMaterials = new Material[renderers.Length][];
-
-    for (int i = 0; i < renderers.Length; i++) {
-      var renderer = renderers[i];
-      if (renderer == null) continue;
-
-      // Scrub stale outline-fill refs and null slots saved into the scene
-      var current = renderer.sharedMaterials;
-      var cleaned = new List<Material>(current.Length);
-      for (int m = 0; m < current.Length; m++) {
-        var mat = current[m];
-        if (mat == null) continue;
-        if (mat.shader != null && mat.name.StartsWith("OutlineFill")) continue;
-        cleaned.Add(mat);
-      }
-
-      var original = cleaned.ToArray();
-      originalSharedMaterials[i] = original;
-
-      var materials = new Material[original.Length + 1];
-      Array.Copy(original, materials, original.Length);
-      materials[original.Length] = outlineFillMaterial;
-
-      renderer.materials = materials;
+    if (outlineRequested) {
+      AttachMaterials();
     }
   }
 
@@ -160,6 +137,65 @@ public class Outline : MonoBehaviour {
   }
 
   void OnDisable() {
+    DetachMaterials();
+  }
+
+  /// <summary>True while the outline fill material is attached to the renderers (i.e. the outline is being drawn).</summary>
+  public bool OutlineActive {
+    get { return originalSharedMaterials != null; }
+  }
+
+  /// <summary>Shows or hides the outline by attaching/detaching the fill material, so a hidden outline costs no draw calls.</summary>
+  /// <summary>Shows or hides the outline by attaching/detaching the fill material, so a hidden outline costs no draw calls.</summary>
+  public void SetOutlineActive(bool active) {
+    outlineRequested = active;
+    if (active) {
+      AttachMaterials();
+    } else {
+      DetachMaterials();
+    }
+  }
+
+  void AttachMaterials() {
+    // Never mutate renderer.materials in edit mode — it serializes into the scene
+    // and leaves a missing slot (pink mat) after instance is GC'd on reload.
+    if (!Application.isPlaying) return;
+    if (!isActiveAndEnabled) return;
+    if (originalSharedMaterials != null) return;
+
+    EnsureRuntimeResources();
+    if (renderers == null || outlineFillMaterial == null) return;
+
+    originalSharedMaterials = new Material[renderers.Length][];
+
+    for (int i = 0; i < renderers.Length; i++) {
+      var renderer = renderers[i];
+      if (renderer == null) continue;
+
+      // Scrub stale outline-fill refs and null slots saved into the scene
+      var current = renderer.sharedMaterials;
+      var cleaned = new List<Material>(current.Length);
+      for (int m = 0; m < current.Length; m++) {
+        var mat = current[m];
+        if (mat == null) continue;
+        if (mat.shader != null && mat.name.StartsWith("OutlineFill")) continue;
+        cleaned.Add(mat);
+      }
+
+      var original = cleaned.ToArray();
+      originalSharedMaterials[i] = original;
+
+      var materials = new Material[original.Length + 1];
+      Array.Copy(original, materials, original.Length);
+      materials[original.Length] = outlineFillMaterial;
+
+      renderer.materials = materials;
+    }
+
+    needsUpdate = true;
+  }
+
+  void DetachMaterials() {
     if (!Application.isPlaying) return;
     if (renderers == null || originalSharedMaterials == null) return;
 
@@ -173,6 +209,7 @@ public class Outline : MonoBehaviour {
     }
     originalSharedMaterials = null;
   }
+
 
   // Re-instantiates the fill material if it was destroyed by a domain reload / scene unload.
   // Outline is [ExecuteAlways], so Awake doesn't re-run after reload but Update still ticks.
