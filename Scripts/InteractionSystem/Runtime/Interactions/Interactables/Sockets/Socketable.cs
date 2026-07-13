@@ -58,6 +58,10 @@ namespace Shababeek.Interactions
         private Transform _initialParent;
         private Vector3 _initialLocalPosition;
         private Quaternion _initialLocalRotation;
+        private Transform _indicatorHomeParent;
+        private Vector3 _indicatorHomeLocalPosition;
+        private Quaternion _indicatorHomeLocalRotation;
+        private Vector3 _indicatorHomeLocalScale;
         private AbstractSocket _lastSocket;
         private Transform _socketTransform;
         private InteractableBase _interactable;
@@ -107,7 +111,11 @@ namespace Shababeek.Interactions
 
             if (indicator)
             {
-                indicator?.gameObject.SetActive(false);
+                _indicatorHomeParent = indicator.parent;
+                _indicatorHomeLocalPosition = indicator.localPosition;
+                _indicatorHomeLocalRotation = indicator.localRotation;
+                _indicatorHomeLocalScale = indicator.localScale;
+                indicator.gameObject.SetActive(false);
             }
 
             if (shouldReturnToLastSocket)
@@ -186,7 +194,7 @@ namespace Shababeek.Interactions
         {
             if (!_interactable.IsSelected)
             {
-                HideIndicatorIfShown();
+                HideIndicator();
                 return;
             }
             DetectSockets();
@@ -194,30 +202,48 @@ namespace Shababeek.Interactions
             DebugKeyHandling();
         }
 
-        private void HideIndicatorIfShown()
-        {
-            if (indicator != null && indicator.gameObject.activeSelf)
-            {
-                indicator.gameObject.SetActive(false);
-            }
-        }
-
         private void HandleIndicator()
         {
             if (!isSocketed && socket != null && socket.CanSocket())
             {
-                if (indicator)
-                {
-                    indicator.gameObject.SetActive(true);
-                    var pivotInfo = socket.GetPivotForSocketable(this);
-                    indicator.position = pivotInfo.position;
-                    indicator.rotation = pivotInfo.rotation;
-                }
+                ShowIndicator(socket);
             }
             else
             {
-                if (indicator)
-                    indicator?.gameObject.SetActive(false);
+                HideIndicator();
+            }
+        }
+
+        private void ShowIndicator(AbstractSocket soc)
+        {
+            if (!indicator) return;
+            if (indicator.parent != soc.transform)
+            {
+                indicator.SetParent(soc.transform, worldPositionStays: true);
+            }
+
+            var pivotInfo = soc.GetPivotForSocketable(this);
+            indicator.SetPositionAndRotation(pivotInfo.position, pivotInfo.rotation);
+            if (!indicator.gameObject.activeSelf)
+            {
+                indicator.gameObject.SetActive(true);
+            }
+        }
+
+        private void HideIndicator()
+        {
+            if (!indicator) return;
+            if (indicator.gameObject.activeSelf)
+            {
+                indicator.gameObject.SetActive(false);
+            }
+
+            if (indicator.parent != _indicatorHomeParent)
+            {
+                indicator.SetParent(_indicatorHomeParent, worldPositionStays: false);
+                indicator.localPosition = _indicatorHomeLocalPosition;
+                indicator.localRotation = _indicatorHomeLocalRotation;
+                indicator.localScale = _indicatorHomeLocalScale;
             }
         }
 
@@ -406,21 +432,33 @@ namespace Shababeek.Interactions
         }
 
         /// <summary>
-        /// Shows the indicator at the specified position and rotation.
+        /// Shows the indicator at the specified position and rotation, detached from this object.
         /// </summary>
         public void Indicate(Vector3 position, Quaternion rotation)
         {
-            indicator.gameObject.SetActive(!isSocketed);
-            indicator.transform.position = position;
-            indicator.transform.rotation = rotation;
+            if (!indicator) return;
+            if (isSocketed)
+            {
+                HideIndicator();
+                return;
+            }
+
+            var parent = socket != null ? socket.transform : null;
+            if (indicator.parent != parent)
+            {
+                indicator.SetParent(parent, worldPositionStays: true);
+            }
+
+            indicator.SetPositionAndRotation(position, rotation);
+            indicator.gameObject.SetActive(true);
         }
 
         /// <summary>
-        /// Hides the socket indicator.
+        /// Hides the socket indicator and returns it to its original parent.
         /// </summary>
         public void StopIndication()
         {
-            indicator.gameObject.SetActive(false);
+            HideIndicator();
         }
 
         /// <summary>
@@ -475,12 +513,7 @@ namespace Shababeek.Interactions
 
             isSocketed = false;
             socket = null;
-
-            if (indicator != null)
-            {
-                indicator.gameObject.SetActive(false);
-            }
-
+            HideIndicator();
             ForceReturn();
         }
 
