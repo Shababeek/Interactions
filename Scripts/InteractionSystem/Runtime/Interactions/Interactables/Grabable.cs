@@ -128,7 +128,7 @@ namespace Shababeek.Interactions
             transform.SetParent(null, true);
             if (_body)
             {
-                _body.isKinematic = canBeThrown || _wasKinematic;
+                _body.isKinematic = !canBeThrown || _wasKinematic;
                 _body.interpolation = _originalInterpolation;
             }
 
