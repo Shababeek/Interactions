@@ -239,25 +239,25 @@ namespace Shababeek.Interactions
 
         protected override void ValidateInteractableObject()
         {
-            if (!_scaleCompensator) return;
+            if (!ScaleCompensator) return;
 
             // If we already have a valid reference, just validate its location
             if (interactableObject != null)
             {
-                if (interactableObject.parent == _scaleCompensator)
+                if (interactableObject.parent == ScaleCompensator)
                 {
                     return; // Already valid
                 }
                 else
                 {
                     // Reference exists but in wrong location - move it
-                    interactableObject.SetParent(_scaleCompensator, true);
+                    interactableObject.SetParent(ScaleCompensator, true);
                     return;
                 }
             }
 
             // No reference - check if object exists in correct location
-            var existing = _scaleCompensator.Find("interactableObject");
+            var existing = ScaleCompensator.Find("interactableObject");
             if (existing != null)
             {
                 interactableObject = existing;
@@ -268,7 +268,7 @@ namespace Shababeek.Interactions
             var wrongLocation = transform.Find("interactableObject");
             if (wrongLocation != null)
             {
-                wrongLocation.SetParent(_scaleCompensator, true);
+                wrongLocation.SetParent(ScaleCompensator, true);
                 interactableObject = wrongLocation;
                 return;
             }
@@ -280,7 +280,7 @@ namespace Shababeek.Interactions
         protected override void CreateInteractableObject()
         {
             interactableObject = new GameObject("interactableObject").transform;
-            interactableObject.SetParent(_scaleCompensator, false);
+            interactableObject.SetParent(ScaleCompensator, false);
             interactableObject.localPosition = Vector3.zero;
             interactableObject.localRotation = Quaternion.identity;
             interactableObject.localScale = Vector3.one;

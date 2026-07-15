@@ -54,31 +54,34 @@ namespace Shababeek.Interactions
         [SerializeField] [ReadOnly] private InteractorBase currentInteractor;
         [Tooltip("The current interaction state of this interactable.")] 
         [SerializeField] [ReadOnly] private InteractionState currentState;
+
+        [SerializeField] private float delayBeforeChangingLayers = .1f;
+
         [Tooltip("Indicates whether this interactable is currently being used (secondary button pressed).")]
         [SerializeField] [ReadOnly] private bool isUsing;
 
         private PoseConstrainer _constrainter;
 
-        private Collider[] colliders;
-        private int[] collisionLayers;
-        private int layer;
+        private Collider[] _colliders;
+        private int[] _collisionLayers;
+        private int _layer;
 
         public PoseConstrainer Constrainter => _constrainter ??= GetComponent<PoseConstrainer>();
 
         // Scale compensation - prevents shearing during editor pose setup and runtime manipulation
-        protected Transform _scaleCompensator;
+        protected Transform ScaleCompensator;
 
         /// <summary>
         /// Transform used for pose constraints and hand positioning.
         /// Returns the scale compensator if it exists, otherwise returns this transform.
         /// </summary>
-        public Transform ConstraintTransform => _scaleCompensator ? _scaleCompensator : transform;
+        public Transform ConstraintTransform => ScaleCompensator ? ScaleCompensator : transform;
 
         /// <summary>
         /// Gets the interactableObject child transform if it exists.
         /// This is the standard location for models/visuals in all interactables.
         /// </summary>
-        public Transform InteractableObject => !_scaleCompensator ? null : _scaleCompensator.Find("interactableObject");
+        public Transform InteractableObject => !ScaleCompensator ? null : ScaleCompensator.Find("interactableObject");
 
         /// <summary>
         /// Indicates whether this interactable is currently selected by an interactor.
@@ -260,14 +263,14 @@ namespace Shababeek.Interactions
             {
                 onSelected.Invoke(currentInteractor);
 
-                layer = gameObject.layer;
-                for (int i = 0; i < collisionLayers.Length; i++)
+                _layer = gameObject.layer;
+                for (int i = 0; i < _collisionLayers.Length; i++)
                 {
-                    collisionLayers[i] = colliders[i].gameObject.layer;
+                    _collisionLayers[i] = _colliders[i].gameObject.layer;
                 }
                 if (layerBehavior == LayerBehavior.MatchHand)
                 {
-                    foreach (var collider in colliders)
+                    foreach (var collider in _colliders)
                     {
                         collider.gameObject.layer = currentInteractor.gameObject.layer;
                     }
@@ -283,16 +286,16 @@ namespace Shababeek.Interactions
             currentState = InteractionState.Selected;
         }
 
-        private void RestoreLayers()
+        private async void RestoreLayers()
         {
-            if (colliders == null || collisionLayers == null) return;
-
-            for (var i = 0; i < colliders.Length; i++)
+            if (_colliders == null || _collisionLayers == null) return;
+            await Awaitable.WaitForSecondsAsync(delayBeforeChangingLayers);
+            for (var i = 0; i < _colliders.Length; i++)
             {
-                colliders[i].gameObject.layer = collisionLayers[i];
+                _colliders[i].gameObject.layer = _collisionLayers[i];
             }
 
-            gameObject.layer = layer;
+            gameObject.layer = _layer;
         }
 
         /// <summary>
@@ -475,8 +478,8 @@ namespace Shababeek.Interactions
         protected virtual void InitializeInteractable()
         {
             // Override in derived classes
-            colliders = gameObject.GetComponentsInChildren<Collider>(true);
-            collisionLayers = new int[colliders.Length];
+            _colliders = gameObject.GetComponentsInChildren<Collider>(true);
+            _collisionLayers = new int[_colliders.Length];
         }
 
         public void ValidateAndCreateHierarchy()
@@ -487,7 +490,7 @@ namespace Shababeek.Interactions
 
         protected void ValidateScaleCompensator()
         {
-            if (_scaleCompensator != null && _scaleCompensator.parent == transform)
+            if (ScaleCompensator != null && ScaleCompensator.parent == transform)
             {
                 return; // Already valid
             }
@@ -498,7 +501,7 @@ namespace Shababeek.Interactions
             {
                 if (existing.parent == transform)
                 {
-                    _scaleCompensator = existing;
+                    ScaleCompensator = existing;
                     UpdateScaleCompensatorScale();
                     return;
                 }
@@ -509,17 +512,17 @@ namespace Shababeek.Interactions
 
         protected void CreateScaleCompensator()
         {
-            _scaleCompensator = new GameObject("ScaleCompensator").transform;
-            _scaleCompensator.SetParent(transform, false);
-            _scaleCompensator.localPosition = Vector3.zero;
-            _scaleCompensator.localRotation = Quaternion.identity;
+            ScaleCompensator = new GameObject("ScaleCompensator").transform;
+            ScaleCompensator.SetParent(transform, false);
+            ScaleCompensator.localPosition = Vector3.zero;
+            ScaleCompensator.localRotation = Quaternion.identity;
 
             UpdateScaleCompensatorScale();
         }
 
         protected void UpdateScaleCompensatorScale()
         {
-            if (!_scaleCompensator) return;
+            if (!ScaleCompensator) return;
 
             if (transform.parent)
             {
@@ -531,11 +534,11 @@ namespace Shababeek.Interactions
                     Debug.LogWarning(
                         $"Parent of {gameObject.name} has zero scale. Scale compensator created but not compensating.",
                         this);
-                    _scaleCompensator.localScale = Vector3.one;
+                    ScaleCompensator.localScale = Vector3.one;
                     return;
                 }
 
-                _scaleCompensator.localScale = new Vector3(
+                ScaleCompensator.localScale = new Vector3(
                     1f / parentScale.x,
                     1f / parentScale.y,
                     1f / parentScale.z
@@ -543,14 +546,14 @@ namespace Shababeek.Interactions
             }
             else
             {
-                _scaleCompensator.localScale = Vector3.one;
+                ScaleCompensator.localScale = Vector3.one;
             }
         }
 
         protected virtual void ValidateInteractableObject()
         {
-            if (!_scaleCompensator) return;
-            var existing = _scaleCompensator.Find("interactableObject");
+            if (!ScaleCompensator) return;
+            var existing = ScaleCompensator.Find("interactableObject");
             if (existing != null)
             {
                 return;
@@ -559,7 +562,7 @@ namespace Shababeek.Interactions
             var wrongLocation = transform.Find("interactableObject");
             if (wrongLocation != null)
             {
-                wrongLocation.SetParent(_scaleCompensator, true);
+                wrongLocation.SetParent(ScaleCompensator, true);
                 return;
             }
 
@@ -569,7 +572,7 @@ namespace Shababeek.Interactions
         protected virtual void CreateInteractableObject()
         {
             var interactableObject = new GameObject("interactableObject").transform;
-            interactableObject.SetParent(_scaleCompensator, false);
+            interactableObject.SetParent(ScaleCompensator, false);
             interactableObject.localPosition = Vector3.zero;
             interactableObject.localRotation = Quaternion.identity;
             interactableObject.localScale = Vector3.one;
@@ -577,12 +580,12 @@ namespace Shababeek.Interactions
 
         protected virtual void OnDestroy()
         {
-            if (_scaleCompensator)
+            if (ScaleCompensator)
             {
                 // Only destroy if we're not in the middle of a scene unload
-                if (_scaleCompensator.gameObject)
+                if (ScaleCompensator.gameObject)
                 {
-                    DestroyImmediate(_scaleCompensator.gameObject);
+                    DestroyImmediate(ScaleCompensator.gameObject);
                 }
             }
         }

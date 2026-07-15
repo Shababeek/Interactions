@@ -126,13 +126,13 @@ namespace Shababeek.Interactions
             // Order matters: ApplyThrow is a no-op on kinematic bodies, so kinematic state must
             // be restored first.
             transform.SetParent(null, true);
-            if (_body != null)
+            if (_body)
             {
-                _body.isKinematic = _wasKinematic;
+                _body.isKinematic = canBeThrown || _wasKinematic;
                 _body.interpolation = _originalInterpolation;
             }
 
-            if (canBeThrown && _body != null && !SuppressThrow)
+            if (canBeThrown && _body && !SuppressThrow)
             {
                 throwable.ApplyThrow();
             }
