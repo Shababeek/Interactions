@@ -58,6 +58,7 @@ namespace Shababeek.Interactions
         private Transform _initialParent;
         private Vector3 _initialLocalPosition;
         private Quaternion _initialLocalRotation;
+        private Vector3 _initialLocalScale;
         private Transform _indicatorHomeParent;
         private Vector3 _indicatorHomeLocalPosition;
         private Quaternion _indicatorHomeLocalRotation;
@@ -117,6 +118,10 @@ namespace Shababeek.Interactions
                 _indicatorHomeLocalScale = indicator.localScale;
                 indicator.gameObject.SetActive(false);
             }
+
+            // Captured unconditionally: LerpToPosition restores this scale on every socket insert,
+            // regardless of shouldReturnToLastSocket, so it must always hold the authored value.
+            _initialLocalScale = transform.localScale;
 
             if (shouldReturnToLastSocket)
             {
@@ -271,6 +276,9 @@ namespace Shababeek.Interactions
             transform.parent = pivot.transform;
             transform.position = pivot.transform.position;
             transform.rotation = pivot.transform.rotation;
+            // Reparenting with worldPositionStays bakes the socket's lossy scale into localScale;
+            // restore the authored scale so repeated socket/unsocket cycles don't drift toward 0.
+            transform.localScale = _initialLocalScale;
         }
 
         private void Return()
@@ -303,6 +311,7 @@ namespace Shababeek.Interactions
             transform.SetParent(_initialParent);
             transform.localPosition = _initialLocalPosition;
             transform.localRotation = _initialLocalRotation;
+            transform.localScale = _initialLocalScale;
         }
 
         private void ReturnWithTween()
@@ -332,6 +341,7 @@ namespace Shababeek.Interactions
                 transform.SetParent(_initialParent);
                 transform.localPosition = _initialLocalPosition;
                 transform.localRotation = _initialLocalRotation;
+                transform.localScale = _initialLocalScale;
 
 
                 if (targetTransform != null)
