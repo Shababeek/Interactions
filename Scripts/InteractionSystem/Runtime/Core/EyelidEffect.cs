@@ -49,9 +49,21 @@ namespace Shababeek.Interactions.Core
         [Range(0f, 0.9f)]
         [SerializeField] private float fadeOffset = 0.3f;
 
+        [Tooltip("How fast lid alpha reaches full black on partial (drowsy) closes. 1.5 = opaque lids by two thirds closed, so a clear slit is left instead of a grey haze.")]
+        [Range(1f, 4f)]
+        [SerializeField] private float partialLidOpacityGain = 1.5f;
+
         private Image _topImage;
         private Image _bottomImage;
         private int _animationVersion;
+        private float _closedAmount;
+
+        /// <summary>
+        /// How closed the lids currently are, averaged across both lids.
+        /// 0 = fully open, 1 = fully closed. Updated every animation frame so external
+        /// effects (post-processing, audio) can follow the blink instead of snapping.
+        /// </summary>
+        public float ClosedAmount => _closedAmount;
 
         private void Awake()
         {
@@ -81,6 +93,26 @@ namespace Shababeek.Interactions.Core
                 holdDuration,
                 openDuration < 0 ? defaultDuration : openDuration,
                 onComplete);
+        }
+
+        /// <summary>
+        /// Animate lids to a partial closed amount — 0 fully open, 1 fully closed.
+        /// Lids go opaque well before they meet, so a drowsy slit stays visible through the gap.
+        /// </summary>
+        public void SetPartial(float closedAmount, float duration = -1f, Action onComplete = null)
+        {
+            EnsureImagesInitialized();
+            _ = RunTo(++_animationVersion, Mathf.Clamp01(closedAmount), duration < 0 ? defaultDuration : duration, onComplete);
+        }
+
+        /// <summary>Snap lids to a partial closed amount with no animation.</summary>
+        public void SetPartialImmediate(float closedAmount)
+        {
+            EnsureImagesInitialized();
+            _animationVersion++;
+            closedAmount = Mathf.Clamp01(closedAmount);
+            float alpha = PartialAlpha(closedAmount);
+            ApplyState(closedAmount, closedAmount, alpha, alpha);
         }
 
         /// <summary>Snap lids to fully open (scaleY = 0, alpha = 0).</summary>
@@ -113,6 +145,18 @@ namespace Shababeek.Interactions.Core
             onComplete?.Invoke();
         }
 
+        private async Awaitable RunTo(int version, float target, float duration, Action onComplete)
+        {
+            bool closing = target >= _closedAmount;
+            await AnimateLids(version, duration, closing ? closeEase : openEase, target, PartialAlpha(target), closing);
+            if (version != _animationVersion) return;
+            onComplete?.Invoke();
+        }
+
+        /// <summary>Lid alpha for a given closed amount — reaches full black before the lids meet.</summary>
+        private float PartialAlpha(float closedAmount) =>
+            Mathf.Clamp01(closedAmount * Mathf.Max(1f, partialLidOpacityGain));
+
         private async Awaitable RunBlink(int version, float closeDuration, float holdDuration, float openDuration, Action onComplete)
         {
             await AnimateLids(version, closeDuration, closeEase, closing: true);
@@ -135,7 +179,14 @@ namespace Shababeek.Interactions.Core
         /// duration, the bottom at the full duration; fades finish early (close) or start late
         /// (open) by fadeOffset, matching the original behavior.
         /// </summary>
-        private async Awaitable AnimateLids(int version, float duration, EaseType ease, bool closing)
+        private async Awaitable AnimateLids(int version, float duration, EaseType ease, bool closing) =>
+            await AnimateLids(version, duration, ease, closing ? 1f : 0f, closing ? 1f : 0f, closing);
+
+        /// <summary>
+        /// Drives one lid phase toward an arbitrary scale/alpha target, so partial (drowsy)
+        /// states animate with the same split-lid timing as a full close or open.
+        /// </summary>
+        private async Awaitable AnimateLids(int version, float duration, EaseType ease, float scaleTarget, float alphaTarget, bool closing)
         {
             duration = Mathf.Max(0.01f, duration);
             float weight = Mathf.Max(0.01f, topLidSpeedWeight);
@@ -146,7 +197,6 @@ namespace Shababeek.Interactions.Core
             float startBottomScale = bottomLid ? bottomLid.localScale.y : 0f;
             float startTopAlpha = _topImage ? _topImage.color.a : 0f;
             float startBottomAlpha = _bottomImage ? _bottomImage.color.a : 0f;
-            float target = closing ? 1f : 0f;
 
             float elapsed = 0f;
             while (elapsed < duration)
@@ -173,21 +223,25 @@ namespace Shababeek.Interactions.Core
                 }
 
                 ApplyState(
-                    Mathf.Lerp(startTopScale, target, topScaleT),
-                    Mathf.Lerp(startBottomScale, target, bottomScaleT),
-                    useFade ? Mathf.Lerp(startTopAlpha, target, topFadeT) : startTopAlpha,
-                    useFade ? Mathf.Lerp(startBottomAlpha, target, bottomFadeT) : startBottomAlpha);
+                    Mathf.Lerp(startTopScale, scaleTarget, topScaleT),
+                    Mathf.Lerp(startBottomScale, scaleTarget, bottomScaleT),
+                    useFade ? Mathf.Lerp(startTopAlpha, alphaTarget, topFadeT) : startTopAlpha,
+                    useFade ? Mathf.Lerp(startBottomAlpha, alphaTarget, bottomFadeT) : startBottomAlpha);
 
                 await Awaitable.NextFrameAsync();
                 elapsed += Time.deltaTime;
             }
 
             if (this == null || version != _animationVersion) return;
-            ApplyState(target, target, useFade ? target : startTopAlpha, useFade ? target : startBottomAlpha);
+            ApplyState(scaleTarget, scaleTarget,
+                useFade ? alphaTarget : startTopAlpha,
+                useFade ? alphaTarget : startBottomAlpha);
         }
 
         private void ApplyState(float topScale, float bottomScale, float topAlpha, float bottomAlpha)
         {
+            _closedAmount = Mathf.Clamp01((topScale + bottomScale) * 0.5f);
+
             if (topLid) SetScaleY(topLid, topScale);
             if (bottomLid) SetScaleY(bottomLid, bottomScale);
             SetAlpha(_topImage, topAlpha);

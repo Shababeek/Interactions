@@ -582,6 +582,21 @@ namespace Shababeek.Interactions.Core
             await Awaitable.WaitForSecondsAsync(eyelidTransitionDuration, cancellationToken);
         }
 
+        /// <summary>
+        /// Animate lids to a partial closed amount — drowsy, still seeing through the gap.
+        /// 0 is fully open, 1 fully closed.
+        /// </summary>
+        /// <param name="duration">Seconds for the transition. Negative uses the rig's default.</param>
+        public async Awaitable BlinkTo(float closedAmount, float duration = -1f, CancellationToken cancellationToken = default)
+        {
+            if (eyelidEffect == null) return;
+
+            if (duration < 0f) duration = eyelidTransitionDuration;
+
+            eyelidEffect.SetPartial(closedAmount, duration);
+            await Awaitable.WaitForSecondsAsync(duration, cancellationToken);
+        }
+
         /// <summary>Animate lids open to reveal the scene.</summary>
         public async Awaitable BlinkOut(CancellationToken cancellationToken = default)
         {

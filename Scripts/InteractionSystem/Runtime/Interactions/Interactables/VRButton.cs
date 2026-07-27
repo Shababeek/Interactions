@@ -156,6 +156,11 @@ namespace Shababeek.Interactions
         }
 
         /// <summary>
+        /// Gets how far the button is currently pressed, from 0 (released) to 1 (fully pressed).
+        /// </summary>
+        public float PressAmount => _t;
+
+        /// <summary>
         /// Gets or sets whether the button is interactable.
         /// </summary>
         public bool IsActive
