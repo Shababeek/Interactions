@@ -19,8 +19,12 @@ namespace Shababeek.Interactions
         [Tooltip("Starting step index (0-based).")]
         [SerializeField] private int startingStep = 0;
 
-        [Tooltip("Total rotation angle covered by all steps (360 = full circle, 180 = half).")]
+        [Tooltip("Total rotation angle covered by all steps (360 = full circle, 180 = half). " +
+                 "When wrap-around is off the last step sits exactly at this angle.")]
         [SerializeField] private float totalAngle = 360f;
+
+        [Tooltip("Angle in degrees where step 0 sits, relative to the object's authored rotation.")]
+        [SerializeField] private float offsetAngle = 0f;
 
         [Tooltip("Allow rotating past the last step to wrap back to the first.")]
         [SerializeField] private bool wrapAround = false;
@@ -63,8 +67,23 @@ namespace Shababeek.Interactions
         /// <summary>Number of discrete steps on the dial.</summary>
         public int NumberOfSteps => numberOfSteps;
 
-        /// <summary>Angle between two adjacent steps in degrees.</summary>
-        public float AnglePerStep => totalAngle / numberOfSteps;
+        /// <summary>
+        /// Angle between two adjacent steps in degrees. A wrapping dial closes the loop, so its steps
+        /// divide the sweep evenly (360/8 = 45); a clamped dial puts the last step *on* the end of the
+        /// sweep, so N steps span N-1 gaps (180/7 for 8 steps).
+        /// </summary>
+        public float AnglePerStep => wrapAround
+            ? totalAngle / numberOfSteps
+            : totalAngle / Mathf.Max(1, numberOfSteps - 1);
+
+        /// <summary>Angle of the first step — the sweep's lower bound.</summary>
+        public float MinAngle => offsetAngle;
+
+        /// <summary>Angle at the end of the sweep — where the last step sits on a clamped dial.</summary>
+        public float MaxAngle => offsetAngle + totalAngle;
+
+        /// <summary>Angle in degrees at which the given step index sits.</summary>
+        public float AngleForStep(int step) => offsetAngle + step * AnglePerStep;
 
         /// <summary>Normalized value (0 to 1) based on the current step.</summary>
         public float NormalizedValue => numberOfSteps > 1 ? (float)currentStep / (numberOfSteps - 1) : 0f;
@@ -77,7 +96,7 @@ namespace Shababeek.Interactions
             returnWhenDeselected = true;
 
             currentStep = Mathf.Clamp(startingStep, 0, numberOfSteps - 1);
-            currentAngle = currentStep * AnglePerStep;
+            currentAngle = AngleForStep(currentStep);
             _previousStep = currentStep;
             _targetSnapAngle = currentAngle;
 
@@ -90,12 +109,12 @@ namespace Shababeek.Interactions
 
             if (wrapAround)
             {
-                while (newAngle < 0f) newAngle += totalAngle;
-                while (newAngle >= totalAngle) newAngle -= totalAngle;
+                while (newAngle < MinAngle) newAngle += totalAngle;
+                while (newAngle >= MaxAngle) newAngle -= totalAngle;
             }
             else
             {
-                newAngle = Mathf.Clamp(newAngle, 0f, totalAngle - 0.0001f);
+                newAngle = Mathf.Clamp(newAngle, MinAngle, MaxAngle);
             }
 
             return newAngle;
@@ -103,7 +122,7 @@ namespace Shababeek.Interactions
 
         protected override void OnAngleApplied(float newAngle)
         {
-            int newStep = Mathf.Clamp(Mathf.FloorToInt(newAngle / AnglePerStep), 0, numberOfSteps - 1);
+            int newStep = StepFromAngle(newAngle);
 
             if (newStep != _previousStep)
             {
@@ -119,19 +138,18 @@ namespace Shababeek.Interactions
         {
             base.HandleObjectDeselection();
 
-            int nearestStep = Mathf.RoundToInt(currentAngle / AnglePerStep);
-            nearestStep = wrapAround
-                ? ((nearestStep % numberOfSteps) + numberOfSteps) % numberOfSteps
-                : Mathf.Clamp(nearestStep, 0, numberOfSteps - 1);
+            // Snap towards the raw (unwrapped) step angle so the lerp always takes the short way round;
+            // the reported index is the wrapped/clamped one.
+            int rawStep = Mathf.RoundToInt((currentAngle - offsetAngle) / AnglePerStep);
+            _targetSnapAngle = offsetAngle + rawStep * AnglePerStep;
 
+            int nearestStep = ClampStep(rawStep);
             if (nearestStep != _previousStep)
             {
                 currentStep = nearestStep;
                 _previousStep = nearestStep;
                 onStepChanged?.Invoke(currentStep);
             }
-
-            _targetSnapAngle = nearestStep * AnglePerStep;
         }
 
         protected override void HandleReturnToOriginalPosition()
@@ -141,7 +159,10 @@ namespace Shababeek.Interactions
 
             if (Mathf.Abs(Mathf.DeltaAngle(currentAngle, _targetSnapAngle)) < 0.05f)
             {
-                currentAngle = _targetSnapAngle;
+                // A wrapping dial can settle a full turn past the sweep; fold it back so the
+                // angle stays inside [MinAngle, MaxAngle) for the next grab.
+                currentAngle = AngleForStep(currentStep);
+                _targetSnapAngle = currentAngle;
                 ApplyRotation();
                 IsReturning = false;
 
@@ -154,7 +175,7 @@ namespace Shababeek.Interactions
         {
             step = Mathf.Clamp(step, 0, numberOfSteps - 1);
             currentStep = step;
-            currentAngle = step * AnglePerStep;
+            currentAngle = AngleForStep(step);
             _previousStep = step;
             _targetSnapAngle = currentAngle;
 
@@ -190,6 +211,14 @@ namespace Shababeek.Interactions
             SetStep(step);
         }
 
+        /// <summary>Nearest step index for an angle. Rounds, so it matches where the dial snaps on release.</summary>
+        private int StepFromAngle(float angle) => ClampStep(
+            Mathf.RoundToInt((angle - offsetAngle) / AnglePerStep));
+
+        private int ClampStep(int step) => wrapAround
+            ? ((step % numberOfSteps) + numberOfSteps) % numberOfSteps
+            : Mathf.Clamp(step, 0, numberOfSteps - 1);
+
         private void TryPlayStepHaptic()
         {
             if (!hapticOnStep || CurrentInteractor == null) return;
@@ -209,7 +238,8 @@ namespace Shababeek.Interactions
         {
             base.OnValidate();
             numberOfSteps = Mathf.Max(2, numberOfSteps);
-            totalAngle = Mathf.Max(1f, totalAngle);
+            totalAngle = Mathf.Clamp(totalAngle, 1f, 360f);
+            offsetAngle = Mathf.Repeat(offsetAngle, 360f);
             startingStep = Mathf.Clamp(startingStep, 0, numberOfSteps - 1);
             if (returnSpeed < 1f) returnSpeed = 10f;
             returnSpeed = Mathf.Clamp(returnSpeed, 1f, 20f);
@@ -221,7 +251,7 @@ namespace Shababeek.Interactions
             if (target == null) return;
 
             var pos = target.position;
-            var axis = GetWorldAxis();
+            var axis = GetSignedWorldAxis();
 
             Gizmos.color = Color.yellow;
             Gizmos.DrawRay(pos, axis * 0.1f);
@@ -234,10 +264,9 @@ namespace Shababeek.Interactions
                 _ => target.right
             };
 
-            float anglePerStep = totalAngle / Mathf.Max(1, numberOfSteps);
             for (int i = 0; i < numberOfSteps; i++)
             {
-                float angle = i * anglePerStep;
+                float angle = AngleForStep(i);
                 Gizmos.color = (Application.isPlaying && i == currentStep) ? Color.green : Color.cyan;
 
                 var rot = Quaternion.AngleAxis(angle, axis);
