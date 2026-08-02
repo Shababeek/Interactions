@@ -58,6 +58,17 @@ namespace Shababeek.Interactions
         /// <summary>The local axis around which the object rotates.</summary>
         public RotationAxis RotationAxis => rotationAxis;
 
+        /// <summary>
+        /// Returns the rotation axis in world space with the same sign the rotation math uses.
+        /// Use this when the direction of positive rotation matters (gizmos, handles); <see cref="GetWorldAxis"/>
+        /// is unsigned and only suitable for symmetric drawing such as discs.
+        /// </summary>
+        public Vector3 GetSignedWorldAxis()
+        {
+            var t = interactableObject != null ? interactableObject.transform : transform;
+            return t.TransformDirection(GetLocalAxis());
+        }
+
         /// <summary>Returns the rotation axis in world space, taken from the interactable object's transform.</summary>
         public Vector3 GetWorldAxis()
         {

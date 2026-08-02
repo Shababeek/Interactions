@@ -81,7 +81,17 @@ namespace Shababeek.Interactions
 
             if (IsSelected)
             {
-                HandleObjectMovement(CurrentInteractor.transform.position);
+                // A holder can disappear without passing through the state machine — a camera rig
+                // swap destroys the interactor while it is still the recorded holder. Recover the
+                // state instead of dereferencing null every frame for the rest of the session.
+                if (!CurrentInteractor)
+                {
+                    OnStateChanged(InteractionState.None, null);
+                }
+                else
+                {
+                    HandleObjectMovement(CurrentInteractor.transform.position);
+                }
             }
 
             if (returnWhenDeselected && IsReturning)
@@ -119,13 +129,18 @@ namespace Shababeek.Interactions
         protected override void DeSelected()
         {
             IsReturning = returnWhenDeselected;
-            CurrentInteractor.ToggleHandModel(true);
+
+            // CurrentInteractor is null when the deselect is a recovery from a holder that was
+            // destroyed while holding; the hand it owned is gone with it, so there is nothing to
+            // restore on that side.
+            if (CurrentInteractor) CurrentInteractor.ToggleHandModel(true);
 
             // Clear this hand's pose constraints/grab point so a stale claimed index never
             // excludes points from the other hand's next search.
             if (PoseConstrainer)
             {
-                PoseConstrainer.RemoveConstraints(_currentFakeHand ? _currentFakeHand : CurrentInteractor.Hand);
+                var constrainedHand = _currentFakeHand ? _currentFakeHand : (CurrentInteractor ? CurrentInteractor.Hand : null);
+                if (constrainedHand) PoseConstrainer.RemoveConstraints(constrainedHand);
             }
 
             if (_currentFakeHand)
