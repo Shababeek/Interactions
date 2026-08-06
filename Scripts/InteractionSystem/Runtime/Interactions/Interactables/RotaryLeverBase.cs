@@ -23,6 +23,13 @@ namespace Shababeek.Interactions
         [ReadOnly, SerializeField] protected float currentAngle = 0f;
         [ReadOnly, SerializeField] protected float currentNormalizedAngle = 0f;
 
+        // Edit-mode preview state. Serialized (not editor-only) so a scene saved while the lever
+        // is posed still knows the real rest pose and can restore it when play mode starts.
+        [SerializeField, HideInInspector] private bool previewPoseCaptured;
+        [SerializeField, HideInInspector] private Vector3 previewRestPosition;
+        [SerializeField, HideInInspector] private Quaternion previewRestRotation = Quaternion.identity;
+        [SerializeField, HideInInspector] private float previewAngle;
+
         protected Quaternion _originalRotation;
         protected Vector3 _originalPosition;
         protected float _returnTargetAngle = 0f;
@@ -51,6 +58,8 @@ namespace Shababeek.Interactions
 
         protected virtual void Start()
         {
+            // Drop any pose left behind by an edit-mode preview so the rest pose is the authored one.
+            ClearPreviewPose();
             _originalRotation = interactableObject.transform.localRotation;
             _originalPosition = interactableObject.transform.localPosition;
             UpdateCurrentAngleFromTransform();
@@ -224,6 +233,78 @@ namespace Shababeek.Interactions
             };
         }
 
+        /// <summary>
+        /// Rotation plane axis and the zero-angle direction in world space, measured from the rest
+        /// pose rather than the current pose, so range gizmos stay put while the body swings.
+        /// </summary>
+        public (Vector3 plane, Vector3 normal) GetRestRotationAxis()
+        {
+            var (axis, normal) = GetRotationAxis();
+            return (axis, Quaternion.AngleAxis(-currentAngle, axis) * normal);
+        }
+
+        /// <summary>True while an edit-mode preview pose is applied to the interactable object.</summary>
+        public bool IsPreviewingPose => previewPoseCaptured;
+
+        /// <summary>Angle the edit-mode preview is currently holding, in degrees.</summary>
+        public float PreviewAngle => previewAngle;
+
+        /// <summary>
+        /// Captures the interactable object's current local pose as the rest pose the edit-mode
+        /// preview swings around. Called automatically the first time a preview angle is set.
+        /// </summary>
+        public void CapturePreviewRestPose()
+        {
+            if (interactableObject == null) return;
+
+            previewRestPosition = interactableObject.localPosition;
+            previewRestRotation = interactableObject.localRotation;
+            previewAngle = 0f;
+            previewPoseCaptured = true;
+        }
+
+        /// <summary>
+        /// Poses the lever at a given angle outside play mode so the motion can be checked in the
+        /// scene view. Set <paramref name="fireEvents"/> to also raise the change callbacks and
+        /// preview whatever the lever drives.
+        /// </summary>
+        public void SetPreviewAngle(float angle, bool fireEvents = false)
+        {
+            if (interactableObject == null) return;
+            if (!previewPoseCaptured) CapturePreviewRestPose();
+
+            _originalRotation = previewRestRotation;
+            _originalPosition = previewRestPosition;
+            previewAngle = Mathf.Clamp(angle, angleRange.x, angleRange.y);
+            currentAngle = previewAngle;
+            ApplyRotationToTransform();
+            UpdateDebugValues();
+            if (fireEvents) OnAngleChanged();
+        }
+
+        /// <summary>Poses the lever using a normalized value (0-1) across the angle range.</summary>
+        public void SetPreviewNormalizedAngle(float normalizedAngle, bool fireEvents = false)
+        {
+            SetPreviewAngle(Mathf.Lerp(angleRange.x, angleRange.y, normalizedAngle), fireEvents);
+        }
+
+        /// <summary>Puts the interactable object back on its captured rest pose and ends the preview.</summary>
+        public void ClearPreviewPose()
+        {
+            if (!previewPoseCaptured) return;
+
+            if (interactableObject != null)
+            {
+                interactableObject.localPosition = previewRestPosition;
+                interactableObject.localRotation = previewRestRotation;
+            }
+
+            previewPoseCaptured = false;
+            previewAngle = 0f;
+            currentAngle = 0f;
+            UpdateDebugValues();
+        }
+
         /// <summary>Sets the rotation to a specific angle in degrees, raising change events.</summary>
         public void SetAngle(float angle)
         {
@@ -273,7 +354,7 @@ namespace Shababeek.Interactions
 
             var position = transform.position;
             float radius = 0.5f;
-            var (axis, normal) = GetRotationAxis();
+            var (axis, normal) = GetRestRotationAxis();
 
             Gizmos.color = Color.cyan;
             var minDir = Quaternion.AngleAxis(angleRange.x, axis) * normal;
