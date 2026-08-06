@@ -7,10 +7,15 @@ using UnityEngine.Events;
 namespace Shababeek.Interactions
 {
     /// <summary>
-    /// Linear multi-slot socket that packs occupants from the start of the rack.
-    /// While a held socketable hovers the rack, existing occupants shift aside
-    /// to preview the insertion slot. Hover is clamped to the first empty slot
-    /// so the user can never preview past the packed edge. Commits on release.
+    /// Linear multi-slot socket. Occupants live in slot-indexed storage.
+    ///
+    /// Default (<see cref="allowGaps"/> off) the rack packs from the start: hover is
+    /// clamped to the first empty slot and removal re-packs, so no gaps ever exist.
+    ///
+    /// With <see cref="allowGaps"/> on, every slot is an independent parking spot.
+    /// Releasing over an empty slot parks there and nothing else moves; releasing over
+    /// an occupied slot ripples the run of occupants toward the nearest gap (either
+    /// direction, ties go right). Removing an occupant just empties its slot.
     /// </summary>
     public class ShiftingRackSocket : AbstractSocket
     {
@@ -36,6 +41,10 @@ namespace Shababeek.Interactions
 
         [Tooltip("Rotation offset applied to every slot.")]
         [SerializeField] private Vector3 pivotRotationOffset = Vector3.zero;
+
+        [Header("Placement Rules")]
+        [Tooltip("Off (default): occupants pack from the start of the rack and re-pack on removal. On: any slot can be filled independently, leaving gaps; dropping onto an occupied slot ripples occupants toward the nearest gap.")]
+        [SerializeField] private bool allowGaps = false;
 
         [Header("Placement Offset")]
         [Tooltip("Local position offset (relative to slot) applied to occupants. Use to lift items out of the slot's geometric center so they rest on the surface.")]
@@ -80,17 +89,56 @@ namespace Shababeek.Interactions
         [SerializeField] private HapticPattern rejectPattern;
 
         private Transform[] _slots;
-        private readonly List<Socketable> _occupants = new();
+        private Socketable[] _slotOccupants;
         private readonly Dictionary<Socketable, Transform> _carriers = new();
+        private readonly List<Socketable> _occupantsCache = new();
+        private bool _occupantsDirty = true;
+        private int _filledCount;
         private Socketable _hovering;
         private int _hoverIndex = -1;
         private Transform _highlightInstance;
         private Transform _rackRoot;
 
         public int SlotCount => slotCount;
-        public int FilledCount => _occupants.Count;
-        public int FirstEmptyIndex => _occupants.Count;
-        public IReadOnlyList<Socketable> Occupants => _occupants;
+        public int FilledCount => _filledCount;
+
+        /// <summary>Lowest usable slot index that is empty, or <see cref="SlotCount"/> when the rack is full.</summary>
+        public int FirstEmptyIndex
+        {
+            get
+            {
+                if (_slotOccupants == null) return 0;
+                for (int i = 0; i < slotCount; i++)
+                    if (IsSlotUsable(i) && _slotOccupants[i] == null) return i;
+                return slotCount;
+            }
+        }
+
+        /// <summary>Occupants in slot order, gaps skipped. Index here is NOT the slot index when gaps exist — use <see cref="GetOccupant"/> for that.</summary>
+        public IReadOnlyList<Socketable> Occupants
+        {
+            get
+            {
+                if (_occupantsDirty) RebuildOccupantsCache();
+                return _occupantsCache;
+            }
+        }
+
+        /// <summary>Occupant parked in a specific slot, or null when that slot is empty.</summary>
+        public Socketable GetOccupant(int slotIndex) =>
+            _slotOccupants != null && slotIndex >= 0 && slotIndex < _slotOccupants.Length ? _slotOccupants[slotIndex] : null;
+
+        /// <summary>Highest slot index holding an occupant, or -1 when the rack is empty.</summary>
+        public int HighestOccupiedSlot
+        {
+            get
+            {
+                if (_slotOccupants == null) return -1;
+                for (int i = slotCount - 1; i >= 0; i--)
+                    if (_slotOccupants[i] != null) return i;
+                return -1;
+            }
+        }
 
         public UnityEvent<int> OnSlotHighlighted => onSlotHighlighted;
         public UnityEvent OnSlotUnhighlighted => onSlotUnhighlighted;
@@ -125,9 +173,9 @@ namespace Shababeek.Interactions
         public void Reconfigure(int newSlotCount)
         {
             if (newSlotCount < 1) newSlotCount = 1;
-            if (_occupants.Count > 0)
+            if (_filledCount > 0)
             {
-                Debug.LogWarning($"[ShiftingRackSocket] Reconfigure called with {_occupants.Count} occupants; aborting.");
+                Debug.LogWarning($"[ShiftingRackSocket] Reconfigure called with {_filledCount} occupants; aborting.");
                 return;
             }
             slotCount = newSlotCount;
@@ -158,7 +206,25 @@ namespace Shababeek.Interactions
                 Mathf.Approximately(s.z, 0f) ? 1f : 1f / s.z);
         }
 
-        public override bool CanSocket() => _occupants.Count < slotCount;
+        /// <summary>
+        /// Whether a slot may hold an occupant. Base rack uses every slot; override to
+        /// gate slots off at runtime (e.g. a rack that opens capacity progressively).
+        /// </summary>
+        protected virtual bool IsSlotUsable(int index) => index >= 0 && index < slotCount;
+
+        /// <summary>
+        /// Effective gap policy. Reads the serialized flag by default; override in a
+        /// subclass whose placement model always allows gaps.
+        /// </summary>
+        protected virtual bool AllowGaps => allowGaps;
+
+        public override bool CanSocket()
+        {
+            if (_slotOccupants == null) return false;
+            for (int i = 0; i < slotCount; i++)
+                if (IsSlotUsable(i) && _slotOccupants[i] == null) return true;
+            return false;
+        }
 
         public override bool CanSocket(Socketable socketable)
         {
@@ -172,14 +238,14 @@ namespace Shababeek.Interactions
             base.StartHovering(socketable);
             if (!CanSocket())
             {
-                Debug.Log($"[Rack:{name}] HOVER START rejected (full) socketable='{(socketable!=null?socketable.name:"null")}' filled={_occupants.Count}/{slotCount}");
+                Debug.Log($"[Rack:{name}] HOVER START rejected (full) socketable='{(socketable!=null?socketable.name:"null")}' filled={_filledCount}/{slotCount}");
                 TriggerHaptic(socketable, rejectAmplitude, rejectDuration, rejectPattern);
                 return;
             }
             _hovering = socketable;
             RefreshHoverIndex(socketable, silent: true);
             ShowHighlight();
-            Debug.Log($"[Rack:{name}] HOVER START socketable='{(socketable!=null?socketable.name:"null")}' hoverIndex={_hoverIndex} filled={_occupants.Count}/{slotCount} canAccept={CanSocket(socketable)} mask=0x{(socketable!=null?(int)socketable.SocketableMask.Value:0):X8}");
+            Debug.Log($"[Rack:{name}] HOVER START socketable='{(socketable!=null?socketable.name:"null")}' hoverIndex={_hoverIndex} filled={_filledCount}/{slotCount} canAccept={CanSocket(socketable)} mask=0x{(socketable!=null?(int)socketable.SocketableMask.Value:0):X8}");
             onSlotHighlighted.Invoke(_hoverIndex);
         }
 
@@ -228,7 +294,7 @@ namespace Shababeek.Interactions
             _hovering = socketable;
             RefreshHoverIndex(socketable, silent: true);
             ShowHighlight();
-            Debug.Log($"[Rack:{name}] HOVER ADOPTED socketable='{socketable.name}' hoverIndex={_hoverIndex} filled={_occupants.Count}/{slotCount}");
+            Debug.Log($"[Rack:{name}] HOVER ADOPTED socketable='{socketable.name}' hoverIndex={_hoverIndex} filled={_filledCount}/{slotCount}");
             onSlotHighlighted.Invoke(_hoverIndex);
         }
 
@@ -236,52 +302,79 @@ namespace Shababeek.Interactions
         {
             if (!CanSocket())
             {
-                Debug.LogWarning($"[Rack:{name}] INSERT REJECTED (full) socketable='{(socketable!=null?socketable.name:"null")}' filled={_occupants.Count}/{slotCount}");
+                Debug.LogWarning($"[Rack:{name}] INSERT REJECTED (full) socketable='{(socketable!=null?socketable.name:"null")}' filled={_filledCount}/{slotCount}");
                 return null;
             }
 
             AdoptAsHoverIfNeeded(socketable);
-            int insertAt;
+            int target;
             string source;
             if (_hovering == socketable && _hoverIndex >= 0)
             {
-                insertAt = _hoverIndex;
+                target = _hoverIndex;
                 source = "hoverIndex";
             }
             else
             {
-                insertAt = ComputeInsertIndex(socketable.transform.position);
+                target = ComputeInsertIndex(socketable.transform.position);
                 source = "nearestSlot";
             }
-            int rawIndex = insertAt;
-            insertAt = Mathf.Clamp(insertAt, 0, _occupants.Count);
+            int rawIndex = target;
+            target = Mathf.Clamp(target, 0, slotCount - 1);
 
-            float distToSlot = Vector3.Distance(socketable.transform.position, _slots[insertAt].position);
-            Debug.Log($"[Rack:{name}] INSERT socketable='{socketable.name}' slot={insertAt} (raw={rawIndex} via {source}) filled-before={_occupants.Count}/{slotCount} dist={distToSlot:F3} canAccept={CanSocket(socketable)} mask=0x{(int)socketable.SocketableMask.Value:X8} releasePos={socketable.transform.position}");
+            if (!IsSlotUsable(target))
+            {
+                // Target is gated off — park in the closest usable gap instead.
+                target = FindNearestGap(target);
+            }
+            else if (_slotOccupants[target] != null)
+            {
+                int gap = FindNearestGap(target);
+                if (gap < 0)
+                {
+                    Debug.LogWarning($"[Rack:{name}] INSERT REJECTED (no gap) socketable='{socketable.name}' target={target}");
+                    return null;
+                }
+                ShiftTowardGap(target, gap);
+            }
+            if (target < 0)
+            {
+                Debug.LogWarning($"[Rack:{name}] INSERT REJECTED (no usable slot) socketable='{socketable.name}' raw={rawIndex}");
+                return null;
+            }
+
+            float distToSlot = Vector3.Distance(socketable.transform.position, _slots[target].position);
+            Debug.Log($"[Rack:{name}] INSERT socketable='{socketable.name}' slot={target} (raw={rawIndex} via {source}) filled-before={_filledCount}/{slotCount} dist={distToSlot:F3} canAccept={CanSocket(socketable)} mask=0x{(int)socketable.SocketableMask.Value:X8} releasePos={socketable.transform.position}");
 
             var carrier = new GameObject($"Carrier_{socketable.name}").transform;
             carrier.SetParent(_rackRoot, false);
-            var placement = GetSlotPlacement(_slots[insertAt]);
+            var placement = GetSlotPlacement(_slots[target]);
             carrier.SetPositionAndRotation(placement.position, placement.rotation);
 
-            _occupants.Insert(insertAt, socketable);
+            _slotOccupants[target] = socketable;
+            _filledCount++;
+            _occupantsDirty = true;
             _carriers[socketable] = carrier;
 
             TriggerHaptic(socketable, insertAmplitude, insertDuration, insertPattern);
             ClearHover();
 
             base.Insert(socketable);
-            Debug.Log($"[Rack:{name}] INSERT DONE socketable='{socketable.name}' slot={insertAt} filled-after={_occupants.Count}/{slotCount} order=[{string.Join(",", System.Linq.Enumerable.Range(0,_occupants.Count).Select(i => _occupants[i]!=null?_occupants[i].name:"null"))}]");
+            Debug.Log($"[Rack:{name}] INSERT DONE socketable='{socketable.name}' slot={target} filled-after={_filledCount}/{slotCount} order=[{string.Join(",", Occupants.Select(o => o != null ? o.name : "null"))}]");
             return carrier;
         }
 
         public override void Remove(Socketable socketable)
         {
-            var idx = _occupants.IndexOf(socketable);
-            Debug.Log($"[Rack:{name}] REMOVE socketable='{(socketable!=null?socketable.name:"null")}' fromSlot={idx} filled-before={_occupants.Count}/{slotCount}");
+            var idx = IndexOfOccupant(socketable);
+            Debug.Log($"[Rack:{name}] REMOVE socketable='{(socketable!=null?socketable.name:"null")}' fromSlot={idx} filled-before={_filledCount}/{slotCount}");
             if (idx >= 0)
             {
-                _occupants.RemoveAt(idx);
+                _slotOccupants[idx] = null;
+                _filledCount--;
+                _occupantsDirty = true;
+                if (!AllowGaps) CompactTowardStart();
+
                 if (_carriers.TryGetValue(socketable, out var carrier))
                 {
                     _carriers.Remove(socketable);
@@ -302,20 +395,20 @@ namespace Shababeek.Interactions
 
         private void Update()
         {
-            if (_slots == null || _slots.Length == 0) return;
+            if (_slots == null || _slots.Length == 0 || _slotOccupants == null) return;
 
             SyncRackRootScale();
 
             if (_hovering != null) RefreshHoverIndex(_hovering);
 
             var t = 1f - Mathf.Exp(-shiftSpeed * Time.deltaTime);
-            for (int i = 0; i < _occupants.Count; i++)
+            for (int i = 0; i < slotCount; i++)
             {
-                var occ = _occupants[i];
+                var occ = _slotOccupants[i];
                 if (occ == null) continue;
                 if (!_carriers.TryGetValue(occ, out var carrier) || carrier == null) continue;
 
-                var targetIdx = EffectiveSlotIndex(i);
+                var targetIdx = PreviewSlotIndex(i);
                 if (targetIdx < 0 || targetIdx >= slotCount) continue;
 
                 var target = GetSlotPlacement(_slots[targetIdx]);
@@ -330,11 +423,79 @@ namespace Shababeek.Interactions
             }
         }
 
-        private int EffectiveSlotIndex(int occupantIndex)
+        /// <summary>
+        /// Slot an occupant should currently rest at, accounting for the live hover preview.
+        /// Hovering an empty slot moves nothing; hovering an occupied slot ripples the run
+        /// between it and the nearest gap by one.
+        /// </summary>
+        private int PreviewSlotIndex(int slotIndex)
         {
-            if (_hovering != null && _hoverIndex >= 0 && occupantIndex >= _hoverIndex)
-                return occupantIndex + 1;
-            return occupantIndex;
+            if (_hovering == null || _hoverIndex < 0) return slotIndex;
+            int target = _hoverIndex;
+            if (!IsSlotUsable(target) || _slotOccupants[target] == null) return slotIndex;
+            int gap = FindNearestGap(target);
+            if (gap < 0) return slotIndex;
+            if (gap > target) return slotIndex >= target && slotIndex < gap ? slotIndex + 1 : slotIndex;
+            return slotIndex > gap && slotIndex <= target ? slotIndex - 1 : slotIndex;
+        }
+
+        /// <summary>Nearest empty usable slot to <paramref name="from"/>. Ties resolve toward the end of the rack. -1 when the rack is full.</summary>
+        private int FindNearestGap(int from)
+        {
+            if (from >= 0 && from < slotCount && IsSlotUsable(from) && _slotOccupants[from] == null) return from;
+            for (int d = 1; d < slotCount; d++)
+            {
+                int right = from + d;
+                if (right < slotCount && IsSlotUsable(right) && _slotOccupants[right] == null) return right;
+                int left = from - d;
+                if (left >= 0 && IsSlotUsable(left) && _slotOccupants[left] == null) return left;
+            }
+            return -1;
+        }
+
+        /// <summary>Moves the run of occupants between <paramref name="target"/> and <paramref name="gap"/> one step toward the gap, leaving target empty.</summary>
+        private void ShiftTowardGap(int target, int gap)
+        {
+            if (gap > target)
+                for (int i = gap; i > target; i--) _slotOccupants[i] = _slotOccupants[i - 1];
+            else
+                for (int i = gap; i < target; i++) _slotOccupants[i] = _slotOccupants[i + 1];
+            _slotOccupants[target] = null;
+            _occupantsDirty = true;
+        }
+
+        private void CompactTowardStart()
+        {
+            int write = 0;
+            for (int read = 0; read < slotCount; read++)
+            {
+                var occ = _slotOccupants[read];
+                if (occ == null) continue;
+                _slotOccupants[read] = null;
+                while (write < slotCount && !IsSlotUsable(write)) write++;
+                if (write >= slotCount) break;
+                _slotOccupants[write++] = occ;
+            }
+            _occupantsDirty = true;
+        }
+
+        private int IndexOfOccupant(Socketable socketable)
+        {
+            if (_slotOccupants == null || socketable == null) return -1;
+            for (int i = 0; i < slotCount; i++)
+                if (_slotOccupants[i] == socketable) return i;
+            return -1;
+        }
+
+        private void RebuildOccupantsCache()
+        {
+            _occupantsCache.Clear();
+            if (_slotOccupants != null)
+            {
+                for (int i = 0; i < slotCount; i++)
+                    if (_slotOccupants[i] != null) _occupantsCache.Add(_slotOccupants[i]);
+            }
+            _occupantsDirty = false;
         }
 
         private void RefreshHoverIndex(Socketable socketable, bool silent = false)
@@ -343,7 +504,7 @@ namespace Shababeek.Interactions
             if (newIndex == _hoverIndex) return;
             int prev = _hoverIndex;
             _hoverIndex = newIndex;
-            Debug.Log($"[Rack:{name}] HOVER SLOT CHANGED socketable='{socketable.name}' {prev}→{newIndex} filled={_occupants.Count}/{slotCount} pos={socketable.transform.position}");
+            Debug.Log($"[Rack:{name}] HOVER SLOT CHANGED socketable='{socketable.name}' {prev}→{newIndex} filled={_filledCount}/{slotCount} pos={socketable.transform.position}");
             if (silent) return;
             TriggerHaptic(socketable, slotChangeAmplitude, slotChangeDuration, slotChangePattern);
             ShowHighlight();
@@ -352,12 +513,13 @@ namespace Shababeek.Interactions
 
         private int ComputeInsertIndex(Vector3 worldPosition)
         {
-            // Insertable range is [0, filledCount], clamped inside rack bounds.
-            var maxInsertable = Mathf.Min(_occupants.Count, slotCount - 1);
-            int closest = 0;
+            // Packed mode keeps the legacy rule: never preview past the packed edge.
+            int maxIndex = AllowGaps ? slotCount - 1 : Mathf.Min(FirstEmptyIndex, slotCount - 1);
+            int closest = -1;
             float closestDist = float.MaxValue;
-            for (int i = 0; i <= maxInsertable; i++)
+            for (int i = 0; i <= maxIndex; i++)
             {
+                if (!IsSlotUsable(i)) continue;
                 var d = (worldPosition - _slots[i].position).sqrMagnitude;
                 if (d < closestDist)
                 {
@@ -365,7 +527,7 @@ namespace Shababeek.Interactions
                     closest = i;
                 }
             }
-            return closest;
+            return closest < 0 ? 0 : closest;
         }
 
         private void ShowHighlight()
@@ -393,6 +555,9 @@ namespace Shababeek.Interactions
         protected virtual void BuildSlots()
         {
             _slots = new Transform[slotCount];
+            _slotOccupants = new Socketable[slotCount];
+            _filledCount = 0;
+            _occupantsDirty = true;
             var dir = AxisVector(axis);
             var centerOffset = centerLine ? dir * ((slotCount - 1) * spacing * 0.5f) : Vector3.zero;
             for (int i = 0; i < slotCount; i++)
