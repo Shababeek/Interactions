@@ -43,6 +43,8 @@ namespace Shababeek.Interactions.Animations
         private Transform[] _bonePositionLocks;
         private Vector3[] _bonePositionLockRestValues;
         private HandPoseSystem _activePoseSystem = HandPoseSystem.LegacyBoneBased;
+        private readonly float[] _proceduralMaxCurls = { 1f, 1f, 1f, 1f, 1f };
+        private bool _proceduralClampsActive;
 
         /// <summary>Finger curl value (0 = extended, 1 = curled) by finger name.</summary>
         public float this[FingerName index]
@@ -350,8 +352,29 @@ namespace Shababeek.Interactions.Animations
             Pose = _constrains[0].pose;
             for (int i = 0; i < 5; i++)
             {
-                this[i] = _constrains[i].constraints.GetConstrainedValue(_hand[i]);
+                float value = _constrains[i].constraints.GetConstrainedValue(_hand[i]);
+                if (_proceduralClampsActive) value = Mathf.Min(value, _proceduralMaxCurls[i]);
+                this[i] = value;
             }
+        }
+
+        /// <summary>Applies per-finger max-curl clamps from procedural surface fitting (0=Thumb..4=Pinky). A clamp of 1 leaves the authored constraint untouched.</summary>
+        public void SetProceduralClamps(float[] maxCurls)
+        {
+            if (maxCurls == null || maxCurls.Length != 5)
+            {
+                Debug.LogWarning($"[HandPoseController] SetProceduralClamps on {gameObject.name} expects exactly 5 values.", this);
+                return;
+            }
+            for (int i = 0; i < 5; i++) _proceduralMaxCurls[i] = Mathf.Clamp01(maxCurls[i]);
+            _proceduralClampsActive = true;
+        }
+
+        /// <summary>Removes procedural max-curl clamps; authored constraints apply unmodified.</summary>
+        public void ClearProceduralClamps()
+        {
+            _proceduralClampsActive = false;
+            for (int i = 0; i < 5; i++) _proceduralMaxCurls[i] = 1f;
         }
 
         /// <summary>Pushes inspector finger values into the active pose and evaluates the graph. Muscle writes happen in LateUpdate.</summary>

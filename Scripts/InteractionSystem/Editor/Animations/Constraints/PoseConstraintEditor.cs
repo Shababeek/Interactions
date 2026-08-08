@@ -700,7 +700,14 @@ namespace Shababeek.Interactions.Editors
             int poseIndex = poseConstraintsProperty.FindPropertyRelative("targetPoseIndex").intValue;
 
             var arcs = FingerArcBaker.Bake(_currentHand, rig, poseIndex);
-            if (arcs == null) return;
+            if (arcs == null)
+            {
+                EditorUtility.DisplayDialog("Auto-Fit Fingers",
+                    "Could not bake the finger curl arcs — the preview hand's pose graph failed to evaluate. " +
+                    "Check the Console for details, then toggle the hand preview off and on and try again.",
+                    "OK");
+                return;
+            }
 
             Physics.SyncTransforms();
             _lastFitResults = PoseFitSolver.Fit(arcs, _currentHand.transform.localToWorldMatrix, colliders);

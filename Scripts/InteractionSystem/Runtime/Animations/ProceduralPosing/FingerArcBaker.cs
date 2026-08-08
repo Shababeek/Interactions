@@ -55,11 +55,31 @@ namespace Shababeek.Interactions.Animations
         /// <param name="rig">Finger bone references on the same hand.</param>
         /// <param name="poseIndex">Pose to bake (the constraint's targetPoseIndex).</param>
         /// <param name="sampleCount">Curl samples per finger; 12 is a good default.</param>
+        /// <summary>
+        /// Bakes finger arcs for the controller's given pose. Temporarily drives finger weights
+        /// and evaluates the pose out-of-band; restores the original state before returning.
+        /// Returns null (never a degenerate arc set) when the pose graph cannot evaluate.
+        /// </summary>
+        /// <param name="controller">Hand pose controller with an initialized graph.</param>
+        /// <param name="rig">Finger bone references on the same hand.</param>
+        /// <param name="poseIndex">Pose to bake (the constraint's targetPoseIndex).</param>
+        /// <param name="sampleCount">Curl samples per finger; 12 is a good default.</param>
         public static FingerArcs Bake(HandPoseController controller, HandFingerRig rig, int poseIndex, int sampleCount = 12)
         {
             if (controller == null || rig == null || !rig.IsValid)
             {
                 Debug.LogError("[FingerArcBaker] Controller or finger rig missing/invalid.");
+                return null;
+            }
+
+            if (!controller.Graph.IsValid())
+            {
+                controller.Initialize();
+            }
+
+            if (!controller.Graph.IsValid())
+            {
+                Debug.LogError("[FingerArcBaker] Hand pose graph failed to initialize; cannot bake finger arcs.", controller);
                 return null;
             }
 
@@ -97,7 +117,27 @@ namespace Shababeek.Interactions.Animations
             controller.CurrentPoseIndex = savedPose;
             controller.EvaluatePoseImmediate();
 
+            if (!HasFingerMovement(samples, sampleCount))
+            {
+                Debug.LogError("[FingerArcBaker] Baked arcs show no fingertip movement — the pose graph did not evaluate. Check the hand's HandData, Animator, and pose setup.", controller);
+                return null;
+            }
+
             return new FingerArcs(samples, radii, sampleCount);
+        }
+
+        private static bool HasFingerMovement(FingerArcs.Sample[][] samples, int sampleCount)
+        {
+            for (int f = 0; f < 5; f++)
+            {
+                float travel = 0f;
+                for (int k = 0; k < sampleCount - 1; k++)
+                {
+                    travel += (samples[f][k + 1].tip - samples[f][k].tip).magnitude;
+                }
+                if (travel > 1e-4f) return true;
+            }
+            return false;
         }
     }
 }
