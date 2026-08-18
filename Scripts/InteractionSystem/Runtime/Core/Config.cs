@@ -281,6 +281,14 @@ namespace Shababeek.Interactions.Core
             [Tooltip("Input action reference for the pinky finger.")]
             [SerializeField] private InputActionReference pinkyAction;
 
+            [Header("Face Buttons & Thumbstick")]
+            [Tooltip("Input action reference for the A (primary) face button. May be empty on older config assets; controller providers then fall back to reading A from the thumb action, exactly as they always have.")]
+            [SerializeField] private InputActionReference aButtonAction;
+            [Tooltip("Input action reference for the B (secondary) face button. May be empty on older config assets; B then simply never fires, which is what an unwired B did before the field existed.")]
+            [SerializeField] private InputActionReference bButtonAction;
+            [Tooltip("Input action reference for the controller thumbstick axis. May be empty on older config assets; the thumbstick then reads zero everywhere.")]
+            [SerializeField] private InputActionReference thumbstickAction;
+
             /// <summary>Gets the input action for the thumb.</summary>
             public InputAction ThumbAction => thumbAction?.action;
 
@@ -303,6 +311,26 @@ namespace Shababeek.Interactions.Core
             /// InputAction for the pinky finger.
             /// </summary>
             public InputAction PinkyAction => pinkyAction?.action;
+
+            /// <summary>
+            /// InputAction for the A (primary) face button, or null when this config asset
+            /// predates the field. Null is a supported state — see the provider classes for
+            /// the fallbacks each one takes.
+            /// </summary>
+            public InputAction AButtonAction => aButtonAction?.action;
+
+            /// <summary>
+            /// InputAction for the B (secondary) face button, or null when this config asset
+            /// predates the field. Null means B never fires, which matches the behaviour of
+            /// every config that was wired before B existed as a distinct source.
+            /// </summary>
+            public InputAction BButtonAction => bButtonAction?.action;
+
+            /// <summary>
+            /// InputAction for the controller thumbstick axis, or null when this config asset
+            /// predates the field. Null means the thumbstick reads zero everywhere.
+            /// </summary>
+            public InputAction ThumbstickAction => thumbstickAction?.action;
         }
 
         /// <summary>

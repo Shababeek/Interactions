@@ -47,6 +47,10 @@ namespace Shababeek.Interactions
         [SerializeField] private InteractorUnityEvent onUseEnded = new();
         [SerializeField] private InteractorUnityEvent onThumbPressed = new();
         [SerializeField] private InteractorUnityEvent onThumbReleased = new();
+        [SerializeField] private InteractorUnityEvent onAPressed = new();
+        [SerializeField] private InteractorUnityEvent onAReleased = new();
+        [SerializeField] private InteractorUnityEvent onBPressed = new();
+        [SerializeField] private InteractorUnityEvent onBReleased = new();
         
         [Tooltip("Indicates whether this interactable is currently selected.")]
         [SerializeField] [ReadOnly] private bool isSelected;
@@ -130,6 +134,30 @@ namespace Shababeek.Interactions
         /// Observable that fires when a thumb button (A/B) is released while this interactable is selected.
         /// </summary>
         public IObservable<InteractorBase> OnThumbReleased => onThumbReleased.AsObservable();
+
+        /// <summary>
+        /// Observable that fires when the A (primary) face button is pressed while this
+        /// interactable is selected.
+        /// </summary>
+        public IObservable<InteractorBase> OnAPressed => onAPressed.AsObservable();
+
+        /// <summary>
+        /// Observable that fires when the A (primary) face button is released while this
+        /// interactable is selected.
+        /// </summary>
+        public IObservable<InteractorBase> OnAReleased => onAReleased.AsObservable();
+
+        /// <summary>
+        /// Observable that fires when the B (secondary) face button is pressed while this
+        /// interactable is selected.
+        /// </summary>
+        public IObservable<InteractorBase> OnBPressed => onBPressed.AsObservable();
+
+        /// <summary>
+        /// Observable that fires when the B (secondary) face button is released while this
+        /// interactable is selected.
+        /// </summary>
+        public IObservable<InteractorBase> OnBReleased => onBReleased.AsObservable();
 
         /// <summary>
         /// The button that triggers selection of this interactable.
@@ -461,6 +489,100 @@ namespace Shababeek.Interactions
         protected virtual void ThumbReleased()
         {
         }
+
+        /// <summary>
+        /// Called when the A (primary) face button is pressed while this interactable is selected.
+        /// </summary>
+        /// <param name="interactorBase">The interactor holding this object.</param>
+        public void APress(InteractorBase interactorBase)
+        {
+            if (this.currentState == InteractionState.Selected)
+            {
+                onAPressed.Invoke(currentInteractor);
+                APressed();
+            }
+        }
+
+        /// <summary>
+        /// Called when the A (primary) face button is released while this interactable is selected.
+        /// </summary>
+        /// <param name="interactorBase">The interactor holding this object.</param>
+        public void ARelease(InteractorBase interactorBase)
+        {
+            if (this.currentState == InteractionState.Selected)
+            {
+                onAReleased.Invoke(currentInteractor);
+                AReleased();
+            }
+        }
+
+        /// <summary>
+        /// Called when the B (secondary) face button is pressed while this interactable is selected.
+        /// </summary>
+        /// <param name="interactorBase">The interactor holding this object.</param>
+        public void BPress(InteractorBase interactorBase)
+        {
+            if (this.currentState == InteractionState.Selected)
+            {
+                onBPressed.Invoke(currentInteractor);
+                BPressed();
+            }
+        }
+
+        /// <summary>
+        /// Called when the B (secondary) face button is released while this interactable is selected.
+        /// </summary>
+        /// <param name="interactorBase">The interactor holding this object.</param>
+        public void BRelease(InteractorBase interactorBase)
+        {
+            if (this.currentState == InteractionState.Selected)
+            {
+                onBReleased.Invoke(currentInteractor);
+                BReleased();
+            }
+        }
+
+        /// <summary>
+        /// Called when the A (primary) face button is pressed while this interactable is selected.
+        /// Override this method to implement custom A press behavior. Under hand tracking the
+        /// provider's thumb-curl fallback is what feeds this — a tracked hand has no face buttons.
+        /// </summary>
+        protected virtual void APressed()
+        {
+        }
+
+        /// <summary>
+        /// Called when the A (primary) face button is released while this interactable is selected.
+        /// Override this method to implement custom A release behavior.
+        /// </summary>
+        protected virtual void AReleased()
+        {
+        }
+
+        /// <summary>
+        /// Called when the B (secondary) face button is pressed while this interactable is selected.
+        /// Override this method to implement custom B press behavior. Note that under hand
+        /// tracking this never fires — there is no gesture standing in for B.
+        /// </summary>
+        protected virtual void BPressed()
+        {
+        }
+
+        /// <summary>
+        /// Called when the B (secondary) face button is released while this interactable is selected.
+        /// Override this method to implement custom B release behavior.
+        /// </summary>
+        protected virtual void BReleased()
+        {
+        }
+
+        /// <summary>
+        /// The holding interactor's thumbstick, in the range [-1, 1] per axis. Zero when
+        /// nothing holds this, when the holding hand has no stick (hand tracking), or when
+        /// the config's thumbstick action was never wired — consumers treat zero as neutral
+        /// rather than "no data".
+        /// </summary>
+        protected Vector2 Thumbstick => CurrentInteractor != null ? CurrentInteractor.Thumbstick : Vector2.zero;
 
         protected virtual void Reset()
         {

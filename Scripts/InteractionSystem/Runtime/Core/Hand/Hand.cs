@@ -57,6 +57,27 @@ namespace Shababeek.Interactions.Core
         public IObservable<VRButtonState> OnThumbButtonStateChange => config?[hand]?.ThumbButtonObservable;
 
         /// <summary>
+        /// Observable for the A (primary) face button's state changes. Distinct from
+        /// <see cref="OnThumbButtonStateChange"/>: it fires only for A, so an interactable can
+        /// treat the two face buttons as two different controls. Under hand tracking this
+        /// carries the thumb-curl fallback — see the input providers.
+        /// </summary>
+        public IObservable<VRButtonState> OnAButtonStateChange => config?[hand]?.AButtonObservable;
+
+        /// <summary>
+        /// Observable for the B (secondary) face button's state changes. Stays silent under
+        /// hand tracking: there is no curl that can stand in for B, so a tracked hand has no
+        /// B at all.
+        /// </summary>
+        public IObservable<VRButtonState> OnBButtonStateChange => config?[hand]?.BButtonObservable;
+
+        /// <summary>
+        /// This hand's controller thumbstick, in the range [-1, 1] per axis. Zero under hand
+        /// tracking or when the config's thumbstick action was never wired.
+        /// </summary>
+        public Vector2 Thumbstick => config?[hand]?.Thumbstick ?? Vector2.zero;
+
+        /// <summary>
         /// Observable that fires on any button press (trigger, grip, or thumb).
         /// </summary>
         public IObservable<VRButtonState> OnAnyButtonStateChange =>
