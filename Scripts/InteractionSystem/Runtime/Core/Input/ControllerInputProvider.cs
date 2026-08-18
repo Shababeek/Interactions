@@ -29,6 +29,23 @@ namespace Shababeek.Interactions.Core
         [Tooltip("Input action for pinky finger curl value.")]
         [SerializeField]private InputAction pinkyAction;
 
+        [Tooltip(
+            "Input action for the A (primary) face button. Normally assigned from the config " +
+            "asset's HandInputActions in Initialize; leave empty to keep reading A from the " +
+            "thumb action exactly as this provider did before dedicated face buttons existed.")]
+        [SerializeField] private InputAction aButtonAction;
+
+        [Tooltip(
+            "Input action for the B (secondary) face button. Normally assigned from the config " +
+            "asset's HandInputActions in Initialize; when empty, B simply never fires — the " +
+            "same as before this field existed.")]
+        [SerializeField] private InputAction bButtonAction;
+
+        [Tooltip(
+            "Input action for the thumbstick axis. Normally assigned from the config asset's " +
+            "HandInputActions in Initialize; when empty, Thumbstick reads zero.")]
+        [SerializeField] private InputAction thumbstickAction;
+
         private bool _controllerConnected = false;
         private XRController _controllerDevice;
 
@@ -58,6 +75,9 @@ namespace Shababeek.Interactions.Core
             middleAction?.Enable();
             ringAction?.Enable();
             pinkyAction?.Enable();
+            aButtonAction?.Enable();
+            bButtonAction?.Enable();
+            thumbstickAction?.Enable();
 
             // Subscribe to device changes
             if (useDeviceDetection)
@@ -98,6 +118,10 @@ namespace Shababeek.Interactions.Core
             this[FingerName.Middle] = middleAction?.ReadValue<float>() ?? 0.5f;
             this[FingerName.Ring] = ringAction?.ReadValue<float>() ?? 0.5f;
             this[FingerName.Pinky] = pinkyAction?.ReadValue<float>() ?? 0.5f;
+
+            // The stick is not a finger, but it is a per-frame read: publishing it here keeps
+            // Thumbstick in step with the same Update's button states. Unwired reads zero.
+            Thumbstick = thumbstickAction?.ReadValue<Vector2>() ?? Vector2.zero;
             
             // Update position, rotation, and tracking state
             if (_controllerDevice != null)
@@ -121,6 +145,32 @@ namespace Shababeek.Interactions.Core
                 _rotation = Quaternion.identity;
                 _trackingState = 0;
             }
+        }
+
+        /// <summary>
+        /// Whether the base's thumb-curl fallback should drive A. Only when no dedicated A
+        /// action is wired — with one, the fallback must stay silent because the thumb action
+        /// also reacts to the B button and the thumbstick touch, and its write would dispatch
+        /// a phantom A press on either of those before the real button's state could correct it.
+        /// </summary>
+        protected override bool DriveAButtonFromThumbCurl => aButtonAction == null;
+
+        /// <summary>
+        /// Drives the face-button observers from their dedicated actions, after the base has
+        /// handled trigger and grip. A is only written when its action exists (otherwise the
+        /// base's curl fallback, left enabled by <see cref="DriveAButtonFromThumbCurl"/>, is
+        /// the intended source); B is only written when its action exists, and without one it
+        /// stays silent forever, exactly as it did before the action was separable.
+        /// </summary>
+        protected override void UpdateButtonStates()
+        {
+            base.UpdateButtonStates();
+
+            if (aButtonAction != null)
+                AButtonObserver.ButtonState = aButtonAction.ReadValue<float>() > 0.5f;
+
+            if (bButtonAction != null)
+                BButtonObserver.ButtonState = bButtonAction.ReadValue<float>() > 0.5f;
         }
 
         /// <summary>
@@ -227,6 +277,9 @@ namespace Shababeek.Interactions.Core
             middleAction = actions.MiddleAction;
             ringAction = actions.RingAction;
             pinkyAction = actions.PinkyAction;
+            aButtonAction = actions.AButtonAction;
+            bButtonAction = actions.BButtonAction;
+            thumbstickAction = actions.ThumbstickAction;
 
             // Enable actions if component is already enabled
             if (enabled)
@@ -236,6 +289,9 @@ namespace Shababeek.Interactions.Core
                 middleAction?.Enable();
                 ringAction?.Enable();
                 pinkyAction?.Enable();
+                aButtonAction?.Enable();
+                bButtonAction?.Enable();
+                thumbstickAction?.Enable();
             }
         }
 

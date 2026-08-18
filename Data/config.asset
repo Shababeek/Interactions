@@ -24,25 +24,21 @@ MonoBehaviour:
     middleAction: {fileID: -5530056983000821337, guid: 40998561fb58d43d3bd6304af9a7868e, type: 3}
     ringAction: {fileID: -827827624979881611, guid: 40998561fb58d43d3bd6304af9a7868e, type: 3}
     pinkyAction: {fileID: 1574761201288198049, guid: 40998561fb58d43d3bd6304af9a7868e, type: 3}
+    aButtonAction: {fileID: -7810688735566398890, guid: 40998561fb58d43d3bd6304af9a7868e, type: 3}
+    bButtonAction: {fileID: 9066913473130184285, guid: 40998561fb58d43d3bd6304af9a7868e, type: 3}
+    thumbstickAction: {fileID: -7410228621354855124, guid: 40998561fb58d43d3bd6304af9a7868e, type: 3}
   rightHandActions:
     thumbAction: {fileID: 2412590077946390391, guid: 40998561fb58d43d3bd6304af9a7868e, type: 3}
     indexAction: {fileID: -1412702599562675357, guid: 40998561fb58d43d3bd6304af9a7868e, type: 3}
     middleAction: {fileID: 5896030430525601180, guid: 40998561fb58d43d3bd6304af9a7868e, type: 3}
     ringAction: {fileID: -6773375996486891541, guid: 40998561fb58d43d3bd6304af9a7868e, type: 3}
     pinkyAction: {fileID: -7802397244816999579, guid: 40998561fb58d43d3bd6304af9a7868e, type: 3}
+    aButtonAction: {fileID: -7849148042195676569, guid: 40998561fb58d43d3bd6304af9a7868e, type: 3}
+    bButtonAction: {fileID: -7015200711917735233, guid: 40998561fb58d43d3bd6304af9a7868e, type: 3}
+    thumbstickAction: {fileID: -7661378625049682749, guid: 40998561fb58d43d3bd6304af9a7868e, type: 3}
   feedbackSystemStyleSheet: {fileID: 7433441132597879392, guid: 3c91606246cd44966a770e730c1ecd9f, type: 3}
   handMass: 30
   linearDamping: 5
   angularDamping: 1
-  followerPreset: 4
-  customFollowerSettings:
-    positionStrength: 1000
-    rotationStrength: 2000
-    maxVelocity: 200
-    maxAngularVelocity: 1000
-    positionDeadzone: 0.001
-    rotationDeadzone: 0.5
-    teleportDistance: 1
-    respectCollisions: 0
   leftHandInputProvider: {fileID: 0}
   rightHandInputProvider: {fileID: 0}

@@ -35,7 +35,16 @@ namespace Shababeek.Interactions.Core
         /// </summary>
 
         IObservable<VRButtonState> ThumbButtonObservable=> AButtonObservable.Merge(BButtonObservable);
-        
+
+        /// <summary>
+        /// Current thumbstick axis of this hand's controller, in the range [-1, 1] per axis.
+        /// Reads zero whenever the input source has no stick — hand tracking, playback
+        /// recordings, or a config asset whose thumbstick action reference was never wired.
+        /// Polled, not observable, because a stick is a value that matters at the moment a
+        /// consumer reads it, not an event to react to.
+        /// </summary>
+        Vector2 Thumbstick { get; }
+
         /// <summary>
         /// Gets the curl value for a specific finger (0 = extended, 1 = curled).
         /// </summary>

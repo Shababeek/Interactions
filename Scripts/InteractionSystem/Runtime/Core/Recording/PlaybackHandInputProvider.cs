@@ -36,6 +36,12 @@ namespace Shababeek.Interactions.Core
         /// <summary>Observable for B button state changes.</summary>
         public IObservable<VRButtonState> BButtonObservable => _bButton.OnStateChanged;
 
+        /// <summary>
+        /// Thumbstick axis. Recordings do not capture stick motion, so playback always reads
+        /// zero — the documented degenerate value for a source without a stick.
+        /// </summary>
+        public Vector2 Thumbstick => Vector2.zero;
+
         /// <summary>Finger curl value by index (0=Thumb, 1=Index, 2=Middle, 3=Ring, 4=Pinky).</summary>
         public float this[int fingerIndex] => fingerIndex is >= 0 and < 5 ? _fingers[fingerIndex] : 0f;
 

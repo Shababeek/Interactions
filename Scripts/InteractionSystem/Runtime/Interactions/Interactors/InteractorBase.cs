@@ -26,8 +26,10 @@ namespace Shababeek.Interactions
         private readonly Subject<VRButtonState> _onInteractionStateChanged = new();
         private readonly Subject<VRButtonState> _onActivate = new();
         private readonly Subject<VRButtonState> _onThumb = new();
+        private readonly Subject<VRButtonState> _onAButton = new();
+        private readonly Subject<VRButtonState> _onBButton = new();
         private readonly CompositeDisposable _disposables = new();
-        private IDisposable _hoverSubscriber, _activationSubscriber, _thumbSubscriber;
+        private IDisposable _hoverSubscriber, _activationSubscriber, _thumbSubscriber, _aSubscriber, _bSubscriber;
         private XRButton _actualSelectionButton;
         private bool _isSecondaryHold;
 
@@ -48,6 +50,14 @@ namespace Shababeek.Interactions
         /// Hand component associated with this interactor.
         /// </summary>
         public Hand Hand => _hand;
+
+        /// <summary>
+        /// This interactor's hand thumbstick, in the range [-1, 1] per axis. Zero when the
+        /// hand has no stick (hand tracking, or an unwired thumbstick action) or before Awake
+        /// has resolved the hand. Interactables read this through InteractableBase.Thumbstick;
+        /// it is exposed here because the hand itself is.
+        /// </summary>
+        public Vector2 Thumbstick => _hand != null ? _hand.Thumbstick : Vector2.zero;
 
         /// <summary>
         /// Whether currently interacting with an object.
@@ -107,6 +117,16 @@ namespace Shababeek.Interactions
 
             _onThumb
                 .Do(HandleThumbButton)
+                .Subscribe()
+                .AddTo(_disposables);
+
+            _onAButton
+                .Do(HandleAButton)
+                .Subscribe()
+                .AddTo(_disposables);
+
+            _onBButton
+                .Do(HandleBButton)
                 .Subscribe()
                 .AddTo(_disposables);
         }
@@ -226,6 +246,16 @@ namespace Shababeek.Interactions
             DisposeThumbSubscription();
             var thumbObservable = _hand.OnThumbButtonStateChange;
             _thumbSubscriber = thumbObservable?.Do(_onThumb).Subscribe();
+
+            // A and B ride along beside the thumb subscription, with the same dispose-first
+            // discipline: SpawningInteractable re-enters Select() and would otherwise leak one
+            // subscription per spawn here too. They are separate subscriptions rather than a
+            // merge so each dispatches to its own interactable entry point.
+            DisposeASubscription();
+            _aSubscriber = _hand.OnAButtonStateChange?.Do(_onAButton).Subscribe();
+
+            DisposeBSubscription();
+            _bSubscriber = _hand.OnBButtonStateChange?.Do(_onBButton).Subscribe();
         }
 
         /// <summary>
@@ -242,6 +272,8 @@ namespace Shababeek.Interactions
                 DisposeActivationSubscription();
                 DisposeHoverSubscription();
                 DisposeThumbSubscription();
+                DisposeASubscription();
+                DisposeBSubscription();
                 if (currentInteractable != null) currentInteractable.SecondaryDeselect(this);
                 currentInteractable = null;
                 return;
@@ -251,6 +283,8 @@ namespace Shababeek.Interactions
             DisposeActivationSubscription();
             DisposeHoverSubscription();
             DisposeThumbSubscription();
+            DisposeASubscription();
+            DisposeBSubscription();
             if (currentInteractable == null) return;
             currentInteractable.OnStateChanged(InteractionState.None, this);
             StartHover();
@@ -357,6 +391,8 @@ namespace Shababeek.Interactions
             DisposeActivationSubscription();
             DisposeHoverSubscription();
             DisposeThumbSubscription();
+            DisposeASubscription();
+            DisposeBSubscription();
             currentInteractable = null;
         }
 
@@ -378,6 +414,18 @@ namespace Shababeek.Interactions
             _thumbSubscriber = null;
         }
 
+        private void DisposeASubscription()
+        {
+            _aSubscriber?.Dispose();
+            _aSubscriber = null;
+        }
+
+        private void DisposeBSubscription()
+        {
+            _bSubscriber?.Dispose();
+            _bSubscriber = null;
+        }
+
         private void HandleThumbButton(VRButtonState state)
         {
             if (currentInteractable == null) return;
@@ -388,6 +436,34 @@ namespace Shababeek.Interactions
                     break;
                 case VRButtonState.Up:
                     currentInteractable.ThumbRelease(this);
+                    break;
+            }
+        }
+
+        private void HandleAButton(VRButtonState state)
+        {
+            if (currentInteractable == null) return;
+            switch (state)
+            {
+                case VRButtonState.Down:
+                    currentInteractable.APress(this);
+                    break;
+                case VRButtonState.Up:
+                    currentInteractable.ARelease(this);
+                    break;
+            }
+        }
+
+        private void HandleBButton(VRButtonState state)
+        {
+            if (currentInteractable == null) return;
+            switch (state)
+            {
+                case VRButtonState.Down:
+                    currentInteractable.BPress(this);
+                    break;
+                case VRButtonState.Up:
+                    currentInteractable.BRelease(this);
                     break;
             }
         }
@@ -429,6 +505,8 @@ namespace Shababeek.Interactions
             DisposeHoverSubscription();
             DisposeActivationSubscription();
             DisposeThumbSubscription();
+            DisposeASubscription();
+            DisposeBSubscription();
         }
 
         public void Release(InteractableBase interactableBase)

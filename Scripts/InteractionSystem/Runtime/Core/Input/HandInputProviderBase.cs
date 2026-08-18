@@ -24,6 +24,12 @@ namespace Shababeek.Interactions.Core
         [Tooltip("Finger curl value threshold for grip button press detection.")]
         [SerializeField] protected float gripThreshold = 0.2f;
 
+        [Tooltip(
+            "Thumb value threshold for thumb button press detection. Under controller tracking " +
+            "the thumb action is a button and this only has to sit above zero; under hand " +
+            "tracking it is a real curl, so raise it if a resting thumb reads as a press.")]
+        [SerializeField] protected float thumbThreshold = 0.5f;
+
         private readonly ButtonObservable _triggerObserver = new();
         private readonly ButtonObservable _gripObserver = new();
         private readonly ButtonObservable _aButtonObserver = new();
@@ -61,6 +67,45 @@ namespace Shababeek.Interactions.Core
         /// Observable for B button state changes.
         /// </summary>
         public IObservable<VRButtonState> BButtonObservable => _bButtonObserver.OnStateChanged;
+
+        /// <summary>
+        /// The A button observer. Protected so derived providers that read a real face button
+        /// (<see cref="ControllerInputProvider"/>) can drive it directly instead of through the
+        /// thumb-curl fallback. Writing the same state twice in a frame is a no-op — the
+        /// observable only fires on changes — but writing two DIFFERENT states in one frame is
+        /// not: the losing write dispatches a press or release the winner immediately retracts,
+        /// and subscribers see a phantom event. A provider that takes over A must therefore also
+        /// suppress the fallback via <see cref="DriveAButtonFromThumbCurl"/>, not merely
+        /// overwrite its result afterwards.
+        /// </summary>
+        protected ButtonObservable AButtonObserver => _aButtonObserver;
+
+        /// <summary>
+        /// The B button observer, for the same direct-drive purpose as
+        /// <see cref="AButtonObserver"/>. The base never writes it — there is no curl to
+        /// approximate B with — so any provider that wants B events must drive it from a real
+        /// secondary-button source.
+        /// </summary>
+        protected ButtonObservable BButtonObserver => _bButtonObserver;
+
+        /// <summary>
+        /// Whether <see cref="UpdateButtonStates"/> drives the A observer from the thumb value
+        /// crossing <see cref="thumbThreshold"/>. The default is true because that fallback is
+        /// the ONLY source of A events for hand tracking: a tracked hand has no face buttons,
+        /// so a thumb curl is the closest thing to an A press it can offer. Controller
+        /// providers override this to false when a dedicated A action is wired, because the
+        /// thumb action still binds the B button and the thumbstick touch, and either of those
+        /// would otherwise fire a phantom A press that the real button then retracts.
+        /// </summary>
+        protected virtual bool DriveAButtonFromThumbCurl => true;
+
+        /// <summary>
+        /// Current thumbstick axis of this hand's controller, or zero when the input source
+        /// has no stick. Derived providers that do have one write it every frame from
+        /// <see cref="UpdateFingerValues"/>; nobody else writes it, so a source without a
+        /// stick simply leaves the default standing.
+        /// </summary>
+        public Vector2 Thumbstick { get; protected set; }
 
         /// <summary>
         /// Gets finger curl value by index (0=Thumb, 1=Index, 2=Middle, 3=Ring, 4=Pinky).
@@ -155,6 +200,27 @@ namespace Shababeek.Interactions.Core
             // Grip = average of middle, ring, pinky
             float gripValue = (this[FingerName.Middle] + this[FingerName.Ring] + this[FingerName.Pinky]) / 3f;
             _gripObserver.ButtonState = gripValue > gripThreshold;
+
+            // Thumb = the thumb value, whatever the tracking type made of it: a face button under
+            // controllers, a curl under hand tracking. Without this the A and B observers are
+            // constructed, exposed as AButtonObservable/BButtonObservable, and never written to —
+            // which silently kills ThumbButtonObservable, since that is the merge of the two, and
+            // with it every interactable's onThumbPressed and ThumbPressed override.
+            //
+            // Only the A observer is driven. The merge would deliver a press once per observer, so
+            // feeding both would double every thumb event rather than distinguish the buttons.
+            //
+            // This write is the HAND-TRACKING fallback and stays the base's job, but it is
+            // guarded: providers that read a real primary button (ControllerInputProvider with a
+            // wired AButton action) suppress it via DriveAButtonFromThumbCurl, because the thumb
+            // value under controllers also moves for the B button and the thumbstick touch — and
+            // an unguarded fallback write followed by a correction would dispatch a phantom A
+            // press on both. ButtonObservable fires inside the setter, synchronously, so a wrong
+            // write cannot be taken back by overwriting it afterwards.
+            if (DriveAButtonFromThumbCurl)
+            {
+                _aButtonObserver.ButtonState = this[FingerName.Thumb] > thumbThreshold;
+            }
         }
 
         /// <summary>
