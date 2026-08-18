@@ -730,7 +730,7 @@ namespace Shababeek.Interactions
 
             // Both halves of a pair see the same overlap; letting only one resolve it keeps the
             // separation from being applied twice.
-            if (GetInstanceID() > neighbour.GetInstanceID()) return;
+            if (GetEntityId() > neighbour.GetEntityId()) return;
             if (!neighbour._initialized) return;
 
             var here = MassWorldPosition;

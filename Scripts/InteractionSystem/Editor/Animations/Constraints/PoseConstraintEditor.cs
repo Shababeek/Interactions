@@ -369,7 +369,8 @@ namespace Shababeek.Interactions.Editors
         {
             EditorGUILayout.Space();
             EditorGUILayout.HelpBox(
-                $"Editing {_selectedHand} hand constraints. Use the scene view to move the hand transform.",
+                $"Editing {_selectedHand} hand constraints. Use the scene view to move the hand transform, " +
+                "and drag the finger handles along their arcs to fine-tune the pose.",
                 MessageType.Info);
             EditorGUILayout.LabelField("Hand Positioning", EditorStyles.boldLabel);
             EditorGUI.indentLevel++;
@@ -657,12 +658,18 @@ namespace Shababeek.Interactions.Editors
 
                 _currentHand = null;
                 _handScaleWrapper = null;
+                InvalidateSceneArcs();
             }
         }
 
         // ─── Procedural Auto-Fit ────────────────────────────────────────
 
         private FingerFitResult[] _lastFitResults;
+
+        private FingerArcs _sceneArcs;
+        private int _sceneArcsPoseIndex = -1;
+        private bool _sceneArcsFailed;
+        private const int SceneArcSampleCount = 24;
 
         private void DrawAutoFitButton()
         {
@@ -762,15 +769,23 @@ namespace Shababeek.Interactions.Editors
 
         private void DrawFitContactGizmos()
         {
+            if (Event.current.type != EventType.Repaint) return;
             if (_lastFitResults == null || _currentHand == null) return;
+
+            var previousZTest = Handles.zTest;
+            Handles.zTest = UnityEngine.Rendering.CompareFunction.Always;
+            Handles.color = Color.green;
 
             for (int f = 0; f < 5; f++)
             {
                 if (!_lastFitResults[f].hit) continue;
-                Handles.color = Color.green;
-                Handles.SphereHandleCap(0, _lastFitResults[f].point, Quaternion.identity, 0.006f, EventType.Repaint);
-                Handles.DrawLine(_lastFitResults[f].point, _lastFitResults[f].point + _lastFitResults[f].normal * 0.02f);
+                // Lift the marker off the surface so it doesn't z-fight with the mesh.
+                Vector3 raised = _lastFitResults[f].point + _lastFitResults[f].normal * 0.004f;
+                Handles.SphereHandleCap(0, raised, Quaternion.identity, 0.006f, EventType.Repaint);
+                Handles.DrawLine(raised, raised + _lastFitResults[f].normal * 0.016f);
             }
+
+            Handles.zTest = previousZTest;
         }
 
         // ─── Copy Utilities ─────────────────────────────────────────────
@@ -971,15 +986,22 @@ namespace Shababeek.Interactions.Editors
 
                 var worldPosition = _currentHand.transform.position;
                 var worldRotation = _currentHand.transform.rotation;
+
+                EditorGUI.BeginChangeCheck();
                 Handles.TransformHandle(ref worldPosition, ref worldRotation);
+                if (EditorGUI.EndChangeCheck())
+                {
+                    // Position on wrapper (keeps rotation in uniform space), rotation on hand.
+                    // Only write back on actual change — unconditional writes dirtied the object
+                    // every GUI event and made the scene view flicker.
+                    if (_handScaleWrapper) _handScaleWrapper.position = worldPosition;
+                    else _currentHand.transform.position = worldPosition;
+                    _currentHand.transform.rotation = worldRotation;
 
-                // Position on wrapper (keeps rotation in uniform space), rotation on hand
-                if (_handScaleWrapper) _handScaleWrapper.position = worldPosition;
-                else _currentHand.transform.position = worldPosition;
-                _currentHand.transform.rotation = worldRotation;
+                    UpdateVectorsFromTransform();
+                }
 
-                UpdateVectorsFromTransform();
-                DrawFingerSlidersInScene();
+                DrawFingerPoseHandles();
                 DrawFitContactGizmos();
             }
             else
@@ -1043,114 +1065,182 @@ namespace Shababeek.Interactions.Editors
             }
         }
 
-        // ─── Scene View Finger Slider Panel ─────────────────────────────
+        // ─── Scene Finger Pose Handles ──────────────────────────────────
 
         private static readonly string[] FingerNames = { "Thumb", "Index", "Middle", "Ring", "Pinky" };
-        private static readonly string[] SceneModeNames = { "Free", "Range", "Fixed" };
         private static readonly string[] FingerPropertyNames =
         {
             "thumbFingerLimits", "indexFingerLimits", "middleFingerLimits",
             "ringFingerLimits", "pinkyFingerLimits"
         };
 
-        private void DrawFingerSlidersInScene()
+        private void DrawFingerPoseHandles()
         {
             if (_currentHand == null || _selectedHand == HandIdentifier.None) return;
             if (IsStaticPose()) return;
 
-            Handles.BeginGUI();
-
-            float panelWidth = 270f;
-            float panelHeight = 180f;
-            float padding = 10f;
-            float x = SceneView.currentDrawingSceneView.position.width - panelWidth - padding;
-            float y = padding;
-
-            var panelRect = new Rect(x, y, panelWidth, panelHeight);
-            GUI.Box(panelRect, GUIContent.none, EditorStyles.helpBox);
-
-            GUILayout.BeginArea(new Rect(panelRect.x + 8, panelRect.y + 4, panelRect.width - 16, panelRect.height - 8));
-            GUILayout.Label("Finger Constraints", EditorStyles.boldLabel);
-
             var poseConstraintsProperty = GetActivePoseConstraintsProperty();
-            if (poseConstraintsProperty == null)
-            {
-                GUILayout.EndArea();
-                Handles.EndGUI();
-                return;
-            }
+            if (poseConstraintsProperty == null) return;
+
+            int poseIndex = poseConstraintsProperty.FindPropertyRelative("targetPoseIndex").intValue;
+            if (!EnsureSceneArcs(poseIndex)) return;
+
+            var handMatrix = _currentHand.transform.localToWorldMatrix;
 
             serializedObject.Update();
             bool changed = false;
 
-            for (int i = 0; i < 5; i++)
+            for (int f = 0; f < 5; f++)
             {
-                var fingerProp = poseConstraintsProperty.FindPropertyRelative(FingerPropertyNames[i]);
+                var fingerProp = poseConstraintsProperty.FindPropertyRelative(FingerPropertyNames[f]);
                 if (fingerProp == null) continue;
 
                 var minProp = fingerProp.FindPropertyRelative("min");
                 var maxProp = fingerProp.FindPropertyRelative("max");
                 var mode = FingerConstraintDrawer.ResolveMode(fingerProp);
 
-                GUILayout.BeginHorizontal();
-                GUILayout.Label(FingerNames[i], GUILayout.Width(48));
+                float value = mode == FingerConstraintMode.Fixed ? minProp.floatValue
+                    : mode == FingerConstraintMode.Range ? maxProp.floatValue
+                    : 1f;
 
+                DrawFingerArcLine(f, handMatrix);
+
+                Vector3 handleWorld = ArcWorldPoint(f, value, handMatrix);
+                float handleSize = HandleUtility.GetHandleSize(handleWorld) * 0.05f;
+
+                Handles.color = FingerHandleColor(mode);
                 EditorGUI.BeginChangeCheck();
-
-                int modeIndex = Mathf.Clamp((int)mode - 1, 0, 2);
-                int newModeIndex = EditorGUILayout.Popup(modeIndex, SceneModeNames, GUILayout.Width(58));
-                var newMode = (FingerConstraintMode)(newModeIndex + 1);
-
-                switch (newMode)
+                Vector3 dragged = Handles.FreeMoveHandle(handleWorld, handleSize, Vector3.zero, Handles.SphereHandleCap);
+                if (EditorGUI.EndChangeCheck())
                 {
-                    case FingerConstraintMode.Range:
-                    {
-                        float min = minProp.floatValue;
-                        float max = maxProp.floatValue;
-                        EditorGUILayout.MinMaxSlider(ref min, ref max, 0f, 1f, GUILayout.Width(102));
-                        if (EditorGUI.EndChangeCheck())
-                        {
-                            minProp.floatValue = min;
-                            maxProp.floatValue = max;
-                            FingerConstraintDrawer.WriteMode(fingerProp, newMode);
-                            changed = true;
-                        }
-                        break;
-                    }
-                    case FingerConstraintMode.Fixed:
-                    {
-                        // Fixed mode stores its held value in min; max stays untouched.
-                        float value = EditorGUILayout.Slider(minProp.floatValue, 0f, 1f, GUILayout.Width(102));
-                        if (EditorGUI.EndChangeCheck())
-                        {
-                            minProp.floatValue = value;
-                            FingerConstraintDrawer.WriteMode(fingerProp, newMode);
-                            changed = true;
-                        }
-                        break;
-                    }
-                    default:
-                    {
-                        GUILayout.Label("0–1 pass-through", EditorStyles.miniLabel, GUILayout.Width(102));
-                        if (EditorGUI.EndChangeCheck())
-                        {
-                            FingerConstraintDrawer.WriteMode(fingerProp, newMode);
-                            changed = true;
-                        }
-                        break;
-                    }
+                    float newValue = ClosestCurlOnArc(f, dragged, handMatrix);
+                    ApplyFingerHandleValue(fingerProp, minProp, maxProp, mode, newValue);
+                    changed = true;
                 }
 
-                GUILayout.EndHorizontal();
+                if (Event.current.type == EventType.Repaint)
+                {
+                    Handles.Label(handleWorld + Vector3.up * 0.012f, $"{FingerNames[f]} {value:F2}", EditorStyles.miniLabel);
+                }
             }
 
             if (changed)
             {
                 serializedObject.ApplyModifiedProperties();
             }
+        }
 
-            GUILayout.EndArea();
-            Handles.EndGUI();
+        private static void ApplyFingerHandleValue(SerializedProperty fingerProp, SerializedProperty minProp, SerializedProperty maxProp, FingerConstraintMode mode, float value)
+        {
+            switch (mode)
+            {
+                case FingerConstraintMode.Fixed:
+                    // Fixed fingers hold their value in min.
+                    minProp.floatValue = value;
+                    break;
+                case FingerConstraintMode.Free:
+                    // Dragging a free finger converts pass-through to a contact-limited range.
+                    FingerConstraintDrawer.WriteMode(fingerProp, FingerConstraintMode.Range);
+                    minProp.floatValue = 0f;
+                    maxProp.floatValue = value;
+                    break;
+                default:
+                    maxProp.floatValue = value;
+                    if (minProp.floatValue > value)
+                        minProp.floatValue = value;
+                    break;
+            }
+        }
+
+        private bool EnsureSceneArcs(int poseIndex)
+        {
+            if (poseIndex != _sceneArcsPoseIndex)
+            {
+                _sceneArcs = null;
+                _sceneArcsFailed = false;
+                _sceneArcsPoseIndex = poseIndex;
+            }
+
+            if (_sceneArcs != null) return true;
+            if (_sceneArcsFailed) return false;
+
+            var rig = _currentHand.GetComponentInChildren<HandFingerRig>();
+            if (rig == null || !rig.IsValid)
+            {
+                _sceneArcsFailed = true;
+                return false;
+            }
+
+            _sceneArcs = FingerArcBaker.Bake(_currentHand, rig, poseIndex, SceneArcSampleCount);
+            _sceneArcsFailed = _sceneArcs == null;
+            return !_sceneArcsFailed;
+        }
+
+        private void InvalidateSceneArcs()
+        {
+            _sceneArcs = null;
+            _sceneArcsPoseIndex = -1;
+            _sceneArcsFailed = false;
+        }
+
+        private void DrawFingerArcLine(int finger, Matrix4x4 handMatrix)
+        {
+            if (Event.current.type != EventType.Repaint) return;
+
+            Handles.color = new Color(1f, 1f, 1f, 0.3f);
+            Vector3 prev = handMatrix.MultiplyPoint3x4(_sceneArcs.GetSample(finger, 0).tip);
+            for (int k = 1; k < _sceneArcs.SampleCount; k++)
+            {
+                Vector3 next = handMatrix.MultiplyPoint3x4(_sceneArcs.GetSample(finger, k).tip);
+                Handles.DrawLine(prev, next);
+                prev = next;
+            }
+        }
+
+        private Vector3 ArcWorldPoint(int finger, float curl, Matrix4x4 handMatrix)
+        {
+            int count = _sceneArcs.SampleCount;
+            float t = Mathf.Clamp01(curl) * (count - 1);
+            int k = Mathf.Min((int)t, count - 2);
+            Vector3 local = Vector3.Lerp(_sceneArcs.GetSample(finger, k).tip, _sceneArcs.GetSample(finger, k + 1).tip, t - k);
+            return handMatrix.MultiplyPoint3x4(local);
+        }
+
+        private float ClosestCurlOnArc(int finger, Vector3 worldPoint, Matrix4x4 handMatrix)
+        {
+            int count = _sceneArcs.SampleCount;
+            float bestDistance = float.MaxValue;
+            float bestCurl = 0f;
+
+            Vector3 prev = handMatrix.MultiplyPoint3x4(_sceneArcs.GetSample(finger, 0).tip);
+            for (int k = 0; k < count - 1; k++)
+            {
+                Vector3 next = handMatrix.MultiplyPoint3x4(_sceneArcs.GetSample(finger, k + 1).tip);
+                Vector3 segment = next - prev;
+                float lengthSq = segment.sqrMagnitude;
+                float t = lengthSq < 1e-12f ? 0f : Mathf.Clamp01(Vector3.Dot(worldPoint - prev, segment) / lengthSq);
+                Vector3 projected = prev + segment * t;
+                float distance = (worldPoint - projected).sqrMagnitude;
+                if (distance < bestDistance)
+                {
+                    bestDistance = distance;
+                    bestCurl = (k + t) / (count - 1);
+                }
+                prev = next;
+            }
+
+            return bestCurl;
+        }
+
+        private static Color FingerHandleColor(FingerConstraintMode mode)
+        {
+            switch (mode)
+            {
+                case FingerConstraintMode.Fixed: return new Color(1f, 0.45f, 0.35f);
+                case FingerConstraintMode.Range: return new Color(1f, 0.8f, 0.2f);
+                default: return new Color(0.4f, 0.85f, 1f);
+            }
         }
     }
 }
+
