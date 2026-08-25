@@ -1,4 +1,5 @@
 using System;
+using Shababeek.Interactions.Core;
 using Shababeek.ReactiveVars;
 using TMPro;
 using UniRx;
@@ -62,6 +63,13 @@ namespace Shababeek.Interactions
         [Tooltip("Name substring to identify the pressing collider.")]
         [SerializeField] private string maskName = "";
 
+        [Tooltip(
+            "Only accept a press from a collider that belongs to a Hand. Leave this off for a " +
+            "button bolted to the world, where anything may press it. Turn it on for a button " +
+            "mounted on a prop the player carries around a room, where a table edge or a dropped " +
+            "box would otherwise press it as readily as a finger does.")]
+        [SerializeField] private bool handsOnly;
+
         [Header("Label")]
         [Tooltip("Text mesh used to display the button label.")]
         [SerializeField] private TMP_Text labelText;
@@ -112,6 +120,18 @@ namespace Shababeek.Interactions
         [SerializeField] private HapticPattern hapticPattern;
 
         [ReadOnly][SerializeField] private bool isDown;
+
+        /// <summary>
+        /// A hand that may never press this button, assigned at runtime. Only consulted when
+        /// <see cref="handsOnly"/> is on.
+        /// </summary>
+        /// <remarks>
+        /// This exists for buttons mounted on a held prop. The hand doing the holding has its
+        /// fingers curled around the grip inches from the controls, so without this it presses
+        /// them by standing still — and the player never gets to press anything, because the
+        /// button is already down before their other hand arrives.
+        /// </remarks>
+        public Hand IgnoredHand { get; set; }
 
         private float _coolDownTimer = 0;
         private float _t = 0;
@@ -220,10 +240,29 @@ namespace Shababeek.Interactions
             button.transform.localPosition = Vector3.Lerp(normalPosition, pressedPosition, _t);
         }
 
+        /// <summary>
+        /// Whether this collider is allowed to press the button.
+        /// </summary>
+        /// <remarks>
+        /// Off by default, so every button authored before this existed behaves exactly as it
+        /// always did: whatever enters, presses. When on, the test walks up to the rig's hand
+        /// root, which is the only reliable marker available — the finger colliders ship
+        /// untagged, on layer 0, and every one of them is named "Capsule", so neither a layer
+        /// mask nor <see cref="maskName"/> can tell a fingertip from a filing cabinet.
+        /// </remarks>
+        private bool Accepts(Collider other)
+        {
+            if (!handsOnly) return true;
+
+            var pressingHand = other.GetComponentInParent<Hand>();
+            return pressingHand != null && pressingHand != IgnoredHand;
+        }
+
         private void OnTriggerEnter(Collider other)
         {
             if (!enabled) return;
             if (maskName != "" && !other.gameObject.name.Contains(maskName)) return;
+            if (!Accepts(other)) return;
             if (_coolDownTimer < coolDownTime) return;
             if (isDown) return;
             _coolDownTimer = 0;
@@ -236,6 +275,12 @@ namespace Shababeek.Interactions
         private void OnTriggerExit(Collider other)
         {
             if (!isDown) return;
+
+            // A collider that was never allowed to press must not be allowed to release either.
+            // Without this, a rejected collider leaving the volume ends a press some other,
+            // legitimate finger is still holding down.
+            if (!Accepts(other)) return;
+
             onButtonUp.Invoke();
             onClick.Invoke();
             isDown = false;
