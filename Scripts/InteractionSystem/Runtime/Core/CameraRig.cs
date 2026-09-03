@@ -572,7 +572,135 @@ namespace Shababeek.Interactions.Core
 
         #endregion
 
+        #region Relocation
+
+        /// <summary>
+        /// Whether the headset currently reports a real head pose. A node can report
+        /// <c>tracked</c> while its position is still at the origin — over Link this happens for
+        /// several frames after the session starts — so a non-zero position is required too.
+        /// Callers relocating the rig gate on this before aligning, because aligning against a
+        /// zero pose bakes a wrong offset into the rig that only a headset recenter clears.
+        /// </summary>
+        public bool HeadTrackingValid
+        {
+            get
+            {
+                var nodeStates = new List<XRNodeState>();
+                InputTracking.GetNodeStates(nodeStates);
+                foreach (var state in nodeStates)
+                {
+                    if ((state.nodeType == XRNode.CenterEye || state.nodeType == XRNode.Head) && state.tracked
+                        && state.TryGetPosition(out var headPosition) && headPosition.sqrMagnitude > 0.0001f)
+                        return true;
+                }
+
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Moves the rig root to a new pose and eye height, bringing the hands with it.
+        /// <para>
+        /// This is deliberately a primitive rather than a full transition: it does not touch the
+        /// eyelids, does not wait for tracking, and does not know what a destination means. The
+        /// caller owns the sequence — hide the view, move, confirm arrival, reveal — because only
+        /// the caller knows what "arrived" has to include for its world.
+        /// </para>
+        /// <para>
+        /// Alignment is not applied here. Call <see cref="AlignToHead"/> once
+        /// <see cref="HeadTrackingValid"/> reports true; doing it inside this call would align
+        /// against whatever pose the headset happened to be reporting mid-move.
+        /// </para>
+        /// </summary>
+        /// <param name="position">World position for the rig root.</param>
+        /// <param name="rotation">World rotation for the rig root, before head-yaw alignment.</param>
+        /// <param name="newCameraHeight">Eye height in metres to adopt at the destination.</param>
+        public void TeleportTo(Vector3 position, Quaternion rotation, float newCameraHeight)
+        {
+            transform.SetPositionAndRotation(position, rotation);
+
+            // AlignRigForwardToHead counter-rotates from the authored rotation so that repeated
+            // alignment never drifts. That reference was captured in Awake, and leaving it there
+            // would make the next alignment rotate the rig back toward where it first stood,
+            // silently undoing this move.
+            _authoredRotation = rotation;
+
+            cameraHeight = newCameraHeight;
+            _lastCameraHeight = newCameraHeight;
+            ApplyCameraHeight();
+
+            TeleportHands();
+        }
+
+        /// <summary>
+        /// Snaps both hands onto their pivots, discarding the momentum they had at the old
+        /// location. Hands are children of the rig, so the move carries their transforms along —
+        /// but a physics hand's rigidbody keeps its velocity and its interpolation history, and a
+        /// velocity-driven follower would otherwise try to cross the gap under its own power.
+        /// </summary>
+        public void TeleportHands()
+        {
+            TeleportHand(_leftPoseController, leftHandPivot);
+            TeleportHand(_rightPoseController, rightHandPivot);
+        }
+
+        private static void TeleportHand(HandPoseController hand, Transform pivot)
+        {
+            if (hand == null || pivot == null) return;
+
+            var handObject = hand.gameObject;
+
+            var physicsFollower = handObject.GetComponent<PhysicsHandFollower>();
+            if (physicsFollower != null)
+            {
+                physicsFollower.Teleport(pivot.position, pivot.rotation);
+                return;
+            }
+
+            var kinematicFollower = handObject.GetComponent<KinematicHandFollower>();
+            if (kinematicFollower != null)
+            {
+                kinematicFollower.Teleport(pivot.position, pivot.rotation);
+                return;
+            }
+
+            // A hand with no follower still has to arrive, or it stays at the previous station.
+            handObject.transform.SetPositionAndRotation(pivot.position, pivot.rotation);
+        }
+
+        /// <summary>
+        /// Re-runs forward alignment and camera recentering against the head's current pose.
+        /// Only meaningful once <see cref="HeadTrackingValid"/> is true.
+        /// </summary>
+        public void AlignToHead() => ApplyInitialTrackingAlignment();
+
+        /// <summary>
+        /// Whether the hands are within <paramref name="tolerance"/> metres of their pivots — the
+        /// check a caller uses to confirm the hands finished arriving before revealing the view.
+        /// </summary>
+        public bool HandsSettled(float tolerance = 0.02f)
+        {
+            return HandSettled(_leftPoseController, leftHandPivot, tolerance)
+                && HandSettled(_rightPoseController, rightHandPivot, tolerance);
+        }
+
+        private static bool HandSettled(HandPoseController hand, Transform pivot, float tolerance)
+        {
+            if (hand == null || pivot == null) return true;
+            return (hand.transform.position - pivot.position).sqrMagnitude <= tolerance * tolerance;
+        }
+
+        #endregion
+
         #region Blinking
+
+        /// <summary>
+        /// How closed the eyelids are right now: 0 fully open, 1 fully closed. A rig with no
+        /// eyelid overlay reports 0, because nothing is hiding anything. Callers use this to avoid
+        /// closing lids that are already shut — a redundant close is not merely wasted time, it
+        /// holds the player in the dark for a second animation they cannot see the point of.
+        /// </summary>
+        public float LidsClosedAmount => eyelidEffect != null ? eyelidEffect.ClosedAmount : 0f;
 
         /// <summary>Animate lids closed to hide the scene.</summary>
         public async Awaitable BlinkIn(CancellationToken cancellationToken = default)
