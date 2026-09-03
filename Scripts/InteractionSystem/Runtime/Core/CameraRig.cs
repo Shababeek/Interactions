@@ -669,6 +669,34 @@ namespace Shababeek.Interactions.Core
         }
 
         /// <summary>
+        /// Shows or hides the player's hands.
+        /// <para>
+        /// Some places are not places you have hands: a dream, a cutscene, a body you are not in
+        /// yet. Each of those used to be a rig built with hand creation switched off, which stopped
+        /// being possible once one Rig served the whole game — hands are now built once and must be
+        /// hidden rather than never made.
+        /// </para>
+        /// <para>
+        /// The whole hand object is deactivated rather than just its renderer, so a hidden hand
+        /// cannot still grab things it is invisible for. That also releases whatever it was holding
+        /// on the way out, because the interactor releases on disable. Which interactor was enabled
+        /// is untouched, so showing the hands again restores the trigger/ray choice as authored.
+        /// </para>
+        /// </summary>
+        public void SetHandsVisible(bool visible)
+        {
+            SetHandVisible(_leftPoseController, visible);
+            SetHandVisible(_rightPoseController, visible);
+        }
+
+        private static void SetHandVisible(HandPoseController hand, bool visible)
+        {
+            if (hand == null) return;
+            if (hand.gameObject.activeSelf == visible) return;
+            hand.gameObject.SetActive(visible);
+        }
+
+        /// <summary>
         /// Re-runs forward alignment and camera recentering against the head's current pose.
         /// Only meaningful once <see cref="HeadTrackingValid"/> is true.
         /// </summary>
@@ -687,6 +715,12 @@ namespace Shababeek.Interactions.Core
         private static bool HandSettled(HandPoseController hand, Transform pivot, float tolerance)
         {
             if (hand == null || pivot == null) return true;
+
+            // A hidden hand has no follower running, so it will never close the gap to its pivot.
+            // Waiting for it would hold the eyelids shut until the arrival timeout every single
+            // time the player arrives somewhere they have no hands.
+            if (!hand.gameObject.activeInHierarchy) return true;
+
             return (hand.transform.position - pivot.position).sqrMagnitude <= tolerance * tolerance;
         }
 
