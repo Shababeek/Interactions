@@ -4,6 +4,9 @@ using UniRx;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Serialization;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+#endif
 
 namespace Shababeek.Interactions
 {
@@ -24,8 +27,13 @@ namespace Shababeek.Interactions
         [Tooltip("Duration in seconds for the return animation.")]
         [SerializeField] private float returnDuration = 0.5f;
 
-        [Tooltip("Debug key to manually trigger socket return.")]
+#if ENABLE_INPUT_SYSTEM
+        [Tooltip("Debug key (editor / development builds only) to manually socket or return the object.")]
+        [SerializeField] private Key debugKey = Key.P;
+#else
+        [Tooltip("Debug key (editor / development builds only) to manually socket or return the object.")]
         [SerializeField] private KeyCode debugKey = KeyCode.P;
+#endif
 
         [Tooltip("Optional visual indicator transform to show socket positions.")]
         [SerializeField] private Transform indicator;
@@ -252,9 +260,23 @@ namespace Shababeek.Interactions
             }
         }
 
+        private bool DebugKeyPressed()
+        {
+#if !UNITY_EDITOR && !DEVELOPMENT_BUILD
+            return false;
+#elif ENABLE_INPUT_SYSTEM
+            var keyboard = Keyboard.current;
+            return keyboard != null && keyboard[debugKey].wasPressedThisFrame;
+#elif ENABLE_LEGACY_INPUT_MANAGER
+            return Input.GetKeyDown(debugKey);
+#else
+            return false;
+#endif
+        }
+
         private void DebugKeyHandling()
         {
-            if (!Input.GetKeyDown(debugKey)) return;
+            if (!DebugKeyPressed()) return;
             if (isSocketed)
             {
                 socket.Remove(this);

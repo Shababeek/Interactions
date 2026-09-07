@@ -72,10 +72,20 @@ HandPoseController — deferred to a later phase to keep scope tight.
 
 ## Phases
 
-1. **HandFingerRig + FingerArcBaker + PoseFitSolver + editor Auto-Fit button.**
+1. **HandFingerRig + FingerArcBaker + PoseFitSolver + editor Auto-Fit button.** — SHIPPED 2026-06-11
    Highest value (kills authoring cost), no runtime risk, exercises the whole stack.
 2. **Runtime fitting for Grabable** via `ProceduralGrabPose` + the clamp layer in
-   HandPoseController.
+   HandPoseController. — SHIPPED 2026-07-06. Implementation notes:
+   - `HandPoseController.SetProceduralClamps(float[5])` / `ClearProceduralClamps()`; clamp applied
+     as `min(constrainedValue, proceduralMax)` inside `PullFingersFromHand`.
+   - `FingerArcCache` (static) memoizes baked arcs per (controller, pose, sampleCount) so the
+     graph is only sampled once per hand/pose combination.
+   - `ProceduralGrabPose` (opt-in, `[RequireComponent(typeof(Grabable))]`) subscribes to
+     OnSelected/OnDeselected. Fires after `Select()` has applied constraints and positioned the
+     attachment point, so the fit matrix is `objectWorld × attachmentPoint⁻¹ × handWorld`
+     (the hand's final pose relative to the object, expressed in the object's current world frame).
+   - Trigger colliders excluded by default (hover-detection triggers would stop fingers early);
+     `fitThumb` toggle as the thumb fallback; public `Refit()` for shape changes while held.
 3. **Fake hands / constrained interactables + MultiPoint** (per-grab-point runtime fit) —
    lands after the two-handed prerequisite work on PoseConstrainer.
 

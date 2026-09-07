@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using Shababeek.Interactions.Highlight;
 
 namespace Shababeek.Interactions
 {
@@ -20,7 +21,7 @@ namespace Shababeek.Interactions
             public bool enabled = true;
             public Color color = new Color(1f, 0.85f, 0.2f, 0.2f);
             [Range(0f, 5f)] public float width = 0.1f;
-            public Outline.Mode mode = Outline.Mode.OutlineVisible;
+            public InteractionOutline.Mode mode = InteractionOutline.Mode.OutlineVisible;
         }
 
         [Tooltip("Global kill switch. When off no outline feedback is shown by any component using this config.")]
@@ -31,7 +32,7 @@ namespace Shababeek.Interactions
         {
             color = new Color(1f, 0.85f, 0.2f, 0.2f),
             width = 0.1f,
-            mode = Outline.Mode.OutlineVisible
+            mode = InteractionOutline.Mode.OutlineVisible
         };
 
         [Header("Selected")]
@@ -40,7 +41,7 @@ namespace Shababeek.Interactions
         {
             color = new Color(0.2f, 0.9f, 1f, 0.2f),
             width = 0.1f,
-            mode = Outline.Mode.OutlineVisible
+            mode = InteractionOutline.Mode.OutlineVisible
         };
 
         [Header("Grab Hint (Idle)")]
@@ -50,7 +51,7 @@ namespace Shababeek.Interactions
             enabled = false,
             color = new Color(1f, 1f, 1f, 0.1f),
             width = 0.02f,
-            mode = Outline.Mode.OutlineVisible
+            mode = InteractionOutline.Mode.OutlineVisible
         };
         [Tooltip("Minimum outline width during the pulse cycle.")]
         [SerializeField, Range(0f, 5f)] private float hintMinWidth = 0.02f;
