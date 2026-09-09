@@ -10,18 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 19928adcbc9ba964289d6380c01edaae, type: 3}
-  m_Name: OutlineFeedbackConfig
+  m_Name: OutlineFeedbackConfig_Quest
   m_EditorClassIdentifier: Shababeek.Interactions::Shababeek.Interactions.OutlineFeedbackConfig
   feedbackEnabled: 1
   hover:
     enabled: 1
     color: {r: 1, g: 0.85, b: 0.2, a: 0.2}
-    width: 0.05
+    width: 0.03
     mode: 1
   selected:
     enabled: 0
     color: {r: 0.2, g: 0.9, b: 1, a: 0.2}
-    width: 0.1
+    width: 0.05
     mode: 1
   hint:
     enabled: 0
@@ -29,11 +29,6 @@ MonoBehaviour:
     width: 0.02
     mode: 1
   hintMinWidth: 0.02
-  hintMaxWidth: 0.08
+  hintMaxWidth: 0.05
   hintPulseSpeed: 1
-  pipelineOverrides:
-  - label: Quest
-    pipelineNameContains:
-    - Quest
-    pipelineAssets: []
-    config: {fileID: 11400000, guid: 3a7c1e9b45d2f4e0a8b6c1d093f2a715, type: 2}
+  pipelineOverrides: []

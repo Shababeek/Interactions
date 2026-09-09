@@ -52,7 +52,7 @@ Material:
     m_Ints: []
     m_Floats:
     - _Fresnel_Power: 2
-    - _OutlineWidth: 0.1
+    - _OutlineWidth: 0.02
     - _QueueControl: 0
     - _QueueOffset: 0
     - _Stripes: 300

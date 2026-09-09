@@ -10,6 +10,8 @@ namespace Shababeek.Interactions.Highlight
     /// Optionally shows a pulsing idle "grab hint" outline to advertise the object as grabbable.
     /// All colors/widths/modes/toggles come from the shared <see cref="OutlineFeedbackConfig"/>
     /// (Resources/OutlineFeedbackConfig) so the whole project shares one source of truth.
+    /// The exact config is picked from the active Render Pipeline Asset, so PC/Editor and Quest
+    /// get their own settings automatically; a pipeline swap re-applies the state live.
     /// </summary>
     [RequireComponent(typeof(InteractableBase))]
     [DisallowMultipleComponent]
@@ -19,8 +21,9 @@ namespace Shababeek.Interactions.Highlight
         [Tooltip("Outline to drive. Auto-found on this GameObject (or children) if not assigned. Created on this GameObject when missing.")]
         [SerializeField] private InteractionOutline outline;
 
-        // Shared project-wide settings, resolved statically from Resources/OutlineFeedbackConfig.
-        private static OutlineFeedbackConfig Config => OutlineFeedbackConfig.Default;
+        // Shared project-wide settings, resolved statically from Resources/OutlineFeedbackConfig
+        // and narrowed to the config that matches the active render pipeline (PC/Editor, Quest, ...).
+        private static OutlineFeedbackConfig Config => OutlineFeedbackConfig.Active;
 
         private InteractableBase _interactable;
         private readonly CompositeDisposable _disposables = new();
@@ -29,6 +32,9 @@ namespace Shababeek.Interactions.Highlight
         // Per-instance runtime toggle for the idle grab hint. Style comes from the config;
         // this decides whether THIS object currently advertises itself (e.g. driven by sockets).
         private bool _showGrabHint;
+        // True once SetGrabHint has been called on this instance. Until then the hint follows
+        // whatever the active config defaults to, so a pipeline swap can turn it off/on.
+        private bool _grabHintOverridden;
 
         private void Awake()
         {
@@ -42,6 +48,7 @@ namespace Shababeek.Interactions.Highlight
         private void OnEnable()
         {
             _disposables.Clear();
+            OutlineFeedbackConfig.ActiveChanged += OnActiveConfigChanged;
             if (_interactable == null) return;
 
             _interactable.OnHoverStarted
@@ -65,6 +72,7 @@ namespace Shababeek.Interactions.Highlight
 
         private void OnDisable()
         {
+            OutlineFeedbackConfig.ActiveChanged -= OnActiveConfigChanged;
             _disposables.Clear();
             _isHovering = false;
             _isSelected = false;
@@ -131,6 +139,21 @@ namespace Shababeek.Interactions.Highlight
         public void SetGrabHint(bool enabled)
         {
             _showGrabHint = enabled;
+            _grabHintOverridden = true;
+            ApplyState();
+        }
+
+        /// <summary>
+        /// The active config changed (render pipeline swap). Re-take the hint default unless this
+        /// instance drives it explicitly, then re-apply so the new colors/widths show immediately.
+        /// </summary>
+        private void OnActiveConfigChanged()
+        {
+            if (!_grabHintOverridden)
+            {
+                var config = Config;
+                _showGrabHint = config != null && config.Hint.enabled;
+            }
             ApplyState();
         }
 

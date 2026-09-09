@@ -46,9 +46,9 @@ namespace Shababeek.Interactions.Highlight
     }
 
     public float OutlineWidth {
-      get { return outlineWidth; }
+      get { return outlineSize; }
       set {
-        outlineWidth = value;
+        outlineSize = value;
         needsUpdate = true;
       }
     }
@@ -64,8 +64,8 @@ namespace Shababeek.Interactions.Highlight
     [SerializeField]
     private Color outlineColor = new Color(1f, 1f, 1f, 0.2f);
 
-    [SerializeField, Range(0f, 50f)]
-    private float outlineWidth = 2f;
+     [SerializeField, Range(0f, 50f)]
+    private float outlineSize = 0.1f;
 
     [Header("Optional")]
 
@@ -363,25 +363,25 @@ namespace Shababeek.Interactions.Highlight
         case Mode.OutlineAll:
           //outlineMaskMaterial.SetFloat("_ZTest", (float)UnityEngine.Rendering.CompareFunction.Always);
           outlineFillMaterial.SetFloat("_ZTest", (float)UnityEngine.Rendering.CompareFunction.Always);
-          outlineFillMaterial.SetFloat("_OutlineWidth", outlineWidth);
+          outlineFillMaterial.SetFloat("_OutlineWidth", outlineSize);
           break;
 
         case Mode.OutlineVisible:
           //outlineMaskMaterial.SetFloat("_ZTest", (float)UnityEngine.Rendering.CompareFunction.Always);
           outlineFillMaterial.SetFloat("_ZTest", (float)UnityEngine.Rendering.CompareFunction.LessEqual);
-          outlineFillMaterial.SetFloat("_OutlineWidth", outlineWidth);
+          outlineFillMaterial.SetFloat("_OutlineWidth", outlineSize);
           break;
 
         case Mode.OutlineHidden:
           //outlineMaskMaterial.SetFloat("_ZTest", (float)UnityEngine.Rendering.CompareFunction.Always);
           outlineFillMaterial.SetFloat("_ZTest", (float)UnityEngine.Rendering.CompareFunction.Greater);
-          outlineFillMaterial.SetFloat("_OutlineWidth", outlineWidth);
+          outlineFillMaterial.SetFloat("_OutlineWidth", outlineSize);
           break;
 
         case Mode.OutlineAndSilhouette:
           //outlineMaskMaterial.SetFloat("_ZTest", (float)UnityEngine.Rendering.CompareFunction.LessEqual);
           outlineFillMaterial.SetFloat("_ZTest", (float)UnityEngine.Rendering.CompareFunction.Always);
-          outlineFillMaterial.SetFloat("_OutlineWidth", outlineWidth);
+          outlineFillMaterial.SetFloat("_OutlineWidth", outlineSize);
           break;
 
         case Mode.SilhouetteOnly:
