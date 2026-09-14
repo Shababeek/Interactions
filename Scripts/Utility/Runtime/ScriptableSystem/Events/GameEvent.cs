@@ -67,14 +67,18 @@ namespace Shababeek.Utilities
         /// </summary>
         /// <param name="data">The data to raise the event with</param>
         /// <remarks>
-        /// This method raises both the base event and the data event with the specified value.
+        /// Invokes the inspector UnityEvent and then pushes the payload to observers, exactly once
+        /// each. It deliberately calls <see cref="GameEvent.Raise"/> rather than this class's own
+        /// parameterless override: that override also pushes <see cref="DefaultValue"/>, and since
+        /// derived types typically return their already-updated state from it, every subscriber
+        /// received the same value twice - once as the default, once as the payload.
         /// Any errors during the raise process are logged but do not prevent the event from firing.
         /// </remarks>
         public void Raise(T data)
         {
             try
             {
-                Raise();
+                base.Raise();
                 _onRaised.OnNext(data);
             }
             catch (Exception e)

@@ -33,6 +33,9 @@ namespace Shababeek.Interactions
         [Tooltip("Whether the lever should return to its original position when deselected.")]
         [SerializeField] private bool returnToOriginal;
 
+        [Tooltip("How far the normalised value must move before a change is reported. Small values give a smooth, continuous signal.")]
+        [SerializeField] [Range(0.001f, 0.25f)] private float changeThreshold = 0.02f;
+
         [Tooltip("Current normalized rotation angle (0-1 range) (read-only).")]
         [ReadOnly] [SerializeField] private float currentNormalizedAngle = 0;
         private float _oldNormalizedAngle = 0;
@@ -47,6 +50,15 @@ namespace Shababeek.Interactions
         /// Observable that fires when the lever's normalized position changes.
         /// </summary>
         public IObservable<float> OnLeverChanged => onLeverChanged.AsObservable();
+
+        /// <summary>
+        /// The normalised value the lever reads at its original rotation.
+        /// </summary>
+        /// <remarks>
+        /// For a centre-sprung lever (min -40, max 40) this is 0.5, not 0. Resting at 0 would report
+        /// full deflection to whatever the lever drives, which is the opposite of released.
+        /// </remarks>
+        public float NeutralNormalized => Mathf.InverseLerp(min, max, 0f);
 
         /// <summary>
         /// Gets or sets the minimum rotation angle in degrees.
@@ -75,11 +87,8 @@ namespace Shababeek.Interactions
 
             CacheWorldRotationBasis();
 
-            OnDeselected
-                .Where(_ => returnToOriginal)
-                .Do(_ => HandleReturnToOriginalPosition())
-                .Do(_ => InvokeEvents())
-                .Subscribe().AddTo(this);
+            // An untouched lever is at its neutral position, not at the bottom of its travel.
+            currentNormalizedAngle = _oldNormalizedAngle = NeutralNormalized;
         }
 
         protected override void UseStarted()
@@ -107,11 +116,12 @@ namespace Shababeek.Interactions
 
         protected override void HandleObjectDeselection()
         {
-            if (returnToOriginal)
-            {
-                HandleReturnToOriginalPosition();
-                InvokeEvents();
-            }
+            if (!returnToOriginal) return;
+            HandleReturnToOriginalPosition();
+
+            // Forced: releasing a lever must always be reported, otherwise whatever the lever drives
+            // keeps running on the last value it was told about.
+            InvokeEvents(force: true);
         }
 
  
@@ -135,15 +145,13 @@ namespace Shababeek.Interactions
         protected override void HandleReturnToOriginalPosition()
         {
             interactableObject.transform.localRotation = _originalRotation;
-            currentNormalizedAngle = 0;
-            _oldNormalizedAngle = 0;
+            currentNormalizedAngle = NeutralNormalized;
         }
 
-        private void InvokeEvents()
+        private void InvokeEvents(bool force = false)
         {
-            var difference = currentNormalizedAngle - _oldNormalizedAngle;
-            var absDifference = Mathf.Abs(difference);
-            if (absDifference < .1f) return;
+            var absDifference = Mathf.Abs(currentNormalizedAngle - _oldNormalizedAngle);
+            if (!force && absDifference < changeThreshold) return;
             _oldNormalizedAngle = currentNormalizedAngle;
             onLeverChanged.Invoke(currentNormalizedAngle);
         }

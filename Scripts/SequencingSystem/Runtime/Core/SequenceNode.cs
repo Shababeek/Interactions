@@ -22,8 +22,24 @@ namespace Shababeek.Sequencing
     /// TODO: Add more Node types in the future, like SubSequence, and ParallelSequence
     public abstract class SequenceNode : GameEvent<SequenceStatus>
     {
-        [SerializeField] protected SequenceStatus status = SequenceStatus.Inactive;
-        [SerializeField, ReadOnly] internal AudioSource audioObject;
+        /// <summary>
+        /// Live run status. Deliberately not serialized: this is runtime state, and persisting it
+        /// writes a half-finished playthrough back into the asset on disk.
+        /// </summary>
+        [NonSerialized] protected SequenceStatus status = SequenceStatus.Inactive;
+
+        /// <summary>
+        /// Voice-over channel. Exclusive: a new line stops the previous one, so narration never overlaps.
+        /// Assigned by the owning <see cref="Sequence"/> at runtime.
+        /// </summary>
+        [NonSerialized] internal AudioSource voiceSource;
+
+        /// <summary>
+        /// Sound-effect channel. Played with PlayOneShot so stings layer instead of cutting each other,
+        /// and never interrupt the voice channel. Assigned by the owning <see cref="Sequence"/> at runtime.
+        /// </summary>
+        [NonSerialized] internal AudioSource sfxSource;
+
         public abstract void Begin();
         protected override SequenceStatus DefaultValue => status;
     }
