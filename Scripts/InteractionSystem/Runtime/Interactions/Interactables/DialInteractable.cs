@@ -52,6 +52,12 @@ namespace Shababeek.Interactions
         [Header("Debug")]
         [ReadOnly, SerializeField] private int currentStep;
 
+        // Edit-mode preview state. Serialized (not editor-only) so a scene saved while the dial is
+        // posed still knows the authored rest rotation and can restore it when play mode starts.
+        [SerializeField, HideInInspector] private bool previewPoseCaptured;
+        [SerializeField, HideInInspector] private Quaternion previewRestRotation = Quaternion.identity;
+        [SerializeField, HideInInspector] private int previewStep;
+
         private int _previousStep;
         private float _targetSnapAngle;
 
@@ -66,6 +72,12 @@ namespace Shababeek.Interactions
 
         /// <summary>Number of discrete steps on the dial.</summary>
         public int NumberOfSteps => numberOfSteps;
+
+        /// <summary>True while an edit-mode preview pose is applied to the interactable object.</summary>
+        public bool IsPreviewingPose => previewPoseCaptured;
+
+        /// <summary>Step index the edit-mode preview is currently holding.</summary>
+        public int PreviewStep => previewStep;
 
         /// <summary>
         /// Angle between two adjacent steps in degrees. A wrapping dial closes the loop, so its steps
@@ -90,6 +102,10 @@ namespace Shababeek.Interactions
 
         protected override void Start()
         {
+            // Drop any pose left behind by an edit-mode preview so the rest rotation base.Start()
+            // caches is the authored one, not the previewed step.
+            ClearPreviewPose();
+
             base.Start();
 
             // Dial always snaps on release — the base class's return pipeline drives the snap lerp.
@@ -211,6 +227,58 @@ namespace Shababeek.Interactions
             SetStep(step);
         }
 
+        /// <summary>
+        /// Captures the interactable object's current local rotation as the rest pose the edit-mode
+        /// preview rotates around. Called automatically the first time a preview step is set.
+        /// </summary>
+        public void CapturePreviewRestPose()
+        {
+            if (interactableObject == null) return;
+
+            previewRestRotation = interactableObject.localRotation;
+            previewStep = 0;
+            previewPoseCaptured = true;
+        }
+
+        /// <summary>
+        /// Poses the dial on a step outside play mode so the travel can be checked in the scene
+        /// view. Set <paramref name="fireEvents"/> to also raise the step callbacks and preview
+        /// whatever the dial drives.
+        /// </summary>
+        public void SetPreviewStep(int step, bool fireEvents = false)
+        {
+            if (interactableObject == null) return;
+            if (!previewPoseCaptured) CapturePreviewRestPose();
+
+            _originalRotation = previewRestRotation;
+            previewStep = ClampStep(step);
+            currentStep = previewStep;
+            _previousStep = previewStep;
+            currentAngle = AngleForStep(previewStep);
+            _targetSnapAngle = currentAngle;
+            ApplyRotation();
+
+            if (!fireEvents) return;
+            onStepChanged?.Invoke(currentStep);
+            onStepConfirmed?.Invoke(currentStep);
+        }
+
+        /// <summary>Puts the interactable object back on its captured rest rotation and ends the preview.</summary>
+        public void ClearPreviewPose()
+        {
+            if (!previewPoseCaptured) return;
+
+            if (interactableObject != null)
+                interactableObject.localRotation = previewRestRotation;
+
+            previewPoseCaptured = false;
+            previewStep = 0;
+            currentAngle = 0f;
+            currentStep = Mathf.Clamp(startingStep, 0, numberOfSteps - 1);
+            _previousStep = currentStep;
+            _targetSnapAngle = 0f;
+        }
+
         /// <summary>Nearest step index for an angle. Rounds, so it matches where the dial snaps on release.</summary>
         private int StepFromAngle(float angle) => ClampStep(
             Mathf.RoundToInt((angle - offsetAngle) / AnglePerStep));
@@ -243,6 +311,10 @@ namespace Shababeek.Interactions
             startingStep = Mathf.Clamp(startingStep, 0, numberOfSteps - 1);
             if (returnSpeed < 1f) returnSpeed = 10f;
             returnSpeed = Mathf.Clamp(returnSpeed, 1f, 20f);
+
+            // Keep a live preview in sync while the step layout is being tweaked in the inspector.
+            if (!Application.isPlaying && previewPoseCaptured && interactableObject != null)
+                SetPreviewStep(previewStep);
         }
 
         private void OnDrawGizmosSelected()
@@ -267,14 +339,15 @@ namespace Shababeek.Interactions
             for (int i = 0; i < numberOfSteps; i++)
             {
                 float angle = AngleForStep(i);
-                Gizmos.color = (Application.isPlaying && i == currentStep) ? Color.green : Color.cyan;
+                bool activeStep = (Application.isPlaying || previewPoseCaptured) && i == currentStep;
+                Gizmos.color = activeStep ? Color.green : Color.cyan;
 
                 var rot = Quaternion.AngleAxis(angle, axis);
                 Gizmos.DrawRay(pos, rot * reference * 0.15f);
                 Gizmos.DrawWireSphere(pos + rot * reference * 0.15f, 0.01f);
             }
 
-            if (Application.isPlaying)
+            if (Application.isPlaying || previewPoseCaptured)
             {
                 Gizmos.color = Color.green;
                 var curRot = Quaternion.AngleAxis(currentAngle, axis);

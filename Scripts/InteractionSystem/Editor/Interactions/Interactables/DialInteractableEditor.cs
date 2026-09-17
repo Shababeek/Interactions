@@ -1,4 +1,4 @@
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEngine;
 using Shababeek.Interactions;
 
@@ -21,6 +21,8 @@ namespace Shababeek.Interactions.Editors
         private SerializedProperty _onStepChangedProp;
         private SerializedProperty _onStepConfirmedProp;
         private SerializedProperty _currentStepProp;
+
+        private static bool _previewFiresEvents = false;
 
         protected override void OnEnable()
         {
@@ -89,6 +91,115 @@ namespace Shababeek.Interactions.Editors
                 EditorGUILayout.PropertyField(_hapticDurationProp, new GUIContent("Duration (s)"));
                 EditorGUI.EndDisabledGroup();
             }
+
+            DrawPreviewSection();
+        }
+
+        /// <summary>
+        /// Slider that steps the dial through its positions without entering play mode, so the
+        /// step layout can be checked in the scene view. In play mode the same slider drives the
+        /// live dial through its normal API.
+        /// </summary>
+        private void DrawPreviewSection()
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Preview", EditorStyles.boldLabel);
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+
+            if (_dial == null || _dial.InteractableObject == null)
+            {
+                EditorGUILayout.HelpBox("Assign an Interactable Object to preview the dial.", MessageType.Warning);
+                EditorGUILayout.EndVertical();
+                return;
+            }
+
+            int steps = StepCount();
+            int step = Application.isPlaying
+                ? _dial.CurrentStep
+                : (_dial.IsPreviewingPose ? _dial.PreviewStep : Mathf.Clamp(_startingStepProp.intValue, 0, steps - 1));
+            step = Mathf.Clamp(step, 0, steps - 1);
+
+            EditorGUI.BeginChangeCheck();
+            int newStep = EditorGUILayout.IntSlider(
+                new GUIContent("Step", "Poses the dial on a step (0 = first, N-1 = last)"),
+                step, 0, steps - 1);
+            bool sliderChanged = EditorGUI.EndChangeCheck();
+
+            EditorGUILayout.LabelField(
+                $"Angle: {_offsetAngleProp.floatValue + newStep * AnglePerStep():F1}°", EditorStyles.miniLabel);
+
+            EditorGUILayout.BeginHorizontal();
+            bool goFirst = GUILayout.Button("First");
+            bool goPrev = GUILayout.Button("◀ Prev");
+            bool goNext = GUILayout.Button("Next ▶");
+            bool goLast = GUILayout.Button("Last");
+            EditorGUILayout.EndHorizontal();
+
+            _previewFiresEvents = EditorGUILayout.ToggleLeft(
+                new GUIContent("Fire Events While Previewing",
+                    "Also raise On Step Changed / On Step Confirmed so listeners react to the previewed step"),
+                _previewFiresEvents);
+
+            using (new EditorGUI.DisabledScope(Application.isPlaying || !_dial.IsPreviewingPose))
+            {
+                if (GUILayout.Button("Reset To Rest Pose"))
+                    ClearPreview();
+            }
+
+            EditorGUILayout.EndVertical();
+            EditorGUILayout.Space(2);
+
+            bool wraps = _wrapAroundProp.boolValue;
+            if (goFirst) ApplyPreview(0);
+            else if (goLast) ApplyPreview(steps - 1);
+            else if (goPrev) ApplyPreview(wraps ? (step - 1 + steps) % steps : step - 1);
+            else if (goNext) ApplyPreview(wraps ? (step + 1) % steps : step + 1);
+            else if (sliderChanged) ApplyPreview(newStep);
+        }
+
+        private void ApplyPreview(int step)
+        {
+            foreach (var obj in targets)
+            {
+                if (obj is not DialInteractable dial || dial.InteractableObject == null) continue;
+
+                if (Application.isPlaying)
+                {
+                    dial.SetStep(step);
+                    continue;
+                }
+
+                Undo.RecordObject(dial, "Preview Dial");
+                Undo.RecordObject(dial.InteractableObject, "Preview Dial");
+                dial.SetPreviewStep(step, _previewFiresEvents);
+                EditorUtility.SetDirty(dial);
+                EditorUtility.SetDirty(dial.InteractableObject);
+            }
+
+            // The component was changed directly, so refresh the cached serialized state before
+            // OnInspectorGUI applies it back over the new values.
+            serializedObject.Update();
+            SceneView.RepaintAll();
+        }
+
+        private void ClearPreview()
+        {
+            foreach (var obj in targets)
+            {
+                if (obj is not DialInteractable dial || !dial.IsPreviewingPose) continue;
+
+                Undo.RecordObject(dial, "Reset Dial Preview");
+                if (dial.InteractableObject != null)
+                    Undo.RecordObject(dial.InteractableObject, "Reset Dial Preview");
+
+                dial.ClearPreviewPose();
+                EditorUtility.SetDirty(dial);
+                if (dial.InteractableObject != null)
+                    EditorUtility.SetDirty(dial.InteractableObject);
+            }
+
+            serializedObject.Update();
+            SceneView.RepaintAll();
         }
 
         protected override void DrawCustomEvents()
@@ -155,14 +266,36 @@ namespace Shababeek.Interactions.Editors
             Handles.color = new Color(1f, 0.8f, 0.2f, 0.15f);
             Handles.DrawSolidArc(pos, axis, sweepStart, _totalAngleProp.floatValue, radius);
 
+            bool posed = Application.isPlaying || _dial.IsPreviewingPose;
+            int activeStep = posed ? _currentStepProp.intValue : -1;
+
             for (int i = 0; i < steps; i++)
             {
                 float angle = offset + i * anglePerStep;
                 var rot = Quaternion.AngleAxis(angle, axis);
                 Vector3 dir = rot * reference;
-                Handles.color = (Application.isPlaying && i == _currentStepProp.intValue) ? Color.green : Color.cyan;
-                Handles.DrawLine(pos, pos + dir * radius);
-                Handles.Label(pos + dir * radius * 1.1f, i.ToString());
+                Vector3 tip = pos + dir * radius;
+
+                Handles.color = i == activeStep ? Color.green : Color.cyan;
+                Handles.DrawLine(pos, tip);
+                Handles.Label(tip + dir * size * 0.08f, i.ToString());
+
+                // Clicking a step handle poses the dial there, so the travel can be scrubbed
+                // straight in the scene view without entering play mode.
+                if (Handles.Button(tip, Quaternion.identity, size * 0.04f, size * 0.05f,
+                        Handles.SphereHandleCap))
+                {
+                    ApplyPreview(i);
+                }
+            }
+
+            if (posed)
+            {
+                float currentAngle = offset + activeStep * anglePerStep;
+                Vector3 needle = Quaternion.AngleAxis(currentAngle, axis) * reference;
+                Handles.color = Color.green;
+                Handles.DrawLine(pos, pos + needle * radius * 1.25f, 3f);
+                Handles.Label(pos + needle * radius * 1.35f, $"Step {activeStep} ({currentAngle:F1}°)");
             }
         }
     }
