@@ -16,19 +16,19 @@ MonoBehaviour:
   hover:
     enabled: 1
     color: {r: 1, g: 0.85, b: 0.2, a: 0.2}
-    width: 0.03
+    width: 0.06
     mode: 1
   selected:
     enabled: 0
     color: {r: 0.2, g: 0.9, b: 1, a: 0.2}
-    width: 0.05
+    width: 0.1
     mode: 1
   hint:
     enabled: 0
     color: {r: 0, g: 0.754717, b: 0.10867929, a: 0.2}
-    width: 0.02
-    mode: 1
-  hintMinWidth: 0.02
-  hintMaxWidth: 0.05
+    width: 0.04
+    mode: 3
+  hintMinWidth: 0.04
+  hintMaxWidth: 0.1
   hintPulseSpeed: 1
   pipelineOverrides: []
