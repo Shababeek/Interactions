@@ -10,7 +10,7 @@ namespace Shababeek.Interactions
     /// Snaps to the nearest step on release.
     /// </summary>
     [AddComponentMenu("Shababeek/Interactions/Interactables/Slider")]
-    public class SliderInteractable : LinearInteractableBase
+    public class SliderInteractable : LinearInteractableBase, IStepInteractable
     {
         [Header("Steps")]
         [Tooltip("Number of discrete positions on the slider.")]
@@ -157,6 +157,10 @@ namespace Shababeek.Interactions
 
         /// <summary>Sets the slider to the step closest to a normalized value (0-1).</summary>
         public void SetNormalized(float value) => SetStep(NormalizedToStep(Mathf.Clamp01(value)));
+
+        /// <summary>World position of a step along the track. Radius is unused for a slider.</summary>
+        public Vector3 GetStepWorldPosition(int step, float radius) =>
+            transform.TransformPoint(Vector3.Lerp(localStart, localEnd, StepToNormalized(step)));
 
         private int NormalizedToStep(float normalized)
         {

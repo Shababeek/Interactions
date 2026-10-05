@@ -223,16 +223,28 @@ namespace Shababeek.Interactions
             if (fakeHand == null || PoseConstrainer == null) return;
 
             var basePose = PoseConstrainer.GetTargetHandTransform(handIdentifier);
-            var orbitRadius = basePose.position.magnitude;
+            var p = basePose.position;
+
+            // Only the in-plane part of the grip orbits; the offset along the axis (e.g. a wrist
+            // sitting on the driver's side of a steering wheel) is kept as authored.
+            float axial, orbitRadius;
+            switch (rotationAxis)
+            {
+                case RotationAxis.Right: axial = p.x; orbitRadius = new Vector2(p.z, p.y).magnitude; break;
+                case RotationAxis.Up:    axial = p.y; orbitRadius = new Vector2(p.x, p.z).magnitude; break;
+                case RotationAxis.Forward:
+                default:                 axial = p.z; orbitRadius = new Vector2(p.x, p.y).magnitude; break;
+            }
+
             float rad = orbitAngle * Mathf.Deg2Rad;
             float cos = Mathf.Cos(rad) * orbitRadius;
             float sin = Mathf.Sin(rad) * orbitRadius;
 
             Vector3 offset = rotationAxis switch
             {
-                RotationAxis.Right => new Vector3(0, sin, cos),
-                RotationAxis.Up => new Vector3(cos, 0, sin),
-                _ => new Vector3(cos, sin, 0)
+                RotationAxis.Right => new Vector3(axial, sin, cos),
+                RotationAxis.Up => new Vector3(cos, axial, sin),
+                _ => new Vector3(cos, sin, axial)
             };
 
             fakeHand.position = transform.TransformPoint(offset);

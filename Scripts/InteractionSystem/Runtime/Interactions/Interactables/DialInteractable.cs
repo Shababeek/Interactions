@@ -10,7 +10,7 @@ namespace Shababeek.Interactions
     /// Snaps to the nearest step on release.
     /// </summary>
     [AddComponentMenu("Shababeek/Interactions/Interactables/Dial")]
-    public class DialInteractable : RotaryInteractableBase
+    public class DialInteractable : RotaryInteractableBase, IStepInteractable
     {
         [Header("Steps")]
         [Tooltip("Number of discrete positions on the dial.")]
@@ -277,6 +277,23 @@ namespace Shababeek.Interactions
             currentStep = Mathf.Clamp(startingStep, 0, numberOfSteps - 1);
             _previousStep = currentStep;
             _targetSnapAngle = 0f;
+        }
+
+        /// <summary>
+        /// World position of a step on a ring of <paramref name="radius"/> around the dial axis.
+        /// Measured from the rest pose, so it doesn't depend on where the dial is currently turned.
+        /// </summary>
+        public Vector3 GetStepWorldPosition(int step, float radius)
+        {
+            var target = interactableObject != null ? interactableObject : transform;
+            var restLocal = Application.isPlaying ? _originalRotation
+                : previewPoseCaptured ? previewRestRotation
+                : target.localRotation;
+            var restWorld = target.parent != null ? target.parent.rotation * restLocal : restLocal;
+
+            // Same reference direction the step gizmos use.
+            var reference = rotationAxis == RotationAxis.Right ? restWorld * Vector3.forward : restWorld * Vector3.right;
+            return target.position + Quaternion.AngleAxis(AngleForStep(step), GetSignedWorldAxis()) * reference * radius;
         }
 
         /// <summary>Nearest step index for an angle. Rounds, so it matches where the dial snaps on release.</summary>
