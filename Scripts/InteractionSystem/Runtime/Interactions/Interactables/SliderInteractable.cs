@@ -66,6 +66,26 @@ namespace Shababeek.Interactions
         /// <summary>Normalized value (0-1) derived from the current step.</summary>
         public float NormalizedValue => StepToNormalized(currentStep);
 
+        /// <summary>
+        /// Step the slider starts on. Setting it in edit mode also updates <see cref="CurrentStep"/>
+        /// so step feedback (e.g. a step label highlighter) previews it.
+        /// </summary>
+        public int StartingStep
+        {
+            get => startingStep;
+            set
+            {
+                startingStep = Mathf.Clamp(value, 0, numberOfSteps - 1);
+                if (!Application.isPlaying) currentStep = startingStep;
+            }
+        }
+
+        /// <summary>Step closest to a normalized value (0-1).</summary>
+        public int NormalizedToStep(float normalized)
+        {
+            return Mathf.Clamp(Mathf.RoundToInt(Mathf.Clamp01(normalized) * (numberOfSteps - 1)), 0, numberOfSteps - 1);
+        }
+
         protected override void Start()
         {
             base.Start();
@@ -162,11 +182,6 @@ namespace Shababeek.Interactions
         public Vector3 GetStepWorldPosition(int step, float radius) =>
             transform.TransformPoint(Vector3.Lerp(localStart, localEnd, StepToNormalized(step)));
 
-        private int NormalizedToStep(float normalized)
-        {
-            return Mathf.Clamp(Mathf.RoundToInt(normalized * (numberOfSteps - 1)), 0, numberOfSteps - 1);
-        }
-
         private float StepToNormalized(int step)
         {
             return numberOfSteps > 1 ? (float)step / (numberOfSteps - 1) : 0f;
@@ -194,6 +209,9 @@ namespace Shababeek.Interactions
             startingStep = Mathf.Clamp(startingStep, 0, numberOfSteps - 1);
             if (returnSpeed < 1f) returnSpeed = 10f;
             returnSpeed = Mathf.Clamp(returnSpeed, 1f, 20f);
+
+            // In edit mode the current step mirrors the starting step, so step feedback previews it.
+            if (!Application.isPlaying) currentStep = startingStep;
         }
 
         protected override void OnDrawGizmos()

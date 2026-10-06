@@ -114,6 +114,8 @@ namespace Shababeek.Interactions.Editors
 
         private void Sync(IStepInteractable stepper)
         {
+            // Restore the preview's scale/material first so they aren't baked into the synced labels.
+            _highlighter.ClearPreview();
             serializedObject.Update();
 
             var template = FirstLabel();
@@ -173,6 +175,7 @@ namespace Shababeek.Interactions.Editors
             serializedObject.ApplyModifiedProperties();
 
             Undo.CollapseUndoOperations(group);
+            _highlighter.RefreshPreview(true);
         }
 
         private TMP_Text FirstLabel()

@@ -332,6 +332,8 @@ namespace Shababeek.Interactions
             // Keep a live preview in sync while the step layout is being tweaked in the inspector.
             if (!Application.isPlaying && previewPoseCaptured && interactableObject != null)
                 SetPreviewStep(previewStep);
+            else if (!Application.isPlaying && !previewPoseCaptured)
+                currentStep = startingStep; // Edit mode: step feedback previews the starting step.
         }
 
         private void OnDrawGizmosSelected()

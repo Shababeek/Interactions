@@ -186,6 +186,9 @@ namespace Shababeek.Interactions
             base.OnValidate();
             numberOfSteps = Mathf.Max(2, numberOfSteps);
             startingStep = Mathf.Clamp(startingStep, 0, numberOfSteps - 1);
+
+            // In edit mode the current step mirrors the starting step, so step feedback previews it.
+            if (!Application.isPlaying) currentStep = startingStep;
         }
 
         protected override void OnDrawGizmos()
