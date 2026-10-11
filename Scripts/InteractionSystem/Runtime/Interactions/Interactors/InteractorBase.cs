@@ -188,6 +188,13 @@ namespace Shababeek.Interactions
                 return;
             }
             if (currentInteractable && currentInteractable.CurrentState != InteractionState.Hovering) return;
+            // Two hands can hover one interactable (a steering wheel) but it records a single
+            // hoverer; a hand that is not that hoverer leaving must not end the other's hover.
+            if (currentInteractable.CurrentInteractor != this)
+            {
+                currentInteractable = null;
+                return;
+            }
             try
             {
                 currentInteractable.OnStateChanged(InteractionState.None, this);                
@@ -343,6 +350,14 @@ namespace Shababeek.Interactions
                     }
                     break;
                 case VRButtonState.Down:
+                    // The hover was ended by another hand while this one stayed in range: take it
+                    // back so the press still grabs.
+                    if (currentInteractable.CurrentState == InteractionState.None &&
+                        currentInteractable.CanInteract(Hand))
+                    {
+                        currentInteractable.OnStateChanged(InteractionState.Hovering, this);
+                    }
+
                     if (currentInteractable.CurrentState == InteractionState.Hovering)
                     {
                         if (currentInteractable.SelectionButton == XRButton.Any)
