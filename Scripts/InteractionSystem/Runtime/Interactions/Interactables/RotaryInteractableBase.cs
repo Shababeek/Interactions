@@ -105,26 +105,34 @@ namespace Shababeek.Interactions
                 delta = (delta + secondaryDelta) * 0.5f;
             }
 
+            float previousAngle = currentAngle;
             currentAngle = ProcessAngleDelta(currentAngle, delta);
+            // Orbit the fake hands by what the wheel actually turned, not by the raw input: at a
+            // rotation limit the wheel stops, and the hands must stop with it instead of sliding
+            // on round the rim away from the object they are holding.
+            float appliedDelta = currentAngle - previousAngle;
+
+            // Rotate first: the fake hands are children of the rotating object, so placing them
+            // before the rotation lets the rotation carry them a frame ahead of the wheel.
+            ApplyRotation();
 
             if (controlScheme == RotaryControlScheme.HandPosition
                 && grabMode == WheelGrabMode.HandFollowsObject)
             {
                 if (_fakeHand != null)
                 {
-                    _fakeHandOrbitAngle += delta;
+                    _fakeHandOrbitAngle += appliedDelta;
                     UpdateFakeHandOrbit();
                 }
 
                 if (SecondaryInteractor != null && SecondaryFakeHand != null)
                 {
-                    _secondaryOrbitAngle += delta;
+                    _secondaryOrbitAngle += appliedDelta;
                     UpdateFakeHandOrbitFor(SecondaryFakeHand.transform, _secondaryOrbitAngle,
                         _secondaryGrabRotationOffset, SecondaryInteractor.HandIdentifier);
                 }
             }
 
-            ApplyRotation();
             OnAngleApplied(currentAngle);
         }
 
@@ -144,7 +152,9 @@ namespace Shababeek.Interactions
                 else
                 {
                     _fakeHandOrbitAngle = _previousHandAngle;
-                    _grabRotationOffset = _previousHandAngle - GetConstraintAngle(handIdentifier);
+                    // The parent already carries currentAngle, so a wheel grabbed off-centre (e.g.
+                    // still springing back) must not count it twice in the hand's rotation.
+                    _grabRotationOffset = _previousHandAngle - currentAngle - GetConstraintAngle(handIdentifier);
                     UpdateFakeHandOrbit();
                 }
             }
@@ -271,7 +281,7 @@ namespace Shababeek.Interactions
                 && SecondaryInteractor != null)
             {
                 _secondaryOrbitAngle = GetHandAngle(SecondaryInteractor.transform.position);
-                _secondaryGrabRotationOffset = _secondaryOrbitAngle - GetConstraintAngle(handIdentifier);
+                _secondaryGrabRotationOffset = _secondaryOrbitAngle - currentAngle - GetConstraintAngle(handIdentifier);
                 UpdateFakeHandOrbitFor(fakeHand, _secondaryOrbitAngle, _secondaryGrabRotationOffset, handIdentifier);
                 return;
             }
