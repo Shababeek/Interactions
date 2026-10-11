@@ -105,6 +105,9 @@ namespace Shababeek.Interactions
         protected override bool Select()
         {
             if (!PoseConstrainer) PoseConstrainer = GetComponent<PoseConstrainer>();
+            // A grab while the object is still springing back takes it over at once; left set,
+            // HandleObjectMovement ignores the hand until the return finishes on its own.
+            IsReturning = false;
             var handIdentifier = CurrentInteractor.HandIdentifier;
             Vector3 interactionPoint = CurrentInteractor.GetInteractionPoint();
 
