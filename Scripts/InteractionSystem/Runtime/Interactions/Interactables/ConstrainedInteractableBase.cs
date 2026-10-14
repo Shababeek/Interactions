@@ -449,16 +449,21 @@ namespace Shababeek.Interactions
 
         private async void ReturnWhenDisabled()
         {
+            var token = destroyCancellationToken;
             try
             {
                 IsReturning = true;
-                await Awaitable.NextFrameAsync();
+                await Awaitable.NextFrameAsync(token);
 
                 while (!enabled)
                 {
-                    await Awaitable.NextFrameAsync();
+                    await Awaitable.NextFrameAsync(token);
                     HandleReturnToOriginalPosition();
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                // Object destroyed mid-return; nothing left to move.
             }
             catch (Exception e)
             {
