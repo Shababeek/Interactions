@@ -28,9 +28,9 @@ namespace Shababeek.Interactions.Highlight
       OutlineAndSilhouette,
       SilhouetteOnly,
       /// <summary>
-      /// Two passes: full colour where the mesh is in view, and <see cref="HiddenOutlineAlpha"/>
-      /// where something is in front of it. Needs a fill material that exposes <c>_ZTest</c>
-      /// (see <see cref="fillMaterialOverride"/>); otherwise falls back to visible only.
+      /// Two passes: the stock outline where the mesh is in view, plus <see cref="hiddenFillMaterial"/>
+      /// at <see cref="HiddenOutlineAlpha"/> where something is in front of it. Falls back to
+      /// visible only when no hidden material is assigned.
       /// </summary>
       OutlineVisibleAndHidden
     }
@@ -95,9 +95,9 @@ namespace Shababeek.Interactions.Highlight
 
     [Header("Optional")]
 
-    [SerializeField, Tooltip("Fill material to use instead of Resources/Materials/OutlineFill. "
-    + "Needs a shader that exposes _ZTest for the OutlineAll / OutlineHidden / OutlineVisibleAndHidden modes to draw through geometry.")]
-    private Material fillMaterialOverride;
+    [SerializeField, Tooltip("Occluded pass for OutlineVisibleAndHidden: a material that draws the outline where geometry "
+    + "is in front of the mesh (takes _OutlineColor, _OutlineWidth and, if exposed, _ZTest). Unused by the other modes.")]
+    private Material hiddenFillMaterial;
 
     [SerializeField, Tooltip("Precompute enabled: Per-vertex calculations are performed in the editor and serialized with the object. "
     + "Precompute disabled: Per-vertex calculations are performed at runtime in Awake(). This may cause a pause for large meshes.")]
@@ -115,7 +115,7 @@ namespace Shababeek.Interactions.Highlight
     private Material outlineHiddenMaterial;
     private Material[][] originalSharedMaterials;
     private bool attachedWithHiddenPass;
-    private bool warnedNoZTest;
+    private bool warnedNoHiddenMaterial;
 
     private bool needsUpdate;
 
@@ -251,18 +251,16 @@ namespace Shababeek.Interactions.Highlight
       attachedWithHiddenPass = false;
     }
 
-    // The occluded pass only exists in OutlineVisibleAndHidden, and only when the fill shader
-    // exposes _ZTest — the stock OutlineFill graph has its depth test baked in.
+    // The occluded pass only exists in OutlineVisibleAndHidden, and only with a hidden material —
+    // the stock OutlineFill graph bakes its depth test and fresnel alpha, so it can't do it.
     bool WantsHiddenPass() {
       if (outlineMode != Mode.OutlineVisibleAndHidden) return false;
       EnsureRuntimeResources();
-      if (outlineFillMaterial == null) return false;
-      if (outlineFillMaterial.HasProperty("_ZTest")) return true;
+      if (outlineHiddenMaterial != null) return true;
 
-      if (!warnedNoZTest) {
-        warnedNoZTest = true;
-        Debug.LogWarning($"{name}: OutlineVisibleAndHidden needs a fill material whose shader exposes _ZTest "
-          + "(set fillMaterialOverride). Drawing the visible outline only.", this);
+      if (!warnedNoHiddenMaterial) {
+        warnedNoHiddenMaterial = true;
+        Debug.LogWarning($"{name}: OutlineVisibleAndHidden needs hiddenFillMaterial. Drawing the visible outline only.", this);
       }
       return false;
     }
@@ -274,18 +272,17 @@ namespace Shababeek.Interactions.Highlight
       if (renderers == null) {
         renderers = GetComponentsInChildren<Renderer>();
       }
-      if (outlineFillMaterial == null || outlineHiddenMaterial == null) {
-        var source = fillMaterialOverride != null ? fillMaterialOverride : Resources.Load<Material>(@"Materials/OutlineFill");
+      if (outlineFillMaterial == null) {
+        var source = Resources.Load<Material>(@"Materials/OutlineFill");
         if (source == null) return;
-        // Both names start with "OutlineFill" so AttachMaterials scrubs stale copies of either.
-        if (outlineFillMaterial == null) {
-          outlineFillMaterial = Instantiate(source);
-          outlineFillMaterial.name = "OutlineFill (Instance)";
-        }
-        if (outlineHiddenMaterial == null) {
-          outlineHiddenMaterial = Instantiate(source);
-          outlineHiddenMaterial.name = "OutlineFill Hidden (Instance)";
-        }
+        outlineFillMaterial = Instantiate(source);
+        outlineFillMaterial.name = "OutlineFill (Instance)";
+        needsUpdate = true;
+      }
+      if (outlineHiddenMaterial == null && hiddenFillMaterial != null) {
+        // Name starts with "OutlineFill" so AttachMaterials scrubs stale copies of it too.
+        outlineHiddenMaterial = Instantiate(hiddenFillMaterial);
+        outlineHiddenMaterial.name = "OutlineFill Hidden (Instance)";
         needsUpdate = true;
       }
     }
@@ -456,7 +453,8 @@ namespace Shababeek.Interactions.Highlight
             var hiddenColor = outlineColor;
             hiddenColor.a *= hiddenOutlineAlpha;
             outlineHiddenMaterial.SetColor("_OutlineColor", hiddenColor);
-            outlineHiddenMaterial.SetFloat("_ZTest", (float)UnityEngine.Rendering.CompareFunction.Greater);
+            if (outlineHiddenMaterial.HasProperty("_ZTest"))
+              outlineHiddenMaterial.SetFloat("_ZTest", (float)UnityEngine.Rendering.CompareFunction.Greater);
             outlineHiddenMaterial.SetFloat("_OutlineWidth", outlineSize);
           }
           break;
