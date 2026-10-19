@@ -26,13 +26,36 @@ namespace Shababeek.Interactions.Highlight
       OutlineVisible,
       OutlineHidden,
       OutlineAndSilhouette,
-      SilhouetteOnly
+      SilhouetteOnly,
+      /// <summary>
+      /// Two passes: full colour where the mesh is in view, and <see cref="HiddenOutlineAlpha"/>
+      /// where something is in front of it. Needs a fill material that exposes <c>_ZTest</c>
+      /// (see <see cref="fillMaterialOverride"/>); otherwise falls back to visible only.
+      /// </summary>
+      OutlineVisibleAndHidden
     }
 
     public Mode OutlineMode {
       get { return outlineMode; }
       set {
+        needsUpdate = true;
+        if (outlineMode == value) return;
         outlineMode = value;
+
+        // The hidden pass is a second material slot, so switching into or out of the
+        // two-pass mode while drawn has to rebuild the renderers' material arrays.
+        if (OutlineActive && WantsHiddenPass() != attachedWithHiddenPass) {
+          DetachMaterials();
+          AttachMaterials();
+        }
+      }
+    }
+
+    /// <summary>Alpha multiplier for the occluded pass of <see cref="Mode.OutlineVisibleAndHidden"/>.</summary>
+    public float HiddenOutlineAlpha {
+      get { return hiddenOutlineAlpha; }
+      set {
+        hiddenOutlineAlpha = value;
         needsUpdate = true;
       }
     }
@@ -67,7 +90,14 @@ namespace Shababeek.Interactions.Highlight
      [SerializeField, Range(0f, 50f)]
     private float outlineSize = 0.1f;
 
+    [SerializeField, Range(0f, 1f), Tooltip("Alpha multiplier for the occluded pass in OutlineVisibleAndHidden mode.")]
+    private float hiddenOutlineAlpha = 0.5f;
+
     [Header("Optional")]
+
+    [SerializeField, Tooltip("Fill material to use instead of Resources/Materials/OutlineFill. "
+    + "Needs a shader that exposes _ZTest for the OutlineAll / OutlineHidden / OutlineVisibleAndHidden modes to draw through geometry.")]
+    private Material fillMaterialOverride;
 
     [SerializeField, Tooltip("Precompute enabled: Per-vertex calculations are performed in the editor and serialized with the object. "
     + "Precompute disabled: Per-vertex calculations are performed at runtime in Awake(). This may cause a pause for large meshes.")]
@@ -82,7 +112,10 @@ namespace Shababeek.Interactions.Highlight
     private Renderer[] renderers;
     //private Material outlineMaskMaterial;
     private Material outlineFillMaterial;
+    private Material outlineHiddenMaterial;
     private Material[][] originalSharedMaterials;
+    private bool attachedWithHiddenPass;
+    private bool warnedNoZTest;
 
     private bool needsUpdate;
 
@@ -99,10 +132,8 @@ namespace Shababeek.Interactions.Highlight
 
       // Instantiate outline materials
       //outlineMaskMaterial = Instantiate(Resources.Load<Material>(@"Materials/OutlineMask"));
-      outlineFillMaterial = Instantiate(Resources.Load<Material>(@"Materials/OutlineFill"));
-
       //outlineMaskMaterial.name = "OutlineMask (Instance)";
-      outlineFillMaterial.name = "OutlineFill (Instance)";
+      EnsureRuntimeResources();
 
       // Retrieve or generate smooth normals
       LoadSmoothNormals();
@@ -172,6 +203,8 @@ namespace Shababeek.Interactions.Highlight
       EnsureRuntimeResources();
       if (renderers == null || outlineFillMaterial == null) return;
 
+      attachedWithHiddenPass = WantsHiddenPass();
+      int extra = attachedWithHiddenPass ? 2 : 1;
       originalSharedMaterials = new Material[renderers.Length][];
 
       for (int i = 0; i < renderers.Length; i++) {
@@ -191,9 +224,10 @@ namespace Shababeek.Interactions.Highlight
         var original = cleaned.ToArray();
         originalSharedMaterials[i] = original;
 
-        var materials = new Material[original.Length + 1];
+        var materials = new Material[original.Length + extra];
         Array.Copy(original, materials, original.Length);
         materials[original.Length] = outlineFillMaterial;
+        if (attachedWithHiddenPass) materials[original.Length + 1] = outlineHiddenMaterial;
 
         renderer.materials = materials;
       }
@@ -214,6 +248,23 @@ namespace Shababeek.Interactions.Highlight
         renderer.sharedMaterials = original;
       }
       originalSharedMaterials = null;
+      attachedWithHiddenPass = false;
+    }
+
+    // The occluded pass only exists in OutlineVisibleAndHidden, and only when the fill shader
+    // exposes _ZTest — the stock OutlineFill graph has its depth test baked in.
+    bool WantsHiddenPass() {
+      if (outlineMode != Mode.OutlineVisibleAndHidden) return false;
+      EnsureRuntimeResources();
+      if (outlineFillMaterial == null) return false;
+      if (outlineFillMaterial.HasProperty("_ZTest")) return true;
+
+      if (!warnedNoZTest) {
+        warnedNoZTest = true;
+        Debug.LogWarning($"{name}: OutlineVisibleAndHidden needs a fill material whose shader exposes _ZTest "
+          + "(set fillMaterialOverride). Drawing the visible outline only.", this);
+      }
+      return false;
     }
 
 
@@ -223,11 +274,18 @@ namespace Shababeek.Interactions.Highlight
       if (renderers == null) {
         renderers = GetComponentsInChildren<Renderer>();
       }
-      if (outlineFillMaterial == null) {
-        var source = Resources.Load<Material>(@"Materials/OutlineFill");
+      if (outlineFillMaterial == null || outlineHiddenMaterial == null) {
+        var source = fillMaterialOverride != null ? fillMaterialOverride : Resources.Load<Material>(@"Materials/OutlineFill");
         if (source == null) return;
-        outlineFillMaterial = Instantiate(source);
-        outlineFillMaterial.name = "OutlineFill (Instance)";
+        // Both names start with "OutlineFill" so AttachMaterials scrubs stale copies of either.
+        if (outlineFillMaterial == null) {
+          outlineFillMaterial = Instantiate(source);
+          outlineFillMaterial.name = "OutlineFill (Instance)";
+        }
+        if (outlineHiddenMaterial == null) {
+          outlineHiddenMaterial = Instantiate(source);
+          outlineHiddenMaterial.name = "OutlineFill Hidden (Instance)";
+        }
         needsUpdate = true;
       }
     }
@@ -237,6 +295,7 @@ namespace Shababeek.Interactions.Highlight
       // Destroy material instances
       //Destroy(outlineMaskMaterial);
       Destroy(outlineFillMaterial);
+      Destroy(outlineHiddenMaterial);
     }
 
     void Bake() {
@@ -388,6 +447,18 @@ namespace Shababeek.Interactions.Highlight
           //outlineMaskMaterial.SetFloat("_ZTest", (float)UnityEngine.Rendering.CompareFunction.LessEqual);
           outlineFillMaterial.SetFloat("_ZTest", (float)UnityEngine.Rendering.CompareFunction.Greater);
           outlineFillMaterial.SetFloat("_OutlineWidth", 0f);
+          break;
+
+        case Mode.OutlineVisibleAndHidden:
+          outlineFillMaterial.SetFloat("_ZTest", (float)UnityEngine.Rendering.CompareFunction.LessEqual);
+          outlineFillMaterial.SetFloat("_OutlineWidth", outlineSize);
+          if (outlineHiddenMaterial != null) {
+            var hiddenColor = outlineColor;
+            hiddenColor.a *= hiddenOutlineAlpha;
+            outlineHiddenMaterial.SetColor("_OutlineColor", hiddenColor);
+            outlineHiddenMaterial.SetFloat("_ZTest", (float)UnityEngine.Rendering.CompareFunction.Greater);
+            outlineHiddenMaterial.SetFloat("_OutlineWidth", outlineSize);
+          }
           break;
       }
     }
