@@ -171,7 +171,8 @@ namespace Shababeek.Interactions
             spacing.y = Mathf.Max(0.1f, spacing.y);
             gridScale = Mathf.Max(0.01f, gridScale);
 
-            if (Application.isPlaying && _gridPivots.Count != gridSize.x * gridSize.y)
+            // Prefab assets also get OnValidate in Play mode; they have no scene and can't be reparented into.
+            if (Application.isPlaying && gameObject.scene.IsValid() && _gridPivots.Count != gridSize.x * gridSize.y)
             {
                 CreateGridPivots();
             }
