@@ -19,6 +19,9 @@ namespace Shababeek.Interactions
         [Tooltip("Starting step index (0-based).")]
         [SerializeField] private int startingStep = 0;
 
+        private bool _started;
+        private int _pendingStep = -1;
+
         [Tooltip("Total rotation angle covered by all steps (360 = full circle, 180 = half). " +
                  "When wrap-around is off the last step sits exactly at this angle.")]
         [SerializeField] private float totalAngle = 360f;
@@ -111,7 +114,12 @@ namespace Shababeek.Interactions
             // Dial always snaps on release — the base class's return pipeline drives the snap lerp.
             returnWhenDeselected = true;
 
-            currentStep = Mathf.Clamp(startingStep, 0, numberOfSteps - 1);
+            // A step assigned before Start (a station randomizing its board as it opens) wins over
+            // the authored starting step; otherwise the dial would snap back and disagree with
+            // whatever already read that step.
+            currentStep = Mathf.Clamp(_pendingStep >= 0 ? _pendingStep : startingStep, 0, numberOfSteps - 1);
+            _pendingStep = -1;
+            _started = true;
             currentAngle = AngleForStep(currentStep);
             _previousStep = currentStep;
             _targetSnapAngle = currentAngle;
@@ -191,11 +199,20 @@ namespace Shababeek.Interactions
         {
             step = Mathf.Clamp(step, 0, numberOfSteps - 1);
             currentStep = step;
-            currentAngle = AngleForStep(step);
             _previousStep = step;
-            _targetSnapAngle = currentAngle;
 
-            if (interactableObject != null) ApplyRotation();
+            // Before Start the rest rotation is not cached yet; posing now would corrupt it.
+            // Start applies the pose for this step instead.
+            if (Application.isPlaying && !_started)
+            {
+                _pendingStep = step;
+            }
+            else
+            {
+                currentAngle = AngleForStep(step);
+                _targetSnapAngle = currentAngle;
+                if (interactableObject != null) ApplyRotation();
+            }
 
             onStepChanged?.Invoke(currentStep);
             onStepConfirmed?.Invoke(currentStep);

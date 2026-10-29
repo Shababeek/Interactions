@@ -19,6 +19,9 @@ namespace Shababeek.Interactions
         [Tooltip("Starting step index (0-based).")]
         [SerializeField] private int startingStep = 0;
 
+        private bool _started;
+        private int _pendingStep = -1;
+
         [Header("Haptics")]
         [Tooltip("Play a haptic pulse each time a step boundary is crossed.")]
         [SerializeField] private bool hapticOnStep = true;
@@ -93,7 +96,12 @@ namespace Shababeek.Interactions
             // Slider always snaps on release — the base class return pipeline drives the lerp.
             returnWhenDeselected = true;
 
-            currentStep = Mathf.Clamp(startingStep, 0, numberOfSteps - 1);
+            // A step assigned before Start (a station randomizing its board as it opens) wins over
+            // the authored starting step; otherwise the slider would snap back and disagree with
+            // whatever already read that step.
+            currentStep = Mathf.Clamp(_pendingStep >= 0 ? _pendingStep : startingStep, 0, numberOfSteps - 1);
+            _pendingStep = -1;
+            _started = true;
             _previousStep = currentStep;
             currentNormalized = StepToNormalized(currentStep);
             _targetSnapNormalized = currentNormalized;
@@ -159,7 +167,11 @@ namespace Shababeek.Interactions
             currentNormalized = StepToNormalized(step);
             _targetSnapNormalized = currentNormalized;
 
-            if (interactableObject != null) ApplyNormalized(currentNormalized);
+            // Before Start the rest position is not cached yet; Start applies this step instead.
+            if (Application.isPlaying && !_started)
+                _pendingStep = step;
+            else if (interactableObject != null)
+                ApplyNormalized(currentNormalized);
 
             onMoved?.Invoke(currentNormalized);
             onStepChanged?.Invoke(currentStep);
