@@ -68,6 +68,7 @@ namespace Shababeek.Interactions.Feedback
         private IStepInteractable _stepper;
         private Material[] _defaultMaterials;
         private Vector3[] _defaultScales;
+        private int _shownStep = int.MinValue;
 
         /// <summary>The dial or slider this component follows (resolved from parents if unassigned).</summary>
         public IStepInteractable Stepper =>
@@ -119,9 +120,18 @@ namespace Shababeek.Interactions.Feedback
             Highlight(_stepper.CurrentStep);
         }
 
+        // A step assigned before the source's Start (e.g. a station seeding its board) raises no
+        // event we can hear, so follow CurrentStep directly as a backstop.
+        private void LateUpdate()
+        {
+            if (!Application.isPlaying || _stepper == null || _shownStep == _stepper.CurrentStep) return;
+            Highlight(_stepper.CurrentStep);
+        }
+
         /// <summary>Highlights the label for <paramref name="step"/> and resets the others.</summary>
         public void Highlight(int step)
         {
+            _shownStep = step;
             for (int i = 0; i < labels.Length; i++)
             {
                 var label = labels[i];
