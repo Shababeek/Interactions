@@ -210,8 +210,10 @@ namespace Shababeek.Interactions
         /// </summary>
         public void SetActive(bool active)
         {
+            // Deliberately not toggling `enabled`: Update drives the press animation and
+            // OnTriggerExit ends the press, so a listener that deactivates the button from
+            // inside onButtonDown would otherwise freeze it half-pressed with isDown stuck.
             _isActive = active;
-            enabled = active;
 
             switch (inactiveMode)
             {
@@ -260,7 +262,7 @@ namespace Shababeek.Interactions
 
         private void OnTriggerEnter(Collider other)
         {
-            if (!enabled) return;
+            if (!enabled || !_isActive) return;
             if (maskName != "" && !other.gameObject.name.Contains(maskName)) return;
             if (!Accepts(other)) return;
             if (_coolDownTimer < coolDownTime) return;
