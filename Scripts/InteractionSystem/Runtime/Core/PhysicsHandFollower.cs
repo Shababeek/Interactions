@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Shababeek.Interactions.Core
@@ -22,7 +23,30 @@ namespace Shababeek.Interactions.Core
             "target-to-hand gap cannot turn into a physics explosion. Set to 0 to disable.")]
         [SerializeField] private float maxSpeed = 20f;
 
+        [Header("Recovery")]
+        [Tooltip(
+            "Gap in metres between hand and target beyond which the hand is teleported at once. " +
+            "Nothing a real hand does opens a gap this wide; it means the hand was left behind. " +
+            "Set to 0 to disable the whole recovery guard.")]
+        [SerializeField] private float recoverFarDistance = 1f;
+
+        [Tooltip("Gap in metres that, held for Recover Stuck Seconds, marks the hand as stuck behind a collider.")]
+        [SerializeField] private float recoverStuckDistance = 0.25f;
+
+        [Tooltip("Seconds the gap must stay at or above Recover Stuck Distance before the hand is teleported.")]
+        [SerializeField] private float recoverStuckSeconds = 0.75f;
+
+        [Tooltip(
+            "Longest time in seconds the hand and its carried prop ignore the collider that trapped them. " +
+            "They stop ignoring it earlier as soon as they are clear of it.")]
+        [SerializeField] private float recoverIgnoreSeconds = 2f;
+
+        private readonly List<Collider> _ignoredTraps = new();
+        private readonly List<Collider> _ignoringColliders = new();
+        private readonly Collider[] _overlapBuffer = new Collider[32];
         private Rigidbody _rb;
+        private float _stuckTime;
+        private float _ignoreExpiry;
 
         /// <summary>
         /// The VR controller transform to follow.
@@ -93,9 +117,196 @@ namespace Shababeek.Interactions.Core
             Teleport(target.position, target.rotation);
         }
 
+        private void OnDisable()
+        {
+            RestoreCollisions();
+            _stuckTime = 0f;
+        }
+
+        /// <summary>
+        /// Whether the hand is stranded: far from its target, or held back from it by something it
+        /// cannot pass. A hand resting on a surface with its controller only slightly through it is
+        /// not stranded — the gap has to be wide, or stay wide.
+        /// </summary>
+        private bool IsStranded(out string reason)
+        {
+            reason = null;
+            if (recoverFarDistance <= 0f) return false;
+
+            float gap = (target.position - _rb.position).magnitude;
+            if (gap >= recoverFarDistance)
+            {
+                reason = $"far ({gap:0.00}m from its target)";
+                return true;
+            }
+
+            if (gap < recoverStuckDistance)
+            {
+                _stuckTime = 0f;
+                return false;
+            }
+
+            _stuckTime += Time.fixedDeltaTime;
+            if (_stuckTime < recoverStuckSeconds) return false;
+
+            reason = $"stuck ({gap:0.00}m from its target for {_stuckTime:0.##}s)";
+            return true;
+        }
+
+        /// <summary>
+        /// Snaps a stranded hand onto its target, carrying whatever it holds, and lets both pass
+        /// through the colliders that trapped them until they are clear. Teleporting alone would
+        /// put a hand whose controller is inside a table straight back into the table, where it
+        /// would strand again on the next step.
+        /// </summary>
+        public void Recover(string reason = "requested")
+        {
+            if (target == null) return;
+            EnsureBody();
+
+            var handColliders = GetComponentsInChildren<Collider>();
+            var held = HeldInteractable();
+            var heldColliders = held != null ? held.GetComponentsInChildren<Collider>() : null;
+
+            // The prop's pose relative to the hand, so it can be put back in the same grip. A prop
+            // parented under the hand has already travelled with it and needs nothing.
+            bool carry = held != null && !held.transform.IsChildOf(transform);
+            Vector3 heldLocalPosition = default;
+            Quaternion heldLocalRotation = default;
+            if (carry)
+            {
+                heldLocalPosition = transform.InverseTransformPoint(held.transform.position);
+                heldLocalRotation = Quaternion.Inverse(transform.rotation) * held.transform.rotation;
+            }
+
+            // Both ends of the move can be the trap: the table the hand is stuck behind and the
+            // floor or table the target sits inside.
+            RestoreCollisions();
+            CollectTraps(handColliders, heldColliders, _rb.position);
+            CollectTraps(handColliders, heldColliders, target.position);
+            IgnoreTraps(handColliders);
+            IgnoreTraps(heldColliders);
+
+            Vector3 from = _rb.position;
+            Teleport(target.position, target.rotation);
+
+            if (carry)
+            {
+                held.transform.SetPositionAndRotation(
+                    transform.TransformPoint(heldLocalPosition),
+                    transform.rotation * heldLocalRotation);
+                var heldBody = held.GetComponent<Rigidbody>();
+                if (heldBody != null && !heldBody.isKinematic)
+                {
+                    heldBody.linearVelocity = Vector3.zero;
+                    heldBody.angularVelocity = Vector3.zero;
+                }
+
+                Physics.SyncTransforms();
+            }
+
+            _stuckTime = 0f;
+            _ignoreExpiry = Time.time + recoverIgnoreSeconds;
+
+            Debug.Log(
+                $"[HandRecovery] '{name}' teleported to its target: {reason}. Moved {(target.position - from).magnitude:0.00}m" +
+                $"{(held != null ? $", carrying '{held.name}'" : string.Empty)}" +
+                $", ignoring {_ignoredTraps.Count} collider(s) until clear.", this);
+        }
+
+        private InteractableBase HeldInteractable()
+        {
+            var interactor = GetComponentInChildren<InteractorBase>();
+            if (interactor == null) interactor = GetComponent<InteractorBase>();
+            var interactable = interactor != null ? interactor.CurrentInteractable : null;
+            if (interactable == null || interactable.CurrentState != InteractionState.Selected) return null;
+            return interactable;
+        }
+
+        private void CollectTraps(Collider[] handColliders, Collider[] heldColliders, Vector3 around)
+        {
+            float radius = 0.1f;
+            foreach (var c in handColliders)
+                radius = Mathf.Max(radius, c.bounds.extents.magnitude);
+            if (heldColliders != null)
+                foreach (var c in heldColliders)
+                    radius = Mathf.Max(radius, c.bounds.extents.magnitude);
+
+            int count = Physics.OverlapSphereNonAlloc(around, radius + 0.05f, _overlapBuffer,
+                ~0, QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < count; i++)
+            {
+                var other = _overlapBuffer[i];
+                if (other == null || _ignoredTraps.Contains(other)) continue;
+                if (System.Array.IndexOf(handColliders, other) >= 0) continue;
+                if (heldColliders != null && System.Array.IndexOf(heldColliders, other) >= 0) continue;
+                _ignoredTraps.Add(other);
+            }
+        }
+
+        private void IgnoreTraps(Collider[] colliders)
+        {
+            if (colliders == null) return;
+            foreach (var mine in colliders)
+            {
+                if (mine == null) continue;
+                foreach (var trap in _ignoredTraps)
+                    if (trap != null) Physics.IgnoreCollision(mine, trap, true);
+                _ignoringColliders.Add(mine);
+            }
+        }
+
+        private void RestoreCollisions()
+        {
+            foreach (var mine in _ignoringColliders)
+            {
+                if (mine == null) continue;
+                foreach (var trap in _ignoredTraps)
+                    if (trap != null) Physics.IgnoreCollision(mine, trap, false);
+            }
+
+            _ignoringColliders.Clear();
+            _ignoredTraps.Clear();
+        }
+
+        private void UpdateIgnoredTraps()
+        {
+            if (_ignoredTraps.Count == 0) return;
+
+            bool clear = Time.time >= _ignoreExpiry;
+            if (!clear)
+            {
+                clear = true;
+                foreach (var mine in _ignoringColliders)
+                {
+                    if (mine == null || !mine.enabled) continue;
+                    foreach (var trap in _ignoredTraps)
+                    {
+                        if (trap != null && trap.enabled && mine.bounds.Intersects(trap.bounds))
+                        {
+                            clear = false;
+                            break;
+                        }
+                    }
+
+                    if (!clear) break;
+                }
+            }
+
+            if (clear) RestoreCollisions();
+        }
+
         private void FixedUpdate()
         {
             if (target == null) return;
+
+            UpdateIgnoredTraps();
+
+            if (IsStranded(out var strandedReason))
+            {
+                Recover(strandedReason);
+                return;
+            }
 
             Vector3 directionVector = target.position - _rb.position;
             Vector3 velocity = directionVector * followSpeed;

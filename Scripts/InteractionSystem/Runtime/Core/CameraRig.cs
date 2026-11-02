@@ -644,6 +644,29 @@ namespace Shababeek.Interactions.Core
             TeleportHand(_rightPoseController, rightHandPivot);
         }
 
+        /// <summary>
+        /// Recovers any hand that is not on its pivot: teleports it, carries what it holds, and
+        /// lets it pass the collider that trapped it until clear. Unlike <see cref="TeleportHands"/>
+        /// this is for hands that failed to settle, not hands that were just relocated.
+        /// </summary>
+        public void RecoverHands(float tolerance = 0.02f)
+        {
+            RecoverHand(_leftPoseController, leftHandPivot, tolerance);
+            RecoverHand(_rightPoseController, rightHandPivot, tolerance);
+        }
+
+        private static void RecoverHand(HandPoseController hand, Transform pivot, float tolerance)
+        {
+            if (hand == null || pivot == null || !hand.gameObject.activeInHierarchy) return;
+            if (HandSettled(hand, pivot, tolerance)) return;
+
+            var physicsFollower = hand.GetComponent<PhysicsHandFollower>();
+            if (physicsFollower != null)
+                physicsFollower.Recover("failed to settle on arrival");
+            else
+                TeleportHand(hand, pivot);
+        }
+
         private static void TeleportHand(HandPoseController hand, Transform pivot)
         {
             if (hand == null || pivot == null) return;
