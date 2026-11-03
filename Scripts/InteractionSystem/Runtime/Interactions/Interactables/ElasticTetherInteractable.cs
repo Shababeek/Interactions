@@ -70,6 +70,12 @@ namespace Shababeek.Interactions
         [Tooltip("Hand distance at which the grab breaks, as a multiple of Soft Limit. The toy rips free and whips back.")]
         [SerializeField, Min(1f)] private float slipLimitMultiplier = 1.6f;
 
+        [Tooltip("Seconds the hand must stay past the slip limit before the grab breaks. Absorbs tracking jitter and brief overshoots; while waiting, the toy stays pinned at the limit instead of following the hand.")]
+        [SerializeField, Min(0f)] private float slipGraceTime = 0.25f;
+
+        [Tooltip("Seconds after grabbing during which the grab cannot slip at all, so closing the hand can never throw the toy straight out.")]
+        [SerializeField, Min(0f)] private float grabGraceTime = 0.4f;
+
         [Tooltip("Maps how far the hand has pulled (x, in Soft Limits) to how far the toy actually goes (y, in Soft Limits). A curve that flattens near 1 gives asymptotic rubbery resistance.")]
         [SerializeField] private AnimationCurve resistanceCurve = DefaultResistanceCurve();
 
@@ -178,6 +184,8 @@ namespace Shababeek.Interactions
         private float _peakStretchThisGrab;
         private Vector3 _grabAnchorLocal;
         private int _grabFrame = -1;
+        private float _grabTime;
+        private float _overLimitTime;
 
         /// <summary>Current stretch, 0 at rest and 1 at the soft limit. Exceeds 1 only while held.</summary>
         public float NormalizedStretch => normalizedStretch;
@@ -470,6 +478,8 @@ namespace Shababeek.Interactions
             _grabCount++;
             _peakStretchThisGrab = 0f;
             _grabFrame = Time.frameCount;
+            _grabTime = Time.time;
+            _overLimitTime = 0f;
 
             // Capture the baseline before base.Select() runs, because base.Select() immediately
             // calls HandleObjectMovement — which would otherwise treat the whole grab offset as a
@@ -532,7 +542,13 @@ namespace Shababeek.Interactions
             var requested = HandOffsetFromRest(handWorldPosition) - _grabAnchorLocal;
             float requestedDistance = requested.magnitude;
 
-            if (requestedDistance > SlipLimit)
+            // Past the limit the grab only breaks once the hand has stayed there for a moment and
+            // the grab is no longer brand new; a single jittery frame must not throw the toy.
+            bool overLimit = requestedDistance > SlipLimit;
+            _overLimitTime = overLimit ? _overLimitTime + Time.deltaTime : 0f;
+            bool inGrabGrace = Time.time - _grabTime < grabGraceTime;
+
+            if (overLimit && !inGrabGrace && _overLimitTime >= slipGraceTime)
             {
                 if (!_slipped)
                 {
@@ -554,6 +570,13 @@ namespace Shababeek.Interactions
                 }
                 Slip();
                 return;
+            }
+
+            if (overLimit)
+            {
+                // Inside the grace window: hold the toy at the limit rather than letting it chase the hand.
+                requested *= SlipLimit / requestedDistance;
+                requestedDistance = SlipLimit;
             }
 
             Vector3 target;
