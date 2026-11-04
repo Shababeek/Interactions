@@ -1,9 +1,11 @@
 using Shababeek.Interactions.Animations;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.XR;
+using UniRx;
 
 namespace Shababeek.Interactions.Core
 {
@@ -79,6 +81,16 @@ namespace Shababeek.Interactions.Core
         private HandPoseController _leftPoseController, _rightPoseController;
         private float _lastCameraHeight;
         private Quaternion _authoredRotation;
+        private bool _handsVisible = true;
+        private HandData _activeHandData;
+        private IDisposable _handDataSubscription;
+        private readonly Dictionary<HandData, HandSet> _handSets = new();
+
+        private sealed class HandSet
+        {
+            public HandPoseController Left;
+            public HandPoseController Right;
+        }
 
         #endregion
 
@@ -179,11 +191,19 @@ namespace Shababeek.Interactions.Core
 
             CreateAndInitializeHands();
             InitializeLayers();
+            SubscribeToHandDataChanges();
+        }
+
+        private void OnDestroy()
+        {
+            _handDataSubscription?.Dispose();
+            _handDataSubscription = null;
         }
 
         private  void OnEnable()
         {
             eyelidEffect?.SetClosed();
+            ApplyCurrentHandData();
             _= HandleRigPositionUpdate();
         }
 
@@ -384,10 +404,8 @@ namespace Shababeek.Interactions.Core
 
             // Hands are spawned under the rig root, so the player-layer recursion above overwrites
             // their hand layers. Reapply the hand layers to the spawned hand hierarchies.
-            if (_leftPoseController != null)
-                ChangeLayerRecursive(_leftPoseController.transform, config.LeftHandLayer);
-            if (_rightPoseController != null)
-                ChangeLayerRecursive(_rightPoseController.transform, config.RightHandLayer);
+            foreach (var set in _handSets.Values)
+                ApplyHandLayers(set);
 
             if (customLayerAssignments != null)
             {
@@ -397,6 +415,13 @@ namespace Shababeek.Interactions.Core
                         ChangeLayerRecursive(assignment.target, assignment.layer);
                 }
             }
+        }
+
+        private void ApplyHandLayers(HandSet set)
+        {
+            if (!initializeLayers || config == null) return;
+            if (set.Left != null) ChangeLayerRecursive(set.Left.transform, config.LeftHandLayer);
+            if (set.Right != null) ChangeLayerRecursive(set.Right.transform, config.RightHandLayer);
         }
 
         private static void ChangeLayerRecursive(Transform transform, int layer)
@@ -418,57 +443,101 @@ namespace Shababeek.Interactions.Core
         {
             if (!initializeHands || config?.HandData == null) return;
 
-            switch (trackingMethod)
-            {
-                case InteractionSystemType.TransformBased:
-                    InitializeTransformBasedHands();
-                    break;
-                case InteractionSystemType.PhysicsBased:
-                    InitializePhysicsBasedHands();
-                    break;
-            }
-        }
-
-        private void InitializeTransformBasedHands()
-        {
-            InitializeHands();
-
-            if (_rightPoseController != null)
-            {
-                InitializeKinematicRigidbody(_rightPoseController.gameObject);
-                AttachKinematicFollower(_rightPoseController.gameObject, rightHandPivot);
-            }
-            if (_leftPoseController != null)
-            {
-                InitializeKinematicRigidbody(_leftPoseController.gameObject);
-                AttachKinematicFollower(_leftPoseController.gameObject, leftHandPivot);
-            }
-        }
-
-        private void InitializePhysicsBasedHands()
-        {
-            InitializeHands();
-
-            if (_rightPoseController != null)
-                InitializePhysics(_rightPoseController.gameObject, rightHandPivot);
-            if (_leftPoseController != null)
-                InitializePhysics(_leftPoseController.gameObject, leftHandPivot);
-        }
-
-        private void InitializeHands()
-        {
-            if (config?.HandData == null) return;
-
             // Provider ownership lives on the Config asset, not on the rig. Touching these
             // properties forces lazy creation of a single shared provider per hand on the
             // Config's runtime host GameObject, so multiple rigs reuse the same providers.
             _ = config.LeftHandProvider;
             _ = config.RightHandProvider;
 
-            _leftPoseController = InitializeHand(LeftHandPrefab, leftHandPivot, HandIdentifier.Left, leftHandInteractorType);
-            _rightPoseController = InitializeHand(RightHandPrefab, rightHandPivot, HandIdentifier.Right, rightHandInteractorType);
-
+            ShowHandSet(config.HandData);
             InitializeHandPivotUpdater();
+        }
+
+        private void SubscribeToHandDataChanges()
+        {
+            if (config == null || _handDataSubscription != null) return;
+            _handDataSubscription = config.HandDataChanged.Subscribe(_ => ApplyCurrentHandData());
+        }
+
+        /// <summary>
+        /// Brings the shown hands in line with <see cref="Config.HandData"/>. Safe to call at any
+        /// time; does nothing when they already match.
+        /// </summary>
+        private void ApplyCurrentHandData()
+        {
+            if (!initializeHands || config == null) return;
+
+            var wanted = config.HandData;
+            if (wanted == null || wanted == _activeHandData) return;
+
+            if (!config.IsCompatible(wanted, out var reason))
+            {
+                Debug.LogError($"[CameraRig] Ignoring hand set '{wanted.name}': {reason}", this);
+                return;
+            }
+
+            ShowHandSet(wanted);
+        }
+
+        private void ShowHandSet(HandData data)
+        {
+            if (data == null || data == _activeHandData) return;
+
+            var firstShow = _activeHandData == null;
+
+            if (!_handSets.TryGetValue(data, out var set))
+            {
+                set = BuildHandSet(data);
+                _handSets[data] = set;
+            }
+
+            // Deactivating the outgoing hands releases whatever they hold, because interactors
+            // release on disable.
+            if (_handSets.TryGetValue(_activeHandData ?? data, out var previous) && previous != set)
+            {
+                if (previous.Left != null) previous.Left.gameObject.SetActive(false);
+                if (previous.Right != null) previous.Right.gameObject.SetActive(false);
+            }
+
+            _activeHandData = data;
+            _leftPoseController = set.Left;
+            _rightPoseController = set.Right;
+
+            SetHandVisible(_leftPoseController, _handsVisible);
+            SetHandVisible(_rightPoseController, _handsVisible);
+
+            if (!firstShow && _handsVisible)
+                TeleportHands();
+        }
+
+        private HandSet BuildHandSet(HandData data)
+        {
+            var set = new HandSet
+            {
+                Left = InitializeHand(data.LeftHandPrefab, leftHandPivot, HandIdentifier.Left, leftHandInteractorType),
+                Right = InitializeHand(data.RightHandPrefab, rightHandPivot, HandIdentifier.Right, rightHandInteractorType)
+            };
+
+            ConfigureTracking(set.Left, leftHandPivot);
+            ConfigureTracking(set.Right, rightHandPivot);
+            ApplyHandLayers(set);
+            return set;
+        }
+
+        private void ConfigureTracking(HandPoseController hand, Transform pivot)
+        {
+            if (hand == null) return;
+
+            switch (trackingMethod)
+            {
+                case InteractionSystemType.TransformBased:
+                    InitializeKinematicRigidbody(hand.gameObject);
+                    AttachKinematicFollower(hand.gameObject, pivot);
+                    break;
+                case InteractionSystemType.PhysicsBased:
+                    InitializePhysics(hand.gameObject, pivot);
+                    break;
+            }
         }
 
         /// <summary>
@@ -708,6 +777,7 @@ namespace Shababeek.Interactions.Core
         /// </summary>
         public void SetHandsVisible(bool visible)
         {
+            _handsVisible = visible;
             SetHandVisible(_leftPoseController, visible);
             SetHandVisible(_rightPoseController, visible);
         }

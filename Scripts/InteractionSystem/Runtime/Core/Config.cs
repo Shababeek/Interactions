@@ -35,6 +35,10 @@ namespace Shababeek.Interactions.Core
         [SerializeField]
         private int rightHandLayer;
 
+        [Tooltip("Optional shared variable holding the hand set chosen at runtime. Leave empty to have one created at runtime. Any script may set it; every rig using this Config follows.")]
+        [SerializeField]
+        private HandDataVariable handDataVariable;
+
         [Tooltip("Layer for interactable objects. Objects on this layer can be grabbed and manipulated by hands.")]
         [SerializeField]
         private int interactableLayer;
@@ -149,9 +153,44 @@ namespace Shababeek.Interactions.Core
         }
 
         /// <summary>
-        /// HandData asset containing hand poses and prefabs.
+        /// The hand set the hands should currently show: the runtime choice, or the default
+        /// when none has been made.
         /// </summary>
-        public HandData HandData => handData;
+        public HandData HandData
+        {
+            get
+            {
+                var chosen = HandDataSource.Value;
+                return chosen != null ? chosen : handData;
+            }
+        }
+
+        /// <summary>The serialized default hand set, used whenever no runtime choice is active.</summary>
+        public HandData DefaultHandData => handData;
+
+        /// <summary>
+        /// The variable carrying the runtime hand set choice. Created on demand when none is assigned.
+        /// </summary>
+        public HandDataVariable HandDataSource
+        {
+            get
+            {
+                if (handDataVariable == null)
+                {
+                    handDataVariable = CreateInstance<HandDataVariable>();
+                    handDataVariable.name = $"{name} HandData (runtime)";
+                    handDataVariable.hideFlags = HideFlags.DontSave;
+                }
+
+                return handDataVariable;
+            }
+        }
+
+        /// <summary>
+        /// Raised with the new effective hand set whenever the runtime choice changes, whether
+        /// through <see cref="SetHandData"/> or by setting the variable directly.
+        /// </summary>
+        public IObservable<HandData> HandDataChanged => HandDataSource.OnValueChanged;
 
         /// <summary>
         /// Mass value for hand physics objects.
@@ -195,6 +234,53 @@ namespace Shababeek.Interactions.Core
             };
 
         #region Public Methods
+
+        /// <summary>
+        /// Switches every rig using this Config to the given hand set. Null returns to the default.
+        /// Rejected, with an error logged, when the hand set is not compatible with the default.
+        /// </summary>
+        /// <returns>False when the hand set was rejected.</returns>
+        public bool SetHandData(HandData data)
+        {
+            if (data == null || data == handData)
+            {
+                ResetHandData();
+                return true;
+            }
+
+            if (!IsCompatible(data, out var reason))
+            {
+                Debug.LogError($"[Config] Rejected hand set '{data.name}': {reason}", this);
+                return false;
+            }
+
+            if (HandDataSource.Value != data)
+                HandDataSource.Value = data;
+            return true;
+        }
+
+        /// <summary>Returns every rig using this Config to the default hand set.</summary>
+        public void ResetHandData()
+        {
+            if (HandDataSource.Value != null)
+                HandDataSource.Value = null;
+        }
+
+        /// <summary>
+        /// Whether a hand set can replace the default. Poses authored on interactables depend on
+        /// the default's pose system, so a different one is refused.
+        /// </summary>
+        public bool IsCompatible(HandData candidate, out string reason)
+        {
+            reason = null;
+            if (candidate == null) return true;
+            if (candidate.LeftHandPrefab == null || candidate.RightHandPrefab == null)
+                reason = "it is missing a left or right hand prefab.";
+            else if (handData != null && candidate.PoseSystem != handData.PoseSystem)
+                reason = $"its pose system ({candidate.PoseSystem}) differs from the default ({handData.PoseSystem}).";
+            return reason == null;
+        }
+
         /// <summary>Sets the input provider for a specific hand at runtime, overriding the auto-created shared provider.</summary>
         public void SetHandProvider(HandIdentifier hand, IHandInputProvider provider)
         {
