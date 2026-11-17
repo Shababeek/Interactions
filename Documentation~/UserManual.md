@@ -8,7 +8,7 @@ The Shababeek Interaction System is a Unity package for building designer-friend
 ## Installation
 1. Add this package via **Package Manager** (git URL or local path), or copy the package folder into your Unity project per your studio workflow. Requires Unity 6000.3 or newer.
 2. Install **Unity Input System** (Package Manager dependency).
-3. Add **com.shababeek.reactivevars** when using variables, drivers, or sequencing.
+3. Install **com.shababeek.reactivevars**. It is required and is declared as a dependency in `package.json`. Package Manager cannot fetch it from a git URL on its own, so when installing from git add ReactiveVars to the project first.
 
 ## Quick Start
 1. Create a **Config** asset: Project window → **Create → Shababeek → Interactions → Config**.

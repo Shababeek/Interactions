@@ -86,6 +86,7 @@ namespace Shababeek.Interactions.Weapons
         {
             _hasLastPos = false;
             _bladeSpeed = 0f;
+            _lastHitTimes.Clear();
         }
 
         // Track blade-tip speed manually: the blade is kinematic while held and moved by the
@@ -96,6 +97,7 @@ namespace Shababeek.Interactions.Weapons
             {
                 _hasLastPos = false;
                 _bladeSpeed = 0f;
+                if (_lastHitTimes.Count > 0) _lastHitTimes.Clear();
                 return;
             }
 

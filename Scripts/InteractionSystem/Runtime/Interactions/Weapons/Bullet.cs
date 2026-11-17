@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
 
@@ -46,6 +47,7 @@ namespace Shababeek.Interactions.Weapons
         private Vector3 _launchPosition;
         private Vector3 _launchDirection;
         private Vector3 _prevDrawPosition;
+        private Vector3 _flightVelocity;
 
         private void Awake()
         {
@@ -61,14 +63,28 @@ namespace Shababeek.Interactions.Weapons
         public void SetPool(IObjectPool<Bullet> pool) => _pool = pool;
 
         /// <summary>Places the bullet at the muzzle and sends it flying. Resets prior flight state.</summary>
-        public void Launch(Vector3 position, Vector3 direction, float speed)
+        public void Launch(Vector3 position, Vector3 direction, float speed) =>
+            Launch(position, direction, speed, null);
+
+        /// <summary>
+        /// Places the bullet at the muzzle and sends it flying, ignoring collisions with the given
+        /// colliders (the gun and the hand holding it) from the first physics step.
+        /// </summary>
+        public void Launch(Vector3 position, Vector3 direction, float speed, IReadOnlyList<Collider> ignoredColliders)
         {
+            if (ignoredColliders != null)
+            {
+                for (int i = 0; i < ignoredColliders.Count; i++)
+                    if (ignoredColliders[i] != null) IgnoreCollisionWith(ignoredColliders[i]);
+            }
+
             var rotation = Quaternion.LookRotation(direction);
             transform.SetPositionAndRotation(position, rotation);
             _body.position = position;
             _body.rotation = rotation;
             _body.linearVelocity = direction * speed;
             _body.angularVelocity = Vector3.zero;
+            _flightVelocity = _body.linearVelocity;
 
             _released = false;
             _despawnTime = Time.time + lifetime;
@@ -85,8 +101,12 @@ namespace Shababeek.Interactions.Weapons
         {
             if (_released) return;
 
+            // Velocity before this step's collisions resolve; OnCollisionEnter reads it for the
+            // impact direction, because after a bounce the body's own velocity points away.
+            _flightVelocity = _body.linearVelocity;
+
             // Persistent path trail visible in the Scene view (Gizmos on) — shows the real flight path.
-            Debug.DrawLine(_prevDrawPosition, transform.position, Color.yellow, 2f);
+            if (debugLogs) Debug.DrawLine(_prevDrawPosition, transform.position, Color.yellow, 2f);
             _prevDrawPosition = transform.position;
 
             if (Time.time >= _despawnTime)
@@ -117,8 +137,8 @@ namespace Shababeek.Interactions.Weapons
                           $"{Time.time - (_despawnTime - lifetime):0.000}s after launch", this);
 
             var contact = collision.GetContact(0);
-            Vector3 direction = _body.linearVelocity.sqrMagnitude > 1e-4f
-                ? _body.linearVelocity.normalized
+            Vector3 direction = _flightVelocity.sqrMagnitude > 1e-4f
+                ? _flightVelocity.normalized
                 : transform.forward;
 
             var hittable = collision.collider.GetComponentInParent<IBulletHittable>();
@@ -164,9 +184,12 @@ namespace Shababeek.Interactions.Weapons
 
         private void IgnoreCollisionWith(Collider other)
         {
+            // IgnoreCollision logs an error for colliders that are disabled or inactive.
+            if (other == null || !other.enabled || !other.gameObject.activeInHierarchy) return;
             foreach (var col in _colliders)
             {
-                if (col != null) Physics.IgnoreCollision(col, other, true);
+                if (col != null && col.enabled && col.gameObject.activeInHierarchy)
+                    Physics.IgnoreCollision(col, other, true);
             }
         }
 

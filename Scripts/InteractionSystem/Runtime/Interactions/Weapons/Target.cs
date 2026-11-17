@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.Events;
@@ -71,6 +72,10 @@ namespace Shababeek.Interactions.Weapons
                 await Awaitable.WaitForSecondsAsync(downTime, token);
                 await LerpLocal(downPosition, downRotation, _homePosition, _homeRotation, riseDuration, token);
             }
+            catch (OperationCanceledException)
+            {
+                // Target destroyed mid-animation — expected, nothing to do.
+            }
             finally
             {
                 _isDown = false;
@@ -95,7 +100,7 @@ namespace Shababeek.Interactions.Weapons
                 transform.SetLocalPositionAndRotation(
                     Vector3.Lerp(fromPos, toPos, k),
                     Quaternion.Slerp(fromRot, toRot, k));
-                await Awaitable.NextFrameAsync();
+                await Awaitable.NextFrameAsync(token);
             }
 
             transform.SetLocalPositionAndRotation(toPos, toRot);

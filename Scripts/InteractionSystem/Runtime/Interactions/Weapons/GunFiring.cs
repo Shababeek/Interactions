@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UniRx;
 using UnityEngine;
 using UnityEngine.Events;
@@ -93,6 +94,8 @@ namespace Shababeek.Interactions.Weapons
         private float _lastFireTime = -999f;
         private CompositeDisposable _disposable;
         private IObjectPool<Bullet> _bulletPool;
+        private readonly HashSet<Bullet> _bulletsInFlight = new();
+        private readonly List<Collider> _bulletIgnoredColliders = new();
 
         /// <summary>Fired on every successful shot (after the muzzle solve). Arg is the hit point in world space.</summary>
         public event Action<Vector3> OnShotFired;
@@ -117,8 +120,16 @@ namespace Shababeek.Interactions.Weapons
                         bullet.gameObject.SetActive(false);
                         return bullet;
                     },
-                    actionOnGet: b => b.gameObject.SetActive(true),
-                    actionOnRelease: b => b.gameObject.SetActive(false),
+                    actionOnGet: b =>
+                    {
+                        b.gameObject.SetActive(true);
+                        _bulletsInFlight.Add(b);
+                    },
+                    actionOnRelease: b =>
+                    {
+                        _bulletsInFlight.Remove(b);
+                        b.gameObject.SetActive(false);
+                    },
                     actionOnDestroy: b => { if (b != null) Destroy(b.gameObject); },
                     collectionCheck: false,
                     defaultCapacity: poolDefaultCapacity,
@@ -128,6 +139,11 @@ namespace Shababeek.Interactions.Weapons
 
         private void OnDestroy()
         {
+            // Bullets still flying outlive the gun: detach them from the pool so they destroy
+            // themselves on impact instead of returning to a pool nobody owns.
+            foreach (var bullet in _bulletsInFlight)
+                if (bullet != null) bullet.SetPool(null);
+            _bulletsInFlight.Clear();
             _bulletPool?.Clear();
         }
 
@@ -136,6 +152,17 @@ namespace Shababeek.Interactions.Weapons
             _disposable = new CompositeDisposable();
             // Fire when the holding hand presses the use (trigger) input.
             _interactable.OnUseStarted.Subscribe(_ => TryFire()).AddTo(_disposable);
+            _interactable.OnSelected.Subscribe(CollectBulletIgnoredColliders).AddTo(_disposable);
+        }
+
+        // The gun's own colliders plus the holding hand's, so a bullet never hits its shooter.
+        private void CollectBulletIgnoredColliders(InteractorBase interactor)
+        {
+            _bulletIgnoredColliders.Clear();
+            GetComponentsInChildren(true, _bulletIgnoredColliders);
+            if (interactor == null) return;
+            foreach (var handCollider in interactor.GetComponentsInChildren<Collider>(true))
+                if (!_bulletIgnoredColliders.Contains(handCollider)) _bulletIgnoredColliders.Add(handCollider);
         }
 
         private void OnDisable()
@@ -193,7 +220,7 @@ namespace Shababeek.Interactions.Weapons
             if (debugLogs)
                 Debug.Log($"[GunFiring] Fire bullet from muzzle '{MuzzlePoint.name}' origin={origin} " +
                           $"dir={direction} speed={projectileSpeed}", this);
-            bullet.Launch(origin, direction, projectileSpeed);
+            bullet.Launch(origin, direction, projectileSpeed, _bulletIgnoredColliders);
         }
 
         private Vector3 FireHitscan(Vector3 origin, Vector3 direction)

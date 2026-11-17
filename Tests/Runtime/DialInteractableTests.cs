@@ -36,6 +36,10 @@ namespace Shababeek.Interactions.Tests
             var prevStepField = typeof(DialInteractable).GetField("_previousStep",
                 BindingFlags.NonPublic | BindingFlags.Instance);
             prevStepField?.SetValue(_dial, 0);
+
+            // These tests run synchronously, before Start. Mark the dial as started so SetStep
+            // poses immediately instead of deferring the pose to Start.
+            SetSerializedField("_started", true);
         }
 
         [TearDown]
@@ -46,27 +50,71 @@ namespace Shababeek.Interactions.Tests
 
         // ── AnglePerStep Calculation ──
 
+        // A wrapping dial closes the loop, so N steps divide the sweep evenly.
+        // A clamped dial puts its last step on the end of the sweep, so N steps span N-1 gaps.
+
         [Test]
-        public void AnglePerStep_8Steps360Degrees_Is45()
+        public void AnglePerStep_Wrapping8Steps360Degrees_Is45()
         {
+            SetSerializedField("wrapAround", true);
+
             Assert.AreEqual(45f, _dial.AnglePerStep, 0.01f);
         }
 
         [Test]
-        public void AnglePerStep_4Steps360Degrees_Is90()
+        public void AnglePerStep_Wrapping4Steps360Degrees_Is90()
         {
+            SetSerializedField("wrapAround", true);
             SetSerializedField("numberOfSteps", 4);
 
             Assert.AreEqual(90f, _dial.AnglePerStep, 0.01f);
         }
 
         [Test]
-        public void AnglePerStep_10Steps180Degrees_Is18()
+        public void AnglePerStep_Wrapping10Steps180Degrees_Is18()
         {
+            SetSerializedField("wrapAround", true);
             SetSerializedField("numberOfSteps", 10);
             SetSerializedField("totalAngle", 180f);
 
             Assert.AreEqual(18f, _dial.AnglePerStep, 0.01f);
+        }
+
+        [Test]
+        public void AnglePerStep_Clamped8Steps360Degrees_SpansSevenGaps()
+        {
+            Assert.AreEqual(360f / 7f, _dial.AnglePerStep, 0.01f);
+        }
+
+        [Test]
+        public void AnglePerStep_Clamped4Steps360Degrees_Is120()
+        {
+            SetSerializedField("numberOfSteps", 4);
+
+            Assert.AreEqual(120f, _dial.AnglePerStep, 0.01f);
+        }
+
+        [Test]
+        public void AnglePerStep_Clamped10Steps180Degrees_Is20()
+        {
+            SetSerializedField("numberOfSteps", 10);
+            SetSerializedField("totalAngle", 180f);
+
+            Assert.AreEqual(20f, _dial.AnglePerStep, 0.01f);
+        }
+
+        [Test]
+        public void AnglePerStep_ClampedSingleStep_DoesNotDivideByZero()
+        {
+            SetSerializedField("numberOfSteps", 1);
+
+            Assert.AreEqual(360f, _dial.AnglePerStep, 0.01f);
+        }
+
+        [Test]
+        public void AngleForStep_ClampedLastStep_SitsAtMaxAngle()
+        {
+            Assert.AreEqual(_dial.MaxAngle, _dial.AngleForStep(7), 0.01f);
         }
 
         // ── NormalizedValue ──
@@ -111,7 +159,28 @@ namespace Shababeek.Interactions.Tests
         {
             _dial.SetStep(2);
 
+            Assert.AreEqual(2f * 360f / 7f, _dial.CurrentAngle, 0.01f);
+        }
+
+        [Test]
+        public void SetStep_WrappingDial_SetsCorrectAngle()
+        {
+            SetSerializedField("wrapAround", true);
+
+            _dial.SetStep(2);
+
             Assert.AreEqual(90f, _dial.CurrentAngle, 0.01f);
+        }
+
+        [Test]
+        public void SetStep_BeforeStart_KeepsStepAndDefersPose()
+        {
+            SetSerializedField("_started", false);
+
+            _dial.SetStep(3);
+
+            Assert.AreEqual(3, _dial.CurrentStep);
+            Assert.AreEqual(0f, _dial.CurrentAngle, 0.01f);
         }
 
         [Test]
@@ -308,7 +377,7 @@ namespace Shababeek.Interactions.Tests
             for (int i = 0; i < 8; i++)
             {
                 _dial.SetStep(i);
-                float expectedAngle = i * _dial.AnglePerStep;
+                float expectedAngle = _dial.AngleForStep(i);
                 Assert.AreEqual(expectedAngle, _dial.CurrentAngle, 0.01f,
                     $"Step {i} should have angle {expectedAngle}");
             }
