@@ -38,7 +38,6 @@ namespace Shababeek.Interactions.Core
         private IHandInputProvider _cachedLeftProvider;
         private IHandInputProvider _cachedRightProvider;
         private readonly List<Behaviour> _disabledBehaviours = new();
-        private HandPivotUpdater _disabledPivotUpdater;
 
         /// <summary>Whether a recording is currently being replayed.</summary>
         public bool IsPlaying => _isPlaying;
@@ -172,13 +171,6 @@ namespace Shababeek.Interactions.Core
                     _disabledBehaviours.Add(behaviour);
                 }
             }
-
-            var pivotUpdater = cameraRig.GetComponent<HandPivotUpdater>();
-            if (pivotUpdater != null && pivotUpdater.enabled)
-            {
-                pivotUpdater.enabled = false;
-                _disabledPivotUpdater = pivotUpdater;
-            }
         }
 
         private void RestoreLiveTracking()
@@ -188,12 +180,6 @@ namespace Shababeek.Interactions.Core
                 if (behaviour != null) behaviour.enabled = true;
             }
             _disabledBehaviours.Clear();
-
-            if (_disabledPivotUpdater != null)
-            {
-                _disabledPivotUpdater.enabled = true;
-                _disabledPivotUpdater = null;
-            }
         }
 
         private void OnDisable()

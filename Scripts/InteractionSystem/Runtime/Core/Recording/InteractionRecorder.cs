@@ -87,6 +87,8 @@ namespace Shababeek.Interactions.Core
             return LastRecording;
         }
 
+        private void OnDestroy() => _eventSubscriptions.Dispose();
+
         private bool ValidateRig()
         {
             if (cameraRig == null)

@@ -170,12 +170,10 @@ namespace Shababeek.Interactions.Core
         
         private void ShutdownHandTracking()
         {
+            // The XRHandSubsystem is shared with the other hand's provider (and anything else
+            // reading hands), so it is left running; the XR loader owns its lifetime.
             _isInitialized = false;
-            
-            if (handSubsystem != null && handSubsystem.running)
-            {
-                handSubsystem.Stop();
-            }
+            handSubsystem = null;
         }
         
         private float CalculateFingerCurl(XRHandFingerID fingerID)
