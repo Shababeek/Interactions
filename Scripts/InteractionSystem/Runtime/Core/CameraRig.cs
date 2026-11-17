@@ -450,7 +450,6 @@ namespace Shababeek.Interactions.Core
             _ = config.RightHandProvider;
 
             ShowHandSet(config.HandData);
-            InitializeHandPivotUpdater();
         }
 
         private void SubscribeToHandDataChanges()
@@ -538,25 +537,6 @@ namespace Shababeek.Interactions.Core
                     InitializePhysics(hand.gameObject, pivot);
                     break;
             }
-        }
-
-        /// <summary>
-        /// Initializes the HandPivotUpdater component to update hand pivots from input providers.
-        /// </summary>
-        private void InitializeHandPivotUpdater()
-        {
-            if (config == null || leftHandPivot == null || rightHandPivot == null)
-                return;
-
-            // Get or create HandPivotUpdater component
-            var updater = GetComponent<HandPivotUpdater>();
-            if (updater == null)
-            {
-                return; updater = gameObject.AddComponent<HandPivotUpdater>();
-            }
-
-            // Initialize with references
-            updater.Initialize(config, leftHandPivot, rightHandPivot);
         }
 
         private void InitializeKinematicRigidbody(GameObject hand)
