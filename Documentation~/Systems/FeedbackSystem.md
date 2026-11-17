@@ -38,7 +38,7 @@ The **Feedback System** provides unified feedback management for interactions. I
 
 > **Goal:** Object highlights when hovered and vibrates when grabbed
 
-![FeedbackSystem — hover highlight and grab haptics](../Images/Feedback_System/feedback-highlight-haptic.gif)
+<!-- IMAGE TODO: Images/Feedback_System/feedback-highlight-haptic.gif | FeedbackSystem — hover highlight and grab haptics -->
 
 *Material highlight on hover and haptic pulse on grab.*
 
@@ -50,7 +50,7 @@ The **Feedback System** provides unified feedback management for interactions. I
 
 ## Inspector Reference
 
-![FeedbackSystem — Inspector with multiple feedback entries](../Images/Feedback_System/feedback-inspector-expanded.png)
+<!-- IMAGE TODO: Images/Feedback_System/feedback-inspector-expanded.png | FeedbackSystem — Inspector with multiple feedback entries -->
 
 *Feedback System component expanded with several feedback types configured.*
 
@@ -196,43 +196,17 @@ Sends vibration impulses to VR controllers.
 
 ### Settings
 
-#### Hover Amplitude / Duration
-Vibration strength (0-1) and length (seconds) for hover events.
+Haptic Feedback uses [Haptic Pattern](Haptics.md) assets. Assign one per event; leave a slot empty for no vibration on that event.
 
-**Defaults:** 0.3 amplitude, 0.1 seconds
+| Slot | Played when |
+|------|-------------|
+| **Hover Pattern** | A hand starts hovering the object |
+| **Select Pattern** | The object is grabbed / selected |
+| **Activate Pattern** | The object is used (trigger while held) |
 
-Subtle feedback when hand approaches object.
+The package ships four patterns in `Data/HapticPatterns/`: `Haptic_Click`, `Haptic_Detent`, `Haptic_Thud`, `Haptic_Buzz`. A light click on hover and a thud on select is a good starting point.
 
-#### Select Amplitude / Duration
-Vibration for grab/select events.
-
-**Defaults:** 0.5 amplitude, 0.2 seconds
-
-Medium feedback confirming grab.
-
-#### Activate Amplitude / Duration
-Vibration for use/activate events.
-
-**Defaults:** 1.0 amplitude, 0.3 seconds
-
-Strong feedback for triggering actions.
-
-### Amplitude Guide
-
-| Value | Feel |
-|-------|------|
-| **0.1-0.3** | Subtle, light tap |
-| **0.4-0.6** | Medium, noticeable |
-| **0.7-0.9** | Strong, attention-getting |
-| **1.0** | Maximum vibration |
-
-### Duration Guide
-
-| Value | Feel |
-|-------|------|
-| **0.05-0.1s** | Quick tick |
-| **0.1-0.2s** | Normal pulse |
-| **0.3-0.5s** | Extended vibration |
+> **Upgrading:** objects set up before patterns existed stored an amplitude and a duration per event. Those values are kept and still play when the matching pattern slot is empty, so older scenes feel the same. Assigning a pattern replaces them.
 
 ---
 
@@ -715,5 +689,5 @@ Feedback events fire in this order:
 
 ---
 
-**Last Updated:** January 2026
+**Last Updated:** November 2026
 **Component Version:** 1.1.0

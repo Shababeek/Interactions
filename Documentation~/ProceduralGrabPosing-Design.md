@@ -1,6 +1,8 @@
 # Procedural Grab Posing — Design Proposal
 
-*2026-06-11 — draft for review, no code yet*
+*2026-06-11 — originally a draft for review. Phase 1 (editor Auto-Fit) has shipped.*
+
+> **Status check, 2026-11-17:** `HandFingerRig`, `FingerArcBaker`, `FingerArcCache`, `PoseFitSolver` and `HandPoseController.SetProceduralClamps` are in the source. The runtime `ProceduralGrabPose` component described under Phase 2 below is **not** in the current checkout and nothing calls `SetProceduralClamps`. See the [improvement plan](Analysis/ImprovementPlan-2026-11-17.md) (section 2.8). Index: [documentation](README.md).
 
 ## Goal
 

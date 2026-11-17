@@ -1,10 +1,12 @@
 # Shababeek Interaction System — User Manual
 
+> Looking for a specific component? See the [documentation index](README.md). New to the package? Start with the [Quick Start Guide](GettingStarted/QuickStart.md).
+
 ## Introduction
 The Shababeek Interaction System is a Unity package for building designer-friendly VR/AR and 3D interactions. Work **in the Editor first** (Project assets, Inspector, hierarchy menus), then add scripts only when needed.
 
 ## Installation
-1. Add this package via **Package Manager** (git URL or local path), or copy the package folder into your Unity project per your studio workflow.
+1. Add this package via **Package Manager** (git URL or local path), or copy the package folder into your Unity project per your studio workflow. Requires Unity 6000.3 or newer.
 2. Install **Unity Input System** (Package Manager dependency).
 3. Add **com.shababeek.reactivevars** when using variables, drivers, or sequencing.
 

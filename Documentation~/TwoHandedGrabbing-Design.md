@@ -2,6 +2,8 @@
 
 *2026-06-12 — decisions: promote secondary on primary release; look-rotation solve; Grabable first.*
 
+> User-facing manual: [Two Handed Grabable](Interactables/TwoHandedGrabable.md). Two-handed wheels are covered under [Wheel](Interactables/ConstrainedInteractables.md#wheel-interactable). Index: [documentation](README.md).
+
 ## Principle
 
 The single-interactor state machine stays authoritative and untouched for the primary hand.

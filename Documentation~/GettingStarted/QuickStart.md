@@ -15,7 +15,7 @@ By the end of this guide, you'll have:
 - ✅ Understanding of the core concepts
 
 **Time Required:** ~15 minutes
-**Prerequisites:** Unity 2021.3 or newer, VR headset (Quest, PCVR, etc.)
+**Prerequisites:** Unity 6000.3 or newer, VR headset (Quest, PCVR, etc.)
 
 ---
 
@@ -192,7 +192,7 @@ When you created your grabbable cube, a PoseConstrainer was automatically added.
 1. Select your Grabbable Cube
 2. Find the **PoseConstrainer** component in the Inspector
 
-![PoseConstrainer Inspector](../Images/Quick_Start/PoseConstrainer%20Inspector%20with%20labeled%20sections.png)
+<!-- IMAGE TODO: Images/Quick_Start/PoseConstrainer%20Inspector%20with%20labeled%20sections.png | PoseConstrainer Inspector -->
 
 #### Configure Constraint Type
 The **Constraint Type** determines how hands behave:
@@ -499,4 +499,4 @@ You've learned the fundamentals of the Shababeek Interaction System:
 
 Happy developing! 🚀
 
-**Last Updated:** January 2026
+**Last Updated:** November 2026

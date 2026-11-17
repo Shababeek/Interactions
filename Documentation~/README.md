@@ -1,107 +1,146 @@
 # Shababeek Interaction System — Documentation
 
-**Unity-first:** Most workflows begin in the **Inspector**, **Hierarchy / Create** menus, and **Project** assets—then use code only when you need custom behavior.
+**Unity-first:** most workflows begin in the **Inspector**, the **Hierarchy / Create** menus and **Project** assets. Code is only needed for custom behaviour.
 
-Welcome to the documentation for the Shababeek Interaction System (VR / XR interactions, hands, grab, constrained controls, sockets, feedback).
+This is the index for the Shababeek Interaction System (VR hands, grabbing, constrained controls, sockets, feedback).
 
-> **Note:** This folder is named `~Documentation` so it stays easy to find in source control while Unity treats it like other package assets. Open these `.md` files in your IDE or on GitHub; Unity does not render them in the Inspector.
+> **Note:** this folder is named `Documentation~`. Unity ignores folders that end in `~`, so these files are not imported as assets. Open them in your IDE, a Markdown viewer or on GitHub.
 
 ---
 
-## 📚 Documentation Structure
-
-### 🎓 Getting Started
-Start here if you're new to the system.
+## Getting Started
 
 | Document | Description |
 |----------|-------------|
-| **[Quick Start Guide](GettingStarted/QuickStart.md)** | 10-minute guide from install to first interaction |
-| **[Config Asset](Core/config.md)** | Central configuration setup |
+| **[Quick Start Guide](GettingStarted/QuickStart.md)** | From install to your first grab, pose and lever |
+| **[Package overview](UserManual.md)** | Install steps and core concepts on one page |
+| **[Config asset](Core/config.md)** | The central settings asset: hands, layers, input |
+| **[Sequence system quick start](GettingStarted/SequenceSystemQuickStart.md)** | Build a first tutorial sequence |
+| **[Scriptable system for designers](GettingStarted/ScriptableSystemForDesigners.md)** | Variables and events without code |
 
 ---
 
-### 📎 Additional manuals (consolidated here)
+## Interactables
 
-| Document | Description |
-|----------|-------------|
-| **[Package overview](UserManual.md)** | High-level install & concepts |
-| **[Interactions (Inspector)](InteractionsUserManual.md)** | Interactables, interactors, grab strategies |
-| **[Interaction Core](Core/InteractionCoreUserManual.md)** | Config, Camera Rig, Hand, input |
-| **[Animations & poses](PoseSystem/AnimationsUserManual.md)** | Pose / animation-oriented usage |
-| **[Reactive utilities](Reference/CoreUtilitiesUserManual.md)** | Tweens & shared utilities used by interactables |
-| **[Sequencing core](Systems/SequencingCoreUserManual.md)** | Sequence assets & editor (ReactiveVars companion) |
-| **[Interactions summary](InteractionsDocumentationSummary.md)** | Short overview / index |
-
----
-
-### 🎮 Interactables
 Components you add to objects to make them interactive.
 
-#### Basic Interactables
-| Component | Description | Use Case |
-|-----------|-------------|----------|
-| **[Grabable](Interactables/Grabable.md)** | Pick up and hold objects (with built-in throwing) | Tools, props, weapons, balls, grenades |
-| **[Switch](Interactables/Switch.md)** | Toggle switches | Light switches, levers |
-| **[VRButton](Interactables/VRButton.md)** | Pressable buttons | Control panels, keypads |
+### Grab and hold
 
-#### Constrained Interactables
-Objects that move with physical constraints.
+| Component | Description | Use for |
+|-----------|-------------|---------|
+| **[Grabable](Interactables/Grabable.md)** | Pick up, hold and throw | Tools, props, balls |
+| **[Two Handed Grabable](Interactables/TwoHandedGrabable.md)** | One or two hands, aims along both grips | Rifles, poles, heavy tools |
+| **[Distance Grab](Interactables/DistanceGrab.md)** | Flick far objects into the hand | Anything out of reach |
+| **[Weapons](Interactables/Weapons.md)** | Gun firing, bullets, blade hits, targets | Shooting ranges, combat |
 
-| Component | Description | Use Case |
-|-----------|-------------|----------|
-| **[Lever](Interactables/ConstrainedInteractables.md#lever)** | Rotates around a single axis | Gear shifts, throttles |
-| **[Drawer](Interactables/ConstrainedInteractables.md#drawer)** | Slides along a linear path | Desk drawers, sliding doors |
-| **[Joystick](Interactables/ConstrainedInteractables.md#joystick)** | Two-axis rotation control | Flight controls, arcade sticks |
-| **[Wheel](Interactables/ConstrainedInteractables.md#wheel)** | Continuous rotation | Valves, steering wheels |
-| **[Slider](Interactables/ConstrainedInteractables.md#slider-interactable)** | Linear multi-step control | Volume strips, detented sliders |
+### Touch
+
+| Component | Description | Use for |
+|-----------|-------------|---------|
+| **[VRButton](Interactables/VRButton.md)** | Push button | Control panels, keypads |
+| **[VR Toggle Button](Interactables/AdditionalInteractables.md#vr-toggle-button)** | Push button that latches | Power buttons, mode buttons |
+| **[Switch](Interactables/Switch.md)** | Finger-flipped on/off switch | Light switches |
+
+### Constrained (grab and move along a path)
+
+| Component | Description | Use for |
+|-----------|-------------|---------|
+| **[Lever](Interactables/ConstrainedInteractables.md#lever-interactable)** | Rotates around one axis | Throttles, gear shifts |
+| **[Toggle Switch](Interactables/ToggleSwitch.md)** | Lever that snaps to steps | Mode selectors |
+| **[Drawer](Interactables/ConstrainedInteractables.md#drawer-interactable)** | Slides along a line | Drawers, sliding doors |
+| **[Slider](Interactables/ConstrainedInteractables.md#slider-interactable)** | Slides and snaps to steps | Faders, stepped selectors |
+| **[Joystick](Interactables/ConstrainedInteractables.md#joystick-interactable)** | Rotates around two axes | Flight sticks, arcade sticks |
+| **[Wheel](Interactables/ConstrainedInteractables.md#wheel-interactable)** | Continuous rotation, one or two hands | Valves, steering wheels |
+| **[Dial](Interactables/ConstrainedInteractables.md#dial-interactable)** | Rotation that snaps to steps | Combination locks, selectors |
+| **[Door and Door Handle](Interactables/AdditionalInteractables.md#door-and-door-handle)** | Hinged door with an optional latch | Doors, cabinets |
+| **[Elastic Tether](Interactables/AdditionalInteractables.md#elastic-tether)** | Object on an elastic cord | Pull cords, hanging toys |
+
+### Helpers
+
+| Component | Description |
+|-----------|-------------|
+| **[Spawning Interactable](Interactables/AdditionalInteractables.md#spawning-interactable)** | Hands out a new object on each grab |
+| **[Return To Origin](Interactables/AdditionalInteractables.md#return-to-origin)** | Puts an object back after release |
+| **[Step displays](Interactables/AdditionalInteractables.md#step-displays)** | Show the current step of a dial, slider or toggle switch |
 
 ---
 
-### ✋ Interactors
-Components that detect and perform interactions (typically on hands).
+## Hands, Interactors and Input
 
-| Component | Description | Use Case |
-|-----------|-------------|----------|
-| **[Hand](Interactors/Interactors.md#hand-component)** | Left/right hand, input, poses | Spawned with Camera Rig |
-| **[TriggerInteractor](Interactors/Interactors.md#trigger-interactor)** | Proximity-based detection | Close-range grabbing |
-| **[RaycastInteractor](Interactors/Interactors.md#raycast-interactor)** | Ray-based selection | Distant object selection |
+| Document | Description |
+|----------|-------------|
+| **[Interactors](Interactors/Interactors.md)** | Hand component, Trigger Interactor, Raycast Interactor |
+| **[Interaction Core](Core/InteractionCoreUserManual.md)** | Camera Rig, Hand, physics hands |
+| **[Input providers and locomotion](Core/InputAndLocomotion.md)** | Controller and hand-tracking input, smooth move and snap turn |
+| **[PoseConstrainer](PoseSystem/PoseConstrainer.md)** | Hand poses and grab points on an object |
+| **[Animations and poses](PoseSystem/AnimationsUserManual.md)** | Hand Data, poses and the pose controller |
+| **[Pose migration guide](PoseSystem/MuscleBasedMigration.md)** | Moving to muscle-based poses |
 
 ---
 
-### 🎨 Systems
-Higher-level systems that add functionality.
+## Systems
 
 | System | Description | Document |
 |--------|-------------|----------|
-| **Pose Constrainer** | Controls hand poses during interactions | **[PoseConstrainer](PoseSystem/PoseConstrainer.md)** |
-| **Feedback System** | Haptic, audio, visual, scale, particle feedback | **[Feedback](Systems/FeedbackSystem.md)** |
-| **Socket System** | Object placement and snapping | **[Sockets](SocketSystem/SocketSystem.md)** |
-
-### 🔗 Integration with ReactiveVars
-Connect interactions to the external data flow system.
-
-The Shababeek Interaction System integrates with the **com.shababeek.reactivevars** package to enable reactive programming and sequencing. This document covers the interaction-specific components only.
-
-| Document | Description |
-|----------|-------------|
-| **[Interaction Drivers](ScriptableSystem/Drivers.md)** | Connect interactables and sockets to reactive variables |
-| **[Interaction Sequences](Systems/SequencingSystem.md)** | Tutorials using interaction-specific sequence actions |
-| **[Architecture Map](Analysis/ArchitectureMap.md)** | Runtime flow and extension points |
-| **[Pose Migration Guide](PoseSystem/MuscleBasedMigration.md)** | Legacy to muscle-based pose migration |
-
-For complete documentation on the ReactiveVars system (Scriptable Variables, Game Events, Sequencing System core, and generic binders), visit the **com.shababeek.reactivevars** package documentation.
+| **Feedback System** | Haptic, audio, material, scale, particle and event feedback | **[Feedback System](Systems/FeedbackSystem.md)** |
+| **Haptic Patterns** | Reusable vibration assets | **[Haptics](Systems/Haptics.md)** |
+| **Outline Highlight** | Hover, selection and grab-hint outlines | **[Outline Highlight](Systems/OutlineHighlight.md)** |
+| **Socket System** | Snapping objects into holders | **[Sockets](SocketSystem/SocketSystem.md)** |
+| **Advanced Sockets** | Categories, multi-slot sockets, grid inventory, fasteners | **[Advanced Sockets](SocketSystem/AdvancedSockets.md)** |
+| **Interaction Recording** | Record a session and replay it without a headset | **[Interaction Recording](Systems/InteractionRecording.md)** |
 
 ---
 
-## 🔍 Quick Reference
+## Integration with ReactiveVars
 
-### Component Quick-Add
-Right-click in hierarchy → **Shababeek** → Choose option:
-- **Initialize Scene** — Sets up VR camera rig
-- **Make Into** → **Grabable** — Convert object to grabbable
-- **Setup Wizard** — Guided configuration
+The Interaction System uses the **com.shababeek.reactivevars** package for variables, events and sequencing. The pages below cover the interaction-specific parts.
 
-### Essential Layers
+| Document | Description |
+|----------|-------------|
+| **[Interaction Drivers](ScriptableSystem/Drivers.md)** | Write interactable and socket state to variables and events |
+| **[Interaction Sequences](Systems/SequencingSystem.md)** | Tutorial steps that wait for grabs, levers, sockets |
+| **[Sequencing core](Systems/SequencingCoreUserManual.md)** | Sequence assets and their editor |
+| **[Scriptable Variables](ScriptableSystem/ScriptableVariables.md)** | Variable asset types |
+| **[Variable Container](ScriptableSystem/VariableContainer.md)** | Grouping variables in one asset |
+| **[Scriptable System Window](ScriptableSystem/ScriptableSystemWindow.md)** | Inspecting variables at runtime |
+| **[Reactive utilities](Reference/CoreUtilitiesUserManual.md)** | Tweens and shared utilities |
+
+For binders, the full variable reference and the tween system, see the [ReactiveVars documentation](https://github.com/Shababeek/ReactiveVars/blob/main/Documentation~/README.md).
+
+---
+
+## For Programmers and Maintainers
+
+| Document | Description |
+|----------|-------------|
+| **[Interactions overview](InteractionsUserManual.md)** | States, events and how to write your own interactable |
+| **[Architecture map](Analysis/ArchitectureMap.md)** | Class families, runtime flow, extension points |
+| **[Two-handed grabbing design](TwoHandedGrabbing-Design.md)** | Design notes |
+| **[Procedural grab posing design](ProceduralGrabPosing-Design.md)** | Design notes for finger auto-fit |
+| **[Improvement plan, November 2026](Analysis/ImprovementPlan-2026-11-17.md)** | Current review and prioritised improvements |
+| **[Code review, September 2026](Analysis/CodeReview-2026-09-06.md)** | Pre-publish review |
+| **[Code review, June 2026](Analysis/CodeReview-2026-06-11.md)** | Full-system review |
+| **[Documentation status](InteractionsDocumentationSummary.md)** | What is documented where, and what is missing |
+| **[Images to do](ImagesTodo.md)** | Screenshots and GIFs still to capture |
+
+---
+
+## Quick Reference
+
+### Hierarchy menus
+
+Right-click in the Hierarchy > **Shababeek**:
+
+- **Initialize CameraRig** — add the VR rig to the scene
+- **Create** > Button, Drawer, Joystick, Lever, Switch, Wheel — a ready-made interactable with a placeholder model
+- **Make Into** > Grabbable, Drawer, Joystick, Lever, Wheel — convert the selected object
+
+Top menu > **Shababeek**: **Setup Wizard**, **Initialize Scene**, **Finger Collider Setup**.
+
+Other components are added with **Add Component > Shababeek > Interactions**.
+
+### Essential layers
+
 | Layer | Purpose |
 |-------|---------|
 | LeftHand | Left hand collisions |
@@ -109,79 +148,43 @@ Right-click in hierarchy → **Shababeek** → Choose option:
 | Interactable | Objects that can be interacted with |
 | Player | Player body (no hand collision) |
 
-### Input Buttons
-| Button | Default Use |
+### Default buttons
+
+| Button | Default use |
 |--------|-------------|
-| **Grip** | Grab/release objects |
-| **Trigger** | Use/activate held objects |
-| **Primary (A/X)** | UI interaction |
+| **Grip** | Grab and release |
+| **Trigger** | Use the held object |
+| **A / B** | Extra events on a held object (On A Pressed, On B Pressed) |
 
 ---
 
-## 📖 How to Use This Documentation
+## How the Manuals Are Organised
 
-Each component manual follows a consistent structure:
+Component manuals follow the same order: what it does, setup, Inspector reference, common workflows, troubleshooting, then a short scripting section.
 
-1. **What It Does** — Quick overview
-2. **Quick Example** — Get started fast
-3. **Inspector Reference** — All settings explained
-4. **Common Workflows** — Step-by-step guides
-5. **Troubleshooting** — Common issues and solutions
-6. **Scripting API** — Code examples (brief)
+### Images
 
-### Figures (screenshots & GIFs)
-Manuals reference images under **`Images/`** using Markdown:
+Manuals reference images under `Images/` with paths relative to the page (`../Images/...` from a subfolder). Images that have not been captured yet are listed in **[ImagesTodo.md](ImagesTodo.md)** and marked in the page with an HTML comment, so nothing renders as a broken image.
 
-```markdown
-![Short description](Images/General/documentation-example.png)
-*Optional caption below the image.*
-```
+### Checking links
 
-Paths are relative to the markdown file (subfolders use `../Images/...`). Assets that are not in the repo yet are listed in **[ImagesTodo.md](ImagesTodo.md)**—add the file there and remove the row once the PNG or GIF is committed.
-
----
-
-## ✅ Documentation Link Check
-
-Run this from the package root to validate relative markdown links:
+From the package root:
 
 ```bash
-npm run docs:check
+node Documentation~/validate-links.mjs
 ```
 
-This executes `~Documentation/validate-links.mjs` and reports broken links.
+This checks every relative link and heading anchor in `Readme.md` and `Documentation~/`. It needs Node.js only.
 
 ---
 
-## 🆘 Getting Help
+## Getting Help
 
-- **Documentation Issues**: Check the troubleshooting section of each component
-- **Bug Reports**: [GitHub Issues](https://github.com/Shababeek/Interactions/issues)
-- **Feature Requests**: [GitHub Discussions](https://github.com/Shababeek/Interactions/discussions)
-- **Email**: Ahmadabobakr@gmail.com
-- **Website**: [ahmadabobakr.github.io](https://ahmadabobakr.github.io)
-
----
-
-## 📋 Documentation Checklist
-
-| Section | Status |
-|---------|--------|
-| Getting Started | ✅ Complete |
-| Config | ✅ Complete |
-| Grabable (incl. throwing) | ✅ Complete |
-| Switch | ✅ Complete |
-| VRButton | ✅ Complete |
-| Constrained Interactables | ✅ Complete |
-| PoseConstrainer | ✅ Complete |
-| Feedback System | ✅ Complete (v1.1 - added Scale, Particle, Toggle, UnityEvent) |
-| Socket System | ✅ Complete (v1.1 - added ReactiveVars integration guidance) |
-| Interaction Drivers | ✅ Complete (v1.5 - interaction-specific only) |
-| Interaction Sequences | ✅ Complete (v1.5 - interaction-specific actions only) |
-| Architecture Map | ✅ Complete |
-| Pose Migration Guide | ✅ Complete |
-| Interactors | ✅ Complete |
+- **Bug reports:** [GitHub Issues](https://github.com/Shababeek/Interactions/issues)
+- **Feature requests:** [GitHub Discussions](https://github.com/Shababeek/Interactions/discussions)
+- **Email:** Ahmadabobakr@gmail.com
+- **Website:** [ahmadabobakr.github.io](https://ahmadabobakr.github.io)
 
 ---
 
-**Last Updated:** March 2026
+**Last Updated:** November 2026

@@ -2,8 +2,8 @@
 
 A comprehensive Unity package for building advanced VR/AR and 3D interactions with a focus on hand presence, pose constraints, and reactive programming.
 
-[![Unity Version](https://img.shields.io/badge/Unity-6.0%2B-blue.svg)](https://unity.com/)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Unity Version](https://img.shields.io/badge/Unity-6000.3%2B-blue.svg)](https://unity.com/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE.md)
 
 ---
 ## **Why Choose Shababeek Interactions?**
@@ -20,7 +20,7 @@ A comprehensive Unity package for building advanced VR/AR and 3D interactions wi
 - Comprehensive editor tools with real-time preview
 - UniRx integration for reactive programming
 - Clear separation of concerns
-- Hand Poses are totally independent of VR SDKs allowing for on non-XR games
+- Hand poses are independent of VR SDKs, so they also work in non-XR games
 
 ### **Designer Friendly**
 - Visual editor tools with interactive scene view
@@ -69,34 +69,40 @@ A comprehensive Unity package for building advanced VR/AR and 3D interactions wi
 4. Press Play and grab it with your VR controllers!
 ```
 
-**📚 Full guide:** [10-Minute Quick Start](~Documentation/GettingStarted/QuickStart.md)
+**📚 Full guide:** [10-Minute Quick Start](Documentation~/GettingStarted/QuickStart.md)
 
 ---
 
 ## 📖 Documentation
 
 ### 🎓 Getting Started
-- **[Quick Start Guide](~Documentation/GettingStarted/QuickStart.md)** - 10-minute guide from install to first interaction
-- **[Component Overview](~Documentation/README.md)** - Catalog of all components
-- **[Core Concepts](~Documentation/UserManual.md)** - System architecture and design principles
+- **[Quick Start Guide](Documentation~/GettingStarted/QuickStart.md)** - 10-minute guide from install to first interaction
+- **[Component Overview](Documentation~/README.md)** - Catalog of all components
+- **[Core Concepts](Documentation~/UserManual.md)** - System architecture and design principles
 
 ### 📘 Component Manuals
-- **[Grabable](~Documentation/Interactables/Grabable.md)** - Pick up and throw objects
-- **[Switch](~Documentation/Interactables/Switch.md)** - Toggle switches and buttons
-- **[Hand System](~Documentation/Interactors/Interactors.md)** - Hand models and pose configuration
-- **[Feedback System](~Documentation/Systems/FeedbackSystem.md)** - Haptics, audio, and visuals
-- **[More components...](~Documentation/README.md)**
+- **[Grabable](Documentation~/Interactables/Grabable.md)** - Pick up and throw objects
+- **[Switch](Documentation~/Interactables/Switch.md)** - Toggle switches and buttons
+- **[Hand System](Documentation~/Interactors/Interactors.md)** - Hand models and pose configuration
+- **[Feedback System](Documentation~/Systems/FeedbackSystem.md)** - Haptics, audio, and visuals
+- **[Two Handed Grabable](Documentation~/Interactables/TwoHandedGrabable.md)** - Rifles, poles and other two-handed objects
+- **[Distance Grab](Documentation~/Interactables/DistanceGrab.md)** - Flick far objects into the hand
+- **[Constrained Interactables](Documentation~/Interactables/ConstrainedInteractables.md)** - Lever, drawer, slider, joystick, wheel, dial
+- **[Sockets](Documentation~/SocketSystem/SocketSystem.md)** and **[Advanced Sockets](Documentation~/SocketSystem/AdvancedSockets.md)** - Snapping, racks, grid inventories
+- **[Interaction Recording](Documentation~/Systems/InteractionRecording.md)** - Record a session and replay it without a headset
+- **[More components...](Documentation~/README.md)**
 
 ### 🛠️ Advanced Topics
-- **[Custom Interactables](~Documentation/UserManual.md#customization--extensibility)** - Create your own components
-- **[Hand Poses](~Documentation/PoseSystem/PoseConstrainer.md)** - Import and configure hands
-- **[Interaction Drivers](~Documentation/ScriptableSystem/Drivers.md)** - Connect interactions to reactive variables
-- **[Interaction Sequences](~Documentation/Systems/SequencingSystem.md)** - Tutorials using interaction-specific actions
-- **[Architecture Map](~Documentation/Analysis/ArchitectureMap.md)** - Runtime flow and extension points
+- **[Custom Interactables](Documentation~/UserManual.md#customization--extensibility)** - Create your own components
+- **[Hand Poses](Documentation~/PoseSystem/PoseConstrainer.md)** - Import and configure hands
+- **[Interaction Drivers](Documentation~/ScriptableSystem/Drivers.md)** - Connect interactions to reactive variables
+- **[Interaction Sequences](Documentation~/Systems/SequencingSystem.md)** - Tutorials using interaction-specific actions
+- **[Architecture Map](Documentation~/Analysis/ArchitectureMap.md)** - Runtime flow and extension points
 
 ### 💻 For Developers
-- **[Scripting Reference](~Documentation/README.md)** - Complete API documentation
-- **[Component Reference](~Documentation/README.md)** - All components indexed
+- **[Interactions overview](Documentation~/InteractionsUserManual.md)** - States, events and writing your own interactable
+- **[Component index](Documentation~/README.md)** - All components and manuals
+- **[Improvement plan](Documentation~/Analysis/ImprovementPlan-2026-11-17.md)** - Current review and priorities
 
 ---
 
@@ -163,7 +169,7 @@ Additional functionality:
 // 4. Grab flashlight and press Trigger to turn on/off
 ```
 
-**📚 More examples:** [Component Manuals](~Documentation/README.md)
+**📚 More examples:** [Component Manuals](Documentation~/README.md)
 
 ---
 
@@ -191,7 +197,7 @@ Additional functionality:
 
 ## 🔧 System Requirements
 
-- **Unity Version:** 6.0 or newer (2021.3 LTS+ supported)
+- **Unity Version:** 6000.3 or newer (the version declared in `package.json`)
 - **Dependencies:**
     - Unity Input System (1.0.0+)
     - UniRx (included)
@@ -208,7 +214,7 @@ Shababeek Interactions/
 ├── Scripts/
 │   ├── InteractionSystem/      # Core interaction runtime/editor
 │   └── SequencingSystem/       # Interaction-specific sequence actions
-├── ~Documentation/              # Complete documentation
+├── Documentation~/              # Complete documentation
 │   ├── Analysis/               # Architecture overviews
 │   ├── Core/                   # Config and core setup docs
 │   ├── GettingStarted/         # Quick start guides
@@ -250,7 +256,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE.md) f
 
 ## 📞 Support
 
-- **Documentation:** [Full Documentation](~Documentation/README.md)
+- **Documentation:** [Full Documentation](Documentation~/README.md)
 - **Issues:** [GitHub Issues](https://github.com/Shababeek/Interactions/issues)
 - **Discussions:** [GitHub Discussions](https://github.com/Shababeek/Interactions/discussions)
 - **Email:** Ahmadabobakr@gmail.com
@@ -263,10 +269,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE.md) f
 Run link validation from the package root:
 
 ```bash
-npm run docs:check
+node Documentation~/validate-links.mjs
 ```
 
-This checks all markdown files under `~Documentation/` for broken relative links.
+This checks `Readme.md` and every markdown file under `Documentation~/` for broken relative links and heading anchors. It needs Node.js only, no packages.
 
 ---
 
@@ -281,9 +287,9 @@ Special thanks to all contributors and the Unity VR community.
 ## 🗺️ Roadmap
 
 ### Interaction System
-- [ ] Two-handed grab support
+- [x] Two-handed grab support ([manual](Documentation~/Interactables/TwoHandedGrabable.md))
 - [ ] Grab transition smoothing (lerp from world to grab position)
-- [ ] Distance grab / force pull (gravity gloves style)
+- [x] Distance grab / force pull, gravity gloves style ([manual](Documentation~/Interactables/DistanceGrab.md))
 - [x] SliderInteractable (linear stepped slider)
 - [ ] HingeInteractable (physics-driven doors/lids)
 - [ ] VRButton/Switch unification under InteractableBase lifecycle( will require big change to archticture) so it's low prioirty for now
@@ -302,9 +308,9 @@ Special thanks to all contributors and the Unity VR community.
 - [ ] UniRx to R3 migration (adapter layer for gradual transition is being implemented)
 - [ ] Extract common driver base class
 - [ ] Assembly definition restructuring ( move the utilites to a new package)
-- [ ] Unit test suite 
+- [x] Unit test suite (EditMode and PlayMode suites under `Tests/`)
 ### Platform & Distribution
-- [ ] Unity Asset Store publishing
+- [x] Unity Asset Store publishing
 - [ ] Video tutorial series
 - [ ] More example scenes
 - [ ] Multiplayer / variable networking support
@@ -312,9 +318,9 @@ Special thanks to all contributors and the Unity VR community.
 
 ---
 
-**Ready to get started?** → [Quick Start Guide](~Documentation/GettingStarted/QuickStart.md)
+**Ready to get started?** → [Quick Start Guide](Documentation~/GettingStarted/QuickStart.md)
 
-**Need help?** → [Documentation](~Documentation/README.md)
+**Need help?** → [Documentation](Documentation~/README.md)
 
 **Want to contribute?** → [Contact the Team](mailto:Ahmadabobakr@gmail.com)
 
@@ -324,6 +330,6 @@ Special thanks to all contributors and the Unity VR community.
 
 Made with ❤️ by the Shababeek team
 
-[⭐ Star us on GitHub](https://github.com/Shababeek/Interactions) | [📖 Read the Docs](~Documentation/README.md) | [💬 Join Discussion](https://github.com/Shababeek/Interactions/discussions)
+[⭐ Star us on GitHub](https://github.com/Shababeek/Interactions) | [📖 Read the Docs](Documentation~/README.md) | [💬 Join Discussion](https://github.com/Shababeek/Interactions/discussions)
 
 </div>

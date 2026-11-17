@@ -11,7 +11,7 @@ Use this when moving a **Hand Data** asset from the legacy bone-based pose pipel
 3. Ensure each **hand prefab** used by that asset has a **Humanoid** Animator avatar (not Generic-only).
 4. For each pose clip referenced on that Hand Data, confirm **Rig → Animation Type = Humanoid** where clips drive poses.
 
-![Hand Data Inspector — Pose System set to Muscle Based](../Images/Pose_Constrainer/hand_data_pose_system_toggle.png)
+<!-- IMAGE TODO: Images/Pose_Constrainer/hand_data_pose_system_toggle.png | Hand Data Inspector — Pose System set to Muscle Based -->
 
 ---
 

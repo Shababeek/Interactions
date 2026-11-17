@@ -1,414 +1,156 @@
-# Shababeek Interactions System - User Manual
+# Interactions Overview
 
-This manual explains how to use the Shababeek Interactions system **from the Unity Editor first** (Inspector, hierarchy menus, components), then code where needed. The system provides interactables, interactors, and grab strategies for VR objects you can grab, manipulate, and use.
+How interactables and interactors work together, the settings and events every interactable shares, and how to write your own. For a specific component, go to its manual from the [documentation index](README.md).
 
 ## Table of Contents
 
-1. [System Overview](#system-overview)
-2. [Core Components](#core-components)
-3. [Interactables](#interactables)
-4. [Interactors](#interactors)
-5. [Grab Strategies](#grab-strategies)
-6. [Editor Tools](#editor-tools)
-7. [Best Practices](#best-practices)
+1. [The Model](#the-model)
+2. [Shared Interactable Settings](#shared-interactable-settings)
+3. [Shared Events](#shared-events)
+4. [Interactable Families](#interactable-families)
+5. [Interactors](#interactors)
+6. [What Happens During a Grab](#what-happens-during-a-grab)
+7. [Writing Your Own Interactable](#writing-your-own-interactable)
 8. [Troubleshooting](#troubleshooting)
 
-## System Overview
+---
 
-The Shababeek Interactions system is built around three core concepts:
+## The Model
 
-- **Interactables**: Objects that can be interacted with (grabbed, used, etc.)
-- **Interactors**: Components that detect and manage interactions (usually attached to hands)
-- **Grab Strategies**: Different ways objects can be grabbed and manipulated
+- An **interactable** is a component on an object the player can act on (Grabable, Lever, Dial, and so on).
+- An **interactor** is a component on a hand that finds interactables and tells them what the hand is doing.
 
-The system automatically handles:
-- Hover detection and visual feedback
-- Selection through button presses
-- Secondary actions (use/activate)
-- Physics-based or transform-based grabbing
-- Event dispatching for custom behaviors
+An interactable is always in one of three states:
 
-## Core Components
+| State | Meaning |
+|---|---|
+| **None** | No hand is near |
+| **Hovering** | A hand is close enough to select it |
+| **Selected** | A hand is holding or operating it |
 
-### InteractionState Enum
+While selected, the other button on the controller **uses** the object (fires a gun, toggles a flashlight). Using is an action on a selected object, not a separate state.
 
-Defines the three possible states of an interaction:
+Buttons and finger-pressed switches ([VRButton](Interactables/VRButton.md), [VR Toggle Button](Interactables/AdditionalInteractables.md#vr-toggle-button), [Switch](Interactables/Switch.md)) are different: they react to a finger physically touching them and do not go through hover and select.
 
-- **None**: No interaction is currently active
-- **Hovering**: An interactor is hovering over the object
-- **Selected**: An interactor has selected the object and can perform actions
+---
 
-### InteractionHand Enum
+## Shared Interactable Settings
 
-Specifies which hands can interact with an object:
+Every interactable that derives from the common base shows these in the Inspector.
 
-- **Left**: Only the left hand can interact
-- **Right**: Only the right hand can interact
-- **Both**: Both hands can interact (default)
+| Field | What it does |
+|---|---|
+| **Interaction Hand** | Which hands may interact: Left, Right or both. |
+| **Selection Button** | The button that selects the object: Grip, Trigger or Any. The other button becomes the use button. |
+| **Layer Behavior** | **Match Hand**: while held, the object moves to the holding hand's layer so it does not collide with that hand. **Keep Original**: the layer is left alone. |
 
-### InteractorUnityEvent
+Read-only debug fields show **Is Selected**, **Current Interactor**, **Current State** and **Is Using** in Play mode.
 
-A UnityEvent wrapper that automatically passes the interactor reference when invoked. Use this in the inspector to create callbacks that receive the hand that triggered the interaction.
+---
 
-## Interactables
+## Shared Events
 
-### InteractableBase
+Each event passes the interactor (the hand) involved. All are available as UnityEvents in the Inspector and as observables in code.
 
-The base class for all interactive objects. Provides the foundation for hover, selection, and activation interactions.
+| Event | Fires when |
+|---|---|
+| **On Hover Start / On Hover End** | A hand comes within reach / leaves |
+| **On Selected / On Deselected** | The object is grabbed / released |
+| **On Use Started / On Use Ended** | The use button is pressed / released while held |
+| **On Thumb Pressed / Released** | The thumb button is pressed / released while held |
+| **On A Pressed / Released**, **On B Pressed / Released** | The A or B face button is pressed / released while held |
 
-#### Inspector Settings
+```csharp
+var grabable = GetComponent<Grabable>();
+grabable.OnSelected.Subscribe(interactor => Debug.Log($"Grabbed by {interactor.HandIdentifier}"));
+grabable.OnUseStarted.Subscribe(_ => Fire());
+```
 
-**Interaction Settings:**
-- **Interaction Hand**: Which hands can interact with this object (Left, Right, or Both)
-- **Selection Button**: The button that triggers selection (Grip or Trigger)
+---
 
-**Interaction Events:**
-- **On Selected**: Event raised when this object is selected
-- **On Deselected**: Event raised when this object is deselected
-- **On Hover Start**: Event raised when hovering begins
-- **On Hover End**: Event raised when hovering ends
-- **On Use Started**: Event raised when the secondary button is pressed while selected
-- **On Use Ended**: Event raised when the secondary button is released while selected
+## Interactable Families
 
-**Runtime State (Read-Only):**
-- **Is Selected**: Whether this object is currently selected
-- **Current Interactor**: The interactor currently interacting with this object
-- **Current State**: The current interaction state (None, Hovering, or Selected)
-- **Is Using**: Whether this object is currently being used
+| Family | Components | Manual |
+|---|---|---|
+| Free grab | Grabable, Two Handed Grabable | [Grabable](Interactables/Grabable.md), [Two Handed Grabable](Interactables/TwoHandedGrabable.md) |
+| Rotary, continuous | Lever, Wheel, Joystick, Door, Door Handle | [Constrained Interactables](Interactables/ConstrainedInteractables.md), [Additional Interactables](Interactables/AdditionalInteractables.md#door-and-door-handle) |
+| Rotary, stepped | Dial, Toggle Switch | [Dial](Interactables/ConstrainedInteractables.md#dial-interactable), [Toggle Switch](Interactables/ToggleSwitch.md) |
+| Linear | Drawer, Slider | [Constrained Interactables](Interactables/ConstrainedInteractables.md) |
+| Special | Elastic Tether, Spawning Interactable | [Additional Interactables](Interactables/AdditionalInteractables.md) |
+| Finger-pressed | VRButton, VR Toggle Button, Switch | [VRButton](Interactables/VRButton.md), [Switch](Interactables/Switch.md) |
 
-#### Usage
+Constrained interactables keep their moving part under a generated **interactableObject** child and show a posed hand on the control while it is held. Wrap only the moving part (the lever arm, the drawer box), not the whole assembly.
 
-1. Inherit from `InteractableBase` in your custom interactable classes
-2. Override the abstract methods:
-   - `Select()`: Handle selection logic
-   - `DeSelected()`: Handle deselection logic
-   - `StartHover()`: Handle hover start
-   - `EndHover()`: Handle hover end
-   - `UseStarted()`: Handle secondary button press
-   - `UseEnded()`: Handle secondary button release (optional)
-
-3. Set up events in the inspector to trigger custom behaviors
-
-### Grabable
-
-A component that enables objects to be grabbed and held by VR hands. Manages the grabbing process with smooth animations and pose constraints.
-
-#### Inspector Settings
-
-**Grab Settings:**
-- **Hide Hand**: Whether to hide the hand model when this object is grabbed
-- **Tweener**: The VariableTweener component for smooth animations (auto-added if not present)
-
-#### Required Components
-
-- **PoseConstrainer**: Manages hand positioning and constraints
-- **VariableTweener**: Handles smooth grab animations
-
-#### Usage
-
-1. Add the `Grabable` component to any object you want to be grabbable
-2. Ensure the object has a `PoseConstrainer` component
-3. The system automatically handles grab/ungrab logic
-4. Use the `RightHandRelativePosition` and `LeftHandRelativePosition` properties to customize grab positions
-
-#### Public Properties
-
-- **RightHandRelativePosition**: Transform for the right hand's grab position
-- **LeftHandRelativePosition**: Transform for the left hand's grab position
-- **GetRightHandTarget()**: Returns target position and rotation for right hand
-- **GetLeftHandTarget()**: Returns target position and rotation for left hand
-
-### Switch
-
-A physical two-state (on/off) switch that responds to trigger collisions. The side a finger or
-object approaches from decides whether it turns on or off; the body rotates to match and latches.
-See [Switch](Interactables/Switch.md) for full details.
-
-#### Inspector Settings
-
-**Events:**
-- **On Turned On**: Raised when the switch turns on
-- **On Turned Off**: Raised when the switch turns off
-- **On State Changed**: Raised on every state change, passing the new state (bool)
-
-**Switch Configuration:**
-- **Switch Body**: The transform that rotates during interaction
-- **Rotation Axis**: Axis around which the switch rotates (X, Y, or Z)
-- **Detection Axis**: Axis used to detect which side the hand approaches from
-- **On Angle**: Rotation angle in degrees for the on position
-- **Off Angle**: Rotation angle in degrees for the off position
-- **Rotate Speed**: Speed of the rotation animation
-- **Angle Threshold**: Minimum approach angle before the switch flips
-- **Start On**: State the switch starts in when the scene loads
-
-**Debug:**
-- **Current State**: Read-only — true when the switch is on
-
-#### Usage
-
-1. Add the `Switch` component to a GameObject with a trigger collider
-2. Configure the rotation and detection axes
-3. Set the on/off angles and animation speed
-4. Connect events in the inspector to trigger custom behaviors
-
-#### Public API
-
-- **IsOn**: Whether the switch is currently on
-- **SetState(bool)**: Sets the state, animating and raising events
-- **Toggle()**: Flips to the opposite state
-- **OnStateChanged**: `IObservable<bool>` that fires on every state change
-
-### Toggle Switch
-
-A grabbable lever-style switch that snaps to discrete step positions on release — the rotary
-counterpart to the Slider. See [Toggle Switch](Interactables/ToggleSwitch.md) for full details.
-
-- **Number Of Steps / Starting Step**: Discrete positions and initial step
-- **Angle Range / Rotation Axis**: Rotation limits and pivot axis
-- **On Step Changed / On Step Confirmed / On Value Changed**: Step and value events
-- **SetStep / IncrementStep / DecrementStep / CurrentStep**: Step API
-
-### VRButton
-
-A simple button component that responds to trigger interactions.
-
-#### Inspector Settings
-
-- **On Press**: Event raised when the button is pressed
-- **On Release**: Event raised when the button is released
-
-### Throwable
-
-A component that makes objects throwable when released from a grab.
-
-#### Inspector Settings
-
-- **Throw Force**: Multiplier for throw force
-- **Angular Velocity**: Angular velocity applied when thrown
-
-### DrawerInteractable
-
-A component for creating drawers that can be pulled open and closed.
-
-#### Inspector Settings
-
-- **Drawer Transform**: The transform that moves during drawer operation
-- **Open Position**: Local position when drawer is fully open
-- **Closed Position**: Local position when drawer is fully closed
-- **Movement Speed**: Speed of drawer movement
-- **On Open**: Event raised when drawer opens
-- **On Close**: Event raised when drawer closes
-
-### LeverInteractable
-
-A component for creating levers that can be pulled in different directions.
-
-#### Inspector Settings
-
-- **Lever Transform**: The transform that rotates during lever operation
-- **Max Rotation**: Maximum rotation angle in degrees
-- **Movement Speed**: Speed of lever movement
-- **On Value Changed**: Event raised when lever value changes (0-1)
-
-### JoystickInteractable
-
-A component for creating joysticks that can be moved in 2D space.
-
-#### Inspector Settings
-
-- **Joystick Transform**: The transform that moves during joystick operation
-- **Max Distance**: Maximum distance the joystick can move
-- **Dead Zone**: Minimum distance required to register movement
-- **On Value Changed**: Event raised when joystick value changes (Vector2)
-
-### WheelInteractable
-
-A component for creating wheels that can be rotated.
-
-#### Inspector Settings
-
-- **Wheel Transform**: The transform that rotates during wheel operation
-- **Max Rotation**: Maximum rotation angle in degrees
-- **Movement Speed**: Speed of wheel rotation
-- **On Value Changed**: Event raised when wheel value changes (0-1)
-
-### TurretInteractable
-
-A component for creating turrets that can be aimed in 3D space.
-
-#### Inspector Settings
-
-- **Turret Base**: The base transform that rotates horizontally
-- **Turret Head**: The head transform that rotates vertically
-- **Max Horizontal Rotation**: Maximum horizontal rotation angle
-- **Max Vertical Rotation**: Maximum vertical rotation angle
-- **Movement Speed**: Speed of turret movement
-- **On Aim Changed**: Event raised when turret aim changes (Vector2)
+---
 
 ## Interactors
 
-### InteractorBase
+| Component | Finds objects by | Manual |
+|---|---|---|
+| **Trigger Interactor** | Proximity to the hand | [Interactors](Interactors/Interactors.md#triggerinteractor) |
+| **Raycast Interactor** | A ray from the hand | [Interactors](Interactors/Interactors.md#raycastinteractor) |
+| **Distance Grabber** | Aim and flick, in addition to one of the above | [Distance Grab](Interactables/DistanceGrab.md) |
 
-The base class for all interactors. Handles interaction detection, state management, and button mapping.
+Hand input comes from an input provider (controller, hand tracking or a recording). See [Input providers and locomotion](Core/InputAndLocomotion.md).
 
-#### Inspector Settings
+---
 
-**Runtime State (Read-Only):**
-- **Current Interactable**: The currently hovered or selected interactable
-- **Is Interacting**: Whether this interactor is currently interacting
+## What Happens During a Grab
 
-#### Required Components
+When a [Grabable](Interactables/Grabable.md) is selected:
 
-- **Hand**: Provides input and pose information
+1. The hand takes the pose set on the object's [PoseConstrainer](PoseSystem/PoseConstrainer.md).
+2. If the object has a Rigidbody, it is made kinematic while held.
+3. The object moves smoothly to the hand and is attached to it.
+4. If **Can Be Thrown** is on, the object's velocity is tracked.
 
-#### Public Properties
+When it is released: the pose is removed, the object is detached, and with **Can Be Thrown** on it becomes a normal physics body and is thrown with the tracked velocity. With **Can Be Thrown** off, the Rigidbody returns to the kinematic setting it had before the grab.
 
-- **AttachmentPoint**: Transform where grabbed objects are attached
-- **HandIdentifier**: Whether this is the left or right hand
-- **Hand**: Reference to the Hand component
-- **CurrentInteractable**: The current interactable being interacted with
+A [Socketable](SocketSystem/SocketSystem.md) object released near a matching socket snaps into it instead.
 
-#### Public Methods
+---
 
-- **ToggleHandModel(bool)**: Shows or hides the hand model
-- **OnSelect()**: Called when selecting an interactable
-- **OnDeSelect()**: Called when deselecting an interactable
+## Writing Your Own Interactable
 
-### TriggerInteractor
+Derive from `InteractableBase` for a new kind of object, or from `ConstrainedInteractableBase` for a control that moves along a path and shows a posed hand.
 
-A trigger-based interactor that detects direct collisions with objects.
+```csharp
+using Shababeek.Interactions;
 
-#### Inspector Settings
+public class Pullable : InteractableBase
+{
+    // Return true to refuse the selection.
+    protected override bool Select()
+    {
+        return false;
+    }
 
-- **Trigger Collider**: The collider used for interaction detection
-- **Interaction Range**: Maximum distance for interactions
+    protected override void DeSelected() { }
 
-### RaycastInteractor
+    // Optional hooks
+    protected override void StartHover() { }
+    protected override void EndHover() { }
+    protected override void UseStarted() { }
+    protected override void UseEnded() { }
+}
+```
 
-A raycast-based interactor that can interact with objects at a distance.
+For a constrained control, implement `HandleObjectMovement(Vector3 target)` (called while held, with the hand position), `HandleObjectDeselection()` and `HandleReturnToOriginalPosition()`. The existing bases do most of the work for common shapes: `RotaryLeverBase` (single-axis lever), `RotaryInteractableBase` (wheel-like rotation) and `LinearInteractableBase` (start-to-end slide). See the [architecture map](Analysis/ArchitectureMap.md).
 
-#### Inspector Settings
+Often you do not need a new interactable. A small component beside an existing one that listens to its events is simpler; [Gun Firing and Blade Hit](Interactables/Weapons.md) are built that way.
 
-- **Ray Origin**: Transform that serves as the ray origin
-- **Ray Direction**: Direction of the raycast
-- **Max Distance**: Maximum raycast distance
-- **Layer Mask**: Layers to include in raycast
-
-## Grab Behavior
-
-Grabable handles its own attach/detach inline (the previous strategy abstraction was removed).
-
-When a Grabable is selected:
-1. Pose constraints are applied to the interacting hand
-2. If a Rigidbody is present, its prior `isKinematic` state is cached and the body is forced kinematic (the original state is restored on release, so designer-set kinematic bodies stay kinematic)
-3. The attachment point is positioned relative to the configured hand target
-4. The object is tweened to the attachment point; on tween completion it is parented to the hand and its local transform is zeroed
-5. If `Can Be Thrown` is on and a Rigidbody is present, throw-velocity tracking begins
-
-When deselected: pose constraints are removed, the object is unparented, the rigidbody's kinematic state is restored, and the throw is applied (if enabled).
-
-## Editor Tools
-
-### SwitchEditor
-
-Custom editor for the Switch component that provides:
-
-- **Visual Configuration**: Easy setup of rotation and detection axes
-- **Gizmo Visualization**: Scene view visualization of switch behavior
-- **Event Management**: Simple event setup and testing
-
-[Insert screenshot of SwitchEditor in action]
-
-### JoystickInteractableEditor
-
-Custom editor for the JoystickInteractable component that provides:
-
-- **Movement Range Visualization**: Visual representation of joystick movement area
-- **Dead Zone Configuration**: Easy setup of dead zone parameters
-- **Testing Tools**: In-editor testing of joystick behavior
-
-[Insert screenshot of JoystickInteractableEditor in action]
-
-### LeverInteractableEditor
-
-Custom editor for the LeverInteractable component that provides:
-
-- **Rotation Range Visualization**: Visual representation of lever movement
-- **Speed Configuration**: Easy adjustment of movement parameters
-- **Event Testing**: Test lever events in the editor
-
-[Insert screenshot of LeverInteractableEditor in action]
-
-## Best Practices
-
-### Setting Up Interactables
-
-1. **Inherit from InteractableBase**: Always inherit from the base class for custom interactables
-2. **Use Events**: Connect inspector events rather than hardcoding behaviors
-3. **Validate in OnValidate**: Add validation logic to ensure proper configuration
-4. **Use ReadOnly for Runtime State**: Mark runtime-only fields as read-only
-
-### Performance Considerations
-
-1. **Minimize Update Calls**: Only use Update for components that need per-frame updates
-2. **Efficient Collision Detection**: Use appropriate collider types and layers
-3. **Event Optimization**: Avoid expensive operations in event callbacks
-4. **Object Pooling**: Consider object pooling for frequently created/destroyed objects
-
-### VR Best Practices
-
-1. **Comfortable Interaction Distances**: Design interactions for comfortable arm reach
-2. **Clear Visual Feedback**: Provide clear visual cues for interactive elements
-3. **Haptic Feedback**: Use haptic feedback to enhance interaction feel
-4. **Accessibility**: Ensure interactions work for different hand sizes and abilities
-
-### Inspector Organization
-
-1. **Use Headers**: Group related fields with headers
-2. **Logical Ordering**: Arrange fields in logical order (configuration, events, runtime state)
-3. **Tooltips**: Provide clear, helpful tooltips for all fields
-4. **Validation**: Show warnings and errors clearly in the inspector
+---
 
 ## Troubleshooting
 
-### Common Issues
+| Problem | Check |
+|---|---|
+| Object cannot be grabbed | It needs a Collider. **Interaction Hand** must include the hand. The hand and object layers must be allowed to overlap (see [Config](Core/config.md)). |
+| Wrong button grabs | **Selection Button** on the interactable. |
+| Events do not fire | Use and button events only fire while the object is selected. |
+| Hand passes through or pushes the held object | **Layer Behavior** should be Match Hand. |
+| A constrained control's visuals do not move | The visuals must be under the **interactableObject** child. |
 
-**Object Not Grabbable:**
-- Ensure the object has a `Grabable` component
-- Check that it has a `PoseConstrainer` component
-- Verify the object has appropriate colliders
+---
 
-**Events Not Firing:**
-- Check that events are properly connected in the inspector
-- Verify the interaction state is correct
-- Ensure the interactable is properly configured
-
-**Physics Issues:**
-- Check layer collision settings
-- Verify rigidbody configuration
-- Ensure proper collider setup
-
-**Performance Problems:**
-- Check for unnecessary Update calls
-- Verify event callback efficiency
-- Monitor physics object count
-
-### Debug Tools
-
-1. **Scene Gizmos**: Many components provide visual gizmos for debugging
-2. **Runtime State Display**: Check runtime state fields in the inspector
-3. **Event Logging**: Add Debug.Log calls to event methods
-4. **Physics Debugging**: Use Unity's physics debugging tools
-
-### Getting Help
-
-1. **Check the Console**: Look for error messages and warnings
-2. **Review Inspector Settings**: Verify all required fields are set
-3. **Test in Isolation**: Test components individually before combining
-4. **Check Dependencies**: Ensure all required components are present
-
-## Conclusion
-
-The Shababeek Interactions system provides a powerful and flexible framework for creating interactive VR experiences. By following this manual and the established patterns, you can quickly create engaging interactive objects that respond naturally to user input.
-
-For more advanced usage patterns or specific questions, refer to the code examples or contact the development team.
+**Last Updated:** November 2026

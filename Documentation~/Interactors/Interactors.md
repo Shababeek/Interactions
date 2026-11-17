@@ -14,14 +14,14 @@
 
 ---
 
-## Hand component {#hand-component}
+## Hand component
 
 > **Menu Path:** Component > Shababeek > Interactions > Hand  
 > **Typical setup:** Added automatically when you use **Shababeek → Initialize Scene** (Camera Rig spawns left/right hands).
 
 The **Hand** identifies **Left vs Right**, connects to the package **Config**, streams controller/hand-tracked input, and coordinates pose presentation with **PoseConstrainer** / **HandPoseController**. Interactors live on the **same GameObject** as the Hand (or its children), sharing layer and attachment transforms.
 
-![Hand component Inspector overview (placeholder)](../Images/Interactors/hand-inspector-overview.png)
+<!-- IMAGE TODO: Images/Interactors/hand-inspector-overview.png | Hand component Inspector overview (placeholder) -->
 
 **Inspector checklist**
 
@@ -35,7 +35,7 @@ For rig setup, layers, and providers, see **[Interaction Core manual](../Core/In
 
 ---
 
-# TriggerInteractor {#trigger-interactor}
+# TriggerInteractor
 
 > **Menu Path:** Component > Shababeek > Interactions > Interactors > Trigger Interactor
 > **Use For:** Natural close-range grabbing with hands
@@ -123,7 +123,7 @@ In Scene view, TriggerInteractor shows:
 
 ---
 
-# RaycastInteractor {#raycast-interactor}
+# RaycastInteractor
 
 > **Menu Path:** Component > Shababeek > Interactions > Interactors > Raycast Interactor
 > **Use For:** Distance-based selection with visual pointer
@@ -332,11 +332,13 @@ Both interactors draw helpful gizmos. Select them in Scene view to see detection
 
 - [Hand component](#hand-component) — Inspector overview on this page
 - [Interaction Core manual](../Core/InteractionCoreUserManual.md) — Camera Rig, Config, input
+- [Distance Grab](../Interactables/DistanceGrab.md) — Pull far objects to the hand
+- [Input providers and locomotion](../Core/InputAndLocomotion.md) — Controller, hand tracking and playback input
 - [Grabable](../Interactables/Grabable.md) — What interactors detect
 - [PoseConstrainer](../PoseSystem/PoseConstrainer.md) — Hand positioning
 - [Config](../Core/config.md) — Layer configuration
 
 ---
 
-**Last Updated:** January 2026
+**Last Updated:** November 2026
 **Component Version:** 1.0.0

@@ -16,6 +16,8 @@
 | **Wheel** | Continuous rotation | 1 | Steering wheels, valves, cranks |
 | **Dial** | Discrete step rotation | 1 | Combination locks, rotary selectors |
 
+Related components documented on their own pages: [Toggle Switch](ToggleSwitch.md) (stepped lever), [Door and Door Handle](AdditionalInteractables.md#door-and-door-handle), [Elastic Tether](AdditionalInteractables.md#elastic-tether), [Two Handed Grabable](TwoHandedGrabable.md), and the [step displays](AdditionalInteractables.md#step-displays) that show a Dial or Slider's current step.
+
 All constrained interactables share common features:
 - PoseConstrainer for hand positioning
 - Return-to-origin option
@@ -37,7 +39,7 @@ There are three ways to add constrained interactables to your scene:
 
 ---
 
-# Lever Interactable {#lever}
+# Lever Interactable
 
 > **Menu Path:** Component > Shababeek > Interactions > Interactables > Lever Interactable
 > **Create Menu:** Right-click in Hierarchy > Shababeek > Create > Lever
@@ -47,7 +49,7 @@ There are three ways to add constrained interactables to your scene:
 
 The Lever rotates around a single axis within defined angle limits. As you move the grabbed lever, it outputs a normalized value (0-1) representing its position between minimum and maximum angles.
 
-![Lever interaction — rotating through range](../Images/Constrained_Interactables/lever-interaction.gif)
+<!-- IMAGE TODO: Images/Constrained_Interactables/lever-interaction.gif | Lever interaction — rotating through range -->
 
 *Lever interaction animation: rotating through its range of motion.*
 
@@ -145,7 +147,7 @@ public class ThrottleController : MonoBehaviour
 
 ---
 
-# Drawer Interactable {#drawer}
+# Drawer Interactable
 
 > **Menu Path:** Component > Shababeek > Interactions > Interactables > Drawer Interactable
 > **Create Menu:** Right-click in Hierarchy > Shababeek > Create > Drawer
@@ -155,7 +157,7 @@ public class ThrottleController : MonoBehaviour
 
 The Drawer slides along a linear path between a start and end position. Perfect for desk drawers, sliding doors, or any sliding mechanism.
 
-![Drawer interaction — sliding open and closed](../Images/Constrained_Interactables/drawer-interaction.gif)
+<!-- IMAGE TODO: Images/Constrained_Interactables/drawer-interaction.gif | Drawer interaction — sliding open and closed -->
 
 *Drawer interaction animation: sliding open and closed.*
 
@@ -232,7 +234,7 @@ public class DrawerContents : MonoBehaviour
 
 ---
 
-# Slider Interactable {#slider-interactable}
+# Slider Interactable
 
 > **Menu Path:** Component > Shababeek > Interactions > Interactables > Slider  
 > **Use For:** Linear controls that snap to discrete steps (e.g. volume-style sliders, stepped linear selectors)
@@ -241,7 +243,7 @@ public class DrawerContents : MonoBehaviour
 
 **Slider Interactable** extends the shared linear constrained base (same lineage as **Drawer**) but is tuned for **multiple discrete steps** along one axis. While grabbed, the knob follows the hand; on release it snaps to the nearest step.
 
-![Slider Interactable Inspector (placeholder)](../Images/Constrained_Interactables/slider-interactable-inspector.png)
+<!-- IMAGE TODO: Images/Constrained_Interactables/slider-interactable-inspector.png | Slider Interactable Inspector (placeholder) -->
 
 ## Inspector essentials
 
@@ -255,7 +257,7 @@ Use **Uniform scale** on the interactable root (see warning at top of this page)
 
 ---
 
-# Joystick Interactable {#joystick}
+# Joystick Interactable
 
 > **Menu Path:** Component > Shababeek > Interactions > Interactables > Joystick Interactable
 > **Create Menu:** Right-click in Hierarchy > Shababeek > Create > Joystick
@@ -265,7 +267,7 @@ Use **Uniform scale** on the interactable root (see warning at top of this page)
 
 The Joystick rotates around two axes simultaneously, outputting X and Y values. Perfect for flight controls, vehicle steering, or any two-dimensional input.
 
-![Joystick interaction — tilt on two axes](../Images/Constrained_Interactables/joystick-interaction.gif)
+<!-- IMAGE TODO: Images/Constrained_Interactables/joystick-interaction.gif | Joystick interaction — tilt on two axes -->
 
 *Joystick interaction animation: tilting on two axes.*
 
@@ -347,7 +349,7 @@ public class AircraftControls : MonoBehaviour
 
 ---
 
-# Wheel Interactable {#wheel}
+# Wheel Interactable
 
 > **Menu Path:** Component > Shababeek > Interactions > Interactables > Wheel Interactable
 > **Create Menu:** Right-click in Hierarchy > Shababeek > Create > Wheel
@@ -357,7 +359,7 @@ public class AircraftControls : MonoBehaviour
 
 The Wheel rotates continuously around a single axis. Unlike Lever which has angle limits, Wheel can spin indefinitely, tracking total rotation.
 
-![Wheel interaction — continuous rotation](../Images/Constrained_Interactables/wheel-interaction.gif)
+<!-- IMAGE TODO: Images/Constrained_Interactables/wheel-interaction.gif | Wheel interaction — continuous rotation -->
 
 *Wheel interaction animation: rotating continuously.*
 
@@ -437,7 +439,7 @@ public class ValveController : MonoBehaviour
 
 ---
 
-# Dial Interactable {#dial}
+# Dial Interactable
 
 > **Menu Path:** Component > Shababeek > Interactions > Interactables > Dial
 > **Use For:** Discrete step rotation (combination locks, rotary selectors)
@@ -446,7 +448,7 @@ public class ValveController : MonoBehaviour
 
 The Dial rotates between discrete positions (steps), snapping to the nearest step when released. Unlike Wheel which outputs continuous rotation, Dial outputs an integer step index.
 
-![Dial interaction — stepping and snapping](../Images/Constrained_Interactables/dial-interaction.gif)
+<!-- IMAGE TODO: Images/Constrained_Interactables/dial-interaction.gif | Dial interaction — stepping and snapping -->
 
 *Dial interaction animation: rotating and snapping to discrete positions.*
 
@@ -671,11 +673,14 @@ For stepped controls, add script logic to snap to discrete positions (using OnCh
 
 - [PoseConstrainer](../PoseSystem/PoseConstrainer.md) — Hand positioning setup
 - [Grabable](Grabable.md) — Free-movement grabbing
+- [Toggle Switch](ToggleSwitch.md) — Grabbable multi-position switch
+- [Additional Interactables](AdditionalInteractables.md) — Door, Elastic Tether, step displays
+- [Interaction Drivers](../ScriptableSystem/Drivers.md) — Write lever, dial, slider and other values to variables
 - [Switch](Switch.md) — Trigger-based toggles
 - [Feedback System](../Systems/FeedbackSystem.md) — Add feedback effects
 - [Quick Start Guide](../GettingStarted/QuickStart.md) — Basic setup tutorials
 
 ---
 
-**Last Updated:** January 2026
+**Last Updated:** November 2026
 **Component Version:** 1.0.0

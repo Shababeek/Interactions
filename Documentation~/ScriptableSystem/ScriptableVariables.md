@@ -48,7 +48,7 @@ The **Scriptable Variables System** provides reactive, asset-based data containe
 > **Goal:** Create a health system that updates UI automatically
 > **Time:** ~5 minutes
 
-![Scriptable variable — health driving UI](../Images/Scriptable_System/scriptable-variable-health-ui.gif)
+<!-- IMAGE TODO: Images/Scriptable_System/scriptable-variable-health-ui.gif | Scriptable variable — health driving UI -->
 
 *Creating a health variable and connecting it to UI for automatic updates.*
 

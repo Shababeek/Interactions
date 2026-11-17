@@ -6,7 +6,7 @@ This manual explains how to use the Shababeek Animations system from the perspec
 
 1. [System Overview](#system-overview)
 2. [Core Components](#core-components)
-3. [Hand Data System](#hand-data-system)
+3. [Hand Data](#handdata)
 4. [Pose System](#pose-system)
 5. [Constraint System](#constraint-system)
 6. [Playable Mixers](#playable-mixers)

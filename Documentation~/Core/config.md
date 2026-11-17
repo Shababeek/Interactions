@@ -104,7 +104,7 @@ Layers prevent unwanted collisions (like hands colliding with themselves), this 
  -  LeftHand cannot collide with LeftHand
  -  RightHand cannot collide with RightHand
 
-![Physics Layer Collision Matrix](../Images/Core/PhysicsLayerMatrix.png)
+<!-- IMAGE TODO: Images/Core/PhysicsLayerMatrix.png | Physics Layer Collision Matrix -->
 
 *Physics Layer Matrix: hands, interactables, and player layers configured for VR.*
 
@@ -114,100 +114,46 @@ Layers prevent unwanted collisions (like hands colliding with themselves), this 
 
 ### Input Manager Settings
 
-Choose between Unity's new Input System (recommended) or legacy Input Manager.
-
 #### Input Type
 
 | Property | Value |
 |----------|-------|
 | **Type** | Enum |
-| **Options** | InputSystem, InputManager |
-| **Default** | InputSystem |
-| **Recommendation** | Use InputSystem for new projects |
+| **Options** | Controller Tracking, Hand Tracking, Both |
+| **Default** | Controller Tracking |
 
-**InputSystem (Modern - Recommended):**
-- More flexible and powerful
-- Better VR controller support
-- Easier to customize
-- Required by most modern XR plugins
+- **Controller Tracking** reads VR controllers through the Input System actions below.
+- **Hand Tracking** reads tracked hands through Unity's XR Hands package.
+- **Both** uses whichever is active.
 
-**InputManager (Legacy):**
-- Unity's old input system
-- Uses axis names and buttons
-- Good for older projects or specific requirements
+Hand Tracking and Both are only offered when the XR Hands package is installed. See [Input providers and locomotion](InputAndLocomotion.md).
 
-#### Left/Right Hand Actions (Input System Mode)
+#### Left / Right Hand Actions
 
 | Property | Value |
 |----------|-------|
 | **Field** | Left Hand Actions / Right Hand Actions |
-| **Type** | HandInputActions struct |
-| **Visible** | Only when Input Type = InputSystem |
-
-These reference InputAction assets from Unity's Input System.
-
-**Structure:**
+| **Type** | A set of Input Action references |
 
 | Action | Description |
 |--------|-------------|
-| **Thumb** | Thumb button (usually A/X button) |
-| **Index** | Index finger trigger |
-| **Middle** | Middle finger curl |
-| **Ring** | Ring finger curl |
-| **Pinky** | Pinky finger curl |
-| **Grip** | Grip button (side button) |
-| **Trigger** | Trigger button |
-| **Primary** | Primary button (A/X) |
-| **Secondary** | Secondary button (B/Y) |
+| **Thumb** | Thumb curl value |
+| **Index** | Index finger (trigger) value |
+| **Middle** | Middle finger (grip) value |
+| **Ring** | Ring finger curl value |
+| **Pinky** | Pinky curl value |
+| **A Button** | Primary face button (A / X) |
+| **B Button** | Secondary face button (B / Y) |
+| **Thumbstick** | Thumbstick axis |
 
 **Setup:**
 1. Create an Input Actions asset: **Create > Input Actions**
-2. Define actions for each hand (grip, trigger, fingers, etc.)
-3. Assign the actions to these fields
+2. Define the actions for each hand
+3. Assign them to these fields
 
-**Quick Setup:**
-The Setup Wizard can create default input actions automatically.
+The Setup Wizard can create and assign default input actions for you.
 
----
-
-### Old Input Manager Settings (Legacy Mode)
-
-| Property | Value |
-|----------|-------|
-| **Field** | Old Input Settings |
-| **Type** | OldInputManagerSettings struct |
-| **Visible** | Only when Input Type = InputManager |
-
-Contains axis and button names for Unity's legacy input system.
-
-**Settings:**
-
-| Hand | Setting | Example | Description |
-|------|---------|---------|-------------|
-| **Left** | leftTriggerAxis | "Shababeek_Left_Trigger" | Axis name for trigger |
-| **Left** | leftGripAxis | "Shababeek_Left_Grip" | Axis name for grip button |
-| **Left** | leftPrimaryButton | "Shababeek_Left_PrimaryButton" | Button name for primary button |
-| **Left** | leftSecondaryButton | "Shababeek_Left_SecondaryButton" | Button name for secondary button |
-| **Left** | Debug keys | "z", "x", "c" | Keyboard testing keys |
-| **Right** | rightTriggerAxis | "Shababeek_Right_Trigger" | Axis name for trigger |
-| **Right** | rightGripAxis | "Shababeek_Right_Grip" | Axis name for grip button |
-| **Right** | rightPrimaryButton | "Shababeek_Right_PrimaryButton" | Button name for primary button |
-| **Right** | rightSecondaryButton | "Shababeek_Right_SecondaryButton" | Button name for secondary button |
-| **Right** | Debug keys | "m", "n", "b" | Keyboard testing keys |
-
-**Default Values:**
-The system provides default axis names following the "Shababeek_" prefix convention.
-
-**Setup:**
-1. Go to **Edit > Project Settings > Input Manager**
-2. Create axes with names matching the fields above
-3. Or use the "Create Input Axes" button in Config inspector (if available)
-
-**Debug Keys:**
-These allow testing without VR hardware:
-- Set keyboard keys (e.g., "z" for left grip)
-- Press keys in Play Mode to simulate controller buttons
-- Useful for development and testing
+> Config assets created before the A / B button and thumbstick references existed leave those three empty. Assign them to use A / B button events and locomotion.
 
 ---
 
@@ -282,8 +228,6 @@ Control how hands interact with physics objects.
 | **Default** | 1.0 |
 | **Range** | 0 - 10 |
 | **Purpose** | How quickly hand rotation slows down |
-Purpose: How quickly hand rotation slows down
-```
 
 **Think of it as:** Air resistance for hand rotation.
 
@@ -298,81 +242,24 @@ Purpose: How quickly hand rotation slows down
 
 ---
 
-### Hand Following Settings
+### Hand Following
 
-#### Follower Preset
-
-| Property | Value |
-|----------|-------|
-| **Type** | Enum |
-| **Options** | Gentle, Standard, Responsive, Aggressive, Custom |
-| **Default** | Standard |
-| **Purpose** | Controls how hands follow controller movement |
-
-**Presets Explained:**
-
-| Preset | Feel | Use Case |
-|--------|------|----------|
-| **Gentle** | Smooth, floaty | Casual experiences, comfort-focused |
-| **Standard** | Balanced | General VR interactions (recommended) |
-| **Responsive** | Snappy, direct | Action games, precise interactions |
-| **Aggressive** | Very tight tracking | Competitive games, minimal latency |
-| **Custom** | Your settings | Fine-tuned control |
-
-**What it affects:**
-- Position smoothing (how quickly hands move to controller position)
-- Rotation smoothing (how quickly hands rotate to controller rotation)
-- Max distance/angle (limits on how far hands can be from controllers)
-
-**Adjust if:**
-- [OK] Hands lag behind controllers  Use Responsive or Aggressive
-- [OK] Hands feel jittery  Use Gentle or Standard
-- [OK] Need precise control for specific game  Use Custom
-
-#### Custom Follower Settings
-
-| Property | Value |
-|----------|-------|
-| **Type** | PhysicsFollowerSettings |
-| **Visible** | Only when Follower Preset = Custom |
-| **Purpose** | Fine-tune hand following behavior |
-
-**Available Settings:**
-- Position smoothing factors
-- Rotation smoothing factors
-- Maximum follow distance
-- Maximum rotation angle
-- Force multipliers
-
-See [Physics Hand Follower documentation] for detailed settings explanation.
+How tightly a physics hand follows the controller is set on the hand's **Physics Hand Follower** component, not on the Config asset. See the [Interaction Core manual](InteractionCoreUserManual.md#physics-hand-follower).
 
 ---
 
-### System References (Read-Only)
+### Hand Input Providers (Optional Override)
 
-These fields are managed automatically - you don't need to set them.
+| Field | What it does |
+|-------|--------------|
+| **Left Hand Input Provider** | Optional component to use as the left hand's input. Leave empty to have one created at runtime from Input Type. |
+| **Right Hand Input Provider** | The same for the right hand. |
 
-#### Game Manager
+Leave both empty unless you have written your own provider. See [Input providers and locomotion](InputAndLocomotion.md).
 
-| Property | Value |
-|----------|-------|
-| **Type** | GameObject |
-| **Purpose** | GameObject that hosts the input manager |
-| **Auto-created** | Yes, when needed |
+### Hand Data Variable (Optional)
 
-This is automatically created in your scene when the Config is initialized. Don't delete it!
-
-#### Input Manager
-
-| Property | Value |
-|----------|-------|
-| **Type** | InputManagerBase |
-| **Purpose** | Component that reads controller input |
-| **Auto-created** | Yes, based on Input Type |
-
-Automatically created based on your Input Type selection:
-- `InputSystem`  Creates `NewInputSystemBasedInputManager`
-- `InputManager`  Creates `AxisBasedInputManager`
+An optional shared variable that holds the hand set chosen at runtime. Any script may set it and every rig using this Config follows, which is how a hand-selection menu swaps hand models. Leave empty to have one created at runtime.
 
 ---
 
@@ -413,8 +300,8 @@ Automatically created based on your Input Type selection:
     - Set up Layer Collision Matrix
 
 5. **Configure Input:**
-    - Choose Input Type
-    - Set up Input Actions (Input System) or Axis names (Input Manager)
+    - Choose Input Type (Controller Tracking, Hand Tracking or Both)
+    - Assign the Input Actions for each hand
 
 6. **Assign to CameraRig:**
     - Add CameraRig component to your XR Origin
@@ -426,11 +313,10 @@ Automatically created based on your Input Type selection:
 
 #### Pattern 1: Standard VR Setup (Most Common)
 ```
-Input Type: InputSystem
+Input Type: Controller Tracking
 Hand Mass: 30
 Linear Damping: 5
 Angular Damping: 1
-Follower Preset: Standard
 
 Layers:
 - LeftHand: Layer 8
@@ -443,11 +329,10 @@ Layers:
 
 #### Pattern 2: Comfort-Focused Experience
 ```
-Input Type: InputSystem
+Input Type: Controller Tracking
 Hand Mass: 20
 Linear Damping: 8
 Angular Damping: 2
-Follower Preset: Gentle
 
 Same layer setup as Pattern 1
 ```
@@ -456,30 +341,15 @@ Same layer setup as Pattern 1
 
 #### Pattern 3: Action/Competitive Game
 ```
-Input Type: InputSystem
+Input Type: Controller Tracking
 Hand Mass: 40
 Linear Damping: 3
 Angular Damping: 0.5
-Follower Preset: Responsive
 
 Same layer setup as Pattern 1
 ```
 
 **Use for:** Action games, competitive VR, rhythm games
-
-#### Pattern 4: Legacy Project
-```
-Input Type: InputManager
-Hand Mass: 30
-Linear Damping: 5
-Angular Damping: 1
-Follower Preset: Standard
-
-Same layer setup as Pattern 1
-+ Configure Old Input Settings with axis names
-```
-
-**Use for:** Updating older projects, specific input requirements
 
 ---
 
@@ -535,25 +405,17 @@ Red box: "Critical configuration missing"
 **Symptoms:** Hands visible but don't move/respond to buttons  
 **Solutions:**
 
-**If using Input System:**
-- Check Input Actions are assigned in Config
-- Verify Input System package is installed
-- Check that Input Actions are enabled
-- Ensure controller is connected and detected
-
-**If using Input Manager:**
-- Check Old Input Settings are configured
-- Go to Edit > Project Settings > Input Manager
-- Verify axis names match Config settings
-- Try debug keys to test without VR hardware
+- Check Input Actions are assigned in Config for both hands
+- Verify the Input System package is installed
+- Ensure the controller is connected and detected
+- For hand tracking, check that Input Type is Hand Tracking or Both and the XR Hands package is installed
 
 #### Issue: "Hands feel wrong (too slow/fast/jittery)"
 **Symptoms:** Hand movement doesn't feel natural  
 **Solutions:**
 - Adjust Hand Mass (higher = more stable)
 - Adjust Linear Damping (higher = less movement)
-- Change Follower Preset (Gentle/Standard/Responsive)
-- Use Custom preset for fine control
+- Tune the Physics Hand Follower component on the hand (see the [Interaction Core manual](InteractionCoreUserManual.md#physics-hand-follower))
 
 #### Issue: "Hands collide with player body"
 **Symptoms:** Hands stop when near body  
@@ -607,35 +469,29 @@ int interactableLayer = config.InteractableLayer;
 int playerLayer = config.PlayerLayer;
 
 // Input
-InputManagerType inputType = config.InputType;
-InputManagerBase inputManager = config.InputManager;
+Config.TrackingType inputType = config.InputType;
 
 // Physics
 float handMass = config.HandMass;
 float linearDamping = config.HandLinearDamping;
 float angularDamping = config.HandAngularDamping;
-
-// Follower settings
-PhysicsFollowerSettings followerSettings = config.FollowerSettings;
 ```
 
-### Input System Access
+### Reading Hand Input
 
 ```csharp
-// Get input manager
-var inputManager = config.InputManager;
+// The input provider for a hand
+IHandInputProvider left = config[HandIdentifier.Left];   // or config.LeftHandProvider
 
-// Access hand input
-var leftHand = inputManager.GetHandInputManager(HandIdentifier.Left);
-var rightHand = inputManager.GetHandInputManager(HandIdentifier.Right);
+// Finger curl values (0 = extended, 1 = curled)
+float index = left[FingerName.Index];
 
-// Read button states
-bool leftGripPressed = leftHand.Grip;
-bool rightTriggerPressed = rightHand.Trigger;
+// Thumbstick
+Vector2 stick = left.Thumbstick;
 
-// Read finger curl values
-float leftIndex = leftHand.Index;
-float rightThumb = rightHand.Thumb;
+// Button presses (UniRx observables)
+left.GripObservable.Subscribe(state => Debug.Log(state));
+left.TriggerObservable.Subscribe(state => Debug.Log(state));
 ```
 
 ### Layer Utilities
@@ -654,22 +510,23 @@ bool canCollide = Physics.GetIgnoreLayerCollision(
 );
 ```
 
-### Runtime Modification (Advanced)
-
-**Note:** Changing Config at runtime is NOT recommended. Config is meant for design-time setup. However, if needed:
+### Changing Hands at Runtime
 
 ```csharp
-// Change physics settings (affects new hands created after this)
-// This won't affect already-created hands
-config.HandMass = 50f;
-config.LinearDamping = 10f;
+// Swap the hand set (for example from a hand-selection menu)
+if (config.IsCompatible(newHandData, out string reason))
+    config.SetHandData(newHandData);
+else
+    Debug.LogWarning(reason);
 
-// Switch input type (requires scene reload)
-config.InputType = Config.InputManagerType.InputManager;
-// Must reinitialize the input system after this
+// Go back to the hand set assigned on the asset
+config.ResetHandData();
+
+// React to changes
+config.HandDataChanged.Subscribe(data => Debug.Log(data.name));
 ```
 
-**Better approach:** Create multiple Config assets for different scenarios and swap them in CameraRig.
+The other settings on the Config asset are design-time values and have no setters.
 
 ---
 
@@ -680,7 +537,7 @@ config.InputType = Config.InputManagerType.InputManager;
 You can create multiple Config assets for different scenarios:
 
 **Example Use Cases:**
-- **Development Config** - Debug keys enabled, lower physics quality
+- **Development Config** - Lower physics quality for fast iteration
 - **Production Config** - VR input only, higher physics quality
 - **Testing Config** - Specific input setup for automated testing
 
@@ -691,28 +548,15 @@ You can create multiple Config assets for different scenarios:
 
 **Caution:** Only one Config should be active per scene.
 
-### Custom Input Manager
+### Custom Input Provider
 
-You can create your own input manager:
+To drive a hand from your own source, write a component that implements `IHandInputProvider` and either assign it to the provider override on the Config asset or install it from script:
 
 ```csharp
-using Shababeek.Interactions.Core;
-
-public class CustomInputManager : InputManagerBase
-{
-    public override void Initialize(Config config)
-    {
-        // Your custom initialization
-    }
-    
-    protected override void CreateInputManager(HandIdentifier handId)
-    {
-        // Create custom hand input manager
-    }
-}
+config.SetHandProvider(HandIdentifier.Left, myProvider);
 ```
 
-Then modify Config to use your custom manager.
+`PlaybackHandInputProvider` (used by [Interaction Recording](../Systems/InteractionRecording.md)) is a compact example.
 
 ### Config as a Prefab
 
@@ -784,22 +628,19 @@ A: Hand physics settings apply to both hands. For different input per hand, conf
 **Q: What if I want to change settings during gameplay- **  
 A: Config is designed for design-time setup. For runtime changes, expose specific settings as parameters on your components rather than modifying Config directly.
 
-**Q: Should I use Input System or Input Manager- **  
-A: Use **Input System** for new projects. It's more flexible, better supported, and required by modern XR plugins.
-
 **Q: Can I copy Config between projects- **  
 A: Yes, but you'll need to reassign HandData and recreate Input Actions for the new project.
 
 **Q: What happens if I don't assign layers- **  
 A: The system will still work, but you'll have collision issues (hands colliding with themselves, etc.). Always configure layers!
 
-**Q: How do I test without VR hardware- **  
-A: Use Input Manager mode and set debug keys in Old Input Settings. Press those keys to simulate controller buttons.
+**Q: How do I test without VR hardware?**  
+A: Record a session once with the headset, then replay it with the [Interaction Recording Player](../Systems/InteractionRecording.md).
 
 **Q: Can I have multiple Config assets- **  
 A: Yes, but only one should be active per scene. Useful for dev/production configs or different game modes.
 
 ---
 
-**Last Updated:** October 2025  
+**Last Updated:** November 2026  
 **Component Version:** Shababeek Interactions 1.0+

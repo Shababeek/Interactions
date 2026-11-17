@@ -12,8 +12,8 @@
 The **Toggle Switch** is a grabbable switch that rotates around a single axis like a lever but
 settles into **discrete step positions**. While held it moves freely; on release it snaps to the
 nearest step and fires a confirmation event. It is the rotary counterpart to the
-[Slider](Slider.md) — exactly as the [Drawer](Drawer.md) relates to the Slider, and the
-[Wheel](ConstrainedInteractables.md#wheel) relates to the [Dial](ConstrainedInteractables.md#dial).
+[Slider](ConstrainedInteractables.md#slider-interactable) — exactly as the [Drawer](ConstrainedInteractables.md#drawer-interactable) relates to the Slider, and the
+[Wheel](ConstrainedInteractables.md#wheel-interactable) relates to the [Dial](ConstrainedInteractables.md#dial-interactable).
 
 **Perfect for:**
 - Gear / mode selectors
@@ -23,7 +23,7 @@ nearest step and fires a confirmation event. It is the rotary counterpart to the
 
 **Don't use for:**
 - Simple on/off flip switches touched by a finger (use [Switch](Switch.md))
-- Continuous, position-free rotation (use [Lever](ConstrainedInteractables.md#lever))
+- Continuous, position-free rotation (use [Lever](ConstrainedInteractables.md#lever-interactable))
 
 ---
 
@@ -122,8 +122,8 @@ Add a **Toggle Switch Variable Writer** to write the current step into an `IntVa
 ## Related Documentation
 
 - [Switch](Switch.md) — Simple finger-touched on/off switch
-- [Slider](Slider.md) — Linear stepped control (the linear counterpart)
-- [Lever](ConstrainedInteractables.md#lever) — Continuous rotation control
+- [Slider](ConstrainedInteractables.md#slider-interactable) — Linear stepped control (the linear counterpart)
+- [Lever](ConstrainedInteractables.md#lever-interactable) — Continuous rotation control
 - [Feedback System](../Systems/FeedbackSystem.md) — Add haptic/audio feedback
 
 ---

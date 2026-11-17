@@ -39,7 +39,7 @@ The **Socket System** enables objects to snap into designated holders or positio
 
 > **Goal:** Create a flashlight holder
 
-![Socket — object snapping into holder](../Images/Socket_System/socket-snap.gif)
+<!-- IMAGE TODO: Images/Socket_System/socket-snap.gif | Socket — object snapping into holder -->
 
 *Object moves into a socket and snaps to the pivot.*
 
@@ -330,7 +330,7 @@ public class SocketPreview : MonoBehaviour
 }
 ```
 
-![Socket — ghost preview at snap position](../Images/Socket_System/socket-ghost-preview.png)
+<!-- IMAGE TODO: Images/Socket_System/socket-ghost-preview.png | Socket — ghost preview at snap position -->
 
 *Semi-transparent ghost outline preview where the object will snap.*
 
@@ -570,6 +570,7 @@ See [Interaction Drivers](../ScriptableSystem/Drivers.md) for interaction-side b
 
 ## Related Documentation
 
+- [Advanced Sockets](AdvancedSockets.md) — Socket categories, multi-slot sockets, grid inventories, fasteners
 - [Grabable](../Interactables/Grabable.md) — Making objects grabbable
 - [Feedback System](../Systems/FeedbackSystem.md) — Adding snap feedback
 - [Sequencing System](../Systems/SequencingSystem.md) — Validating socket sequences
@@ -578,5 +579,5 @@ See [Interaction Drivers](../ScriptableSystem/Drivers.md) for interaction-side b
 
 ---
 
-**Last Updated:** January 2026
+**Last Updated:** November 2026
 **Component Version:** 1.1.0

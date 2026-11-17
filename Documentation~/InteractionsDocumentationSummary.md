@@ -1,137 +1,69 @@
-# Shababeek Interactions System - Documentation Summary
+# Documentation Status
 
-This document summarizes the current state of documentation for the Interactions system and what has been completed.
+What is documented, where, and what is still missing. Updated November 2026 against the current source.
 
-## ✅ **Completed Files**
+Back to the [documentation index](README.md).
 
-### Core Interaction System
-- **InteractionState.cs** - ✅ Fully documented with XML comments for enum values
-- **InteractorUnityEvent.cs** - ✅ Fully documented with comprehensive XML comments
-- **InteractableBase.cs** - ✅ Fully documented with XML comments, tooltips, and headers
+---
 
-### Interactables
-- **Grabable.cs** - ✅ Fully documented with XML comments, tooltips, and headers (kinematic + parenting now inlined; throwing is a serialized sub-feature)
-- **Switch.cs** - ✅ Fully documented with XML comments, tooltips, and headers
-- **VRButton.cs** - ✅ Already had good documentation
-- **Throwable.cs** - ✅ Plain `[Serializable]` class owned by Grabable
+## Coverage by component
 
-### Interactors
-- **InteractorBase.cs** - ✅ Fully documented with XML comments, tooltips, and headers
-- **Gesture.cs** - ✅ Fully documented with XML comments for enum values
-- **GestureVariable.cs** - ✅ Already had good documentation
-- **GestureSetter.cs** - ✅ Fully documented with XML comments, tooltips, and headers
-- **TriggerInteractor.cs** - ✅ Fully documented with XML comments, tooltips, and headers
-- **RaycastInteractor.cs** - ✅ Fully documented with XML comments, tooltips, and headers
+| Area | Components | Manual | State |
+|---|---|---|---|
+| Grab | Grabable, Throwable settings | [Grabable](Interactables/Grabable.md) | Complete |
+| Grab | TwoHandedGrabable | [Two Handed Grabable](Interactables/TwoHandedGrabable.md) | New, no images |
+| Grab | DistanceGrabber, DistanceGrabbable | [Distance Grab](Interactables/DistanceGrab.md) | New, no images |
+| Weapons | GunFiring, Bullet, BladeHit, Target, PistolInteractable | [Weapons](Interactables/Weapons.md) | New, no images |
+| Touch | VRButton | [VRButton](Interactables/VRButton.md) | Complete |
+| Touch | VRToggleButton | [Additional Interactables](Interactables/AdditionalInteractables.md#vr-toggle-button) | New, reference only |
+| Touch | Switch | [Switch](Interactables/Switch.md) | Complete |
+| Constrained | Lever, Drawer, Joystick, Wheel, Dial | [Constrained Interactables](Interactables/ConstrainedInteractables.md) | Complete |
+| Constrained | Slider | [Constrained Interactables](Interactables/ConstrainedInteractables.md#slider-interactable) | Short; needs a full Inspector reference |
+| Constrained | ToggleSwitchInteractable | [Toggle Switch](Interactables/ToggleSwitch.md) | Complete |
+| Constrained | DoorInteractable, DoorHandleInteractable, ElasticTetherInteractable | [Additional Interactables](Interactables/AdditionalInteractables.md) | New, reference only |
+| Helpers | SpawningInteractable, ReturnToOrigin, StepValueDisplay, StepLabelHighlighter | [Additional Interactables](Interactables/AdditionalInteractables.md) | New, reference only |
+| Hands | Hand, TriggerInteractor, RaycastInteractor | [Interactors](Interactors/Interactors.md) | Complete |
+| Hands | Config | [Config asset](Core/config.md) | Input sections rewritten November 2026 |
+| Hands | CameraRig, PhysicsHandFollower | [Interaction Core](Core/InteractionCoreUserManual.md) | Needs review: still presents the legacy input manager |
+| Hands | Input providers, CameraRigLocomotion | [Input providers and locomotion](Core/InputAndLocomotion.md) | New |
+| Poses | PoseConstrainer | [PoseConstrainer](PoseSystem/PoseConstrainer.md) | Complete; Auto-Fit Fingers button and grab points not yet covered |
+| Poses | HandData, HandPoseController | [Animations and poses](PoseSystem/AnimationsUserManual.md) | Older page, needs review |
+| Feedback | FeedbackSystem | [Feedback System](Systems/FeedbackSystem.md) | Complete; haptic section updated for patterns |
+| Feedback | HapticPattern | [Haptics](Systems/Haptics.md) | New |
+| Feedback | InteractableOutlineFeedback, OutlineFeedbackConfig, DemoOutlineFeedback | [Outline Highlight](Systems/OutlineHighlight.md) | New, no images |
+| Sockets | Socket, Socketable | [Socket System](SocketSystem/SocketSystem.md) | Complete |
+| Sockets | SocketMask, MultiSocket, GridMultiSocket, TransformArrayMultiSocket, ShiftingRackSocket, InventoryGridSocket and helpers, Fastener, FastenerTool | [Advanced Sockets](SocketSystem/AdvancedSockets.md) | New, reference only |
+| Tools | InteractionRecorder, InteractionRecordingPlayer | [Interaction Recording](Systems/InteractionRecording.md) | New |
+| Data flow | Variable writers, event and socket drivers | [Interaction Drivers](ScriptableSystem/Drivers.md) | Complete; Slider, Toggle Switch and Switch writers added |
+| Data flow | Sequence actions | [Interaction Sequences](Systems/SequencingSystem.md) | Complete |
 
-### User Manuals
-- **InteractionsUserManual.md** - ✅ Comprehensive user manual created with:
-  - System overview and architecture
-  - Detailed component documentation
-  - Inspector settings explanations
-  - Usage examples and best practices
-  - Troubleshooting guide
-  - Screenshot placeholders for editor tools
+---
 
-## 🔄 **Files That May Need Additional Documentation**
+## Not documented yet
 
-### Interactables (Need Review)
-- **SpawningInteractable.cs** - Needs review for XML comments and tooltips
-- **TurretInteractable.cs** - Needs review for XML comments and tooltips
-- **WheelInteractable.cs** - Needs review for XML comments and tooltips
-- **LeverInteractable.cs** - Needs review for XML comments and tooltips
-- **JoystickInteractable.cs** - Needs review for XML comments and tooltips
-- **DrawerInteractable.cs** - Needs review for XML comments and tooltips
-- **DebugInteractable.cs** - Needs review for XML comments and tooltips
-- **ConstrainedInteractableBase.cs** - Needs review for XML comments and tooltips
+| Component | Note |
+|---|---|
+| HandFingerRig and Auto-Fit Fingers To Surface | Described only in the [design notes](ProceduralGrabPosing-Design.md). Needs a section in the PoseConstrainer manual. |
+| InteractionZoneVisualizer | No manual. |
+| EyelidEffect | No manual. |
+| KinematicHandFollower | One line in the source; mention in the Interaction Core manual. |
+| GestureSetter, GestureVariable | Older gesture components; decide whether they stay before documenting. |
+| SFXFeedback, MaterialHighlighter, HapticDriver, Animinteractable | Older standalone feedback components, superseded by the Feedback System. |
 
-### Editor Scripts (Need Review)
-- **SwitchEditor.cs** - Needs review for XML comments
-- **JoystickInteractableEditor.cs** - Needs review for XML comments
-- **GrabableEditor.cs** - Needs review for XML comments
-- **LeverInteractableEditor.cs** - Needs review for XML comments
-- **DrawerInteractableEditor.cs** - Needs review for XML comments
-- **InteractableBaseEditor.cs** - Needs review for XML comments
-- **ThrowableEditor.cs** - Needs review for XML comments
-- **WheelInteractableEditor.cs** - Needs review for XML comments
+---
 
-### Subdirectories (Need Review)
-- **Feedback/** - Contains feedback-related interactables
-- **Sockets/** - Contains socket-based interaction components
+## Known gaps in existing pages
 
-## 📋 **Documentation Standards Applied**
+- **Images.** 28 screenshots and GIFs are referenced but not captured; see [ImagesTodo.md](ImagesTodo.md). The haptic feedback screenshot in the Feedback System manual predates pattern slots and should be retaken.
+- **Interaction Core manual** describes the legacy input manager and keyboard debug keys as current options.
+- **ScriptableSystem pages** duplicate material from the ReactiveVars package and can drift from it.
+- **Hierarchy menus** cover only the original interactables, so manuals for newer components can only say "Add Component".
 
-### XML Comments
-- ✅ All public members have comprehensive XML comments
-- ✅ All public methods include `<param>` and `<returns>` tags where applicable
-- ✅ All public properties include `<value>` tags
-- ✅ Classes include `<remarks>` sections for additional context
-- ✅ Enums have individual value documentation
+---
 
-### Tooltips
-- ✅ All serialized fields have descriptive tooltips
-- ✅ Tooltips explain the purpose and usage of each field
-- ✅ Tooltips include units where applicable (degrees, world units, etc.)
+## Conventions
 
-### Inspector Organization
-- ✅ Headers used to group related fields logically
-- ✅ Fields organized in logical order (configuration, events, runtime state)
-- ✅ ReadOnly attributes applied to runtime-only fields
-- ✅ Consistent naming conventions
-
-### Code Quality Improvements
-- ✅ Fixed CreateAssetMenu → AddComponentMenu where appropriate
-- ✅ Added missing AddComponentMenu attributes
-- ✅ Improved error handling and null checks
-- ✅ Enhanced method documentation with usage examples
-
-## 🎯 **Next Steps**
-
-### Priority 1: Complete Core Interactables
-1. Review and document remaining interactable base classes
-2. Ensure all public members have XML comments
-3. Add tooltips to all serialized fields
-4. Apply consistent header organization
-
-### Priority 2: Editor Scripts
-1. Review all custom editor scripts
-2. Add XML comments to public methods
-3. Ensure proper error handling
-4. Add validation and user feedback
-
-### Priority 3: Subdirectories
-1. Review Feedback/ directory components
-2. Review Sockets/ directory components
-3. Apply consistent documentation standards
-4. Update user manual with new components
-
-### Priority 4: Final Review
-1. Verify all public members are documented
-2. Check tooltip consistency and clarity
-3. Validate user manual completeness
-4. Test inspector organization and usability
-
-## 📚 **Documentation Quality Metrics**
-
-- **XML Comments Coverage**: ~95% complete
-- **Tooltip Coverage**: ~90% complete
-- **Header Organization**: ~85% complete
-- **User Manual Completeness**: ~80% complete
-- **Code Quality Improvements**: ~70% complete
-
-## 🏆 **Achievements**
-
-1. **Comprehensive Core Documentation**: All fundamental interaction system components are fully documented
-2. **User Manual**: Created extensive user manual covering all major components
-3. **Consistent Standards**: Applied uniform documentation standards across the codebase
-4. **Inspector Organization**: Improved inspector usability with headers and logical grouping
-5. **Code Quality**: Fixed several code issues and improved error handling
-
-## 📝 **Notes**
-
-- The system follows Unity best practices for component organization
-- All components include proper AddComponentMenu attributes for easy discovery
-- Runtime state fields are properly marked as ReadOnly
-- Events and callbacks are well-documented with usage examples
-- Performance considerations are documented where relevant
-
-This documentation effort significantly improves the developer experience and makes the Interactions system much more accessible to Unity developers working in the Inspector.
+- Unity Manual style: what it does, setup, Inspector reference, workflows, troubleshooting, then a short scripting section.
+- Inspector field names are written as they appear in the Inspector, in bold.
+- Relative links only; anchors are the heading text in lower case with spaces as hyphens.
+- Run `node Documentation~/validate-links.mjs` from the package root before publishing.

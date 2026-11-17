@@ -116,7 +116,7 @@ and raise `GameEvent`s on turn-on / turn-off, without writing any glue code.
 
 - [Toggle Switch](ToggleSwitch.md) — Grabbable multi-position rotary switch
 - [VRButton](VRButton.md) — Press-style buttons
-- [Lever](ConstrainedInteractables.md#lever) — Continuous rotation control
+- [Lever](ConstrainedInteractables.md#lever-interactable) — Continuous rotation control
 - [Feedback System](../Systems/FeedbackSystem.md) — Add haptic/audio feedback
 
 ---

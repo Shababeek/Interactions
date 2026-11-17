@@ -27,7 +27,7 @@ Perfect for creating tools, weapons, toys, or any object your player needs to pi
 
 > **Goal:** Make a cube you can pick up and throw
 
-![Grabable — grab, move, and throw](../Images/Grabable/grabable-select-throw.gif)
+<!-- IMAGE TODO: Images/Grabable/grabable-select-throw.gif | Grabable — grab, move, and throw -->
 
 *Selecting a grabbable object, moving it, and throwing.*
 
@@ -63,7 +63,7 @@ This example shows a basic grabbable Object. The player can pick it up, move it 
 ### Step 3: Automatic Setup
 When you add Grabable, Unity automatically:
 - ✅ Adds a **PoseConstrainer** component (for hand positioning)
-- ✅ Detects if you have a Rigidbody and chooses the right grab strategy
+- ✅ Detects whether the object has a Rigidbody and handles its physics while held
 - ✅ Sets default interaction settings
 
 Your object is now grabbable with default settings! Press Play and try grabbing it with your VR controller's grip button.
@@ -200,7 +200,7 @@ Throwing is built into Grabable. The fields below appear under the **Throwing** 
 - **What it does:** UnityEvent invoked on release with the final throw velocity
 - **Common uses:** Play a whoosh sound, spawn a trail VFX, log throw analytics
 
-> 💡 **Tip:** Kinematic-by-design Rigidbodies are preserved. The grab strategy caches the prior `isKinematic` state on grab and restores it on release; if your body is kinematic by design, the throw is skipped rather than forcing it physical.
+> 💡 **Tip:** With **Can Be Thrown** on, a released object always becomes a normal physics body, even if its Rigidbody started out kinematic. That lets you mark an object kinematic so it stays put until it is first picked up. With **Can Be Thrown** off, the Rigidbody goes back to the kinematic setting it had before the grab.
 
 ---
 
@@ -217,7 +217,7 @@ These fields show the object's state while in Play mode. You can't edit them.
 - **Useful for:** Debugging multi-hand scenarios
 
 ##### c. Current State
-- **Shows:** None, Hovering, Selected, or Activating
+- **Shows:** None, Hovering or Selected
 - **Useful for:** Understanding the interaction flow
 
 
@@ -227,9 +227,9 @@ These fields show the object's state while in Play mode. You can't edit them.
 
 1. **On grab:** `Grabable.Select()` calls `throwable.StartTracking(rigidbody, transform)` and the sample buffer is reset.
 2. **Each FixedUpdate while held:** `Grabable.FixedUpdate()` records linear `(currentPos − lastPos) / dt` and angular velocity into a circular buffer.
-3. **On release:** `Grabable.DeSelected()` first calls the grab strategy's `UnGrab` (which restores the rigidbody's prior `isKinematic` state), then calls `throwable.ApplyThrow()`. The averaged velocity is multiplied by `throwMultiplier` and applied via `Rigidbody.linearVelocity`; angular velocity is applied via `Rigidbody.angularVelocity` if enabled. `OnThrowEnd` fires with the applied velocity.
+3. **On release:** `Grabable.DeSelected()` first detaches the object and makes its Rigidbody non-kinematic, then calls `throwable.ApplyThrow()`. The averaged velocity is multiplied by `throwMultiplier` and applied via `Rigidbody.linearVelocity`; angular velocity is applied via `Rigidbody.angularVelocity` if enabled. `OnThrowEnd` fires with the applied velocity.
 
-This ordering matters: `UnGrab` must restore the kinematic state **before** the throw, otherwise the velocity setter is a no-op on a still-kinematic body.
+This ordering matters: the body must be non-kinematic **before** the throw, otherwise the velocity setter is a no-op.
 
 ---
 
@@ -258,7 +258,7 @@ This ordering matters: `UnGrab` must restore the kinematic state **before** the 
 ![ThrowableComponent.png](../Images/ThrowableComponent.png)
 #### ✅ Result
 
-![Grabable — Play Mode pickup](../Images/Grabable/grabable-playmode.gif)
+<!-- IMAGE TODO: Images/Grabable/grabable-playmode.gif | Grabable — Play Mode pickup -->
 
 *Play Mode: reaching and grabbing with the configured selection button.*
 
@@ -291,7 +291,7 @@ Press Play! Put on your VR headset, reach for the cube, and press the **Grip** b
 
 
 #### ✅ Result
-![Grabable — grab/release wired to Audio Source](../Images/Grabable/grabable-audio-feedback.png)
+<!-- IMAGE TODO: Images/Grabable/grabable-audio-feedback.png | Grabable — grab/release wired to Audio Source -->
 
 *Inspector or Play Mode view: audio feedback on grab and release.*
 
@@ -344,7 +344,7 @@ Under the **Throwing** foldout on the Grabable:
 - **Velocity Sample Count:** 10 is a good default; lower for snappier throws
 
 #### ✅ Result
-![Grabable — thrown object with velocity](../Images/Grabable/grabable-throw-trail.gif)
+<!-- IMAGE TODO: Images/Grabable/grabable-throw-trail.gif | Grabable — thrown object with velocity -->
 
 *Throwing with tracked hand velocity applied on release.*
 
@@ -462,7 +462,7 @@ public class FlashlightToggle : MonoBehaviour
 
 
 #### ✅ Result
-![Grabable — use action toggling a flashlight](../Images/Grabable/grabable-flashlight-toggle.gif)
+<!-- IMAGE TODO: Images/Grabable/grabable-flashlight-toggle.gif | Grabable — use action toggling a flashlight -->
 
 *Held object: secondary button (use) toggling a light on/off.*
 
@@ -607,7 +607,7 @@ When you grab an object:
 5. On release: Re-enables physics, applies release velocity
 
 ### Compatibility
-- **Unity Version:** 2021.3 or newer (Unity 6 recommended)
+- **Unity Version:** 6000.3 or newer
 - **Dependencies:**
   - Unity Input System/ or Input Manager (see config.md)
   - PoseConstrainer (added automatically)
@@ -644,5 +644,5 @@ Found an issue with this documentation? Have a suggestion? *Submit feedback via 
 
 ---
 
-**Last Updated:** April 2026
+**Last Updated:** November 2026
 **Component Version:** 1.1.0 (throwing folded into Grabable)

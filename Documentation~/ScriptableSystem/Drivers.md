@@ -28,7 +28,16 @@ ReactiveVars Binder updates visuals/logic
 
 | Driver | Attach To | Purpose |
 |--------|-----------|---------|
+| `LeverVariableWriter` | `LeverInteractable` | Lever value to variables and events |
+| `WheelVariableWriter` | `WheelInteractable` | Wheel rotation to variables and events |
 | `DialVariableWriter` | `DialInteractable` | Push dial step/normalized output to variables and events |
+| `JoystickVariableWriter` | `JoystickInteractable` | Joystick axes to variables and events |
+| `DrawerVariableWriter` | `DrawerInteractable` | Drawer position and open state to variables and events |
+| `SliderVariableWriter` | `SliderInteractable` | Slider step to an IntVariable and per-step events |
+| `ToggleSwitchVariableWriter` | `ToggleSwitchInteractable` | Toggle switch step to an IntVariable and per-step events |
+| `SwitchVariableWriter` | `Switch` | Switch on/off state to a BoolVariable and events |
+| `InteractableToBoolDriver` | Any `InteractableBase` | Write hovered / selected / used state to BoolVariables |
+| Socket drivers | Sockets and Socketables | Write socket state to variables and events ([details](#socket-drivers)) |
 | `InteractableEventDriver` | Any `InteractableBase` | Convert interaction lifecycle into variables + events |
 | `InteractableToEventDriver` | Any `InteractableBase` | Forward interaction lifecycle to GameEvents only |
 
@@ -52,7 +61,7 @@ ReactiveVars Binder updates visuals/logic
 
 ## Driver vs Binder Naming
 
-- **Interaction System:** uses the term **Driver** for interaction-to-data bridges.
+- **Interaction System:** uses **Writer** for components that write an interactable's value to a variable (Component > Shababeek > Interactions > Writers), and **Driver** for the generic event and socket bridges.
 - **ReactiveVars:** still uses **Binder** for generic variable-to-component wiring.
 
 Both are valid, but they serve different layers.
@@ -65,12 +74,13 @@ Both are valid, but they serve different layers.
 - [Variable Container](VariableContainer.md) — Group variables
 - [Scriptable System Window](ScriptableSystemWindow.md) — Runtime inspection
 - [Socket System](../SocketSystem/SocketSystem.md) — Socket event sources
+- [Advanced Sockets](../SocketSystem/AdvancedSockets.md) — Multi-slot sockets and inventories
 - [Sequencing System](../Systems/SequencingSystem.md) — Interaction-driven sequences
 - [ReactiveVars](https://github.com/Shababeek/ReactiveVars) — Generic binders and core data-flow docs
 
 ---
 
-**Last Updated:** April 2026
+**Last Updated:** November 2026
 # Interaction Drivers — Connect Interactions to Reactive Variables
 
 > **Quick Reference**
@@ -189,6 +199,37 @@ Writes a DrawerInteractable's output to variables and events.
 | **Open Threshold** | Position considered "open" | 0.9 |
 
 **Use Case:** Detect when a drawer opens to trigger lighting or UI updates.
+
+---
+
+### Slider Variable Writer
+
+Writes a SliderInteractable's step to variables and events.
+
+| Setting | Description |
+|---------|-------------|
+| **Step Variable** | IntVariable that receives the current step index (0-based) |
+| **On Step Changed Event** | GameEvent raised when the step changes while held |
+| **On Step Confirmed Event** | GameEvent raised when a step is committed (snap complete) |
+| **Step Events** | Optional GameEvents, one per step; the array index matches the step number |
+
+---
+
+### Toggle Switch Variable Writer
+
+Writes a [Toggle Switch](../Interactables/ToggleSwitch.md)'s step to variables and events. Same settings as the Slider Variable Writer.
+
+---
+
+### Switch Variable Writer
+
+Writes a [Switch](../Interactables/Switch.md)'s on/off state to a variable and events.
+
+| Setting | Description |
+|---------|-------------|
+| **State Variable** | BoolVariable that receives the switch state (true = on) |
+| **On Turned On Event** | GameEvent raised when the switch turns on |
+| **On Turned Off Event** | GameEvent raised when the switch turns off |
 
 ---
 

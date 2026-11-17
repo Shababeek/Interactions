@@ -25,7 +25,7 @@
 > **Goal:** Create a container for player stats with variables and events
 > **Time:** ~3 minutes
 
-![Variable Container — create asset and add variables](../Images/Scriptable_System/variable-container-create.gif)
+<!-- IMAGE TODO: Images/Scriptable_System/variable-container-create.gif | Variable Container — create asset and add variables -->
 
 *Creating a Variable Container asset and adding variables with default values.*
 
@@ -73,7 +73,7 @@
 
 ## Inspector Reference
 
-![Variable Container — Inspector](../Images/Scriptable_System/variable-container-inspector.png)
+<!-- IMAGE TODO: Images/Scriptable_System/variable-container-inspector.png | Variable Container — Inspector -->
 
 *Variable Container Inspector: variables list and events section.*
 
