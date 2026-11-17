@@ -69,6 +69,8 @@ namespace Shababeek.Interactions
         private Collider[] _colliders;
         private int[] _collisionLayers;
         private int _layer;
+        private bool _layersOverridden;
+        private int _layerRestoreVersion;
 
         public PoseConstrainer Constrainter => _constrainter ??= GetComponent<PoseConstrainer>();
 
@@ -291,13 +293,22 @@ namespace Shababeek.Interactions
             {
                 onSelected.Invoke(currentInteractor);
 
-                _layer = gameObject.layer;
-                for (int i = 0; i < _collisionLayers.Length; i++)
-                {
-                    _collisionLayers[i] = _colliders[i].gameObject.layer;
-                }
+                // A new selection cancels any restore still pending from the previous release.
+                _layerRestoreVersion++;
                 if (layerBehavior == LayerBehavior.MatchHand)
                 {
+                    // Capture only while the object is on its own layers. On a quick re-grab
+                    // (hand-to-hand pass) it is still on the previous hand's layer.
+                    if (!_layersOverridden)
+                    {
+                        _layer = gameObject.layer;
+                        for (int i = 0; i < _collisionLayers.Length; i++)
+                        {
+                            _collisionLayers[i] = _colliders[i].gameObject.layer;
+                        }
+                    }
+
+                    _layersOverridden = true;
                     foreach (var collider in _colliders)
                     {
                         collider.gameObject.layer = currentInteractor.gameObject.layer;
@@ -316,14 +327,25 @@ namespace Shababeek.Interactions
 
         private async void RestoreLayers()
         {
-            if (_colliders == null || _collisionLayers == null) return;
-            await Awaitable.WaitForSecondsAsync(delayBeforeChangingLayers);
+            if (_colliders == null || _collisionLayers == null || !_layersOverridden) return;
+            int version = ++_layerRestoreVersion;
+            try
+            {
+                await Awaitable.WaitForSecondsAsync(delayBeforeChangingLayers, destroyCancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+
+            if (version != _layerRestoreVersion) return; // re-selected during the delay
             for (var i = 0; i < _colliders.Length; i++)
             {
-                _colliders[i].gameObject.layer = _collisionLayers[i];
+                if (_colliders[i]) _colliders[i].gameObject.layer = _collisionLayers[i];
             }
 
             gameObject.layer = _layer;
+            _layersOverridden = false;
         }
 
         /// <summary>

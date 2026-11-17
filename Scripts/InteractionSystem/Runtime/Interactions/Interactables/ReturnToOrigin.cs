@@ -38,6 +38,7 @@ namespace Shababeek.Interactions
         private Vector3 _originPosition;
         private Quaternion _originRotation;
         private Transform _originParent;
+        private Socketable _socketable;
 
         /// <summary>Fired after the object has finished returning to its origin.</summary>
         public UnityEngine.Events.UnityEvent OnReturned => onReturned;
@@ -46,7 +47,11 @@ namespace Shababeek.Interactions
         {
             _interactable = GetComponent<InteractableBase>();
             _body = GetComponent<Rigidbody>();
+            _socketable = GetComponent<Socketable>();
         }
+
+        // A socketed (or socket-returning) object belongs to its socket, not to its origin.
+        private bool OwnedBySocket => _socketable != null && (_socketable.IsSocketed || _socketable.IsReturning);
 
         private void Start()
         {
@@ -99,9 +104,12 @@ namespace Shababeek.Interactions
             {
                 if (returnDelay > 0f)
                     await Awaitable.WaitForSecondsAsync(returnDelay, token);
+                else if (_socketable != null)
+                    await Awaitable.NextFrameAsync(token); // let the release settle into a socket first
 
                 // Do not fight the hand: if it got grabbed during the delay, bail out.
                 if (_interactable.IsSelected) return;
+                if (OwnedBySocket) return;
 
                 bool wasKinematic = false;
                 if (_body != null)
@@ -125,7 +133,7 @@ namespace Shababeek.Interactions
                         while (t < returnDuration)
                         {
                             // Abort mid-flight if the object is grabbed again.
-                            if (_interactable.IsSelected) return;
+                            if (_interactable.IsSelected || OwnedBySocket) return;
 
                             t += Time.deltaTime;
                             float k = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t / returnDuration));

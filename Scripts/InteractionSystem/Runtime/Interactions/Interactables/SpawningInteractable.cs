@@ -8,6 +8,7 @@ namespace Shababeek.Interactions
     /// Interactable that spawns a new grabable object when selected.
     /// Automatically transfers the grab to the newly spawned object.
     /// </summary>
+    [AddComponentMenu("Shababeek/Interactions/Interactables/Spawning Interactable")]
     public class SpawningInteractable : InteractableBase
     {
         [Tooltip("The grabable prefab to spawn when this interactable is selected.")]

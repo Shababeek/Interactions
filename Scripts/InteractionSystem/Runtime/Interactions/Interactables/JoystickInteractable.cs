@@ -295,7 +295,7 @@ namespace Shababeek.Interactions
         {
             var normalizedAngle = currentRotation;
             normalizedAngle.x /= Mathf.Abs(xRotationRange.x - xRotationRange.y);
-            normalizedAngle.y /= Mathf.Abs(xRotationRange.x - xRotationRange.y);
+            normalizedAngle.y /= Mathf.Abs(zRotationRange.x - zRotationRange.y);
             onRotationChanged?.Invoke(normalizedAngle);
         }
 

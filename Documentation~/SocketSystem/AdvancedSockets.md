@@ -12,7 +12,7 @@ The [Socket System](SocketSystem.md) page covers the basics: a **Socket** that h
 | [Inventory Grid Socket](#inventory-grid-socket) | A grid inventory where items take up several cells |
 | [Fastener and Fastener Tool](#fastener-and-fastener-tool) | Nuts, bolts, wrenches and drills |
 
-All sockets share the four events from the base socket: **On Socket Connected**, **On Socket Disconnected**, **On Hover Start**, **On Hover End**.
+All of these are under **Component > Shababeek > Interactions > Interactables**. All sockets share the four events from the base socket: **On Socket Connected**, **On Socket Disconnected**, **On Hover Start**, **On Hover End**.
 
 ---
 
@@ -106,6 +106,7 @@ A single row of slots where items make room for each other, like books on a shel
 | **Highlight Prefab** | Optional visual moved to the slot a held item would land in. |
 | **On Slot Highlighted / Unhighlighted** | Fired as the preview slot changes. |
 | **Haptics** | Slot change, insert and reject vibration. Assign [Haptic Patterns](../Systems/Haptics.md) or use the amplitude and duration values. |
+| **Verbose Logs** | Console logging of hover, insert and remove, for debugging. Off by default. |
 
 ---
 
@@ -140,7 +141,7 @@ A grid inventory where each item takes up a rectangle of cells (1×1, 2×1, 2×3
 
 ### Taking items out
 
-- **Backpack Item Grabber** on a fixed container: a grip press within **Grab Radius** of an occupied cell takes that item.
+- **Backpack Item Grabber** on a fixed container: a grip press within **Grab Radius** of an occupied cell takes that item. **Verbose Logs** prints each attempt to the Console.
 - **Inventory Backpack Grabable** for a backpack the player can also carry: gripping over an occupied cell takes the item; gripping anywhere else picks up the backpack.
 
 ---
@@ -161,7 +162,7 @@ A **Fastener** (nut, bolt, screw) turns about its own axis and travels along it 
 | **Turns To Remove** | Full turns from tight to loose. |
 | **Detach When Fully Loose** | Drop with physics once fully loosened. |
 | **On Tightened / On Fully Loosened / On Progress** | Events. Progress runs 0 (tight) to 1 (loose). |
-| **Verbose Logs** | Console logging. Turn off outside debugging. |
+| **Verbose Logs** | Console logging for debugging. Off by default. |
 
 ### Fastener Tool — Inspector
 
@@ -177,7 +178,7 @@ A **Fastener** (nut, bolt, screw) turns about its own axis and travels along it 
 | **Spin Visual** | Optional part that spins with the fastener, such as a drill bit. |
 | **Use Fake Hand** | Show a posed hand on the tool while operating. |
 | **On Engaged / On Disengaged** | Events. |
-| **Verbose Logs** | Console logging. Turn off outside debugging. |
+| **Verbose Logs** | Console logging for debugging. Off by default. |
 
 ### Setup
 
