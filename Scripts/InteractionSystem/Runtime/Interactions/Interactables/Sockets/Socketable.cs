@@ -14,6 +14,7 @@ namespace Shababeek.Interactions
     /// Component that allows objects to be socketed into specific locations using trigger-based detection.
     /// Handles socket detection, positioning, and return-to-original-position functionality.
     /// </summary>
+    [AddComponentMenu("Shababeek/Interactions/Interactables/Socketable")]
     [RequireComponent(typeof(Grabable))]
     [RequireComponent(typeof(VariableTweener))]
     public class Socketable : MonoBehaviour
@@ -51,7 +52,6 @@ namespace Shababeek.Interactions
         [Tooltip("Physics layers scanned during socket detection. Combined with Socketable Mask — both must match.")]
         [SerializeField] private LayerMask socketLayerMask = -1;
 
-        private float _nextNoHitLogTime;
 
         [Tooltip("Bitmask of categories this socketable belongs to. Matched against each socket's accepted mask via bitwise AND. Default is everything.")]
         [FormerlySerializedAs("category")]
@@ -300,7 +300,10 @@ namespace Shababeek.Interactions
             transform.rotation = pivot.transform.rotation;
             // Reparenting with worldPositionStays bakes the socket's lossy scale into localScale;
             // restore the authored scale so repeated socket/unsocket cycles don't drift toward 0.
-            transform.localScale = _initialLocalScale;
+            // Sockets that resize their contents (inventory grid scale-to-fit) supply their own.
+            transform.localScale = socket != null && socket.TryGetSocketedScale(this, out var socketedScale)
+                ? socketedScale
+                : _initialLocalScale;
         }
 
         private void Return()

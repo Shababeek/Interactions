@@ -13,6 +13,9 @@ namespace Shababeek.Interactions
         [Tooltip("Distance from this transform within which a grip press counts as a grid grab.")]
         [SerializeField] private float grabRadius = 0.3f;
 
+        [Tooltip("Log grid grab attempts to the Console.")]
+        [SerializeField] private bool verboseLogs;
+
         private InventoryGridSocket _grid;
         private readonly List<IDisposable> _subs = new();
 
@@ -20,7 +23,7 @@ namespace Shababeek.Interactions
 
         private void Start()
         {
-            foreach (var interactor in FindObjectsOfType<TriggerInteractor>())
+            foreach (var interactor in FindObjectsByType<TriggerInteractor>(FindObjectsSortMode.None))
                 SubscribeInteractor(interactor);
         }
 
@@ -56,7 +59,7 @@ namespace Shababeek.Interactions
             var socketable = _grid.GetItemAtWorldPosition(handPos);
             if (socketable == null)
             {
-                Debug.Log($"[BackpackGrab] {interactor.HandIdentifier} grip at dist={dist:F3} — no item at hand position");
+                if (verboseLogs) Debug.Log($"[BackpackGrab] {interactor.HandIdentifier} grip at dist={dist:F3} — no item at hand position");
                 return;
             }
 
@@ -76,7 +79,7 @@ namespace Shababeek.Interactions
             if (hoveringBackpack)
                 interactor.Release(current);
 
-            Debug.Log($"[BackpackGrab] {interactor.HandIdentifier} → grabbing '{socketable.name}' from grid (dist={dist:F3})");
+            if (verboseLogs) Debug.Log($"[BackpackGrab] {interactor.HandIdentifier} → grabbing '{socketable.name}' from grid (dist={dist:F3})");
             interactor.CurrentInteractable = grabable;
             interactor.Select();
         }

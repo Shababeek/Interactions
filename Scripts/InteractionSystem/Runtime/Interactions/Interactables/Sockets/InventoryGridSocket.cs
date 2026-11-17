@@ -74,6 +74,9 @@ namespace Shababeek.Interactions
         // Reading current localScale on remove would return the shrunk value for
         // items without a GridItem, leaving them permanently small.
         private readonly Dictionary<Socketable, Vector3> _restoreScale = new();
+        // Fit scale applied on insert; Socketable re-applies it after parenting to the carrier.
+        private readonly Dictionary<Socketable, Vector3> _fitScale = new();
+        private readonly List<Socketable> _destroyedItems = new();
         private Transform _gridRoot;
 
         private Socketable _hovering;
@@ -100,6 +103,7 @@ namespace Shababeek.Interactions
         public Socketable GetItemAtWorldPosition(Vector3 worldPos)
         {
             if (_packer == null) return null;
+            PruneDestroyedItems();
             var cell = WorldToCell(worldPos);
             foreach (var kvp in _placements)
             {
@@ -110,6 +114,33 @@ namespace Shababeek.Interactions
                     return kvp.Key;
             }
             return null;
+        }
+
+        /// <inheritdoc/>
+        public override bool TryGetSocketedScale(Socketable socketable, out Vector3 localScale) =>
+            _fitScale.TryGetValue(socketable, out localScale);
+
+        private void PruneDestroyedItems()
+        {
+            _destroyedItems.Clear();
+            foreach (var item in _placements.Keys)
+                if (item == null) _destroyedItems.Add(item);
+            if (_destroyedItems.Count == 0) return;
+
+            foreach (var item in _destroyedItems)
+            {
+                var placement = _placements[item];
+                _packer.Release(placement.anchor, placement.footprint);
+                _placements.Remove(item);
+                if (_carriers.TryGetValue(item, out var carrier) && carrier != null) Destroy(carrier.gameObject);
+                _carriers.Remove(item);
+                _wasKinematic.Remove(item);
+                _wasColliderEnabled.Remove(item);
+                _restoreScale.Remove(item);
+                _fitScale.Remove(item);
+            }
+            _destroyedItems.Clear();
+            onGridChanged.Invoke();
         }
 
         /// <summary>Returns world position of a cell's center (for Canvas highlights).</summary>
@@ -390,6 +421,7 @@ namespace Shababeek.Interactions
                     fitScale = Vector3.Scale(fitScale, footprintData.PlacementScale);
 
                 socketable.transform.localScale = fitScale;
+                _fitScale[socketable] = fitScale;
             }
 
             // Rigidbody kinematic + collider disabled.
@@ -421,6 +453,7 @@ namespace Shababeek.Interactions
                 socketable.transform.localScale = restoreScale;
                 _restoreScale.Remove(socketable);
             }
+            _fitScale.Remove(socketable);
 
             // A hand may be grabbing the item OUT of the grid (Remove fires from the grab's
             // OnSelected, so IsSelected is already true here). In that case the Grabable owns

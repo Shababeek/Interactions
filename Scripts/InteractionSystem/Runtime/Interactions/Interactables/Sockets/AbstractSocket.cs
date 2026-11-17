@@ -86,6 +86,16 @@ namespace Shababeek.Interactions
         }
 
         /// <summary>
+        /// Local scale a socketed item should take under its pivot. Returns false to keep the
+        /// item's authored scale.
+        /// </summary>
+        public virtual bool TryGetSocketedScale(Socketable socketable, out Vector3 localScale)
+        {
+            localScale = Vector3.one;
+            return false;
+        }
+
+        /// <summary>
         /// Removes a socketable from this socket. Called internally by Socketable.
         /// </summary>
         public virtual void Remove(Socketable socketable)

@@ -27,6 +27,7 @@ namespace Shababeek.Interactions
     /// out WITH the nut; motor: pinned to a fixed world pose) so the hand can drift without
     /// breaking contact. Releasing the button frees the tool back to the hand.
     /// </summary>
+    [AddComponentMenu("Shababeek/Interactions/Interactables/Fastener Tool")]
     public class FastenerTool : MonoBehaviour
     {
         public enum DriveMode { Manual, Motor }
@@ -59,7 +60,7 @@ namespace Shababeek.Interactions
         [SerializeField] private bool useFakeHand = true;
 
         [Tooltip("Log detection / buttons / lock / turning to the Console.")]
-        [SerializeField] private bool verboseLogs = true;
+        [SerializeField] private bool verboseLogs;
 
         [Tooltip("Seconds between the per-frame 'turning' logs so they don't spam.")]
         [SerializeField] private float turnLogInterval = 0.25f;
@@ -94,6 +95,7 @@ namespace Shababeek.Interactions
         private Quaternion _lockWorldRot;
 
         private float _graceUntil;
+        private InteractorBase _hiddenHandInteractor;
         private float _nextTurnLogTime;
 
         public SocketMask ToolMask => toolMask;
@@ -113,10 +115,23 @@ namespace Shababeek.Interactions
             _tool.OnThumbPressed.Do(_ => SetThumb(true)).Subscribe().AddTo(_disposables);
             _tool.OnThumbReleased.Do(_ => SetThumb(false)).Subscribe().AddTo(_disposables);
             // Dropping the tool must clear held buttons so it can't keep "operating".
-            _tool.OnDeselected.Do(_ => { _useHeld = false; _thumbHeld = false; }).Subscribe().AddTo(_disposables);
+            // It must also stop operating right away: by the next Update the interactable has
+            // cleared its interactor, and the real hand could no longer be shown again.
+            _tool.OnDeselected.Do(_ => ReleaseButtonsAndStop()).Subscribe().AddTo(_disposables);
         }
 
-        private void OnDisable() => _disposables.Clear();
+        private void OnDisable()
+        {
+            ReleaseButtonsAndStop();
+            _disposables.Clear();
+        }
+
+        private void ReleaseButtonsAndStop()
+        {
+            _useHeld = false;
+            _thumbHeld = false;
+            if (_operating) StopOperate();
+        }
 
         private void SetUse(bool v)   { _useHeld = v;   Log($"BUTTON Use(Trigger)={_useHeld}"); }
         private void SetThumb(bool v) { _thumbHeld = v; Log($"BUTTON Thumb(A/B)={_thumbHeld}"); }
@@ -336,6 +351,7 @@ namespace Shababeek.Interactions
             if (prefab == null) return;
 
             interactor.ToggleHandModel(false);
+            _hiddenHandInteractor = interactor;
 
             var toolT = _tool.transform;
             _fakeHand = Instantiate(prefab.gameObject, toolT);
@@ -368,8 +384,10 @@ namespace Shababeek.Interactions
                 _fakeHand = null;
             }
 
-            if (_tool != null && _tool.CurrentInteractor != null)
-                _tool.CurrentInteractor.ToggleHandModel(true);
+            // Restore the hand that was hidden, not whichever interactor holds the tool now:
+            // on a drop the interactable has already forgotten its interactor.
+            if (_hiddenHandInteractor != null) _hiddenHandInteractor.ToggleHandModel(true);
+            _hiddenHandInteractor = null;
         }
 
         private void Log(string msg)

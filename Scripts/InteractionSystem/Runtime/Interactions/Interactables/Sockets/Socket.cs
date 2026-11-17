@@ -7,6 +7,7 @@ namespace Shababeek.Interactions
     /// <summary>
     /// Simple socket implementation that can hold one socketable object at a time.
     /// </summary>
+    [AddComponentMenu("Shababeek/Interactions/Interactables/Socket")]
     public class Socket : AbstractSocket
     {
         [Tooltip("The socketable object currently in this socket.")]

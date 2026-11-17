@@ -13,6 +13,7 @@ namespace Shababeek.Interactions
     /// The item's own <see cref="Grabable.Select"/> then runs <see cref="Socketable.DetachForGrab"/>,
     /// which restores the item's scale, parent and physics before the hand pose is computed.
     /// </summary>
+    [AddComponentMenu("Shababeek/Interactions/Interactables/Inventory Backpack Grabable")]
     [RequireComponent(typeof(InventoryGridSocket))]
     public class InventoryBackpackGrabable : Grabable
     {

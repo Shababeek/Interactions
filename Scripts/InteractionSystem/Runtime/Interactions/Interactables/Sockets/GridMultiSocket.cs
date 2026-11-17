@@ -8,6 +8,7 @@ namespace Shababeek.Interactions
     /// A multi-socket that arranges objects in a grid pattern.
     /// Perfect for organizing objects in rows and columns like inventory grids, shelves, or display cases.
     /// </summary>
+    [AddComponentMenu("Shababeek/Interactions/Interactables/Grid Multi Socket")]
     public class GridMultiSocket : AbstractSocket
     {
         [Header("Grid Settings")]

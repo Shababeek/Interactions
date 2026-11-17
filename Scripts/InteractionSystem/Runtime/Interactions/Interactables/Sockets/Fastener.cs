@@ -9,6 +9,7 @@ namespace Shababeek.Interactions
     /// fully tightened (seated) and fully loosened (removed). The fastener spins around its own
     /// centre — the tool rotates with it.
     /// </summary>
+    [AddComponentMenu("Shababeek/Interactions/Interactables/Fastener")]
     public class Fastener : MonoBehaviour
     {
         [Tooltip("Which tool can turn this. Wrench=Nut, Drill=Bolt. Matched against FastenerTool's tool mask.")]
@@ -36,7 +37,7 @@ namespace Shababeek.Interactions
         [SerializeField] private UnityEvent<float> onProgress = new();
 
         [Tooltip("Log seat / loosen / detach milestones to the Console.")]
-        [SerializeField] private bool verboseLogs = true;
+        [SerializeField] private bool verboseLogs;
 
         private Vector3 _seatedLocalPos;
         private Vector3 _parentAxis; // thread axis in parent space; constant while spinning about it

@@ -26,6 +26,7 @@ namespace Shababeek.Interactions
         /// Multi-socket that projects socketable objects onto a plane and creates pivot points dynamically.
         /// Allows multiple objects to be socketed simultaneously with automatic spacing.
         /// </summary>
+        [AddComponentMenu("Shababeek/Interactions/Interactables/Multi Socket")]
         public class MultiSocket : AbstractSocket
         {
             [Header("Positioning")]
@@ -43,6 +44,7 @@ namespace Shababeek.Interactions
             [SerializeField] private int initialPivotCount = 10;
 
             private readonly List<Transform> _availablePivots = new();
+            private readonly Dictionary<Socketable, Transform> _usedPivots = new();
             private int _nextPivotIndex = 0;
 
             private void Awake()
@@ -86,15 +88,16 @@ namespace Shababeek.Interactions
                 var pivotInfo = GetPivotForSocketable(socketable);
                 socket.position = pivotInfo.position;
                 socket.rotation = pivotInfo.rotation;
+                _usedPivots[socketable] = socket;
                 base.Insert(socketable);
                 return socket;
             }
 
             public override void Remove(Socketable socketable)
             {
-                // Return the pivot to the pool
-                var pivotTransform = socketable.transform.parent;
-                if (pivotTransform != null && pivotTransform != transform)
+                // Return the pivot this socketable was given to the pool. Its current parent is
+                // not reliable: when it is grabbed out, the parent can already be the hand.
+                if (_usedPivots.Remove(socketable, out var pivotTransform) && pivotTransform != null)
                 {
                     pivotTransform.SetParent(Pivot);
                     _availablePivots.Add(pivotTransform);

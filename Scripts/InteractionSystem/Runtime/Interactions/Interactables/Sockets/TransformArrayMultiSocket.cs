@@ -8,6 +8,7 @@ namespace Shababeek.Interactions
     /// Most flexible option - designers can place socket points exactly where needed.
     /// Perfect for irregular layouts, custom arrangements, or when precise control is required.
     /// </summary>
+    [AddComponentMenu("Shababeek/Interactions/Interactables/Transform Array Multi Socket")]
     public class TransformArrayMultiSocket : AbstractSocket
     {
         [Header("Socket Points")]

@@ -17,6 +17,7 @@ namespace Shababeek.Interactions
     /// an occupied slot ripples the run of occupants toward the nearest gap (either
     /// direction, ties go right). Removing an occupant just empties its slot.
     /// </summary>
+    [AddComponentMenu("Shababeek/Interactions/Interactables/Shifting Rack Socket")]
     public class ShiftingRackSocket : AbstractSocket
     {
         [Header("Category")]
@@ -66,6 +67,10 @@ namespace Shababeek.Interactions
 
         [Tooltip("Fired when the rack stops previewing any slot.")]
         [SerializeField] private UnityEvent onSlotUnhighlighted = new();
+
+        [Header("Diagnostics")]
+        [Tooltip("Log hover, insert and remove events to the Console.")]
+        [SerializeField] private bool verboseLogs;
 
         [Header("Haptics")]
         [Tooltip("Haptic amplitude (0-1) when the hover preview moves to another slot.")]
@@ -238,14 +243,14 @@ namespace Shababeek.Interactions
             base.StartHovering(socketable);
             if (!CanSocket())
             {
-                Debug.Log($"[Rack:{name}] HOVER START rejected (full) socketable='{(socketable!=null?socketable.name:"null")}' filled={_filledCount}/{slotCount}");
+                if (verboseLogs) Debug.Log($"[Rack:{name}] HOVER START rejected (full) socketable='{(socketable!=null?socketable.name:"null")}' filled={_filledCount}/{slotCount}");
                 TriggerHaptic(socketable, rejectAmplitude, rejectDuration, rejectPattern);
                 return;
             }
             _hovering = socketable;
             RefreshHoverIndex(socketable, silent: true);
             ShowHighlight();
-            Debug.Log($"[Rack:{name}] HOVER START socketable='{(socketable!=null?socketable.name:"null")}' hoverIndex={_hoverIndex} filled={_filledCount}/{slotCount} canAccept={CanSocket(socketable)} mask=0x{(socketable!=null?(int)socketable.SocketableMask.Value:0):X8}");
+            if (verboseLogs) Debug.Log($"[Rack:{name}] HOVER START socketable='{(socketable!=null?socketable.name:"null")}' hoverIndex={_hoverIndex} filled={_filledCount}/{slotCount} canAccept={CanSocket(socketable)} mask=0x{(socketable!=null?(int)socketable.SocketableMask.Value:0):X8}");
             onSlotHighlighted.Invoke(_hoverIndex);
         }
 
@@ -253,7 +258,7 @@ namespace Shababeek.Interactions
         {
             base.EndHovering(socketable);
             if (_hovering != socketable) return;
-            Debug.Log($"[Rack:{name}] HOVER END socketable='{(socketable!=null?socketable.name:"null")}' wasHoverIndex={_hoverIndex}");
+            if (verboseLogs) Debug.Log($"[Rack:{name}] HOVER END socketable='{(socketable!=null?socketable.name:"null")}' wasHoverIndex={_hoverIndex}");
             ClearHover();
         }
 
@@ -294,7 +299,7 @@ namespace Shababeek.Interactions
             _hovering = socketable;
             RefreshHoverIndex(socketable, silent: true);
             ShowHighlight();
-            Debug.Log($"[Rack:{name}] HOVER ADOPTED socketable='{socketable.name}' hoverIndex={_hoverIndex} filled={_filledCount}/{slotCount}");
+            if (verboseLogs) Debug.Log($"[Rack:{name}] HOVER ADOPTED socketable='{socketable.name}' hoverIndex={_hoverIndex} filled={_filledCount}/{slotCount}");
             onSlotHighlighted.Invoke(_hoverIndex);
         }
 
@@ -344,7 +349,7 @@ namespace Shababeek.Interactions
             }
 
             float distToSlot = Vector3.Distance(socketable.transform.position, _slots[target].position);
-            Debug.Log($"[Rack:{name}] INSERT socketable='{socketable.name}' slot={target} (raw={rawIndex} via {source}) filled-before={_filledCount}/{slotCount} dist={distToSlot:F3} canAccept={CanSocket(socketable)} mask=0x{(int)socketable.SocketableMask.Value:X8} releasePos={socketable.transform.position}");
+            if (verboseLogs) Debug.Log($"[Rack:{name}] INSERT socketable='{socketable.name}' slot={target} (raw={rawIndex} via {source}) filled-before={_filledCount}/{slotCount} dist={distToSlot:F3} canAccept={CanSocket(socketable)} mask=0x{(int)socketable.SocketableMask.Value:X8} releasePos={socketable.transform.position}");
 
             var carrier = new GameObject($"Carrier_{socketable.name}").transform;
             carrier.SetParent(_rackRoot, false);
@@ -360,14 +365,14 @@ namespace Shababeek.Interactions
             ClearHover();
 
             base.Insert(socketable);
-            Debug.Log($"[Rack:{name}] INSERT DONE socketable='{socketable.name}' slot={target} filled-after={_filledCount}/{slotCount} order=[{string.Join(",", Occupants.Select(o => o != null ? o.name : "null"))}]");
+            if (verboseLogs) Debug.Log($"[Rack:{name}] INSERT DONE socketable='{socketable.name}' slot={target} filled-after={_filledCount}/{slotCount} order=[{string.Join(",", Occupants.Select(o => o != null ? o.name : "null"))}]");
             return carrier;
         }
 
         public override void Remove(Socketable socketable)
         {
             var idx = IndexOfOccupant(socketable);
-            Debug.Log($"[Rack:{name}] REMOVE socketable='{(socketable!=null?socketable.name:"null")}' fromSlot={idx} filled-before={_filledCount}/{slotCount}");
+            if (verboseLogs) Debug.Log($"[Rack:{name}] REMOVE socketable='{(socketable!=null?socketable.name:"null")}' fromSlot={idx} filled-before={_filledCount}/{slotCount}");
             if (idx >= 0)
             {
                 _slotOccupants[idx] = null;
@@ -504,7 +509,7 @@ namespace Shababeek.Interactions
             if (newIndex == _hoverIndex) return;
             int prev = _hoverIndex;
             _hoverIndex = newIndex;
-            Debug.Log($"[Rack:{name}] HOVER SLOT CHANGED socketable='{socketable.name}' {prev}→{newIndex} filled={_filledCount}/{slotCount} pos={socketable.transform.position}");
+            if (verboseLogs) Debug.Log($"[Rack:{name}] HOVER SLOT CHANGED socketable='{socketable.name}' {prev}→{newIndex} filled={_filledCount}/{slotCount} pos={socketable.transform.position}");
             if (silent) return;
             TriggerHaptic(socketable, slotChangeAmplitude, slotChangeDuration, slotChangePattern);
             ShowHighlight();

@@ -8,7 +8,7 @@ Smaller components that build on the core interactables. Each section is self-co
 | [Door Handle](#door-and-door-handle) | Interactables > Door Handle | A handle that unlatches and swings a Door |
 | [Elastic Tether](#elastic-tether) | Interactables > Elastic Tether | An object hanging on an elastic cord |
 | [VR Toggle Button](#vr-toggle-button) | Interactables > VRToggleButton | A push button that stays down until pressed again |
-| [Spawning Interactable](#spawning-interactable) | (add by script name) | A dispenser that hands out a new object on each grab |
+| [Spawning Interactable](#spawning-interactable) | Interactables > Spawning Interactable | A dispenser that hands out a new object on each grab |
 | [Return To Origin](#return-to-origin) | Interactables > Return To Origin | Put an object back where it started after release |
 | [Step displays](#step-displays) | Feedback > Step Value Display / Step Label Highlighter | Show the current step of a dial, slider or toggle switch |
 
@@ -125,7 +125,7 @@ Add next to any interactable. After the object is released it waits, then moves 
 
 The starting pose is recorded on Start. Call `CaptureOrigin()` to set a new home, `ScheduleReturn()` or `CancelReturn()` to control it from script.
 
-> **Note:** do not combine with a [Socketable](../SocketSystem/SocketSystem.md) that returns to its socket; the two will compete.
+> **Note:** on a [Socketable](../SocketSystem/SocketSystem.md) object, the socket wins: an object that is in a socket, or on its way back to one, is not returned to its origin.
 
 ---
 
