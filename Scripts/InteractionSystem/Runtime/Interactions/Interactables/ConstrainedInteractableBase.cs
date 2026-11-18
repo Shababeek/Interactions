@@ -170,12 +170,16 @@ namespace Shababeek.Interactions
         {
             try
             {
-                await Awaitable.NextFrameAsync();
+                await Awaitable.NextFrameAsync(destroyCancellationToken);
                 if (this == null || interactor == null || IsSelected) return;
                 interactor.PromoteSecondaryToPrimary();
                 // The brief deselected frame may have started a return animation — the new
                 // grab must not fight it.
                 if (IsSelected) IsReturning = false;
+            }
+            catch (OperationCanceledException)
+            {
+                // Destroyed before the next frame; nothing to promote.
             }
             catch (Exception e)
             {
