@@ -16,6 +16,9 @@ namespace Shababeek.Interactions.Core
         [Tooltip("Maximum flex angle in degrees for each finger (when fully curled).")]
         [SerializeField] private float maxFlexAngle = 90f;
         
+        [Tooltip("Total bend in degrees, summed over the three finger joints, that counts as a fully curled index/middle/ring/little finger.")]
+        [SerializeField] private float maxFingerCurlAngle = 200f;
+
         [Tooltip("Minimum flex angle in degrees (when fully extended).")]
         [SerializeField] private float minFlexAngle = 0f;
         
@@ -178,29 +181,87 @@ namespace Shababeek.Interactions.Core
         
         private float CalculateFingerCurl(XRHandFingerID fingerID)
         {
-            // Get the relevant joints
+            if (fingerID != XRHandFingerID.Thumb)
+                return CalculateLongFingerCurl(fingerID);
+
+            // Thumb keeps the joint-rotation estimate: its joint axes do not match the other fingers.
             XRHandJointID metacarpalJoint = GetMetacarpalJoint(fingerID);
             XRHandJointID proximalJoint = GetProximalJoint(fingerID);
-            
-            // Try to get poses
+
             if (!TryGetJointPose(metacarpalJoint, out Pose metacarpalPose) ||
                 !TryGetJointPose(proximalJoint, out Pose proximalPose))
             {
-                return 0f; // Return extended if we can't get data
+                return 0f;
             }
-            
-            // Calculate relative rotation
+
             Quaternion relativeRotation = Quaternion.Inverse(metacarpalPose.rotation) * proximalPose.rotation;
-            
-            // Get the flex angle (rotation around the local X or Z axis depending on finger)
             float flexAngle = GetFlexAngle(fingerID, relativeRotation);
-            
-            // Map angle to 0-1 range
-            float curl = Mathf.InverseLerp(minFlexAngle, maxFlexAngle, flexAngle);
-            
-            return Mathf.Clamp01(curl);
+            return Mathf.Clamp01(Mathf.InverseLerp(minFlexAngle, maxFlexAngle, flexAngle));
         }
-        
+
+        /// <summary>
+        /// Curl for index/middle/ring/little from joint POSITIONS: the sum of the bend angles
+        /// between consecutive bone directions (knuckle, middle joint, fingertip joint). Positions
+        /// do not depend on each joint's local axis convention, and the metacarpal joint, which
+        /// some runtimes do not report for every finger, is replaced by the wrist when missing.
+        /// </summary>
+        private float CalculateLongFingerCurl(XRHandFingerID fingerID)
+        {
+            GetLongFingerJoints(fingerID, out var proximal, out var intermediate, out var distal, out var tip, out var metacarpal);
+
+            if (!TryGetJointPose(proximal, out Pose proximalPose) ||
+                !TryGetJointPose(intermediate, out Pose intermediatePose) ||
+                !TryGetJointPose(distal, out Pose distalPose) ||
+                !TryGetJointPose(tip, out Pose tipPose))
+            {
+                return 0f;
+            }
+
+            Vector3 origin;
+            if (TryGetJointPose(metacarpal, out Pose metacarpalPose))
+                origin = metacarpalPose.position;
+            else if (TryGetJointPose(XRHandJointID.Wrist, out Pose wristPose))
+                origin = wristPose.position;
+            else
+                return 0f;
+
+            Vector3 palmBone = proximalPose.position - origin;
+            Vector3 proximalBone = intermediatePose.position - proximalPose.position;
+            Vector3 intermediateBone = distalPose.position - intermediatePose.position;
+            Vector3 distalBone = tipPose.position - distalPose.position;
+
+            float total = Vector3.Angle(palmBone, proximalBone)
+                          + Vector3.Angle(proximalBone, intermediateBone)
+                          + Vector3.Angle(intermediateBone, distalBone);
+
+            return Mathf.Clamp01(Mathf.InverseLerp(0f, maxFingerCurlAngle, total));
+        }
+
+        private static void GetLongFingerJoints(XRHandFingerID fingerID, out XRHandJointID proximal,
+            out XRHandJointID intermediate, out XRHandJointID distal, out XRHandJointID tip,
+            out XRHandJointID metacarpal)
+        {
+            switch (fingerID)
+            {
+                case XRHandFingerID.Index:
+                    metacarpal = XRHandJointID.IndexMetacarpal; proximal = XRHandJointID.IndexProximal;
+                    intermediate = XRHandJointID.IndexIntermediate; distal = XRHandJointID.IndexDistal;
+                    tip = XRHandJointID.IndexTip; break;
+                case XRHandFingerID.Middle:
+                    metacarpal = XRHandJointID.MiddleMetacarpal; proximal = XRHandJointID.MiddleProximal;
+                    intermediate = XRHandJointID.MiddleIntermediate; distal = XRHandJointID.MiddleDistal;
+                    tip = XRHandJointID.MiddleTip; break;
+                case XRHandFingerID.Ring:
+                    metacarpal = XRHandJointID.RingMetacarpal; proximal = XRHandJointID.RingProximal;
+                    intermediate = XRHandJointID.RingIntermediate; distal = XRHandJointID.RingDistal;
+                    tip = XRHandJointID.RingTip; break;
+                default:
+                    metacarpal = XRHandJointID.LittleMetacarpal; proximal = XRHandJointID.LittleProximal;
+                    intermediate = XRHandJointID.LittleIntermediate; distal = XRHandJointID.LittleDistal;
+                    tip = XRHandJointID.LittleTip; break;
+            }
+        }
+
         private float GetFlexAngle(XRHandFingerID fingerID, Quaternion relativeRotation)
         {
             Vector3 euler = relativeRotation.eulerAngles;

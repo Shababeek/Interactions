@@ -446,10 +446,27 @@ namespace Shababeek.Interactions.Core
             // Provider ownership lives on the Config asset, not on the rig. Touching these
             // properties forces lazy creation of a single shared provider per hand on the
             // Config's runtime host GameObject, so multiple rigs reuse the same providers.
-            _ = config.LeftHandProvider;
-            _ = config.RightHandProvider;
+            var left = config.LeftHandProvider;
+            var right = config.RightHandProvider;
+
+            AttachHandPivotDriver(leftHandPivot, left);
+            AttachHandPivotDriver(rightHandPivot, right);
 
             ShowHandSet(config.HandData);
+        }
+
+        // With Both tracking the pivots must also follow a bare tracked hand, which the
+        // controller-bound pose driver cannot do.
+        private static void AttachHandPivotDriver(Transform pivot, IHandInputProvider provider)
+        {
+            if (pivot == null || provider is not AutoSwitchInputProvider auto) return;
+
+            var poseDriver = pivot.GetComponentInParent<UnityEngine.InputSystem.XR.TrackedPoseDriver>();
+            var host = poseDriver != null ? poseDriver.gameObject : pivot.gameObject;
+
+            var driver = host.GetComponent<HandPivotDriver>();
+            if (driver == null) driver = host.AddComponent<HandPivotDriver>();
+            driver.Initialize(auto, poseDriver, pivot);
         }
 
         private void SubscribeToHandDataChanges()
