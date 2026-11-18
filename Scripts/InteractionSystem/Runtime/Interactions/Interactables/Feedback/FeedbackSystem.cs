@@ -302,6 +302,8 @@ namespace Shababeek.Interactions.Feedback
 
         private Color[] _originalColors;
         private bool _isInitialized = false;
+        private MaterialPropertyBlock _block;
+        private int _colorId;
 
         public MaterialFeedback()
         {
@@ -319,13 +321,17 @@ namespace Shababeek.Interactions.Feedback
 
             if (renderers != null && renderers.Length > 0)
             {
+                // Colours are read from the shared material and written through a property
+                // block, so no per-renderer material instance is ever created.
+                _block = new MaterialPropertyBlock();
+                _colorId = Shader.PropertyToID(colorPropertyName);
                 _originalColors = new Color[renderers.Length];
                 for (int i = 0; i < renderers.Length; i++)
                 {
-                    if (renderers[i] != null && renderers[i].material != null)
-                    {
-                        _originalColors[i] = renderers[i].material.GetColor(colorPropertyName);
-                    }
+                    var shared = renderers[i] != null ? renderers[i].sharedMaterial : null;
+                    _originalColors[i] = shared != null && shared.HasProperty(_colorId)
+                        ? shared.GetColor(_colorId)
+                        : Color.white;
                 }
 
                 _isInitialized = true;
@@ -341,67 +347,48 @@ namespace Shababeek.Interactions.Feedback
         {
             if (!IsValid() || !enabled) return;
 
-            for (int i = 0; i < renderers.Length; i++)
-            {
-                if (renderers[i] && renderers[i].material)
-                {
-                    renderers[i].material.SetColor(colorPropertyName, _originalColors[i] * colorMultiplier);
-                }
-            }
+            for (int i = 0; i < renderers.Length; i++) SetColor(i, _originalColors[i] * colorMultiplier);
         }
 
         public override void OnHoverEnded(InteractorBase interactor)
         {
             if (!IsValid() || !enabled) return;
 
-            for (int i = 0; i < renderers.Length; i++)
-            {
-                if (renderers[i] && renderers[i].material)
-                {
-                    renderers[i].material.SetColor(colorPropertyName, _originalColors[i]);
-                }
-            }
+            for (int i = 0; i < renderers.Length; i++) SetColor(i, _originalColors[i]);
         }
 
         public override void OnSelected(InteractorBase interactor)
         {
             if (!IsValid() || !enabled) return;
 
-            foreach (var renderer in renderers)
-            {
-                if (renderer && renderer.material)
-                {
-                    renderer.material.SetColor(colorPropertyName, selectColor);
-                }
-            }
+            for (int i = 0; i < renderers.Length; i++) SetColor(i, selectColor);
         }
 
         public override void OnDeselected(InteractorBase interactor)
         {
             if (!IsValid() || !enabled) return;
 
-            for (int i = 0; i < renderers.Length; i++)
-            {
-                if (renderers[i] != null && renderers[i].material != null)
-                {
-                    renderers[i].material.SetColor(colorPropertyName, _originalColors[i]);
-                }
-            }
+            for (int i = 0; i < renderers.Length; i++) SetColor(i, _originalColors[i]);
         }
 
         public override void OnActivated(InteractorBase interactor)
         {
             if (!IsValid() || !enabled) return;
 
-            foreach (var renderer in renderers)
-            {
-                if (renderer && renderer.material)
-                {
-                    renderer.material.SetColor(colorPropertyName, activateColor);
-                }
-            }
+            for (int i = 0; i < renderers.Length; i++) SetColor(i, activateColor);
+        }
+
+        // Tints the renderer's first material slot, as the previous material-instance code did.
+        private void SetColor(int index, Color color)
+        {
+            var renderer = renderers[index];
+            if (!renderer) return;
+            renderer.GetPropertyBlock(_block, 0);
+            _block.SetColor(_colorId, color);
+            renderer.SetPropertyBlock(_block, 0);
         }
     }
+
 
     /// <summary>
     /// Animation feedback for triggering animator parameters.
