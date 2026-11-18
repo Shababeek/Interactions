@@ -4,6 +4,7 @@ using UnityEngine;
 namespace Shababeek
 {
     /// <summary>Visualizes rig bones with colored gizmo lines in the scene editor.</summary>
+    [AddComponentMenu("Shababeek/Interactions/Debug/Rig Visualizer")]
     public class RigVisualizer : MonoBehaviour
     {
         /// <summary>Child rig visualizers for this bone.</summary>

@@ -8,6 +8,7 @@ namespace Shababeek.Interactions.Core
     /// Eyelid blink overlay: scales and fades two lid images to cover/reveal the screen.
     /// Self-contained Awaitable animation — no external tween library required.
     /// </summary>
+    [AddComponentMenu("Shababeek/Interactions/Eyelid Effect")]
     public class EyelidEffect : MonoBehaviour
     {
         /// <summary>Easing applied to lid animation progress.</summary>
