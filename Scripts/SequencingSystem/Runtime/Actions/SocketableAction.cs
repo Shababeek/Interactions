@@ -55,8 +55,8 @@ namespace Shababeek.Sequencing
                     break;
 
                 case SocketableEventType.Unsocketed:
-                    Observable.EveryUpdate()
-                        .Where(_ => Started && !socketable.IsSocketed && !socketable.IsReturning)
+                    socketable.OnUnsocketedAsObservable
+                        .Where(_ => Started)
                         .Take(1)
                         .Do(_ => CompleteStep())
                         .Subscribe()
@@ -64,9 +64,8 @@ namespace Shababeek.Sequencing
                     break;
 
                 case SocketableEventType.Returned:
-                    Observable.EveryUpdate()
-                        .Where(_ => Started && !socketable.IsReturning && !socketable.IsSocketed)
-                        .Skip(1)
+                    socketable.OnReturnedAsObservable
+                        .Where(_ => Started)
                         .Take(1)
                         .Do(_ => CompleteStep())
                         .Subscribe()

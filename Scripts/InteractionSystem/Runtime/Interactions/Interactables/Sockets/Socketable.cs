@@ -77,6 +77,10 @@ namespace Shababeek.Interactions
         private VariableTweener _tweener;
         private TransformTweenable _returnTweenable;
         private bool _isReturning = false;
+        private readonly Subject<Unit> _unsocketed = new();
+        private readonly Subject<Unit> _returned = new();
+        private Transform _returnTarget;
+        private Action _returnCompleteHandler;
         // Sized generously: OverlapSphereNonAlloc fills this in undefined order and
         // silently drops overflow. With a wide socketLayerMask a busy scene can return
         // many colliders in the detection sphere; too small a buffer can omit the socket
@@ -93,8 +97,19 @@ namespace Shababeek.Interactions
         public bool IsSocketed
         {
             get => isSocketed;
-            private set { isSocketed = value; }
+            private set
+            {
+                bool wasSocketed = isSocketed;
+                isSocketed = value;
+                if (wasSocketed && !value) _unsocketed.OnNext(Unit.Default);
+            }
         }
+
+        /// <summary>Fires when the object leaves a socket.</summary>
+        public IObservable<Unit> OnUnsocketedAsObservable => _unsocketed;
+
+        /// <summary>Fires when the object has finished returning to its original position.</summary>
+        public IObservable<Unit> OnReturnedAsObservable => _returned;
 
         /// <summary>
         /// Gets the currently detected socket.
@@ -309,7 +324,7 @@ namespace Shababeek.Interactions
         private void Return()
         {
             if (_isReturning) return;
-            isSocketed = false;
+            IsSocketed = false;
             transform.parent = null;
             if (!shouldReturnToLastSocket) return;
             bool canReuseLast = _lastSocket != null && _lastSocket.CanSocket() && _lastSocket.CanSocket(this);
@@ -337,13 +352,30 @@ namespace Shababeek.Interactions
             transform.localPosition = _initialLocalPosition;
             transform.localRotation = _initialLocalRotation;
             transform.localScale = _initialLocalScale;
+            _returned.OnNext(Unit.Default);
+        }
+
+        // Drops the previous return's completion handler and helper object so repeated returns
+        // do not stack handlers or leave "_ReturnTarget" objects behind.
+        private void ClearReturnTween()
+        {
+            if (_returnCompleteHandler != null)
+            {
+                _returnTweenable.OnTweenComplete -= _returnCompleteHandler;
+                _returnCompleteHandler = null;
+            }
+
+            if (_returnTarget != null) Destroy(_returnTarget.gameObject);
+            _returnTarget = null;
         }
 
         private void ReturnWithTween()
         {
+            ClearReturnTween();
             _isReturning = true;
 
             var targetTransform = new GameObject($"{gameObject.name}_ReturnTarget").transform;
+            _returnTarget = targetTransform;
             if (_initialParent != null)
             {
                 targetTransform.SetParent(_initialParent);
@@ -361,7 +393,7 @@ namespace Shababeek.Interactions
             _tweener.AddTweenable(_returnTweenable);
 
             // Set up completion callback
-            _returnTweenable.OnTweenComplete += () =>
+            _returnCompleteHandler = () =>
             {
                 transform.SetParent(_initialParent);
                 transform.localPosition = _initialLocalPosition;
@@ -369,13 +401,11 @@ namespace Shababeek.Interactions
                 transform.localScale = _initialLocalScale;
 
 
-                if (targetTransform != null)
-                {
-                    DestroyImmediate(targetTransform.gameObject);
-                }
-
+                ClearReturnTween();
                 _isReturning = false;
+                _returned.OnNext(Unit.Default);
             };
+            _returnTweenable.OnTweenComplete += _returnCompleteHandler;
         }
 
 
@@ -508,6 +538,8 @@ namespace Shababeek.Interactions
                     _tweener.RemoveTweenable(_returnTweenable);
                 }
 
+                ClearReturnTween();
+
                 _isReturning = false;
             }
 
@@ -526,6 +558,8 @@ namespace Shababeek.Interactions
                 {
                     _tweener.RemoveTweenable(_returnTweenable);
                 }
+
+                ClearReturnTween();
 
                 _isReturning = false;
             }
@@ -546,7 +580,7 @@ namespace Shababeek.Interactions
                 socket.EndHovering(this);
             }
 
-            isSocketed = false;
+            IsSocketed = false;
             socket = null;
             HideIndicator();
             ForceReturn();
