@@ -73,8 +73,8 @@ Put on the bullet prefab (requires a Rigidbody).
 | **Lifetime** | Seconds before a bullet that hit nothing returns to the pool. |
 | **Impact Force** | Push applied to a Rigidbody that is hit. |
 | **Hit Effect Prefab / Lifetime** | Optional impact effect. |
-| **Pass Through Layers** | Layers the bullet ignores, for example the hands and the gun itself. |
-| **Debug Logs** | Logs launch, collision and release. Leave off. |
+| **Pass Through Layers** | Extra layers the bullet flies through. The gun and the hand holding it are ignored automatically, so this is only needed for other things, such as the second hand on a two-handed weapon. |
+| **Debug Logs** | Logs launch, collision and release, and draws the flight path in the Scene view. Leave off. |
 
 ---
 

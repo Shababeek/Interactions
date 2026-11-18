@@ -7,6 +7,7 @@ namespace Shababeek.Interactions
     /// Debug interactable that logs interaction events to the console.
     /// Useful for testing and debugging interaction systems.
     /// </summary>
+    [AddComponentMenu("Shababeek/Interactions/Debug/Debug Interactable")]
     public class DebugInteractable : InteractableBase
     {
         protected override void UseStarted()

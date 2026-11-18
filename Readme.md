@@ -199,7 +199,7 @@ Additional functionality:
 
 - **Unity Version:** 6000.3 or newer (the version declared in `package.json`)
 - **Dependencies:**
-    - Unity Input System (1.0.0+)
+    - Unity Input System (1.11.2+)
     - UniRx (included)
     - **com.shababeek.reactivevars** (required for data flow, events, and sequencing)
 - **Platforms:** PC VR, Quest, PSVR, and all Unity-supported VR platforms

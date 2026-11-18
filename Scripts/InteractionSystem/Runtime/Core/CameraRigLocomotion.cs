@@ -64,8 +64,15 @@ namespace Shababeek.Interactions.Core
 
         private void OnDisable()
         {
-            moveAction.action?.Disable();
-            turnAction.action?.Disable();
+            DisableIfOwned(moveAction);
+            DisableIfOwned(turnAction);
+        }
+
+        // A referenced action belongs to a shared asset that other components read too;
+        // only actions defined on this component are switched off with it.
+        private static void DisableIfOwned(InputActionProperty property)
+        {
+            if (property.reference == null) property.action?.Disable();
         }
 
         private void Update()

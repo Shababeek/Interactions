@@ -1,7 +1,7 @@
 {
   "name": "com.shababeek.interactions",
   "displayName": "Shababeek Interaction System",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "unity": "6000.3",
   "description": "VR hand interaction toolkit: physics and kinematic hands, pose constraints, grabbing, constrained interactables (levers, dials, drawers, wheels), sockets, feedback and interaction-driven sequencing.",
   "author": {
@@ -12,7 +12,7 @@
   "company": "Shababeek",
   "keywords": ["interactions", "events", "unity", "shababeek"],
   "dependencies": {
-    "com.unity.inputsystem": "1.0.0",
+    "com.unity.inputsystem": "1.11.2",
     "com.shababeek.reactivevars": "1.0.0"
   }
 } 

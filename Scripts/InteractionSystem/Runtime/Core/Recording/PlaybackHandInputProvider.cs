@@ -21,8 +21,6 @@ namespace Shababeek.Interactions.Core
         private readonly ButtonObservable _aButton = new();
         private readonly ButtonObservable _bButton = new();
         private readonly float[] _fingers = new float[5];
-        private Vector3 _position;
-        private Quaternion _rotation = Quaternion.identity;
 
         /// <summary>Observable for trigger button state changes.</summary>
         public IObservable<VRButtonState> TriggerObservable => _trigger.OnStateChanged;
@@ -51,15 +49,6 @@ namespace Shababeek.Interactions.Core
         /// <summary>Playback providers take precedence over any live provider.</summary>
         public int Priority => 1000;
 
-        /// <summary>Replayed hand position in CameraRig-local space.</summary>
-        public Vector3 Position => _position;
-
-        /// <summary>Replayed hand rotation in CameraRig-local space.</summary>
-        public Quaternion Rotation => _rotation;
-
-        /// <summary>Tracking state; always fully tracked during playback.</summary>
-        public uint TrackingState => 3;
-
         /// <summary>Binds this provider to a recording and hand, resetting playback state.</summary>
         public void Initialize(InteractionRecording recording, HandIdentifier hand)
         {
@@ -78,14 +67,10 @@ namespace Shababeek.Interactions.Core
             _bButton.ButtonState = false;
         }
 
-        /// <summary>Advances playback to the given time: updates pose and fingers, fires due button events.</summary>
+        /// <summary>Advances playback to the given time: updates fingers and fires due button events.</summary>
         public void Evaluate(float time)
         {
             if (_recording == null) return;
-
-            var pose = _recording.EvaluateHandPose(_hand, time);
-            _position = pose.position;
-            _rotation = pose.rotation;
 
             var fingers = _recording.EvaluateFingers(_hand, time);
             for (int i = 0; i < 5; i++) _fingers[i] = fingers[i];
