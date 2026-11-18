@@ -147,14 +147,6 @@ namespace Shababeek.Interactions.Core
             get => handedness;
             set => handedness = value;
         }
-        ///<inheritdoc/>
-        public virtual Vector3 Position => Vector3.zero;
-
-        ///<inheritdoc/>
-        public virtual Quaternion Rotation => Quaternion.identity;
-
-        ///<inheritdoc/>
-        public virtual uint TrackingState => 0;
 
         protected virtual void OnEnable()
         {

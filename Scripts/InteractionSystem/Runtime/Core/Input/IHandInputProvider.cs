@@ -62,20 +62,5 @@ namespace Shababeek.Interactions.Core
         /// Priority of this input provider (higher priority providers are used first).
         /// </summary>
         int Priority { get; }
-        
-        /// <summary>
-        /// Current position of the controller/hand in world space.
-        /// </summary>
-        Vector3 Position { get; }
-        
-        /// <summary>
-        /// Current rotation of the controller/hand in world space.
-        /// </summary>
-        Quaternion Rotation { get; }
-        
-        /// <summary>
-        /// Current tracking state of the controller/hand (flags: Position = 1, Rotation = 2, Both = 3).
-        /// </summary>
-        uint TrackingState { get; }
     }
 }

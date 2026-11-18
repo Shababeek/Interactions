@@ -327,6 +327,10 @@ namespace Shababeek.Interactions.Core
                     var handTracking = host.AddComponent<HandTrackingInputProvider>();
                     handTracking.Handedness = hand;
                     return handTracking;
+                case TrackingType.Both:
+                    var autoSwitch = host.AddComponent<AutoSwitchHandInputProvider>();
+                    autoSwitch.Initialize(hand, actions);
+                    return autoSwitch;
 #endif
                 default:
                     var fallback = host.AddComponent<ControllerInputProvider>();

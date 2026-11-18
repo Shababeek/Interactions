@@ -117,6 +117,7 @@ For binders, the full variable reference and the tween system, see the [Reactive
 | **[Architecture map](Analysis/ArchitectureMap.md)** | Class families, runtime flow, extension points |
 | **[Two-handed grabbing design](TwoHandedGrabbing-Design.md)** | Design notes |
 | **[Procedural grab posing design](ProceduralGrabPosing-Design.md)** | Design notes for finger auto-fit |
+| **[Changelog](../CHANGELOG.md)** | What changed in each version |
 | **[Improvement plan, November 2026](Analysis/ImprovementPlan-2026-11-17.md)** | Current review and prioritised improvements |
 | **[Code review, September 2026](Analysis/CodeReview-2026-09-06.md)** | Pre-publish review |
 | **[Code review, June 2026](Analysis/CodeReview-2026-06-11.md)** | Full-system review |

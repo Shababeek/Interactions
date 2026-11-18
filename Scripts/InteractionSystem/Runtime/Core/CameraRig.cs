@@ -336,8 +336,16 @@ namespace Shababeek.Interactions.Core
 
         private async void OnTrackingOriginUpdated(XRInputSubsystem subsystem)
         {
-            await Awaitable.NextFrameAsync();
-            await Awaitable.NextFrameAsync();
+            try
+            {
+                await Awaitable.NextFrameAsync(destroyCancellationToken);
+                await Awaitable.NextFrameAsync(destroyCancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+
             if (this == null || !isActiveAndEnabled) return;
             ApplyInitialTrackingAlignment();
         }
@@ -450,6 +458,19 @@ namespace Shababeek.Interactions.Core
             _ = config.RightHandProvider;
 
             ShowHandSet(config.HandData);
+            InitializeHandTrackingPivotDriver();
+        }
+
+        private void InitializeHandTrackingPivotDriver()
+        {
+#if XR_HANDS_AVAILABLE
+            if (!Application.isPlaying || config.InputType == Config.TrackingType.ControllerTracking) return;
+            if (leftHandPivot == null || rightHandPivot == null) return;
+
+            if (!TryGetComponent(out HandTrackingPivotDriver driver))
+                driver = gameObject.AddComponent<HandTrackingPivotDriver>();
+            driver.Initialize(config, leftHandPivot, rightHandPivot);
+#endif
         }
 
         private void SubscribeToHandDataChanges()

@@ -48,11 +48,6 @@ namespace Shababeek.Interactions.Core
 
         private bool _controllerConnected = false;
         private XRController _controllerDevice;
-
-        // Cached position/rotation for efficiency
-        private Vector3 _position = Vector3.zero;
-        private Quaternion _rotation = Quaternion.identity;
-        private uint _trackingState = 0;
         
         // Retry controller detection if not found
         private float _lastControllerCheckTime = 0f;
@@ -123,27 +118,11 @@ namespace Shababeek.Interactions.Core
             // Thumbstick in step with the same Update's button states. Unwired reads zero.
             Thumbstick = thumbstickAction?.ReadValue<Vector2>() ?? Vector2.zero;
             
-            // Update position, rotation, and tracking state
-            if (_controllerDevice != null)
+            // A removed device stays non-null; drop it so detection can pick up a new one.
+            if (_controllerDevice != null && !_controllerDevice.added)
             {
-                try
-                {
-                    _position = _controllerDevice.devicePosition.ReadValue();
-                    _rotation = _controllerDevice.deviceRotation.ReadValue();
-                    _trackingState = (uint)_controllerDevice.trackingState.ReadValue();
-                }
-                catch
-                {
-                    // Device might have been disconnected
-                    _controllerDevice = null;
-                    _controllerConnected = false;
-                }
-            }
-            else
-            {
-                _position = Vector3.zero;
-                _rotation = Quaternion.identity;
-                _trackingState = 0;
+                _controllerDevice = null;
+                _controllerConnected = false;
             }
         }
 
@@ -256,14 +235,6 @@ namespace Shababeek.Interactions.Core
             }
 
             _controllerConnected = foundController;
-            
-            // Reset tracking data if controller not found
-            if (!foundController)
-            {
-                _position = Vector3.zero;
-                _rotation = Quaternion.identity;
-                _trackingState = 0;
-            }
         }
 
         /// <summary>
@@ -294,21 +265,6 @@ namespace Shababeek.Interactions.Core
                 thumbstickAction?.Enable();
             }
         }
-
-        /// <summary>
-        /// Current position of the controller in world space.
-        /// </summary>
-        public override Vector3 Position => _position;
-
-        /// <summary>
-        /// Current rotation of the controller in world space.
-        /// </summary>
-        public override Quaternion Rotation => _rotation;
-
-        /// <summary>
-        /// Current tracking state of the controller (flags: Position = 1, Rotation = 2, Both = 3).
-        /// </summary>
-        public override uint TrackingState => _trackingState;
 
 #if UNITY_EDITOR
         private void OnValidate()

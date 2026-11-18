@@ -18,6 +18,9 @@ namespace Shababeek.Interactions.Core
         
         [Tooltip("Minimum flex angle in degrees (when fully extended).")]
         [SerializeField] private float minFlexAngle = 0f;
+
+        [Tooltip("Bend in degrees at which the index, middle, ring and little fingers count as fully open. A relaxed hand is never perfectly straight; this keeps it from reading as a light press.")]
+        [SerializeField] private float fingerRestAngle = 15f;
         
         [Header("Debug")]
         [Tooltip("Enable debug logging for finger values.")]
@@ -25,11 +28,6 @@ namespace Shababeek.Interactions.Core
 
         private XRHandSubsystem handSubsystem;
         private bool _isInitialized = false;
-        
-        // Cached position/rotation for efficiency
-        [SerializeField] private Vector3 _position = Vector3.zero;
-        [SerializeField] private Quaternion _rotation = Quaternion.identity;
-        [SerializeField] private uint _trackingState = 0;
     
         private void Awake()
         {
@@ -74,9 +72,6 @@ namespace Shababeek.Interactions.Core
             {
                 // Set all to zero when not tracked
                 SetFingerValues(0f, 0f, 0f, 0f, 0f);
-                _position = Vector3.zero;
-                _rotation = Quaternion.identity;
-                _trackingState = 0;
                 return;
             }
             
@@ -87,32 +82,40 @@ namespace Shababeek.Interactions.Core
             this[FingerName.Ring] = CalculateFingerCurl(XRHandFingerID.Ring);
             this[FingerName.Pinky] = CalculateFingerCurl(XRHandFingerID.Little);
             
-            // Update position, rotation, and tracking state
-            if (TryGetHandPosition(out Vector3 pos))
-            {
-                _position = pos;
-            }
-            else
-            {
-                _position = Vector3.zero;
-            }
-            
-            if (TryGetHandRotation(out Quaternion rot))
-            {
-                _rotation = rot;
-            }
-            else
-            {
-                _rotation = Quaternion.identity;
-            }
-            
-            _trackingState = GetTrackingState();
-            
             if (debugLog)
             {
                 Debug.Log($"Finger Curls - T:{this[FingerName.Thumb]:F2} I:{this[FingerName.Index]:F2} " +
                          $"M:{this[FingerName.Middle]:F2} R:{this[FingerName.Ring]:F2} P:{this[FingerName.Pinky]:F2}");
             }
+        }
+
+        /// <summary>True while the hand subsystem is running and reports this hand as tracked.</summary>
+        public bool IsTracked =>
+            _isInitialized && handSubsystem != null && handSubsystem.running && Hand.isTracked;
+
+        // Palm joint axes are +Z toward the fingers and +Y out of the back of the hand. A grip
+        // pose points +Z from the little finger toward the thumb with +X along the palm normal.
+        private static readonly Quaternion LeftPalmToGrip = Quaternion.LookRotation(Vector3.right, Vector3.back);
+        private static readonly Quaternion RightPalmToGrip = Quaternion.LookRotation(Vector3.left, Vector3.back);
+
+        /// <summary>
+        /// Pose of the tracked hand in tracking space, in the same convention as a controller's
+        /// grip pose. Uses the runtime's grip pose when it provides one, otherwise the palm joint.
+        /// </summary>
+        public bool TryGetGripPose(out Pose pose)
+        {
+            pose = Pose.identity;
+            if (!IsTracked) return false;
+
+            var gestures = handedness == HandIdentifier.Left
+                ? handSubsystem.leftHandCommonGestures
+                : handSubsystem.rightHandCommonGestures;
+            if (gestures != null && gestures.TryGetGripPose(out pose)) return true;
+
+            if (!TryGetJointPose(XRHandJointID.Palm, out var palm)) return false;
+            var palmToGrip = handedness == HandIdentifier.Left ? LeftPalmToGrip : RightPalmToGrip;
+            pose = new Pose(palm.position, palm.rotation * palmToGrip);
+            return true;
         }
 
         private void EnsureDefaultPriority()
@@ -178,55 +181,70 @@ namespace Shababeek.Interactions.Core
         
         private float CalculateFingerCurl(XRHandFingerID fingerID)
         {
-            // Get the relevant joints
             XRHandJointID metacarpalJoint = GetMetacarpalJoint(fingerID);
             XRHandJointID proximalJoint = GetProximalJoint(fingerID);
-            
-            // Try to get poses
+
             if (!TryGetJointPose(metacarpalJoint, out Pose metacarpalPose) ||
                 !TryGetJointPose(proximalJoint, out Pose proximalPose))
             {
-                return 0f; // Return extended if we can't get data
+                return 0f;
             }
-            
-            // Calculate relative rotation
-            Quaternion relativeRotation = Quaternion.Inverse(metacarpalPose.rotation) * proximalPose.rotation;
-            
-            // Get the flex angle (rotation around the local X or Z axis depending on finger)
-            float flexAngle = GetFlexAngle(fingerID, relativeRotation);
-            
-            // Map angle to 0-1 range
-            float curl = Mathf.InverseLerp(minFlexAngle, maxFlexAngle, flexAngle);
-            
-            return Mathf.Clamp01(curl);
-        }
-        
-        private float GetFlexAngle(XRHandFingerID fingerID, Quaternion relativeRotation)
-        {
-            Vector3 euler = relativeRotation.eulerAngles;
-            
-            // Different fingers flex on different axes
-            // For most fingers, flexion is around the Z axis
-            // For thumb, it's more complex due to different joint orientation
-            
+
             if (fingerID == XRHandFingerID.Thumb)
             {
-                // Thumb flexion is typically around X axis
-                float angle = euler.x;
-                // Normalize to 0-180 range
-                if (angle > 180f) angle -= 360f;
-                return Mathf.Abs(angle);
+                float thumbAngle = ThumbFlexAngle(metacarpalPose, proximalPose);
+                return Mathf.Clamp01(Mathf.InverseLerp(minFlexAngle, maxFlexAngle, thumbAngle));
             }
-            else
-            {
-                // Other fingers flex around Z axis
-                float angle = euler.z;
-                // Normalize to 0-180 range
-                if (angle > 180f) angle -= 360f;
-                return Mathf.Abs(angle);
-            }
+
+            float fingerAngle = FingerFlexAngle(fingerID, metacarpalPose, proximalPose);
+            float openAngle = Mathf.Max(minFlexAngle, fingerRestAngle);
+            return Mathf.Clamp01(Mathf.InverseLerp(openAngle, maxFlexAngle, fingerAngle));
         }
-        
+
+        private static float ThumbFlexAngle(Pose metacarpalPose, Pose proximalPose)
+        {
+            Quaternion relativeRotation = Quaternion.Inverse(metacarpalPose.rotation) * proximalPose.rotation;
+            float angle = relativeRotation.eulerAngles.x;
+            if (angle > 180f) angle -= 360f;
+            return Mathf.Abs(angle);
+        }
+
+        // Average of the bend at the knuckle and at the middle joint, measured between bone
+        // directions taken from joint positions, so it does not depend on how the runtime
+        // orients each joint. Reading one Euler component of the knuckle rotation does not work:
+        // it misses flexion on some fingers and flips once the bend passes 90 degrees.
+        private float FingerFlexAngle(XRHandFingerID fingerID, Pose metacarpalPose, Pose proximalPose)
+        {
+            XRHandJointID intermediateJoint = XRHandJointID.IndexIntermediate;
+            XRHandJointID distalJoint = XRHandJointID.IndexDistal;
+            switch (fingerID)
+            {
+                case XRHandFingerID.Middle:
+                    intermediateJoint = XRHandJointID.MiddleIntermediate;
+                    distalJoint = XRHandJointID.MiddleDistal;
+                    break;
+                case XRHandFingerID.Ring:
+                    intermediateJoint = XRHandJointID.RingIntermediate;
+                    distalJoint = XRHandJointID.RingDistal;
+                    break;
+                case XRHandFingerID.Little:
+                    intermediateJoint = XRHandJointID.LittleIntermediate;
+                    distalJoint = XRHandJointID.LittleDistal;
+                    break;
+            }
+
+            if (!TryGetJointPose(intermediateJoint, out Pose intermediatePose)) return 0f;
+
+            Vector3 palmBone = proximalPose.position - metacarpalPose.position;
+            Vector3 proximalBone = intermediatePose.position - proximalPose.position;
+            float knuckleBend = Vector3.Angle(palmBone, proximalBone);
+
+            if (!TryGetJointPose(distalJoint, out Pose distalPose)) return knuckleBend;
+
+            Vector3 middleBone = distalPose.position - intermediatePose.position;
+            return (knuckleBend + Vector3.Angle(proximalBone, middleBone)) * 0.5f;
+        }
+
         private XRHandJointID GetMetacarpalJoint(XRHandFingerID fingerID)
         {
             switch (fingerID)
@@ -284,93 +302,6 @@ namespace Shababeek.Interactions.Core
             return joint.TryGetPose(out pose);
         }
         
-        private bool TryGetHandPosition(out Vector3 position)
-        {
-            var hand = Hand;
-            if (!hand.isTracked)
-            {
-                position = Vector3.zero;
-                return false;
-            }
-            
-            if (TryGetJointPose(XRHandJointID.Wrist, out Pose wristPose))
-            {
-                position = wristPose.position;
-                return true;
-            }
-            
-            position = Vector3.zero;
-            return false;
-        }
-        
-        private bool TryGetHandRotation(out Quaternion rotation)
-        {
-            var hand = Hand;
-            if (!hand.isTracked)
-            {
-                rotation = Quaternion.identity;
-                return false;
-            }
-            
-            if (TryGetJointPose(XRHandJointID.Wrist, out Pose wristPose))
-            {
-                rotation = wristPose.rotation;
-                return true;
-            }
-            
-            rotation = Quaternion.identity;
-            return false;
-        }
-        
-        private uint GetTrackingState()
-        {
-            var hand = Hand;
-            if (!hand.isTracked)
-                return 0;
-            
-            var wristJoint = hand.GetJoint(XRHandJointID.Wrist);
-            if (wristJoint.id == XRHandJointID.Invalid)
-                return 0;
-            
-            uint state = 0;
-            var trackingState = wristJoint.trackingState;
-            
-            // XRHandJointTrackingState.Pose indicates both position and rotation are tracked
-            if ((trackingState & XRHandJointTrackingState.Pose) != 0)
-            {
-                state |= 3; // Both position (1) and rotation (2) flags
-            }
-            else
-            {
-                // If Pose is not available, check if we can at least get position/rotation from the pose
-                if (TryGetJointPose(XRHandJointID.Wrist, out Pose wristPose))
-                {
-                    // If pose is valid (not zero/identity), assume both are tracked
-                    if (wristPose.position != Vector3.zero)
-                        state |= 1; // Position flag
-                    if (wristPose.rotation != Quaternion.identity)
-                        state |= 2; // Rotation flag
-                }
-            }
-            
-            return state;
-        }
-
-        /// <summary>
-        /// Current position of the hand in world space.
-        /// </summary>
-        public override Vector3 Position => _position;
-
-        /// <summary>
-        /// Current rotation of the hand in world space.
-        /// </summary>
-        public override Quaternion Rotation => _rotation;
-
-        /// <summary>
-        /// Current tracking state of the hand (flags: Position = 1, Rotation = 2, Both = 3).
-        /// </summary>
-        public override uint TrackingState => _trackingState;
-
 #if UNITY_EDITOR
         private void OnValidate()
         {

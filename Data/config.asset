@@ -15,9 +15,10 @@ MonoBehaviour:
   handData: {fileID: 11400000, guid: 6aca1e053bffb4e23be6bcf251ae2a5d, type: 2}
   leftHandLayer: 11
   rightHandLayer: 12
+  handDataVariable: {fileID: 0}
   interactableLayer: 13
   playerLayer: 14
-  inputType: 1
+  inputType: 3
   leftHandActions:
     thumbAction: {fileID: -2340996174322847054, guid: 40998561fb58d43d3bd6304af9a7868e, type: 3}
     indexAction: {fileID: -5584061613127055169, guid: 40998561fb58d43d3bd6304af9a7868e, type: 3}
