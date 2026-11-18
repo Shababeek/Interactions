@@ -20,6 +20,7 @@ namespace Shababeek.Interactions.Feedback
     /// </remarks>
     [RequireComponent(typeof(InteractableBase))]
     [System.Obsolete("This component is deprecated. Use FeedbackSystem with MaterialFeedback instead for better integration and more features.")]
+    [AddComponentMenu("")]
     public class MaterialHighlighter : MonoBehaviour
     {
         [Tooltip("Array of renderers to apply color changes to. If empty, uses all child renderers.")]
@@ -46,7 +47,6 @@ namespace Shababeek.Interactions.Feedback
                 _color[i] = renderers[i].material.color;
             }
 
-            _color = new Color[renderers.Length];
             var interactable = GetComponent<InteractableBase>();
 
             interactable.OnHoverStarted.Do(OnHoverStart).Subscribe().AddTo(this);

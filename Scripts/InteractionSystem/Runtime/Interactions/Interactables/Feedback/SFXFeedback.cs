@@ -9,6 +9,7 @@ namespace Shababeek.Interactions.Feedback
     /// </summary>
     [RequireComponent(typeof(InteractableBase))]
     [RequireComponent(typeof(AudioSource))]
+    [AddComponentMenu("Shababeek/Interactions/Feedback/SFX Feedback")]
     public class SFXFeedback : MonoBehaviour
     {
         [Header("Hover Sound Effects")]

@@ -22,6 +22,7 @@ namespace Shababeek.Interactions.Feedback
     [RequireComponent(typeof(InteractableBase))]
     [RequireComponent(typeof(Animator))]
     [System.Obsolete("This component is deprecated. Use FeedbackSystem with AnimationFeedback instead for better integration and more features.")]
+    [AddComponentMenu("")]
     public class Animinteractable : MonoBehaviour
     {
         [Tooltip("Name of the bool parameter to set for hover state in the animator.")]

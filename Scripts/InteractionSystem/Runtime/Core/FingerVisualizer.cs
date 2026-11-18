@@ -9,6 +9,7 @@ namespace Shababeek.Interactions.Core
     /// Visualizes a specific finger for debugging.
     /// </summary>
     [Obsolete("This class is only used for debugging and will be removed in the future")]
+    [AddComponentMenu("")]
     public class FingerVisualizer : MonoBehaviour
     {
         [Tooltip("The finger to visualize.")]

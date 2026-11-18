@@ -28,12 +28,17 @@ namespace Shababeek.Interactions.Editors
                 }
             }
 
-            // Fallback to hardcoded path
-            var fallbackPath = "Assets/Shababeek/Interactions/Scripts/InteractionSystem/Editor/Interactions/Interactables/Feedback/FeedbackDrawers.uss";
-            var styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(fallbackPath);
+            // Fallback: find the style sheet by name, wherever the package is installed.
+            StyleSheet styleSheet = null;
+            foreach (var guid in AssetDatabase.FindAssets("FeedbackDrawers t:StyleSheet"))
+            {
+                styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(AssetDatabase.GUIDToAssetPath(guid));
+                if (styleSheet != null) break;
+            }
+
             if (styleSheet == null)
             {
-                Debug.LogWarning($"Feedback style sheet not found at {fallbackPath}. Please assign it in the Shababeek Config asset.");
+                Debug.LogWarning("Feedback style sheet (FeedbackDrawers.uss) not found. Please assign it in the Shababeek Config asset.");
             }
             return styleSheet;
         }

@@ -18,6 +18,7 @@ namespace Shababeek.Interactions.Highlight
   /// <summary>
   /// Mesh outline / silhouette renderer used by the interaction highlight feedback components.
   /// </summary>
+  [AddComponentMenu("Shababeek/Interactions/Feedback/Interaction Outline")]
   public class InteractionOutline : MonoBehaviour {
     private static HashSet<Mesh> registeredMeshes = new HashSet<Mesh>();
 

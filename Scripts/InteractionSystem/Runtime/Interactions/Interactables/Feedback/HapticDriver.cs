@@ -21,6 +21,7 @@ namespace Shababeek.Interactions.Feedback
     /// </remarks>
     [RequireComponent(typeof(InteractableBase))]
     [System.Obsolete("This component is deprecated. Use FeedbackSystem with HapticFeedback instead for better integration and more features.")]
+    [AddComponentMenu("")]
     public class HapticDriver : MonoBehaviour
     {
         [Tooltip("Whether to provide haptic feedback when hovering over the interactable.")]
