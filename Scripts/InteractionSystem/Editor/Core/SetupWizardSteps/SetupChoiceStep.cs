@@ -266,26 +266,22 @@ namespace Shababeek.Interactions.Editors
             {
                 Debug.Log("Installing OpenXR package for default settings...");
                 
-                // Add OpenXR package via Package Manager
+                // Add OpenXR via Package Manager and poll the request from the editor loop;
+                // blocking the main thread here would freeze the editor until it finished.
                 var addRequest = UnityEditor.PackageManager.Client.Add("com.unity.xr.openxr");
-                
-                // Wait for the request to complete (this is synchronous in the editor)
-                while (!addRequest.IsCompleted)
+
+                void PollAddRequest()
                 {
-                    System.Threading.Thread.Sleep(100);
+                    if (!addRequest.IsCompleted) return;
+                    EditorApplication.update -= PollAddRequest;
+
+                    if (addRequest.Status == UnityEditor.PackageManager.StatusCode.Success)
+                        Debug.Log("OpenXR package installed successfully for default settings!");
+                    else
+                        Debug.LogWarning($"OpenXR installation failed: {addRequest.Error?.message}.");
                 }
-                
-                if (addRequest.Status == UnityEditor.PackageManager.StatusCode.Success)
-                {
-                    Debug.Log("OpenXR package installed successfully for default settings!");
-                    
-                    // Refresh the asset database to pick up new packages
-                    AssetDatabase.Refresh();
-                }
-                else
-                {
-                    Debug.LogWarning($"OpenXR installation failed: {addRequest.Error?.message}. Continuing with setup...");
-                }
+
+                EditorApplication.update += PollAddRequest;
             }
             catch (System.Exception e)
             {
@@ -298,7 +294,7 @@ namespace Shababeek.Interactions.Editors
             // Check if OpenXR is installed via Package Manager
             try
             {
-                var openXRPackage = UnityEditor.PackageManager.PackageInfo.FindForPackageName("Unity.XR.OpenXR");
+                var openXRPackage = UnityEditor.PackageManager.PackageInfo.FindForPackageName("com.unity.xr.openxr");
                 return openXRPackage != null;
             }
             catch (System.Exception)

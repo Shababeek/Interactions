@@ -87,7 +87,7 @@ namespace Shababeek.Interactions.Editors
             // Method 1: Check via Package Manager (safest)
             try
             {
-                var openXRPackage = UnityEditor.PackageManager.PackageInfo.FindForPackageName("Unity.XR.OpenXR");
+                var openXRPackage = UnityEditor.PackageManager.PackageInfo.FindForPackageName("com.unity.xr.openxr");
                 if (openXRPackage != null)
                 {
                     return true;
@@ -250,7 +250,7 @@ namespace Shababeek.Interactions.Editors
                 }
                 
                 // Check if the package is properly installed
-                var openXRPackage = UnityEditor.PackageManager.PackageInfo.FindForPackageName("Unity.XR.OpenXR");
+                var openXRPackage = UnityEditor.PackageManager.PackageInfo.FindForPackageName("com.unity.xr.openxr");
                 if (openXRPackage == null)
                 {
                     Debug.LogError("OpenXR validation failed: Package not found in Package Manager");

@@ -23,7 +23,8 @@ namespace Shababeek.Interactions.Editors
             bool hasShababeekAssets = false;
             foreach (string assetPath in importedAssets)
             {
-                if (assetPath.StartsWith("Assets/Shababeek/"))
+                // The runtime assembly definition identifies this package wherever it is installed.
+                if (assetPath.EndsWith("/Shababeek.Interactions.Runtime.asmdef"))
                 {
                     hasShababeekAssets = true;
                     break;
@@ -59,6 +60,9 @@ namespace Shababeek.Interactions.Editors
 
     public class ShababeekSetupWizard : EditorWindow
     {
+        // Where the wizard writes the assets it generates (config, default hand data).
+        private const string GeneratedDataFolder = "Assets/Shababeek/Interactions/Data";
+
         private int _step = 0;
         private bool _useProvidedHands = false;
         private HandData _selectedHandData;
@@ -208,7 +212,7 @@ namespace Shababeek.Interactions.Editors
             serializedConfig.ApplyModifiedProperties();
             
             // Save the asset first (layers will be set later when ApplyDefaultSettings is called)
-            string folderPath = "Assets/Shababeek/Interactions/Data";
+            string folderPath = GeneratedDataFolder;
             if (!Directory.Exists(folderPath))
                 Directory.CreateDirectory(folderPath);
                 
@@ -224,7 +228,7 @@ namespace Shababeek.Interactions.Editors
         {
             HandData handData = ScriptableObject.CreateInstance<HandData>();
             
-            string folderPath = "Assets/Shababeek/Interactions/Data";
+            string folderPath = GeneratedDataFolder;
             if (!Directory.Exists(folderPath))
                 Directory.CreateDirectory(folderPath);
                 
