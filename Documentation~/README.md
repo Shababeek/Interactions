@@ -72,6 +72,7 @@ Components you add to objects to make them interactive.
 | **[Interactors](Interactors/Interactors.md)** | Hand component, Trigger Interactor, Raycast Interactor |
 | **[Interaction Core](Core/InteractionCoreUserManual.md)** | Camera Rig, Hand, physics hands |
 | **[Input providers and locomotion](Core/InputAndLocomotion.md)** | Controller and hand-tracking input, smooth move and snap turn |
+| **[Interaction zones](Core/InteractionZones.md)** | Scene view guide to where the player can reach |
 | **[PoseConstrainer](PoseSystem/PoseConstrainer.md)** | Hand poses and grab points on an object |
 | **[Animations and poses](PoseSystem/AnimationsUserManual.md)** | Hand Data, poses and the pose controller |
 | **[Pose migration guide](PoseSystem/MuscleBasedMigration.md)** | Moving to muscle-based poses |
