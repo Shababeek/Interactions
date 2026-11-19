@@ -271,7 +271,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   vrMode: 1
   playerRadius: 0.25
-  playAreaWidth: 2
+  deadZoneRadius: 0.25
+  roomScale:
+    playAreaWidth: 2
+    playAreaDepth: 2
+    optimalDistance: 0.3
+    extendedDistance: 0.6
+    maximumDistance: 0.8
+    reachHeightPercent: {x: -60, y: 10}
+    optimalHeightPercent: {x: -40, y: -10}
+  seated:
+    optimalMin: 0.3
+    optimalMax: 0.5
+    extendedDistance: 0.7
+    maximumDistance: 0.9
+    arcAngle: 60
+    reachHeightPercent: {x: -40, y: 25}
+    optimalHeightPercent: {x: -25, y: 8}
+  playAreaWidth: -1
   playAreaDepth: 2
   seatedOptimalMin: 0.3
   seatedOptimalMax: 0.5
@@ -284,14 +301,6 @@ MonoBehaviour:
   heightMaxPercent: 25
   optimalHeightMinPercent: -25
   optimalHeightMaxPercent: 8
-  showOptimalZone: 1
-  showExtendedZone: 1
-  showMaximumZone: 1
-  showDeadZone: 1
-  deadZoneRadius: 0.25
-  showPlayAreaBounds: 0
-  showPlayerRepresentation: 1
-  arcSegments: 16
   seatedArcAngle: 60
 --- !u!1 &2233243764032628933
 GameObject:

@@ -1,12 +1,13 @@
-﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+
 namespace Shababeek
 {
-    /// <summary>Visualizes rig bones with colored gizmo lines in the scene editor.</summary>
+    /// <summary>Draws the bones below this transform as coloured gizmo lines in the Scene view.</summary>
     [AddComponentMenu("Shababeek/Interactions/Debug/Rig Visualizer")]
     public class RigVisualizer : MonoBehaviour
     {
+        private const float JointRadius = 0.01f;
+
         /// <summary>Child rig visualizers for this bone.</summary>
         [HideInInspector] public RigVisualizer[] children;
         /// <summary>Gizmo color for this bone.</summary>
@@ -14,57 +15,43 @@ namespace Shababeek
         /// <summary>GameObject reference for this bone.</summary>
         [HideInInspector] public GameObject bone;
         /// <summary>Root rig visualizer in the hierarchy.</summary>
-        [HideInInspector] public RigVisualizer root ;
+        [HideInInspector] public RigVisualizer root;
         /// <summary>Currently selected rig visualizer.</summary>
-        [HideInInspector] public static RigVisualizer selected;
-        void OnDrawGizmos()
+        public static RigVisualizer selected;
+
+        private void OnDrawGizmos()
         {
-            Gizmos.color = color;
-            Gizmos.DrawSphere(this.transform.position, .01f);
-            Color childColor = color;
-            childColor.r = color.b;
-            childColor.g = color.r;
-            childColor.b = color.g;
-            for (int i = 0; i < transform.childCount; i++)
-            {
-                var child = transform.GetChild(i);
-                if (child.GetComponent<MeshRenderer>()) continue;
-                Gizmos.DrawLine(this.transform.position, child.position);
-                var visualizer = child.GetComponent<RigVisualizer>();
-                if (!visualizer)
-                {
-                    child.gameObject.AddComponent<RigVisualizer>().color = childColor;
-                }
-                else
-                {
-                    visualizer.color = childColor;
-                }
-
-            }
-
+            if (HasVisualizerAbove()) return;
+            DrawBone(transform, color);
         }
-        /// <summary>Initializes the rig visualizer hierarchy.</summary>
+
+        /// <summary>Collects the visualizers already present on the bones below this one.</summary>
         public void Init()
         {
-            if (!transform.parent||!(transform.parent.GetComponent < RigVisualizer>()) )
-            {
-                root = this;
-            }
-            children = new RigVisualizer[transform.childCount];
-            for (int i = 0; i < children.Length; i++)
-            {
-                var child = transform.GetChild(i);
-                children[i] = child.GetComponent< RigVisualizer>();
-                if (!children[i])
-                {
-                    children[i]=child.gameObject.AddComponent<RigVisualizer>();
-                }
-                children[i].Init();
-
-            }
-
+            if (!HasVisualizerAbove()) root = this;
+            children = GetComponentsInChildren<RigVisualizer>(true);
         }
 
+        private bool HasVisualizerAbove()
+        {
+            return transform.parent && transform.parent.GetComponentInParent<RigVisualizer>();
+        }
 
+        private static void DrawBone(Transform bone, Color boneColor)
+        {
+            Gizmos.color = boneColor;
+            Gizmos.DrawSphere(bone.position, JointRadius);
+
+            var childColor = new Color(boneColor.b, boneColor.r, boneColor.g, boneColor.a);
+            for (int i = 0; i < bone.childCount; i++)
+            {
+                var child = bone.GetChild(i);
+                if (child.GetComponent<MeshRenderer>()) continue;
+
+                Gizmos.color = boneColor;
+                Gizmos.DrawLine(bone.position, child.position);
+                DrawBone(child, childColor);
+            }
+        }
     }
 }
