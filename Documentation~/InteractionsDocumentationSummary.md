@@ -44,7 +44,7 @@ Back to the [documentation index](README.md).
 | Component | Note |
 |---|---|
 | HandFingerRig and Auto-Fit Fingers To Surface | Described only in the [design notes](ProceduralGrabPosing-Design.md). Needs a section in the PoseConstrainer manual. |
-| InteractionZoneVisualizer | No manual. |
+| InteractionZoneVisualizer | [Interaction zones](Core/InteractionZones.md). |
 | EyelidEffect | No manual. |
 | KinematicHandFollower | One line in the source; mention in the Interaction Core manual. |
 | GestureSetter, GestureVariable | Older gesture components; decide whether they stay before documenting. |

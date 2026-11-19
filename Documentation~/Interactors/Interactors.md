@@ -21,7 +21,7 @@
 
 The **Hand** identifies **Left vs Right**, connects to the package **Config**, streams controller/hand-tracked input, and coordinates pose presentation with **PoseConstrainer** / **HandPoseController**. Interactors live on the **same GameObject** as the Hand (or its children), sharing layer and attachment transforms.
 
-<!-- IMAGE TODO: Images/Interactors/hand-inspector-overview.png | Hand component Inspector overview (placeholder) -->
+![Hand component Inspector](../Images/Interactors/hand-inspector-overview.png)
 
 **Inspector checklist**
 

@@ -50,7 +50,7 @@ The **Feedback System** provides unified feedback management for interactions. I
 
 ## Inspector Reference
 
-<!-- IMAGE TODO: Images/Feedback_System/feedback-inspector-expanded.png | FeedbackSystem — Inspector with multiple feedback entries -->
+![Feedback System Inspector with several feedback entries](../Images/Feedback_System/feedback-inspector-expanded.png)
 
 *Feedback System component expanded with several feedback types configured.*
 

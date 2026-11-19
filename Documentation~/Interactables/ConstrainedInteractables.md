@@ -243,7 +243,7 @@ public class DrawerContents : MonoBehaviour
 
 **Slider Interactable** extends the shared linear constrained base (same lineage as **Drawer**) but is tuned for **multiple discrete steps** along one axis. While grabbed, the knob follows the hand; on release it snaps to the nearest step.
 
-<!-- IMAGE TODO: Images/Constrained_Interactables/slider-interactable-inspector.png | Slider Interactable Inspector (placeholder) -->
+![Slider Interactable Inspector](../Images/Constrained_Interactables/slider-interactable-inspector.png)
 
 ## Inspector essentials
 
