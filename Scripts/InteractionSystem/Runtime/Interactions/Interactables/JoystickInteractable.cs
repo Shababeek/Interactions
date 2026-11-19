@@ -18,14 +18,12 @@ namespace Shababeek.Interactions
     [AddComponentMenu("Shababeek/Interactions/Interactables/Joystick")]
     public class JoystickInteractable : ConstrainedInteractableBase
     {
-        [Header("Joystick Settings")]
         [Tooltip("Height at which the hand will hold the joystick during interaction.")]
         [SerializeField] private float projectionPlaneHeight = 0.3f;
 
         [Tooltip("Method used to project hand position onto rotation plane.")]
         [SerializeField] private JoystickProjectionMethod projectionMethod = JoystickProjectionMethod.DirectionProjection;
 
-        [Header("Rotation Limits")]
         [Tooltip("X-axis (pitch) rotation range in degrees. x=minimum, y=maximum.")]
         [SerializeField] private Vector2 xRotationRange = new Vector2(-45f, 45f);
 
@@ -53,7 +51,6 @@ namespace Shababeek.Interactions
 
         private float _lockedHapticTimer;
 
-        [Header("Debug")]
         [ReadOnly, SerializeField] private Vector2 currentRotation = Vector2.zero;
         [ReadOnly, SerializeField] private Vector2 normalizedRotation = Vector2.zero;
 

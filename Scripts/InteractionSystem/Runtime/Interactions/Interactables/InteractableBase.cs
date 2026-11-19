@@ -64,7 +64,7 @@ namespace Shababeek.Interactions
         [Tooltip("Indicates whether this interactable is currently being used (secondary button pressed).")]
         [SerializeField] [ReadOnly] private bool isUsing;
 
-        private PoseConstrainer _constrainter;
+        private PoseConstrainer _constrainer;
 
         private Collider[] _colliders;
         private int[] _collisionLayers;
@@ -72,7 +72,12 @@ namespace Shababeek.Interactions
         private bool _layersOverridden;
         private int _layerRestoreVersion;
 
-        public PoseConstrainer Constrainter => _constrainter ??= GetComponent<PoseConstrainer>();
+        /// <summary>Pose Constrainer on this object, if it has one.</summary>
+        public PoseConstrainer Constrainer => _constrainer ??= GetComponent<PoseConstrainer>();
+
+        /// <summary>Misspelled name of <see cref="Constrainer"/>, kept so existing scripts compile.</summary>
+        [Obsolete("Use Constrainer.")]
+        public PoseConstrainer Constrainter => Constrainer;
 
         // Scale compensation - prevents shearing during editor pose setup and runtime manipulation
         protected Transform ScaleCompensator;
@@ -192,7 +197,7 @@ namespace Shababeek.Interactions
             set => interactionHand = value;
         }
 
-        public PoseConstrainer this[HandIdentifier index] => Constrainter;
+        public PoseConstrainer this[HandIdentifier index] => Constrainer;
 
         protected virtual void Awake()
         {
@@ -251,9 +256,9 @@ namespace Shababeek.Interactions
             if (currentState == InteractionState.Selected)
             {
                 isUsing = false;
+                DeSelected();
                 isSelected = false;
                 onDeselected.Invoke(currentInteractor);
-                DeSelected();
                 if (layerBehavior == LayerBehavior.MatchHand)
                     RestoreLayers();
             }
@@ -281,7 +286,11 @@ namespace Shababeek.Interactions
 
             try
             {
-                if (Select()) return;
+                if (Select())
+                {
+                    SettleAbortedSelection();
+                    return;
+                }
             }
             catch (Exception e)
             {
@@ -323,6 +332,15 @@ namespace Shababeek.Interactions
             }
 
             currentState = InteractionState.Selected;
+        }
+
+        private void SettleAbortedSelection()
+        {
+            // Hover end has already been raised, so land in None: the next hover then raises hover
+            // start again instead of being ignored as a repeat, and no stale interactor is kept.
+            if (currentState == InteractionState.Selected) return;
+            currentState = InteractionState.None;
+            currentInteractor = null;
         }
 
         private async void RestoreLayers()

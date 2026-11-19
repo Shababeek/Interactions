@@ -507,8 +507,8 @@ namespace Shababeek.Interactions
                          + " handDistFromRest=" + (interactor != null ? HandDistanceFromRest(interactor.transform.position).ToString("F3") : "n/a") + "m"
                          + " grabBaseline=" + _grabAnchorLocal.magnitude.ToString("F3") + "m"
                          + " toyOffsetAtGrab=" + _offset.magnitude.ToString("F3") + "m"
-                         + " constraintType=" + (Constrainter != null ? Constrainter.ConstraintType.ToString() : "<no PoseConstrainer>")
-                         + " grabPoints=" + (Constrainter != null && Constrainter.GrabPoints != null ? Constrainter.GrabPoints.Count : 0));
+                         + " constraintType=" + (Constrainer != null ? Constrainer.ConstraintType.ToString() : "<no PoseConstrainer>")
+                         + " grabPoints=" + (Constrainer != null && Constrainer.GrabPoints != null ? Constrainer.GrabPoints.Count : 0));
             }
 
             return base.Select();
@@ -1001,8 +1001,8 @@ namespace Shababeek.Interactions
                               + "  cordPivot=" + (_cordPivot != null ? "ok" : "<none>")
                               + "  neighbour=" + (neighbour != null ? neighbour.name : "<none>")
                               + "  mutual=" + (neighbour != null && neighbour.neighbour == this)
-                              + "  poseConstrainer=" + (Constrainter != null ? Constrainter.ConstraintType.ToString() : "<missing>")
-                              + "  grabPoints=" + (Constrainter != null && Constrainter.GrabPoints != null ? Constrainter.GrabPoints.Count : 0));
+                              + "  poseConstrainer=" + (Constrainer != null ? Constrainer.ConstraintType.ToString() : "<missing>")
+                              + "  grabPoints=" + (Constrainer != null && Constrainer.GrabPoints != null ? Constrainer.GrabPoints.Count : 0));
             report.AppendLine("  counters: grabs=" + _grabCount + " slips=" + _slipCount + " bumps=" + _bumpCount
                               + " clacks=" + _clackCount + " wakes=" + _wakeCount + " sleeps=" + _sleepCount
                               + " anchorClamps=" + _clampCount + " holderRecoveries=" + _recoveryCount);

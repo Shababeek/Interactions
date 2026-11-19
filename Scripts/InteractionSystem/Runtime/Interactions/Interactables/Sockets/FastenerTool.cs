@@ -356,7 +356,7 @@ namespace Shababeek.Interactions
             var toolT = _tool.transform;
             _fakeHand = Instantiate(prefab.gameObject, toolT);
 
-            var constrainer = _tool.Constrainter;
+            var constrainer = _tool.Constrainer;
             var (posOffset, rotOffset) = constrainer.GetTargetHandTransform(handId);
             _fakeHand.transform.localPosition = posOffset;
             _fakeHand.transform.localRotation = rotOffset;

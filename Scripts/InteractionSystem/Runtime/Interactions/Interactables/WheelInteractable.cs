@@ -14,18 +14,15 @@ namespace Shababeek.Interactions
     [AddComponentMenu("Shababeek/Interactions/Interactables/Wheel")]
     public class WheelInteractable : RotaryInteractableBase
     {
-        [Header("Rotation Limits")]
         [Tooltip("Maximum rotations in each direction (0.5 = half turn, 1 = full turn).")]
         [SerializeField] private float maxRotations = 1f;
 
-        [Header("Events")]
         [Tooltip("Event invoked when wheel rotation angle changes, passing the angle in degrees.")]
         [SerializeField] private FloatUnityEvent onAngleChanged = new();
 
         [Tooltip("Event invoked when normalized rotation value changes (-1 to 1).")]
         [SerializeField] private FloatUnityEvent onNormalizedChanged = new();
 
-        [Header("Debug")]
         [ReadOnly, SerializeField] private float normalizedValue;
 
         private float _returnTimer;

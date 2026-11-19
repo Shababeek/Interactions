@@ -27,7 +27,6 @@ namespace Shababeek.Interactions
         [Tooltip("Whether the door starts latched shut. A locked door will not swing until Unlock() is called.")]
         [SerializeField] private bool startLocked = true;
 
-        [Header("Events")]
         [Tooltip("Event invoked when the door reaches the open position.")]
         [SerializeField] private UnityEvent onOpened;
 
@@ -45,7 +44,6 @@ namespace Shababeek.Interactions
 
         private const float LimitEpsilon = 0.02f;
 
-        [Header("Debug")]
         [ReadOnly, SerializeField] private bool isLocked;
 
         // Latches the last extreme reported so onOpened/onClosed fire once per transition

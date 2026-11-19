@@ -12,9 +12,7 @@ namespace Shababeek.Interactions.Tests
         [SetUp]
         public void SetUp()
         {
-            var go = new GameObject("ConstrainedInteractable");
-            var poseConstrainter = go.AddComponent<TestPoseConstrainer>();
-            _constrainedInteractable = go.AddComponent<TestConstrainedInteractable>();
+            _constrainedInteractable = new GameObject("ConstrainedInteractable").AddComponent<TestConstrainedInteractable>();
         }
 
         [TearDown]
@@ -24,97 +22,56 @@ namespace Shababeek.Interactions.Tests
         }
 
         [Test]
-        public void ConstrainedInteractable_InitialStateIsNone()
+        public void AddingTheComponent_AlsoAddsAPoseConstrainer()
+        {
+            Assert.IsNotNull(_constrainedInteractable.GetComponent<PoseConstrainer>());
+            Assert.AreSame(_constrainedInteractable.GetComponent<PoseConstrainer>(), _constrainedInteractable.Constrainer);
+        }
+
+        [Test]
+        public void Defaults_MatchTheBaseInteractable()
         {
             Assert.AreEqual(InteractionState.None, _constrainedInteractable.CurrentState);
-        }
-
-        [Test]
-        public void ConstrainedInteractable_InteractableObjectInitialized()
-        {
-            var interactableObject = _constrainedInteractable.InteractableObject;
-            Assert.IsNotNull(interactableObject);
-        }
-
-        [Test]
-        public void ConstrainedInteractable_ScaleCompensatorCreated()
-        {
-            var scaleCompensator = _constrainedInteractable.ConstraintTransform;
-            Assert.IsNotNull(scaleCompensator);
-            Assert.AreEqual("ScaleCompensator", scaleCompensator.name);
-        }
-
-        [Test]
-        public void ConstrainedInteractable_InteractableObjectCreated()
-        {
-            var interactableObject = _constrainedInteractable.InteractableObject;
-            Assert.IsNotNull(interactableObject);
-            Assert.AreEqual("interactableObject", interactableObject.name);
-        }
-
-        [Test]
-        public void ConstrainedInteractable_CanAssignCustomInteractableObject()
-        {
-            var customObject = new GameObject("CustomObject").transform;
-            customObject.SetParent(_constrainedInteractable.ConstraintTransform);
-            _constrainedInteractable.InteractableObject = customObject;
-
-            Assert.AreEqual(customObject, _constrainedInteractable.InteractableObject);
-
-            TestHelpers.DestroyGameObject(customObject.gameObject);
-        }
-
-        [Test]
-        public void ConstrainedInteractable_InitiallyNotSelected()
-        {
             Assert.IsFalse(_constrainedInteractable.IsSelected);
-        }
-
-        [Test]
-        public void ConstrainedInteractable_CurrentInteractorInitiallyNull()
-        {
             Assert.IsNull(_constrainedInteractable.CurrentInteractor);
-        }
-
-        [Test]
-        public void ConstrainedInteractable_CanTransitionToHovering()
-        {
-            var mockInteractor = TestHelpers.CreateMockInteractor(HandIdentifier.Left);
-            _constrainedInteractable.OnStateChanged(InteractionState.Hovering, mockInteractor);
-
-            Assert.AreEqual(InteractionState.Hovering, _constrainedInteractable.CurrentState);
-            TestHelpers.DestroyComponent(mockInteractor);
-        }
-
-        [Test]
-        public void ConstrainedInteractable_InteractableObjectIsChild()
-        {
-            var interactableObject = _constrainedInteractable.InteractableObject;
-            Assert.IsTrue(interactableObject.IsChildOf(_constrainedInteractable.ConstraintTransform));
-        }
-
-        [Test]
-        public void ConstrainedInteractable_HierarchyStructure()
-        {
-            // Verify: InteractableBase -> ScaleCompensator -> interactableObject
-            var scaleCompensator = _constrainedInteractable.ConstraintTransform;
-            var interactableObject = _constrainedInteractable.InteractableObject;
-
-            Assert.AreEqual(scaleCompensator, interactableObject.parent);
-            Assert.AreEqual(_constrainedInteractable.transform, scaleCompensator.parent);
-        }
-
-        [Test]
-        public void ConstrainedInteractable_CanInteractBothHands()
-        {
+            Assert.AreEqual(XRButton.Grip, _constrainedInteractable.SelectionButton);
             Assert.IsTrue(_constrainedInteractable.CanInteract(HandIdentifier.Left));
             Assert.IsTrue(_constrainedInteractable.CanInteract(HandIdentifier.Right));
         }
 
         [Test]
-        public void ConstrainedInteractable_DefaultSelectButtonIsGrip()
+        public void Hierarchy_IsRootThenScaleCompensatorThenInteractableObject()
         {
-            Assert.AreEqual(XRButton.Grip, _constrainedInteractable.SelectionButton);
+            var scaleCompensator = _constrainedInteractable.ConstraintTransform;
+            var interactableObject = _constrainedInteractable.InteractableObject;
+
+            Assert.AreEqual("ScaleCompensator", scaleCompensator.name);
+            Assert.AreEqual("interactableObject", interactableObject.name);
+            Assert.AreEqual(_constrainedInteractable.transform, scaleCompensator.parent);
+            Assert.AreEqual(scaleCompensator, interactableObject.parent);
+        }
+
+        [Test]
+        public void InteractableObject_CanBeReplacedWithACustomChild()
+        {
+            var customObject = new GameObject("CustomObject").transform;
+            customObject.SetParent(_constrainedInteractable.ConstraintTransform);
+
+            _constrainedInteractable.InteractableObject = customObject;
+
+            Assert.AreEqual(customObject, _constrainedInteractable.InteractableObject);
+        }
+
+        [Test]
+        public void Hover_ChangesStateAndRecordsTheInteractor()
+        {
+            var interactor = TestHelpers.CreateMockInteractor(HandIdentifier.Left);
+
+            _constrainedInteractable.OnStateChanged(InteractionState.Hovering, interactor);
+
+            Assert.AreEqual(InteractionState.Hovering, _constrainedInteractable.CurrentState);
+            Assert.AreSame(interactor, _constrainedInteractable.CurrentInteractor);
+            TestHelpers.DestroyComponent(interactor);
         }
     }
 
@@ -136,27 +93,6 @@ namespace Shababeek.Interactions.Tests
         protected override void HandleReturnToOriginalPosition()
         {
             // Test implementation - do nothing
-        }
-    }
-
-    /// <summary>
-    /// Test implementation of PoseConstrainer for testing.
-    /// </summary>
-    public class TestPoseConstrainer : MonoBehaviour
-    {
-        public void ApplyConstraints(Hand hand, Vector3 interactionPoint)
-        {
-            // Test implementation
-        }
-
-        public void RemoveConstraints(Hand hand)
-        {
-            // Test implementation
-        }
-
-        public (Vector3 position, Quaternion rotation) GetTargetHandTransform(HandIdentifier handIdentifier)
-        {
-            return (Vector3.zero, Quaternion.identity);
         }
     }
 }

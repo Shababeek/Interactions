@@ -12,7 +12,6 @@ namespace Shababeek.Interactions
     [AddComponentMenu("Shababeek/Interactions/Interactables/Dial")]
     public class DialInteractable : RotaryInteractableBase, IStepInteractable
     {
-        [Header("Steps")]
         [Tooltip("Number of discrete positions on the dial.")]
         [SerializeField, Min(2)] private int numberOfSteps = 8;
 
@@ -32,7 +31,6 @@ namespace Shababeek.Interactions
         [Tooltip("Allow rotating past the last step to wrap back to the first.")]
         [SerializeField] private bool wrapAround = false;
 
-        [Header("Haptics")]
         [Tooltip("Play a haptic pulse each time a step boundary is crossed.")]
         [SerializeField] private bool hapticOnStep = true;
 
@@ -45,14 +43,12 @@ namespace Shababeek.Interactions
         [Tooltip("Optional haptic pattern asset; overrides amplitude/duration when assigned.")]
         [SerializeField] private HapticPattern hapticPattern;
 
-        [Header("Events")]
         [Tooltip("Fired when the current step changes. Passes the new step index.")]
         [SerializeField] private IntUnityEvent onStepChanged = new();
 
         [Tooltip("Fired when a step is committed (snap animation complete or direct API call).")]
         [SerializeField] private IntUnityEvent onStepConfirmed = new();
 
-        [Header("Debug")]
         [ReadOnly, SerializeField] private int currentStep;
 
         // Edit-mode preview state. Serialized (not editor-only) so a scene saved while the dial is

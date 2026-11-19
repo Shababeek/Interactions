@@ -12,7 +12,6 @@ namespace Shababeek.Interactions
     [AddComponentMenu("Shababeek/Interactions/Interactables/Slider")]
     public class SliderInteractable : LinearInteractableBase, IStepInteractable
     {
-        [Header("Steps")]
         [Tooltip("Number of discrete positions on the slider.")]
         [SerializeField, Min(2)] private int numberOfSteps = 4;
 
@@ -22,7 +21,6 @@ namespace Shababeek.Interactions
         private bool _started;
         private int _pendingStep = -1;
 
-        [Header("Haptics")]
         [Tooltip("Play a haptic pulse each time a step boundary is crossed.")]
         [SerializeField] private bool hapticOnStep = true;
 
@@ -35,7 +33,6 @@ namespace Shababeek.Interactions
         [Tooltip("Optional haptic pattern asset; overrides amplitude/duration when assigned.")]
         [SerializeField] private HapticPattern hapticPattern;
 
-        [Header("Events")]
         [Tooltip("Fired when the current step changes. Passes the new step index.")]
         [SerializeField] private IntUnityEvent onStepChanged = new();
 
@@ -45,7 +42,6 @@ namespace Shababeek.Interactions
         [Tooltip("Fired continuously as the slider moves. Passes normalized position (0-1).")]
         [SerializeField] private FloatUnityEvent onMoved = new();
 
-        [Header("Debug")]
         [ReadOnly, SerializeField] private int currentStep;
 
         private int _previousStep;

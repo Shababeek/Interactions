@@ -35,9 +35,9 @@ namespace Shababeek.Interactions
         private Action _tweenCompleteCallback;
 
 
-        private (Vector3 position, Quaternion rotation) RightHandTarget => Constrainter.GetTargetHandTransform(HandIdentifier.Right);
+        private (Vector3 position, Quaternion rotation) RightHandTarget => Constrainer.GetTargetHandTransform(HandIdentifier.Right);
 
-        private (Vector3 position, Quaternion rotation) LeftHandTarget => Constrainter.GetTargetHandTransform(HandIdentifier.Left);
+        private (Vector3 position, Quaternion rotation) LeftHandTarget => Constrainer.GetTargetHandTransform(HandIdentifier.Left);
 
         /// <summary>Throw tracker for this grabable. Active only when Can Be Thrown is enabled and a Rigidbody is present.</summary>
         public Throwable Throwable => throwable;
@@ -85,7 +85,7 @@ namespace Shababeek.Interactions
 
             // Apply pose constraints with interaction point for nearest grab point selection
             Vector3 interactionPoint = CurrentInteractor.GetInteractionPoint();
-            Constrainter.ApplyConstraints(CurrentInteractor.Hand, interactionPoint);
+            Constrainer.ApplyConstraints(CurrentInteractor.Hand, interactionPoint);
 
             // Force the rigidbody kinematic for the duration of the grab so the tween can
             // animate position cleanly. Interpolation is also disabled: while parented to a
@@ -115,7 +115,7 @@ namespace Shababeek.Interactions
         protected override void DeSelected()
         {
             // Remove pose constraints and restore hand visibility
-            Constrainter.RemoveConstraints(CurrentInteractor.Hand);
+            Constrainer.RemoveConstraints(CurrentInteractor.Hand);
 
             // Clean up tween subscription before removing tweenable
             UnsubscribeTweenComplete();
@@ -183,7 +183,7 @@ namespace Shababeek.Interactions
 
             // Hand offsets are in ConstraintTransform local space which is scaled by the
             // interactable's own scale. Convert to world scale for the attachment point.
-            Vector3 constraintScale = Constrainter.ConstraintTransform.lossyScale;
+            Vector3 constraintScale = Constrainer.ConstraintTransform.lossyScale;
             Vector3 scaledHandPosition = Vector3.Scale(handLocalPosition, constraintScale);
 
             Quaternion objectRotation = Quaternion.Inverse(handLocalRotation);

@@ -123,6 +123,17 @@ namespace Shababeek.Interactions.Tests
     {
         public Vector3 TestInteractionPoint { get; set; } = Vector3.zero;
 
+        /// <summary>True while this interactor holds an interactable.</summary>
+        public bool Interacting => IsInteracting;
+
+        /// <summary>Moves the hover to another interactable (or to nothing), as a detecting interactor would.</summary>
+        public void Hover(InteractableBase interactable)
+        {
+            EndHover();
+            CurrentInteractable = interactable;
+            StartHover();
+        }
+
         public override Vector3 GetInteractionPoint()
         {
             return TestInteractionPoint;

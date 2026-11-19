@@ -17,6 +17,7 @@ namespace Shababeek.Interactions.Editors
         private SerializedProperty _xRotationRangeProp;
         private SerializedProperty _zRotationRangeProp;
         private SerializedProperty _onRotationChangedProp;
+        private SerializedProperty _isLockedProp;
         private SerializedProperty _currentRotationProp;
         private SerializedProperty _normalizedRotationProp;
 
@@ -33,6 +34,7 @@ namespace Shababeek.Interactions.Editors
             _projectionMethodProp = serializedObject.FindProperty("projectionMethod");
             _xRotationRangeProp = serializedObject.FindProperty("xRotationRange");
             _zRotationRangeProp = serializedObject.FindProperty("zRotationRange");
+            _isLockedProp = serializedObject.FindProperty("isLocked");
             _onRotationChangedProp = serializedObject.FindProperty("onRotationChanged");
             _currentRotationProp = serializedObject.FindProperty("currentRotation");
             _normalizedRotationProp = serializedObject.FindProperty("normalizedRotation");
@@ -77,6 +79,8 @@ namespace Shababeek.Interactions.Editors
             
             DrawRotationRangeSlider("X Rotation (Pitch)", _xRotationRangeProp);
             DrawRotationRangeSlider("Z Rotation (Yaw)", _zRotationRangeProp);
+
+            if (_isLockedProp != null) EditorGUILayout.PropertyField(_isLockedProp);
         }
 
         protected override void DrawImportantSettings()
